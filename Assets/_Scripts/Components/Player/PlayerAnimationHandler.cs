@@ -11,9 +11,11 @@ public class PlayerAnimationHandler : MonoBehaviour
     [SerializeField] private PlayerShooting playerShooting;
     [SerializeField] private PlayerAbilityHandler playerAbilityHandler;
     [SerializeField] private HealthComponent healthComponent;
+    [SerializeField] private PlayerMovement playerMovement;
 
     private Animator _animator;
     private Rigidbody2D _rb;
+    private SpriteRenderer _spriteRenderer;
 
     // Hashes dos parametros para performance (evita usar strings)
     private readonly int _hashMoveSpeed = Animator.StringToHash("MoveSpeed");
@@ -26,13 +28,16 @@ public class PlayerAnimationHandler : MonoBehaviour
     {
         _animator = GetComponent<Animator>();
         _rb = GetComponent<Rigidbody2D>();
+        _spriteRenderer = GetComponent<SpriteRenderer>();
     }
 
     private void OnEnable()
     {
         playerShooting.OnShoot += HandleShoot;
         playerAbilityHandler.OnAbilityActivated += HandleAbility;
+        playerMovement.OnFlipSprite += HandleFlipSprite;
         healthComponent.OnDied.AddListener(HandleDeath);
+        
     }
 
     private void OnDisable()
@@ -40,6 +45,7 @@ public class PlayerAnimationHandler : MonoBehaviour
         // Limpa as assinaturas
         playerShooting.OnShoot -= HandleShoot;
         playerAbilityHandler.OnAbilityActivated -= HandleAbility;
+        playerMovement.OnFlipSprite += HandleFlipSprite;
         healthComponent.OnDied.RemoveListener(HandleDeath);
     }
 
@@ -51,6 +57,12 @@ public class PlayerAnimationHandler : MonoBehaviour
     private void HandleShoot()
     {
         _animator.SetTrigger(_hashOnShoot);
+    }
+
+    private void HandleFlipSprite(bool facingRight)
+    {
+        print("Flip Sprite: " + facingRight);
+        _spriteRenderer.flipX = facingRight;
     }
 
     private void HandleAbility(Ability ability)
