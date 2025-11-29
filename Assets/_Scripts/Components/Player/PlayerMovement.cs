@@ -42,7 +42,6 @@ public class PlayerMovement : MonoBehaviour
         _moveDirection = direction;
         if (_moveDirection.x > 0 && !facingRight)
         {
-            print($"Flipping Sprite to Right");
             OnFlipSprite?.Invoke(true);
             facingRight = true;
         }

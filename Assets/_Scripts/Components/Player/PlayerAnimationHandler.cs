@@ -61,7 +61,6 @@ public class PlayerAnimationHandler : MonoBehaviour
 
     private void HandleFlipSprite(bool facingRight)
     {
-        print("Flip Sprite: " + facingRight);
         _spriteRenderer.flipX = facingRight;
     }
 
