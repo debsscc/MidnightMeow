@@ -120,12 +120,12 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 1
-  m_Sprite: {fileID: 5905681027756182028, guid: ec4ca82fc4e747f4cb6927024f941564, type: 3}
+  m_Sprite: {fileID: 629948968941374174, guid: 06631e41cf3dd794b9f3a49dbffe7f1b, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
-  m_Size: {x: 0.16, y: 0.16}
+  m_Size: {x: 1.91, y: 2.34}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
@@ -315,6 +315,7 @@ MonoBehaviour:
   playerShooting: {fileID: 8839670001696835616}
   playerAbilityHandler: {fileID: 5792988918660519372}
   healthComponent: {fileID: 4338388805264836550}
+  playerMovement: {fileID: 584514799452680066}
 --- !u!114 &4338388805264836550
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -434,6 +435,6 @@ SpriteRenderer:
   m_Size: {x: 1, y: 1}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
-  m_WasSpriteAssigned: 1
+  m_WasSpriteAssigned: 0
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
