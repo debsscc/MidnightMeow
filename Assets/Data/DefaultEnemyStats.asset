@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 40812829843fe674189e6b68709405bb, type: 3}
   m_Name: DefaultEnemyStats
   m_EditorClassIdentifier: Assembly-CSharp::EnemyStats
-  targetPriority: 1
+  targetPriority: 0
   targetDetectionRange: 20
   maxHealth: 50
   moveSpeed: 3.5

@@ -14,7 +14,7 @@ public class Projectile : MonoBehaviour
 
 
     private Rigidbody2D _rb;
-    private int _currentBounces = 0; // Contador de quicadas, pode ser interessante para futuras funcionalidades
+    private int _currentBounces = 0;
 
     // Estado para controlar se pode ser pego
     private bool _canBeCollected = false;
@@ -55,8 +55,11 @@ public class Projectile : MonoBehaviour
         if (collision.gameObject.layer == LayerMask.NameToLayer("Wall") || collision.gameObject.layer == LayerMask.NameToLayer("Enemy") || collision.gameObject.layer == LayerMask.NameToLayer("Structure"))
         {   
             _currentBounces++;
+            if (!stats.infinityBounces && _currentBounces >= stats.maxBounces){
+                Destroy(gameObject);
+            }
             // Após o primeiro quique, o projétil vira munição, talvez devemos considerar outra lógica usando delay
-            if (!_canBeCollected)
+            if (!_canBeCollected && stats.collectable)
             {
                 _canBeCollected = true;
             }
@@ -68,7 +71,7 @@ public class Projectile : MonoBehaviour
 
         if (other.gameObject.layer == LayerMask.NameToLayer("Player"))
         {
-            if (_canBeCollected)
+            if (_canBeCollected && stats.collectable)
             {
                 GameEvents.InvokeAmmoCollected();
                 Destroy(gameObject);
@@ -83,8 +86,11 @@ public class Projectile : MonoBehaviour
         Debug.Log("Projectile hit: " + other.gameObject.name);
         if (other.TryGetComponent<IDamageable>(out IDamageable target))
         {
+            _currentBounces++;
             target.TakeDamage(stats.damage, this.gameObject);
-
+            if (!stats.infinityBounces && _currentBounces >= stats.maxBounces){
+                Destroy(gameObject);
+            }
         }
     }
 

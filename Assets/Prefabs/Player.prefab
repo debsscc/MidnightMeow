@@ -276,7 +276,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 83da08afb0b42174a91a15e1cb2b289c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerAbilityHandler
-  currentAbility: {fileID: 11400000, guid: 405390d127c90e34cbc4d83cb2d6e847, type: 2}
+  currentAbility: {fileID: 0}
   firePoint: {fileID: 874212205570085287}
 --- !u!95 &944221471755545764
 Animator:

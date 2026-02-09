@@ -1,7 +1,7 @@
 ///* ----------------------------------------------------------------
 // CRIADO EM: 17-11-2025
 // FEITO POR: Pedro Caurio
-// DESCRIÇÃO: Define as estatísticas do jogador, como velocidade de movimento e capacidade de munição.
+// DESCRIï¿½ï¿½O: Define as estatï¿½sticas do jogador, como velocidade de movimento e capacidade de muniï¿½ï¿½o.
 // ---------------------------------------------------------------- */
 
 using UnityEngine;
@@ -17,5 +17,6 @@ public class PlayerStats : ScriptableObject
 
     [Header("Combat")]
     public int maxAmmo = 5;
+    public bool infinityAmmo = false;
     public float firePointRadius = 0.8f;
 }

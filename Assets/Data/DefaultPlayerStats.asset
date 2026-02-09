@@ -12,6 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9267ac74f46cd854b8a8bb249f38128f, type: 3}
   m_Name: DefaultPlayerStats
   m_EditorClassIdentifier: Assembly-CSharp::PlayerStats
+  maxHealth: 100
   moveSpeed: 8
   maxAmmo: 5
+  infinityAmmo: 1
   firePointRadius: 1
