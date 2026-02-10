@@ -1,9 +1,9 @@
 ﻿<Solution>
-  <Project Path="MerryYellow.CodeAssist.Editor.csproj" />
-  <Project Path="Unity.AI.Navigation.Samples.csproj" />
   <Project Path="Assembly-CSharp.csproj" />
-  <Project Path="NavMeshPlus.csproj" />
+  <Project Path="MerryYellow.CodeAssist.Editor.csproj" />
   <Project Path="NavMeshPlusEditor.csproj" />
+  <Project Path="Unity.AI.Navigation.Samples.csproj" />
+  <Project Path="NavMeshPlus.csproj" />
   <Project Path="Assembly-CSharp-firstpass.csproj" />
   <Project Path="Unity.AI.Navigation.Samples.Initialization.Editor.csproj" />
 </Solution>

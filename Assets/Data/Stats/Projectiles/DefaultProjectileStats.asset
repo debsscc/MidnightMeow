@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 816715e90962539499338c169310f610, type: 3}
   m_Name: DefaultProjectileStats
   m_EditorClassIdentifier: Assembly-CSharp::ProjectileStats
-  moveSpeed: 10
+  moveSpeed: 30
   maxBounces: 1
   infinityBounces: 0
   collectable: 1

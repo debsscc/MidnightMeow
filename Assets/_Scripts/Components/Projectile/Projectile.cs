@@ -12,9 +12,9 @@ public class Projectile : MonoBehaviour
     // Estatísticas do projétil
     [SerializeField] private ProjectileStats stats;
 
-
     private Rigidbody2D _rb;
     private int _currentBounces = 0;
+    private int _maxBounces;
 
     // Estado para controlar se pode ser pego
     private bool _canBeCollected = false;
@@ -28,6 +28,7 @@ public class Projectile : MonoBehaviour
     private void Awake()
     {
         _rb = GetComponent<Rigidbody2D>();
+        _maxBounces = stats.maxBounces;
     }
 
     private void Start()
@@ -53,9 +54,9 @@ public class Projectile : MonoBehaviour
         if (_currentState == ProjectileState.Seeking)  return;
         // Verifica se colidiu com uma Parede
         if (collision.gameObject.layer == LayerMask.NameToLayer("Wall") || collision.gameObject.layer == LayerMask.NameToLayer("Enemy") || collision.gameObject.layer == LayerMask.NameToLayer("Structure"))
-        {   
+        {
             _currentBounces++;
-            if (!stats.infinityBounces && _currentBounces >= stats.maxBounces){
+            if (!stats.infinityBounces && _currentBounces >= _maxBounces){
                 Destroy(gameObject);
             }
             // Após o primeiro quique, o projétil vira munição, talvez devemos considerar outra lógica usando delay
@@ -88,7 +89,7 @@ public class Projectile : MonoBehaviour
         {
             _currentBounces++;
             target.TakeDamage(stats.damage, this.gameObject);
-            if (!stats.infinityBounces && _currentBounces >= stats.maxBounces){
+            if (!stats.infinityBounces && _currentBounces >= _maxBounces){
                 Destroy(gameObject);
             }
         }
@@ -111,5 +112,10 @@ public class Projectile : MonoBehaviour
         // Ajusta a rotação para alinhar com a nova direção
         float angle = Mathf.Atan2(newDirection.y, newDirection.x) * Mathf.Rad2Deg - 90f;
         transform.rotation = Quaternion.Euler(0, 0, angle);
+    }
+
+    public void AddBonusBounces(int bonusBounces)
+    {
+        _maxBounces += bonusBounces;
     }
 }

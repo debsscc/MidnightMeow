@@ -19,4 +19,16 @@ public class PlayerStats : ScriptableObject
     public int maxAmmo = 5;
     public bool infinityAmmo = false;
     public float firePointRadius = 0.8f;
+
+    [Header("Adrenaline")]
+    public float maxAdrenaline = 100f;
+    public float adrenalineDecayRate = 5f;
+    public float adrenalineGainPerCiencia = 10f;
+    public float adrenalineThresholdToActivate = 50f;
+    public float adrenalineLowThreshold = 30f;
+
+    [Header("Frenzy Mode")]
+    public float frenzySpeedMultiplier = 1.5f;
+    public int frenzyBonusBounces = 2;
+    public float frenzyDuration = 10f;
 }

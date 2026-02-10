@@ -1,7 +1,7 @@
 ///* ----------------------------------------------------------------
 // CRIADO EM: 13-11-2025
 // FEITO POR: Pedro Caurio
-// DESCRIÇÃO: Controla o disparo de projéteis pelo jogador quando o input de 'Fire' é acionado.
+// DESCRIï¿½ï¿½O: Controla o disparo de projï¿½teis pelo jogador quando o input de 'Fire' ï¿½ acionado.
 // ---------------------------------------------------------------- */
 using System;
 using UnityEngine;
@@ -14,6 +14,7 @@ public class PlayerShooting : MonoBehaviour
 
     private PlayerInputHandler _input;
     private PlayerAmmo _ammo;
+    private PlayerAdrenaline _adrenaline;
 
     public event Action OnShoot;
     public event Action OnOutOfAmmo;
@@ -21,6 +22,7 @@ public class PlayerShooting : MonoBehaviour
     {
         _input = GetComponent<PlayerInputHandler>();
         _ammo = GetComponent<PlayerAmmo>();
+        _adrenaline = GetComponent<PlayerAdrenaline>();
     }
 
     // Assina e desassina eventos de input
@@ -38,13 +40,22 @@ public class PlayerShooting : MonoBehaviour
         if (_ammo.HasAmmo())
         {
             _ammo.UseAmmo(1);
-            Instantiate(projectilePrefab, firePoint.position, firePoint.rotation);
+            GameObject projectileInstance = Instantiate(projectilePrefab, firePoint.position, firePoint.rotation);
+
+            if (_adrenaline != null && _adrenaline.IsFrenzyActive)
+            {
+                if (projectileInstance.TryGetComponent<Projectile>(out Projectile projectile))
+                {
+                    projectile.AddBonusBounces(_adrenaline.GetBonusBounces());
+                }
+            }
+
             OnShoot?.Invoke();
         }
         else
         {
             OnOutOfAmmo?.Invoke();  // Emitir som de clique vazio ou similar
-            Debug.Log("Sem Munição!");
+            Debug.Log("Sem Muniï¿½ï¿½o!");
         }
     }
 }

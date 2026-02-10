@@ -23,6 +23,7 @@ GameObject:
   - component: {fileID: 6008801279886521943}
   - component: {fileID: 4338388805264836550}
   - component: {fileID: 1971275511166303136}
+  - component: {fileID: 6184364087952878765}
   m_Layer: 3
   m_Name: Player
   m_TagString: Player
@@ -348,6 +349,25 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerHealthConfig
   stats: {fileID: 11400000, guid: 7f4fa052e88f8494f918e2f5d5b9cdd1, type: 2}
+--- !u!114 &6184364087952878765
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3845447005448380479}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9ab77ff5bca06da4d998fbf75b2d8bc2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerAdrenaline
+  stats: {fileID: 11400000, guid: 7f4fa052e88f8494f918e2f5d5b9cdd1, type: 2}
+  OnFrenzyActivated:
+    m_PersistentCalls:
+      m_Calls: []
+  OnFrenzyDeactivated:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!1 &5715922893988417228
 GameObject:
   m_ObjectHideFlags: 0

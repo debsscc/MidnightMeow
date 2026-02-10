@@ -1,5 +1,36 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &5041201252990876819
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7769710525481836737}
+  m_Layer: 9
+  m_Name: firePoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7769710525481836737
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5041201252990876819}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.06, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 6396371665158594734}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &8336658271261246405
 GameObject:
   m_ObjectHideFlags: 0
@@ -16,10 +47,12 @@ GameObject:
   - component: {fileID: 692900625736899868}
   - component: {fileID: 7399958676104610512}
   - component: {fileID: 8492623029768286588}
-  - component: {fileID: 4432233189746163320}
   - component: {fileID: 5704336305023549229}
   - component: {fileID: 4817587253931695636}
   - component: {fileID: 974458903785184444}
+  - component: {fileID: 5316140801015922341}
+  - component: {fileID: 8699465747872324352}
+  - component: {fileID: 801549803459353313}
   m_Layer: 9
   m_Name: Enemy
   m_TagString: Enemy
@@ -39,7 +72,8 @@ Transform:
   m_LocalPosition: {x: 5.61, y: 0.76, z: 0}
   m_LocalScale: {x: 0.6925, y: 0.6334555, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 7769710525481836737}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &2629720616798489814
@@ -234,19 +268,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyMovement
   stats: {fileID: 11400000, guid: f2371fa77c69eb944abdc9b4ce3ecbcd, type: 2}
---- !u!114 &4432233189746163320
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8336658271261246405}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 47e52db4aeed7d046a1a2e7aa571e442, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::EnemyAttack_Melee
-  stats: {fileID: 11400000, guid: f2371fa77c69eb944abdc9b4ce3ecbcd, type: 2}
 --- !u!114 &5704336305023549229
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -292,3 +313,44 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyHealthConfig
   stats: {fileID: 11400000, guid: f2371fa77c69eb944abdc9b4ce3ecbcd, type: 2}
+--- !u!114 &5316140801015922341
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8336658271261246405}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f02dea8fa59b9424495b3f3dc42ae17b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyScaleConfig
+  stats: {fileID: 11400000, guid: f2371fa77c69eb944abdc9b4ce3ecbcd, type: 2}
+--- !u!114 &8699465747872324352
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8336658271261246405}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 321b28bcba53502429e6b766fec6dde2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyDropHandler
+  stats: {fileID: 11400000, guid: f2371fa77c69eb944abdc9b4ce3ecbcd, type: 2}
+--- !u!114 &801549803459353313
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8336658271261246405}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5be99fa3d9900c04f841392385f87d10, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyAttack_Ranged
+  stats: {fileID: 11400000, guid: f2371fa77c69eb944abdc9b4ce3ecbcd, type: 2}
+  projectilePrefab: {fileID: 3344960684203597567, guid: 6ededdb4f3eb7e143ae0a036319f5fd3, type: 3}
+  firePoint: {fileID: 7769710525481836737}

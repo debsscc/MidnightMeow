@@ -61,8 +61,8 @@ public class HealthComponent : MonoBehaviour, IDamageable
         _isDead = true;
         OnDied?.Invoke();
 
-        // Para protótipo, destrói o objeto. 
-        // Em produção: substituir por Pooling.
-        Destroy(gameObject, 0.5f);
+        // Para protï¿½tipo, destrï¿½i o objeto. 
+        // Em produï¿½ï¿½o: substituir por Pooling.
+        Destroy(gameObject, 0.1f);
     }
 }

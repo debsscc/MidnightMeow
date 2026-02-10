@@ -11,6 +11,9 @@ public static class GameEvents
     // Evento disparado quando o jogador coleta muni��o
     public static event Action OnAmmoCollected;
     public static event Action<float, float> OnPlayerHealthChanged;
+    public static event Action<float, float> OnPlayerAdrenalineChanged;
+    public static event Action<int> OnCienciaCollected;
+    public static event Action OnAdrenalineLow;
 
     // M�todo para invocar o evento de muni��o coletada
     public static void InvokeAmmoCollected()
@@ -22,5 +25,22 @@ public static class GameEvents
     {
         Debug.Log($"Player health changed captured by game event: {currentHealth}/{maxHealth}");
         OnPlayerHealthChanged?.Invoke(currentHealth, maxHealth);
+    }
+
+    public static void InvokeCienciaCollected(int amount)
+    {
+        OnCienciaCollected?.Invoke(amount);
+    }
+
+
+    public static void InvokePlayerAdrenalineChanged(float currentAdrenaline, float maxAdrenaline)
+    {
+        Debug.Log($"Player adrenaline changed captured by game event: {currentAdrenaline}/{maxAdrenaline}");
+        OnPlayerAdrenalineChanged?.Invoke(currentAdrenaline, maxAdrenaline);
+    }
+
+    public static void InvokeAdrenalineLow()
+    {
+        OnAdrenalineLow?.Invoke();
     }
 }

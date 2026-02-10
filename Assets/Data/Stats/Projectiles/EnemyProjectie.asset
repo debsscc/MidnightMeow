@@ -9,11 +9,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9267ac74f46cd854b8a8bb249f38128f, type: 3}
-  m_Name: DefaultPlayerStats
-  m_EditorClassIdentifier: Assembly-CSharp::PlayerStats
-  maxHealth: 100
-  moveSpeed: 8
-  maxAmmo: 5
-  infinityAmmo: 1
-  firePointRadius: 1
+  m_Script: {fileID: 11500000, guid: 3dd47c4d17ad43440b2506d11b4ed18d, type: 3}
+  m_Name: EnemyProjectie
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyProjectileStats
+  moveSpeed: 15
+  damage: 15
+  lifetime: 10

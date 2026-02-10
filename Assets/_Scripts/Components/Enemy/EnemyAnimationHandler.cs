@@ -1,12 +1,12 @@
 ///* ----------------------------------------------------------------
 // CRIADO EM: 17-11-2025
 // FEITO POR: Pedro Caurio
-// DESCRIÇÃO: Componente que gerencia as animações do inimigo com base em suas ações e estado.
+// DESCRIï¿½ï¿½O: Componente que gerencia as animaï¿½ï¿½es do inimigo com base em suas aï¿½ï¿½es e estado.
 // ---------------------------------------------------------------- */
 
 using UnityEngine;
 
-[RequireComponent(typeof(Animator), typeof(EnemyMovement), typeof(EnemyAttack_Melee))]
+[RequireComponent(typeof(Animator), typeof(EnemyMovement))]
 public class EnemyAnimationHandler : MonoBehaviour
 {
     private Animator _animator;
@@ -24,7 +24,7 @@ public class EnemyAnimationHandler : MonoBehaviour
     {
         _animator = GetComponent<Animator>();
         _movement = GetComponent<EnemyMovement>();
-        _attack = GetComponent<EnemyAttack_Melee>();
+        //_attack = GetComponent<EnemyAttack_Melee>() || GetComponent<EnemyAttack_Ranged>();
         // _health = GetComponent<EnemyHealth>();
     }
 
@@ -64,9 +64,9 @@ public class EnemyAnimationHandler : MonoBehaviour
 
     private void HandleHealthChanged(float current, float max)
     {
-        // Se a vida diminuiu (lógica simples), toca animação de dano.
+        // Se a vida diminuiu (lï¿½gica simples), toca animaï¿½ï¿½o de dano.
         // Nota: Para ser perfeito, o HealthComponent idealmente teria um evento "OnDamaged",
-        // mas podemos usar OnHealthChanged verificando se não estamos mortos.
+        // mas podemos usar OnHealthChanged verificando se nï¿½o estamos mortos.
         if (current > 0 && current < max)
         {
             _animator.SetTrigger(_hashOnTakeDamage);

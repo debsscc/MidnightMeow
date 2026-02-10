@@ -14,6 +14,7 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private PlayerStats stats;
     private Rigidbody2D _rb;
     private PlayerInputHandler _input;
+    private PlayerAdrenaline _adrenaline;
 
     private Vector2 _moveDirection;
 
@@ -24,6 +25,7 @@ public class PlayerMovement : MonoBehaviour
     {
         _rb = GetComponent<Rigidbody2D>();
         _input = GetComponent<PlayerInputHandler>();
+        _adrenaline = GetComponent<PlayerAdrenaline>();
     }
 
     // Assina e desassina eventos de input
@@ -54,6 +56,7 @@ public class PlayerMovement : MonoBehaviour
 
     private void FixedUpdate()
     {
-        _rb.linearVelocity = _moveDirection * stats.moveSpeed;
+        float speedMultiplier = _adrenaline != null ? _adrenaline.GetSpeedMultiplier() : 1f;
+        _rb.linearVelocity = _moveDirection * stats.moveSpeed * speedMultiplier;
     }
 }
