@@ -14,6 +14,7 @@ public static class GameEvents
     public static event Action<float, float> OnPlayerAdrenalineChanged;
     public static event Action<int> OnCienciaCollected;
     public static event Action OnAdrenalineLow;
+    public static event Action<int, int, int, int> OnWaveStatusChanged;
 
     // M�todo para invocar o evento de muni��o coletada
     public static void InvokeAmmoCollected()
@@ -42,5 +43,10 @@ public static class GameEvents
     public static void InvokeAdrenalineLow()
     {
         OnAdrenalineLow?.Invoke();
+    }
+
+    public static void InvokeWaveStatusChanged(int currentWave, int totalWaves, int enemiesRemaining, int totalKilled)
+    {
+        OnWaveStatusChanged?.Invoke(currentWave, totalWaves, enemiesRemaining, totalKilled);
     }
 }
