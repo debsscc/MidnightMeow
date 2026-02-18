@@ -1,25 +1,10 @@
 fileFormatVersion: 2
-guid: 0b537696a2f47354cb830d7adb9c503e
+guid: 5427c62011849614d8daf9557e479ff3
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -7429941913122337674
-    second: Icon_click_0
-  - first:
-      213: 5802392989211945042
-    second: Icon_click_1
-  - first:
-      213: 5183536016863510604
-    second: Icon_click_2
-  - first:
-      213: 6825354274066739394
-    second: Icon_click_3
-  - first:
-      213: 3645234526481514615
-    second: Icon_click_4
-  - first:
-      213: -1278460981476842302
-    second: Icon_click_5
+      213: 2542767257520419604
+    second: Armadura_asset_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -39,7 +24,7 @@ TextureImporter:
     heightScale: 0.25
     normalMapFilter: 0
     flipGreenChannel: 0
-  isReadable: 1
+  isReadable: 0
   streamingMipmaps: 0
   streamingMipmapsPriority: 0
   vTOnly: 0
@@ -61,7 +46,7 @@ TextureImporter:
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 2
+  spriteMode: 1
   spriteExtrude: 1
   spriteMeshType: 1
   alignment: 0
@@ -72,7 +57,7 @@ TextureImporter:
   alphaUsage: 1
   alphaIsTransparency: 1
   spriteTessellationDetail: -1
-  textureType: 7
+  textureType: 8
   textureShape: 1
   singleChannelComponent: 0
   flipbookRows: 1
@@ -99,7 +84,7 @@ TextureImporter:
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
   - serializedVersion: 4
-    buildTarget: iOS
+    buildTarget: Standalone
     maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: -1
@@ -125,19 +110,6 @@ TextureImporter:
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
   - serializedVersion: 4
-    buildTarget: Standalone
-    maxTextureSize: 2048
-    resizeAlgorithm: 0
-    textureFormat: -1
-    textureCompression: 1
-    compressionQuality: 50
-    crunchedCompression: 0
-    allowsAlphaSplitting: 0
-    overridden: 0
-    ignorePlatformSupport: 0
-    androidETC2FallbackOverride: 0
-    forceMaximumCompressionQuality_BC6H_BC7: 0
-  - serializedVersion: 4
     buildTarget: WebGL
     maxTextureSize: 2048
     resizeAlgorithm: 0
@@ -151,7 +123,7 @@ TextureImporter:
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
   - serializedVersion: 4
-    buildTarget: WindowsStoreApps
+    buildTarget: iOS
     maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: -1
@@ -167,13 +139,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Icon_click_0
+      name: Armadura_asset_0
       rect:
         serializedVersion: 2
-        x: 106
-        y: 400
-        width: 70
-        height: 70
+        x: 15
+        y: 27
+        width: 330
+        height: 451
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -182,118 +154,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 67c8e8e023b83e890800000000000000
-      internalID: -7429941913122337674
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: Icon_click_1
-      rect:
-        serializedVersion: 2
-        x: 212
-        y: 425
-        width: 24
-        height: 87
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 258e1396ead368050800000000000000
-      internalID: 5802392989211945042
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: Icon_click_2
-      rect:
-        serializedVersion: 2
-        x: 272
-        y: 400
-        width: 70
-        height: 70
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: c40c7953b8e9fe740800000000000000
-      internalID: 5183536016863510604
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: Icon_click_3
-      rect:
-        serializedVersion: 2
-        x: 63
-        y: 340
-        width: 88
-        height: 24
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 2c031fbcc8788be50800000000000000
-      internalID: 6825354274066739394
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: Icon_click_4
-      rect:
-        serializedVersion: 2
-        x: 212
-        y: 0
-        width: 237
-        height: 364
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 7708be11d79769230800000000000000
-      internalID: 3645234526481514615
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: Icon_click_5
-      rect:
-        serializedVersion: 2
-        x: 106
-        y: 234
-        width: 70
-        height: 70
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 2c420ebc28ef14ee0800000000000000
-      internalID: -1278460981476842302
+      spriteID: 413bffa3959b94320800000000000000
+      internalID: 2542767257520419604
       vertices: []
       indices: 
       edges: []
@@ -302,7 +164,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 
+    spriteID: 5e97eb03825dee720800000000000000
     internalID: 0
     vertices: []
     indices: 
@@ -312,12 +174,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      Icon_click_0: -7429941913122337674
-      Icon_click_1: 5802392989211945042
-      Icon_click_2: 5183536016863510604
-      Icon_click_3: 6825354274066739394
-      Icon_click_4: 3645234526481514615
-      Icon_click_5: -1278460981476842302
+      Armadura_asset_0: 2542767257520419604
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

@@ -9,9 +9,13 @@ using UnityEngine.SceneManagement;
 
 public class Buttons : MonoBehaviour
 {
+    public bool isPopUpActive = false;
+
     [Header("Reference Scenes")]
     [SerializeField] private string mainMenuScene = "Menu";
     [SerializeField] public  GameObject pauseMenuObject;
+
+    [SerializeField] public GameObject popUpQuitGame;
     [SerializeField] private string gameOverScene = "GameOver";
 
     //-------Quit Application-------//
@@ -22,12 +26,13 @@ public class Buttons : MonoBehaviour
         #else
             Application.Quit(); // build final
         #endif
+        isPopUpActive = false;
     }
 
     //-------Scene Management-------//
     public void LoadScene(string sceneName)
     {
-        Time.timeScale = 1f; // Garante que o jogo não está pausado ao trocar de cena
+        Time.timeScale = 1f; 
         SceneManager.LoadScene(sceneName);
     }
 
@@ -43,7 +48,6 @@ public class Buttons : MonoBehaviour
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 
-    //-------Métodos Específicos para Cenas-------//
     public void GoToMainMenu()
     {
         LoadScene(mainMenuScene);
@@ -51,22 +55,29 @@ public class Buttons : MonoBehaviour
 
     public void OpenPauseMenu()
     {
-        Time.timeScale = 0f; // Pausa o jogo
+        Time.timeScale = 0f; 
         ActivateScreen(pauseMenuObject);
     }
 
     public void ClosePauseMenu()
     {
-        Time.timeScale = 1f; // Despausa o jogo
+        Time.timeScale = 1f;
         DeactivateScreen(pauseMenuObject);
+
+        if (popUpQuitGame != null)
+        {
+            DeactivateScreen(popUpQuitGame);
+        }
     }
     public void QuitGamePopUp()
     {
-        ActivateScreen(pauseMenuObject);
+        isPopUpActive = true;
+        ActivateScreen(popUpQuitGame);
     }
     public void CloseQuitGamePopUp()
     {
-        DeactivateScreen(pauseMenuObject);
+        isPopUpActive = false;
+        DeactivateScreen(popUpQuitGame);
     }
 
     public void GoToGameOver()
@@ -74,7 +85,7 @@ public class Buttons : MonoBehaviour
         LoadScene(gameOverScene);
     }
 
-    //-----PopUps (Para GameObjects dentro da mesma cena)----------//
+    //-----PopUps----------//
     public void ActivateScreen(GameObject screen)
     {
         screen.SetActive(true);

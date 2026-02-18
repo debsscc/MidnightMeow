@@ -8,6 +8,15 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/SandBox/SampleScene.unity
     guid: 8c9cfa26abfee488c85f1582747f6a02
+  - enabled: 1
+    path: Assets/Scenes/Fases/Fase-1.unity
+    guid: b03ed8d147c204945978b0d73ea589ed
+  - enabled: 1
+    path: Assets/Scenes/UI/Menu.unity
+    guid: 7bff307225605964aa8d70995a37802a
+  - enabled: 1
+    path: Assets/Scenes/UI/GameOver.unity
+    guid: 01b7bafbea2d8814fab40575a612666c
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
   m_UseUCBPForAssetBundles: 0
