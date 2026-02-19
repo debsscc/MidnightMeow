@@ -11,6 +11,9 @@ using UnityEngine.EventSystems;
 [RequireComponent(typeof(Rigidbody2D), typeof(PlayerInputHandler))]
 public class PlayerMovement : MonoBehaviour
 {
+    //-----DustParticle-------
+    public ParticleSystem dustParticle; 
+
     [SerializeField] private PlayerStats stats;
     private Rigidbody2D _rb;
     private PlayerInputHandler _input;
@@ -42,14 +45,18 @@ public class PlayerMovement : MonoBehaviour
     private void HandleMoveInput(Vector2 direction)
     {
         _moveDirection = direction;
+
+        //-------Flip w/ Dust Particle--------
         if (_moveDirection.x > 0 && !facingRight)
         {
             OnFlipSprite?.Invoke(true);
+            CreateDust();
             facingRight = true;
         }
         else if (_moveDirection.x < 0 && facingRight)
         {
             OnFlipSprite?.Invoke(false);
+            CreateDust();
             facingRight = false;
         }
     }
@@ -58,5 +65,10 @@ public class PlayerMovement : MonoBehaviour
     {
         float speedMultiplier = _adrenaline != null ? _adrenaline.GetSpeedMultiplier() : 1f;
         _rb.linearVelocity = _moveDirection * stats.moveSpeed * speedMultiplier;
+    }
+
+    void CreateDust()
+    {
+        dustParticle.Play();
     }
 }

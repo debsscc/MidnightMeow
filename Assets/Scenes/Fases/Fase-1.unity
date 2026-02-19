@@ -8375,6 +8375,14 @@ PrefabInstance:
       propertyPath: m_Name
       value: Player
       objectReference: {fileID: 0}
+    - target: {fileID: 4893774097399496419, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
+    - target: {fileID: 4893774097399496419, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
+      propertyPath: m_Color.a
+      value: 0.23921569
+      objectReference: {fileID: 0}
     - target: {fileID: 6095736318987863571, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
       propertyPath: m_Color.b
       value: 1
@@ -8387,8 +8395,41 @@ PrefabInstance:
       propertyPath: m_Color.r
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 8195667279442912607, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 0.6
+      objectReference: {fileID: 0}
+    - target: {fileID: 8195667279442912607, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 0.4
+      objectReference: {fileID: 0}
+    - target: {fileID: 8195667279442912607, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8195667279442912607, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8195667279442912607, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8195667279442912607, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: -1279.7916
+      objectReference: {fileID: 0}
+    - target: {fileID: 8195667279442912607, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: -709.4649
+      objectReference: {fileID: 0}
+    - target: {fileID: 8195667279442912607, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
+      propertyPath: m_ConstrainProportionsScale
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
-    m_RemovedGameObjects: []
+    m_RemovedGameObjects:
+    - {fileID: 5624334747897378146, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
