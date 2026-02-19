@@ -36,7 +36,7 @@ public static class GameEvents
 
     public static void InvokePlayerAdrenalineChanged(float currentAdrenaline, float maxAdrenaline)
     {
-        Debug.Log($"Player adrenaline changed captured by game event: {currentAdrenaline}/{maxAdrenaline}");
+        //Debug.Log($"Player adrenaline changed captured by game event: {currentAdrenaline}/{maxAdrenaline}");
         OnPlayerAdrenalineChanged?.Invoke(currentAdrenaline, maxAdrenaline);
     }
 

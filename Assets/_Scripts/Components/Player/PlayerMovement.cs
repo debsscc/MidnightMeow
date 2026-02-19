@@ -5,6 +5,7 @@
 // ---------------------------------------------------------------- */
 
 using System;
+using System.Diagnostics;
 using UnityEngine;
 using UnityEngine.EventSystems;
 // Usei RequireComponent para garantir que os componentes necessários estejam presentes
@@ -45,19 +46,21 @@ public class PlayerMovement : MonoBehaviour
     private void HandleMoveInput(Vector2 direction)
     {
         _moveDirection = direction;
-
+        UnityEngine.Debug.Log("Movement input: ");
         //-------Flip w/ Dust Particle--------
         if (_moveDirection.x > 0 && !facingRight)
         {
             OnFlipSprite?.Invoke(true);
-            CreateDust();
+            
             facingRight = true;
+            CreateDust();
         }
         else if (_moveDirection.x < 0 && facingRight)
         {
             OnFlipSprite?.Invoke(false);
-            CreateDust();
+            
             facingRight = false;
+            CreateDust();
         }
     }
 
