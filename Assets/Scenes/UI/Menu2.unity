@@ -3154,8 +3154,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CursorManager
   defaultSprite: {fileID: 0}
-  onHoverSprite: {fileID: 2800000, guid: 0b537696a2f47354cb830d7adb9c503e, type: 3}
-  onClickSprite: {fileID: 2800000, guid: 0b537696a2f47354cb830d7adb9c503e, type: 3}
+  gameplayCursor: {fileID: 0}
+  onHoverSprite: {fileID: 2800000, guid: f1e55371eb92c1d4aa3afb570deeb30b, type: 3}
+  onClickSprite: {fileID: 2800000, guid: f1e55371eb92c1d4aa3afb570deeb30b, type: 3}
 --- !u!1 &929364237
 GameObject:
   m_ObjectHideFlags: 0

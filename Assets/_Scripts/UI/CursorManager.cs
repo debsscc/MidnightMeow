@@ -12,10 +12,12 @@ public class CursorManager : MonoBehaviour
 
     [Header("Cursor Sprites")]
     [SerializeField] private Texture2D defaultSprite;
+    [SerializeField] private Texture2D gameplayCursor;
     [SerializeField] private Texture2D onHoverSprite;
     [SerializeField] private Texture2D onClickSprite;
 
-    private Vector2 hotspot = Vector2.zero; //HotSpot do cursor says where the click will be registered, usually the center or top-left of the sprite
+    private Vector2 hotspot = Vector2.zero;
+    private bool isInGameplay = false;
 
     private void Awake()
     {
@@ -27,6 +29,21 @@ public class CursorManager : MonoBehaviour
     public void SetDefaultCursor()
     {
         Cursor.SetCursor(defaultSprite, hotspot, CursorMode.Auto);
+    }
+
+    public void SetGameplayCursor()
+    {
+        if (gameplayCursor != null)
+        {
+            Cursor.SetCursor(gameplayCursor, hotspot, CursorMode.Auto);
+            isInGameplay = true;
+        }
+    }
+
+    public void ResetToDefault()
+    {
+        SetDefaultCursor();
+        isInGameplay = false;
     }
 
     public void SetHoverCursor()

@@ -69,13 +69,24 @@ public class GameManager2 : MonoBehaviour
                 Debug.LogWarning("Script 'Buttons' não encontrado na cena!");
             }
         }
+
+        if (CursorManager.Instance != null)
+        {
+            if (scene.name == "Fase-1")
+            {
+                CursorManager.Instance.SetGameplayCursor();
+            }
+            else
+            {
+                CursorManager.Instance.ResetToDefault();
+            }
+        }
     }
 
 private void Update()
 {
     if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
     {
-        // if is playing, pauses
         if (currentState == GameStates.Playing) 
         {
             Debug.Log("-> Chamando PauseGame()");
@@ -83,7 +94,6 @@ private void Update()
             return;
         }
 
-        // if its paused, resumes
         if (currentState == GameStates.Paused) 
         {
             bool popUpAtivo = false;
@@ -110,6 +120,9 @@ private void Update()
         Time.timeScale = 0f;
         OnGameStateChanged?.Invoke(currentState);
         
+        if (CursorManager.Instance != null)
+            CursorManager.Instance.ResetToDefault();
+        
         if (buttonsManager != null)
             buttonsManager.OpenPauseMenu();
         else if (pauseMenuObject != null)
@@ -123,6 +136,13 @@ private void Update()
         currentState = GameStates.Playing;
         Time.timeScale = 1f;
         OnGameStateChanged?.Invoke(currentState);
+
+        if (CursorManager.Instance != null)
+        {
+            Scene currentScene = SceneManager.GetActiveScene();
+            if (currentScene.name == "Fase-1")
+                CursorManager.Instance.SetGameplayCursor();
+        }
 
         if (buttonsManager != null)
             buttonsManager.ClosePauseMenu();

@@ -4,6 +4,8 @@
 // DESCRIÇÃO: Componente de UI que gerencia botões de telas de UI.
 // ---------------------------------------------------------------- */
 
+using System;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -12,40 +14,56 @@ public class Buttons : MonoBehaviour
     public bool isPopUpActive = false;
 
     [Header("Reference Scenes")]
-    [SerializeField] private string mainMenuScene = "Menu";
+    [SerializeField] private string mainMenuScene = "Menu2";
     [SerializeField] public  GameObject pauseMenuObject;
 
     [SerializeField] public GameObject popUpQuitGame;
     [SerializeField] private string gameOverScene = "GameOver";
 
-    //-------Quit Application-------//
-    public void QuitGame()
+    private IEnumerator DelayedAction(float delay, Action action)
     {
-        #if UNITY_EDITOR
-            UnityEditor.EditorApplication.isPlaying = false; // editor mode
-        #else
-            Application.Quit(); // build final
-        #endif
-        isPopUpActive = false;
+        yield return new WaitForSecondsRealtime(delay);
+        action?.Invoke();
     }
 
-    //-------Scene Management-------//
+    public void QuitGame()
+    {
+        StartCoroutine(DelayedAction(0.2f, () =>
+        {
+            isPopUpActive = false;
+            #if UNITY_EDITOR
+                UnityEditor.EditorApplication.isPlaying = false;
+            #else
+                Application.Quit();
+            #endif
+        }));
+    }
+
     public void LoadScene(string sceneName)
     {
-        Time.timeScale = 1f; 
-        SceneManager.LoadScene(sceneName);
+        StartCoroutine(DelayedAction(0.2f, () =>
+        {
+            Time.timeScale = 1f;
+            SceneManager.LoadScene(sceneName);
+        }));
     }
 
     public void LoadSceneByIndex(int sceneIndex)
     {
-        Time.timeScale = 1f;
-        SceneManager.LoadScene(sceneIndex);
+        StartCoroutine(DelayedAction(0.2f, () =>
+        {
+            Time.timeScale = 1f;
+            SceneManager.LoadScene(sceneIndex);
+        }));
     }
     
     public void ReloadCurrentScene()
     {
-        Time.timeScale = 1f;
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        StartCoroutine(DelayedAction(0.2f, () =>
+        {
+            Time.timeScale = 1f;
+            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        }));
     }
 
     public void GoToMainMenu()
@@ -85,7 +103,6 @@ public class Buttons : MonoBehaviour
         LoadScene(gameOverScene);
     }
 
-    //-----PopUps----------//
     public void ActivateScreen(GameObject screen)
     {
         screen.SetActive(true);
