@@ -8,7 +8,7 @@
   - Layers:
     - Default, TransparentFX, Ignore Raycast, Player, Water, UI, Wall, Projectile, Structure, Enemy, Collectable
 - Active game object:
-  - Name: Walkable
+  - Name: DustParticiple
   - Tag: Untagged
   - Layer: Default
 <!-- UNITY CODE ASSIST INSTRUCTIONS END -->
