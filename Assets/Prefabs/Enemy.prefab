@@ -280,7 +280,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5fbf207ab8623434e909175705a1b8f1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyAnimationHandler
-  healthComponent: {fileID: 4817587253931695636}
+  enemyMovement: {fileID: 8492623029768286588}
+  isMelee: 0
 --- !u!114 &4817587253931695636
 MonoBehaviour:
   m_ObjectHideFlags: 0

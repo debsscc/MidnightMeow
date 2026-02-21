@@ -45,7 +45,7 @@ public class PlayerAnimationHandler : MonoBehaviour
         // Limpa as assinaturas
         playerShooting.OnShoot -= HandleShoot;
         playerAbilityHandler.OnAbilityActivated -= HandleAbility;
-        playerMovement.OnFlipSprite += HandleFlipSprite;
+        playerMovement.OnFlipSprite -= HandleFlipSprite;
         healthComponent.OnDied.RemoveListener(HandleDeath);
     }
 

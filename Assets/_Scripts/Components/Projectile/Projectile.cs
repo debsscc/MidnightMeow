@@ -11,6 +11,8 @@ public class Projectile : MonoBehaviour
 {
     // Estatísticas do projétil
     [SerializeField] private ProjectileStats stats;
+    // Multiplicador de dano aplicado a essa instância (permite upgrades)
+    private float _damageMultiplier = 1f;
 
     private Rigidbody2D _rb;
     private int _currentBounces = 0;
@@ -88,7 +90,7 @@ public class Projectile : MonoBehaviour
         if (other.TryGetComponent<IDamageable>(out IDamageable target))
         {
             _currentBounces++;
-            target.TakeDamage(stats.damage, this.gameObject);
+            target.TakeDamage(stats.damage * _damageMultiplier, this.gameObject);
             if (!stats.infinityBounces && _currentBounces >= _maxBounces){
                 Destroy(gameObject);
             }
@@ -117,5 +119,10 @@ public class Projectile : MonoBehaviour
     public void AddBonusBounces(int bonusBounces)
     {
         _maxBounces += bonusBounces;
+    }
+
+    public void SetDamageMultiplier(float multiplier)
+    {
+        _damageMultiplier = Mathf.Max(0f, multiplier);
     }
 }

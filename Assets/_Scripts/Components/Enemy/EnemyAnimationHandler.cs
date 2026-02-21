@@ -10,9 +10,12 @@ using UnityEngine;
 public class EnemyAnimationHandler : MonoBehaviour
 {
     private Animator _animator;
-    private EnemyMovement _movement;
+    [SerializeField] private EnemyMovement enemyMovement;
+    private SpriteRenderer _spriteRenderer;
     private EnemyAttack_Melee _attack;
-    [SerializeField] private HealthComponent healthComponent;
+    private EnemyAttack_Ranged _attackRanged;
+    private HealthComponent healthComponent;
+    [SerializeField] private bool isMelee; // Para determinar se o inimigo � corpo a corpo ou ranged, caso ambos os componentes existam.
 
     // Hashes
     private readonly int _hashMoveSpeed = Animator.StringToHash("MoveSpeed");
@@ -23,28 +26,49 @@ public class EnemyAnimationHandler : MonoBehaviour
     private void Awake()
     {
         _animator = GetComponent<Animator>();
-        _movement = GetComponent<EnemyMovement>();
-        //_attack = GetComponent<EnemyAttack_Melee>() || GetComponent<EnemyAttack_Ranged>();
-        // _health = GetComponent<EnemyHealth>();
+        if (enemyMovement == null)
+            enemyMovement = GetComponent<EnemyMovement>();
+        _spriteRenderer = GetComponent<SpriteRenderer>();
+        if (isMelee)
+            _attack = GetComponent<EnemyAttack_Melee>();
+        else
+            _attackRanged = GetComponent<EnemyAttack_Ranged>();
+        healthComponent = GetComponent<HealthComponent>();
     }
 
     private void OnEnable()
     {
-        _attack.OnAttack += HandleAttack;
+        if (isMelee && _attack != null)
+            _attack.OnAttack += HandleAttack;
+        else if (!isMelee && _attackRanged != null)
+            _attackRanged.OnAttack += HandleAttack;
+        if (enemyMovement != null)
+            enemyMovement.OnFlipSprite += HandleFlipSprite;
         healthComponent.OnHealthChanged.AddListener(HandleHealthChanged);
         healthComponent.OnDied.AddListener(HandleDie);
     }
 
     private void OnDisable()
     {
-        _attack.OnAttack -= HandleAttack;
+        if (isMelee && _attack != null)
+            _attack.OnAttack -= HandleAttack;
+        else if (!isMelee && _attackRanged != null)
+            _attackRanged.OnAttack -= HandleAttack;
+        if (enemyMovement != null)
+            enemyMovement.OnFlipSprite -= HandleFlipSprite;
         healthComponent.OnDied.RemoveListener(HandleDie);
         healthComponent.OnHealthChanged.RemoveListener(HandleHealthChanged);
     }
 
     private void Update()
     {
-        _animator.SetFloat(_hashMoveSpeed, _movement.GetCurrentSpeed());
+        _animator.SetFloat(_hashMoveSpeed, enemyMovement != null ? enemyMovement.GetCurrentSpeed() : 0f);
+    }
+
+    private void HandleFlipSprite(bool facingRight)
+    {
+        if (_spriteRenderer != null)
+            _spriteRenderer.flipX = facingRight;
     }
 
     private void HandleAttack()

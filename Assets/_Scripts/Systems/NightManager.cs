@@ -52,6 +52,8 @@ public class NightManager : MonoBehaviour
     private void HandleVictory()
     {
         Debug.Log("Todas as waves foram completadas!");
+        // Emite evento local e global para sinalizar fim das waves
+        GameEvents.InvokeNightEnded();
         OnNightEnded?.Invoke();
     }
 }

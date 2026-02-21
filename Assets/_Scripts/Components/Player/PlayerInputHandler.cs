@@ -12,24 +12,62 @@ public class PlayerInputHandler : MonoBehaviour
 {
     // Eventos que os outros scripts do Player ir�o assinar
     public event Action<Vector2> OnMoveInput;
-    public event Action OnFireInput;
+    // Now reports whether the fire button is pressed (true) or released (false)
+    public event Action<bool> OnFireInput;
     public event Action OnAbilityInput;
     public event Action OnFrenzyInput;
 
-    // M�todos chamados pelo componente PlayerInput 
-    // O nome deve bater com o nome da Action Map (ex: "Move", "Fire")
+    // Methods called by PlayerInput are not relied on for fire state anymore.
+    // We subscribe directly to the underlying InputAction to reliably detect started/canceled.
+    private PlayerInput _playerInput;
+    private InputAction _fireAction;
+
+    private void Awake()
+    {
+        _playerInput = GetComponent<PlayerInput>();
+        if (_playerInput != null)
+        {
+            // Try to find the 'Fire' action in the current action map or asset
+            if (_playerInput.actions != null)
+            {
+                _fireAction = _playerInput.actions.FindAction("Fire");
+            }
+        }
+    }
+
+    private void OnEnable()
+    {
+        if (_fireAction != null)
+        {
+            _fireAction.started += OnFireStarted;
+            _fireAction.canceled += OnFireCanceled;
+        }
+    }
+
+    private void OnDisable()
+    {
+        if (_fireAction != null)
+        {
+            _fireAction.started -= OnFireStarted;
+            _fireAction.canceled -= OnFireCanceled;
+        }
+    }
+
     public void OnMove(InputValue value)
     {
         OnMoveInput?.Invoke(value.Get<Vector2>());
     }
 
-    public void OnFire(InputValue value)
+    private void OnFireStarted(InputAction.CallbackContext ctx)
     {
-        if (value.isPressed)
-        {
-            OnFireInput?.Invoke();
-        }
+        OnFireInput?.Invoke(true);
     }
+
+    private void OnFireCanceled(InputAction.CallbackContext ctx)
+    {
+        OnFireInput?.Invoke(false);
+    }
+
     public void OnAbility(InputValue value)
     {
         if (value.isPressed)
@@ -37,6 +75,7 @@ public class PlayerInputHandler : MonoBehaviour
             OnAbilityInput?.Invoke();
         }
     }
+
     public void OnFrenzy(InputValue value)
     {
         if (value.isPressed)

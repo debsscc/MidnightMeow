@@ -15,6 +15,10 @@ public static class GameEvents
     public static event Action<int> OnCienciaCollected;
     public static event Action OnAdrenalineLow;
     public static event Action<int, int, int, int> OnWaveStatusChanged;
+    // Evento global disparado quando todas as waves são completadas
+    public static event Action OnNightEnded;
+    // Evento global disparado quando o jogador morre
+    public static event Action OnPlayerDefeated;
 
     // M�todo para invocar o evento de muni��o coletada
     public static void InvokeAmmoCollected()
@@ -26,6 +30,18 @@ public static class GameEvents
     {
         Debug.Log($"Player health changed captured by game event: {currentHealth}/{maxHealth}");
         OnPlayerHealthChanged?.Invoke(currentHealth, maxHealth);
+    }
+
+    public static void InvokeNightEnded()
+    {
+        Debug.Log("GameEvents: Night ended");
+        OnNightEnded?.Invoke();
+    }
+
+    public static void InvokePlayerDefeated()
+    {
+        Debug.Log("GameEvents: Player defeated");
+        OnPlayerDefeated?.Invoke();
     }
 
     public static void InvokeCienciaCollected(int amount)

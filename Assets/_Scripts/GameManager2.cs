@@ -5,6 +5,7 @@
 // ---------------------------------------------------------------- */
 
 using System;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
@@ -24,6 +25,7 @@ public class GameManager2 : MonoBehaviour
     [Header("References")]
     [SerializeField] private GameObject pauseMenuObject;
     private Buttons buttonsManager; 
+    [SerializeField] private GameConfig gameConfig;
 
     private GameStates currentState = GameStates.Playing;
     public GameStates CurrentState => currentState;
@@ -43,11 +45,15 @@ public class GameManager2 : MonoBehaviour
     private void OnEnable()
     {
         SceneManager.sceneLoaded += OnSceneLoaded;
+        GameEvents.OnNightEnded += HandleNightEnded;
+        GameEvents.OnPlayerDefeated += HandlePlayerDefeated;
     }
 
     private void OnDisable()
     {
         SceneManager.sceneLoaded -= OnSceneLoaded;
+        GameEvents.OnNightEnded -= HandleNightEnded;
+        GameEvents.OnPlayerDefeated -= HandlePlayerDefeated;
     }
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
@@ -148,5 +154,45 @@ private void Update()
             buttonsManager.ClosePauseMenu();
         else if (pauseMenuObject != null)
             pauseMenuObject.SetActive(false);
+    }
+
+    private void HandleNightEnded()
+    {
+        StartCoroutine(HandleVictorySequence());
+    }
+
+    private void HandlePlayerDefeated()
+    {
+        StartCoroutine(HandleDefeatSequence());
+    }
+
+    private IEnumerator HandleVictorySequence()
+    {
+        float delay = gameConfig != null ? gameConfig.victoryDelay : 2f;
+        yield return new WaitForSecondsRealtime(delay);
+
+        if (gameConfig != null && !string.IsNullOrEmpty(gameConfig.victorySceneName))
+        {
+            SceneManager.LoadScene(gameConfig.victorySceneName);
+        }
+        else
+        {
+            Debug.LogWarning("GameManager2: GameConfig or victorySceneName not set. Cannot load victory scene.");
+        }
+    }
+
+    private IEnumerator HandleDefeatSequence()
+    {
+        float delay = gameConfig != null ? gameConfig.defeatDelay : 2f;
+        yield return new WaitForSecondsRealtime(delay);
+
+        if (gameConfig != null && !string.IsNullOrEmpty(gameConfig.defeatSceneName))
+        {
+            SceneManager.LoadScene(gameConfig.defeatSceneName);
+        }
+        else
+        {
+            Debug.LogWarning("GameManager2: GameConfig or defeatSceneName not set. Cannot load defeat scene.");
+        }
     }
 }

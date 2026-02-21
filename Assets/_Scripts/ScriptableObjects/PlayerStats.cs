@@ -31,4 +31,14 @@ public class PlayerStats : ScriptableObject
     public float frenzySpeedMultiplier = 1.5f;
     public int frenzyBonusBounces = 2;
     public float frenzyDuration = 10f;
+
+    [Header("Upgrades")]
+    [Tooltip("Nível do upgrade de dano (0-3)")]
+    [Range(0, 3)] public int damageUpgradeLevel = 0;
+
+    [Tooltip("Nível do upgrade de taxa de tiro (0-3)")]
+    [Range(0, 3)] public int fireRateUpgradeLevel = 0;
+
+    [Tooltip("Nível do upgrade de vida (0-3)")]
+    [Range(0, 3)] public int healthUpgradeLevel = 0;
 }

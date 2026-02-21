@@ -805,6 +805,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameManager2
   pauseMenuObject: {fileID: 1301115287}
+  gameConfig: {fileID: 11400000, guid: ca1e29a8a0f38c04e845505abd2b0638, type: 2}
 --- !u!1 &277573710
 GameObject:
   m_ObjectHideFlags: 0
@@ -16871,7 +16872,7 @@ PrefabInstance:
     - target: {fileID: 187609901900546607, guid: dc0c13b91aa5c6040a65b0d5c07f90e8, type: 3}
       propertyPath: m_NavMeshData
       value: 
-      objectReference: {fileID: 23800000, guid: 6f7ef6915bfbe424892f2bf31e71043f, type: 2}
+      objectReference: {fileID: 23800000, guid: 2ef8be9acbd5eb844acde82767eeaf1f, type: 2}
     - target: {fileID: 4632979622400464624, guid: dc0c13b91aa5c6040a65b0d5c07f90e8, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
