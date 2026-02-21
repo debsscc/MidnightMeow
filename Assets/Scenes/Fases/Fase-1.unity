@@ -8645,6 +8645,10 @@ PrefabInstance:
       propertyPath: m_Color.r
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 7050732553715643850, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 932dce8f24bb3174a97f03ef6c211f84, type: 2}
     - target: {fileID: 8195667279442912607, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
       propertyPath: m_SizeDelta.x
       value: 0.6

@@ -2,13 +2,13 @@
 - Project name: MidnightMeow
 - Unity version: Unity 6000.2.9f1
 - Active scene:
-  - Name: Fase-1
+  - Name: GameOver
   - Tags:
     - Untagged, Respawn, Finish, EditorOnly, MainCamera, Player, GameController, Structure, Enemy, Drop
   - Layers:
     - Default, TransparentFX, Ignore Raycast, Player, Water, UI, Wall, Projectile, Structure, Enemy, Collectable
 - Active game object:
-  - Name: Player
-  - Tag: Player
-  - Layer: Player
+  - Name: Animation2
+  - Tag: Untagged
+  - Layer: UI
 <!-- UNITY CODE ASSIST INSTRUCTIONS END -->

@@ -24,6 +24,7 @@ GameObject:
   - component: {fileID: 4338388805264836550}
   - component: {fileID: 1971275511166303136}
   - component: {fileID: 6184364087952878765}
+  - component: {fileID: 2753586627441032894}
   m_Layer: 3
   m_Name: Player
   m_TagString: Player
@@ -369,6 +370,19 @@ MonoBehaviour:
   OnFrenzyDeactivated:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &2753586627441032894
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3845447005448380479}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cb1606be9080ab140a1d02e5f054953b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SpriteBlink
+  blinkDecaySpeed: 7
 --- !u!1 &5715922893988417228
 GameObject:
   m_ObjectHideFlags: 0
