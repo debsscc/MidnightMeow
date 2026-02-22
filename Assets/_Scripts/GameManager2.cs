@@ -1,14 +1,13 @@
 ///* ----------------------------------------------------------------
-// CRIADO EM: 17-02-2026
-// FEITO POR: Debora Carvalho
-// DESCRIÇÃO: GameManager to test pause state.
+// ATUALIZADO EM: 17-02-2026
+// REVISADO POR: Arquiteto de Sistemas
+// DESCRIÇÃO: GameManager de Fase. Controla estados, pause e transições via GameFlowManager.
 // ---------------------------------------------------------------- */
 
 using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.SceneManagement;
 
 public enum GameStates
 {
@@ -20,11 +19,11 @@ public enum GameStates
 
 public class GameManager2 : MonoBehaviour
 {
-    public static GameManager2 Instance { get; private set; }
-
     [Header("References")]
+    [Tooltip("Arraste o painel principal do Pause Menu aqui.")]
     [SerializeField] private GameObject pauseMenuObject;
-    private Buttons buttonsManager; 
+    
+    [Tooltip("Configurações de delay e cenas para vitória/derrota.")]
     [SerializeField] private GameConfig gameConfig;
 
     private GameStates currentState = GameStates.Playing;
@@ -32,91 +31,88 @@ public class GameManager2 : MonoBehaviour
 
     public event Action<GameStates> OnGameStateChanged;
 
-    private void Awake()
-{    
-    Instance = this;
-    
-    buttonsManager = FindObjectOfType<Buttons>();
-    if (pauseMenuObject == null) 
-        pauseMenuObject = GameObject.Find("PauseMenu");
-}
+    [Header("Progression")]
+    [Tooltip("Optional: reference to the global PlayerProgressionData SO. If left empty, will try ServiceLocator.")]
+    [SerializeField] private PlayerProgressionData progressionData;
 
+    // Temporary accumulator for collected ciencia during the current run
+    private int _tempCollectedScience = 0;
+
+    private void Awake()
+    {
+        // Opcional: Registrar no Service Locator se outras classes da fase precisarem ler o CurrentState.
+        // ServiceLocator.RegisterService<GameManager2>(this);
+    }
+
+    private void Start()
+    {
+        // Inicializa o estado jogável e cursores logo no início da cena
+        InitializePhase();
+    }
 
     private void OnEnable()
     {
-        SceneManager.sceneLoaded += OnSceneLoaded;
         GameEvents.OnNightEnded += HandleNightEnded;
         GameEvents.OnPlayerDefeated += HandlePlayerDefeated;
+        GameEvents.OnCienciaCollected += HandleCienciaCollected;
     }
 
     private void OnDisable()
     {
-        SceneManager.sceneLoaded -= OnSceneLoaded;
         GameEvents.OnNightEnded -= HandleNightEnded;
         GameEvents.OnPlayerDefeated -= HandlePlayerDefeated;
+        GameEvents.OnCienciaCollected -= HandleCienciaCollected;
+        
+        // ServiceLocator.UnregisterService<GameManager2>(); // Descomente se registrar no Awake
     }
 
-    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    private void InitializePhase()
     {
         currentState = GameStates.Playing;
         Time.timeScale = 1f;
         
-        GameObject foundPauseMenu = GameObject.Find("PauseMenu");
-        
-        if (foundPauseMenu != null)
+        if (pauseMenuObject != null)
         {
-            pauseMenuObject = foundPauseMenu;
             pauseMenuObject.SetActive(false);
-            
-            buttonsManager = FindObjectOfType<Buttons>();
-            
-            if (buttonsManager == null)
-            {
-                Debug.LogWarning("Script 'Buttons' não encontrado na cena!");
-            }
         }
 
-        if (CursorManager.Instance != null)
+        // Recupera o serviço de cursor globalmente
+        if (ServiceLocator.HasService<CursorManager>())
         {
-            if (scene.name == "Fase-1")
-            {
-                CursorManager.Instance.SetGameplayCursor();
-            }
-            else
-            {
-                CursorManager.Instance.ResetToDefault();
-            }
+             ServiceLocator.GetService<CursorManager>().SetGameplayCursor();
+        }
+        else
+        {
+            Debug.LogWarning("GameManager2: CursorManager não encontrado no ServiceLocator.");
+        }
+
+        // Resolve progression data from ServiceLocator if unset
+        if (progressionData == null && ServiceLocator.HasService<PlayerProgressionData>())
+        {
+            progressionData = ServiceLocator.GetService<PlayerProgressionData>();
         }
     }
 
-private void Update()
-{
-    if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
+    private void Update()
+    {
+        // Captura o botão Esc via novo Input System
+        if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
+        {
+            TogglePause();
+        }
+    }
+
+    private void TogglePause()
     {
         if (currentState == GameStates.Playing) 
         {
-            Debug.Log("-> Chamando PauseGame()");
             PauseGame();
-            return;
         }
-
-        if (currentState == GameStates.Paused) 
+        else if (currentState == GameStates.Paused) 
         {
-            bool popUpAtivo = false;
-
-            if (buttonsManager != null && buttonsManager.popUpQuitGame != null)
-            {
-                popUpAtivo = buttonsManager.popUpQuitGame.activeInHierarchy;
-            }
-
-            if (popUpAtivo)
-            {
-                return;
-            }
             ResumeGame();
         }
     }
-}
 
     public void PauseGame()
     {
@@ -126,12 +122,10 @@ private void Update()
         Time.timeScale = 0f;
         OnGameStateChanged?.Invoke(currentState);
         
-        if (CursorManager.Instance != null)
-            CursorManager.Instance.ResetToDefault();
+        if (ServiceLocator.HasService<CursorManager>())
+            ServiceLocator.GetService<CursorManager>().ResetToDefault();
         
-        if (buttonsManager != null)
-            buttonsManager.OpenPauseMenu();
-        else if (pauseMenuObject != null)
+        if (pauseMenuObject != null)
             pauseMenuObject.SetActive(true);
     }
 
@@ -143,56 +137,72 @@ private void Update()
         Time.timeScale = 1f;
         OnGameStateChanged?.Invoke(currentState);
 
-        if (CursorManager.Instance != null)
-        {
-            Scene currentScene = SceneManager.GetActiveScene();
-            if (currentScene.name == "Fase-1")
-                CursorManager.Instance.SetGameplayCursor();
-        }
+        if (ServiceLocator.HasService<CursorManager>())
+            ServiceLocator.GetService<CursorManager>().SetGameplayCursor();
 
-        if (buttonsManager != null)
-            buttonsManager.ClosePauseMenu();
-        else if (pauseMenuObject != null)
+        if (pauseMenuObject != null)
             pauseMenuObject.SetActive(false);
     }
 
     private void HandleNightEnded()
     {
-        StartCoroutine(HandleVictorySequence());
+        StartCoroutine(HandleEndGameSequence(true));
     }
 
     private void HandlePlayerDefeated()
     {
-        StartCoroutine(HandleDefeatSequence());
+        StartCoroutine(HandleEndGameSequence(false));
     }
 
-    private IEnumerator HandleVictorySequence()
+    /// <summary>
+    /// Corrotina unificada para lidar com o fim do jogo (Vitória ou Derrota).
+    /// </summary>
+    private IEnumerator HandleEndGameSequence(bool isVictory)
     {
-        float delay = gameConfig != null ? gameConfig.victoryDelay : 2f;
+        // Atualiza o estado para evitar interações (como Pausar o jogo enquanto morre)
+        currentState = isVictory ? GameStates.Victory : GameStates.Defeat;
+        
+        float delay = 2f;
+        string sceneToLoad = string.Empty;
+
+        if (gameConfig != null)
+        {
+            delay = isVictory ? gameConfig.victoryDelay : gameConfig.defeatDelay;
+            sceneToLoad = isVictory ? gameConfig.victorySceneName : gameConfig.defeatSceneName;
+        }
+
         yield return new WaitForSecondsRealtime(delay);
 
-        if (gameConfig != null && !string.IsNullOrEmpty(gameConfig.victorySceneName))
+        // Commit collected ciencia to global progression data before leaving the phase
+        if (progressionData != null && _tempCollectedScience > 0)
         {
-            SceneManager.LoadScene(gameConfig.victorySceneName);
+            progressionData.AddScience(_tempCollectedScience);
+            _tempCollectedScience = 0;
+        }
+
+        if (!string.IsNullOrEmpty(sceneToLoad))
+        {
+            // Utiliza nossa ponte arquitetural para transição de cenas
+            if (ServiceLocator.HasService<GameFlowManager>())
+            {
+                var flowManager = ServiceLocator.GetService<GameFlowManager>();
+                flowManager.LoadPhase(sceneToLoad);
+            }
+            else
+            {
+                Debug.LogError("GameManager2: GameFlowManager não registrado. Impossível trocar de cena.");
+            }
         }
         else
         {
-            Debug.LogWarning("GameManager2: GameConfig or victorySceneName not set. Cannot load victory scene.");
+            Debug.LogWarning("GameManager2: Nome da cena de destino vazio no GameConfig.");
         }
     }
 
-    private IEnumerator HandleDefeatSequence()
+    private void HandleCienciaCollected(int amount)
     {
-        float delay = gameConfig != null ? gameConfig.defeatDelay : 2f;
-        yield return new WaitForSecondsRealtime(delay);
-
-        if (gameConfig != null && !string.IsNullOrEmpty(gameConfig.defeatSceneName))
-        {
-            SceneManager.LoadScene(gameConfig.defeatSceneName);
-        }
-        else
-        {
-            Debug.LogWarning("GameManager2: GameConfig or defeatSceneName not set. Cannot load defeat scene.");
-        }
+        if (amount <= 0) return;
+        _tempCollectedScience += amount;
+        Debug.Log($"GameManager2: Ciencia collected +{amount}. Temp total: {_tempCollectedScience}");
     }
 }

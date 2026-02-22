@@ -21,10 +21,14 @@ public class CursorManager : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance == null) Instance = this;
-        else Destroy(gameObject);
-
         SetDefaultCursor();
+        // Registra este componente como um serviço global
+        ServiceLocator.RegisterService<CursorManager>(this);
+    }
+
+    private void OnDestroy()
+    {
+        ServiceLocator.UnregisterService<CursorManager>();
     }
     public void SetDefaultCursor()
     {

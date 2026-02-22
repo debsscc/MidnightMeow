@@ -24,8 +24,8 @@ public class PlayerShooting : MonoBehaviour
     [Tooltip("Shots per second (can be modified by upgrades)")]
     [SerializeField] private float baseFireRate = 3f;
 
-    private float _fireRate;
-    private float _damageMultiplier = 1f;
+    public float CurrentFireRate;
+    public float DamageMultiplier = 1f;
     private Coroutine _fireCoroutine;
 
     public float BaseFireRate => baseFireRate;
@@ -34,7 +34,7 @@ public class PlayerShooting : MonoBehaviour
         _input = GetComponent<PlayerInputHandler>();
         _ammo = GetComponent<PlayerAmmo>();
         _adrenaline = GetComponent<PlayerAdrenaline>();
-        _fireRate = baseFireRate;
+        CurrentFireRate = baseFireRate;
     }
 
     // Assina e desassina eventos de input
@@ -60,7 +60,7 @@ public class PlayerShooting : MonoBehaviour
         {
             StopFiring();
         }
-        Debug.Log($"Fire input: {(pressed ? "Pressed" : "Released")}. Fire Rate: {_fireRate}, Damage Multiplier: {_damageMultiplier}");
+        Debug.Log($"Fire input: {(pressed ? "Pressed" : "Released")}. Fire Rate: {CurrentFireRate}, Damage Multiplier: {DamageMultiplier}");
     }
 
     private void StopFiring()
@@ -83,7 +83,7 @@ public class PlayerShooting : MonoBehaviour
 
                 if (projectileInstance.TryGetComponent<Projectile>(out Projectile projectile))
                 {
-                    projectile.SetDamageMultiplier(_damageMultiplier);
+                    projectile.SetDamageMultiplier(DamageMultiplier);
                     if (_adrenaline != null && _adrenaline.IsFrenzyActive)
                     {
                         projectile.AddBonusBounces(_adrenaline.GetBonusBounces());
@@ -99,7 +99,7 @@ public class PlayerShooting : MonoBehaviour
                 yield break;
             }
 
-            float delay = _fireRate > 0f ? 1f / _fireRate : 0.2f;
+            float delay = CurrentFireRate > 0f ? 1f / CurrentFireRate : 0.2f;
             yield return new WaitForSeconds(delay);
         }
     }
@@ -107,11 +107,11 @@ public class PlayerShooting : MonoBehaviour
     // API: allow external systems (upgrades) to change fire rate and damage
     public void SetFireRate(float shotsPerSecond)
     {
-        _fireRate = Mathf.Max(0.1f, shotsPerSecond);
+        CurrentFireRate = Mathf.Max(0.1f, shotsPerSecond);
     }
 
     public void SetDamageMultiplier(float multiplier)
     {
-        _damageMultiplier = Mathf.Max(0f, multiplier);
+        DamageMultiplier = Mathf.Max(0f, multiplier);
     }
 }

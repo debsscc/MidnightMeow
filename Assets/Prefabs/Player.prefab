@@ -25,6 +25,7 @@ GameObject:
   - component: {fileID: 1971275511166303136}
   - component: {fileID: 6184364087952878765}
   - component: {fileID: 2753586627441032894}
+  - component: {fileID: 5190072827659602972}
   m_Layer: 3
   m_Name: Player
   m_TagString: Player
@@ -253,6 +254,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerShooting
   projectilePrefab: {fileID: 691743863976024828, guid: eadee2043abe1c540b4356dff9dbd9a7, type: 3}
   firePoint: {fileID: 874212205570085287}
+  baseFireRate: 3
 --- !u!114 &5631259045198985370
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -383,6 +385,26 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SpriteBlink
   blinkDecaySpeed: 7
+--- !u!114 &5190072827659602972
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3845447005448380479}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f671df43cd95e4940bcf92d766d0a89c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerInitializer
+  baseStats: {fileID: 11400000, guid: 7f4fa052e88f8494f918e2f5d5b9cdd1, type: 2}
+  progressionData: {fileID: 11400000, guid: b87f7c79296088641991071b4e517b5c, type: 2}
+  upgradeDefinitions:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  healthComponent: {fileID: 4338388805264836550}
+  playerShooting: {fileID: 8839670001696835616}
 --- !u!1 &5715922893988417228
 GameObject:
   m_ObjectHideFlags: 0
