@@ -16,9 +16,9 @@ MonoBehaviour:
   displayName: Life
   description: Increase the maximum life of the player
   levels:
-  - cost: 5
-    bonusValue: 10
   - cost: 10
-    bonusValue: 10
-  - cost: 15
+    bonusValue: 3
+  - cost: 30
+    bonusValue: 6
+  - cost: 65
     bonusValue: 10
