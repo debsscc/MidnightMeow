@@ -16,9 +16,9 @@ MonoBehaviour:
   displayName: Damage
   description: Increase the damage of each shoot
   levels:
-  - cost: 10
-    bonusValue: 0.5
-  - cost: 15
-    bonusValue: 0.5
-  - cost: 20
-    bonusValue: 0.5
+  - cost: 12
+    bonusValue: 1
+  - cost: 35
+    bonusValue: 2
+  - cost: 75
+    bonusValue: 4

@@ -16,9 +16,9 @@ MonoBehaviour:
   displayName: Fire Rate
   description: "Increase the fire ratio\t"
   levels:
-  - cost: 5
-    bonusValue: 10
-  - cost: 5
-    bonusValue: 10
-  - cost: 10
-    bonusValue: 10
+  - cost: 8
+    bonusValue: 1
+  - cost: 25
+    bonusValue: 2
+  - cost: 55
+    bonusValue: 3

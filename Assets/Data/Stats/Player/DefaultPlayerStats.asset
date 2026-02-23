@@ -12,16 +12,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9267ac74f46cd854b8a8bb249f38128f, type: 3}
   m_Name: DefaultPlayerStats
   m_EditorClassIdentifier: Assembly-CSharp::PlayerStats
-  maxHealth: 100
-  moveSpeed: 6
+  maxHealth: 6
+  moveSpeed: 10
   maxAmmo: 5
   infinityAmmo: 1
   firePointRadius: 1
-  maxAdrenaline: 100
-  adrenalineDecayRate: 5
-  adrenalineGainPerCiencia: 50
-  adrenalineThresholdToActivate: 50
-  adrenalineLowThreshold: 30
-  frenzySpeedMultiplier: 1.5
-  frenzyBonusBounces: 3
+  maxAdrenaline: 10
+  adrenalineDecayRate: 0.5
+  adrenalineGainPerCiencia: 2
+  adrenalineThresholdToActivate: 2
+  adrenalineLowThreshold: 1
+  frenzySpeedMultiplier: 2
+  frenzyBonusBounces: 2
   frenzyDuration: 10
+  damageUpgradeLevel: 0
+  fireRateUpgradeLevel: 0
+  healthUpgradeLevel: 0
