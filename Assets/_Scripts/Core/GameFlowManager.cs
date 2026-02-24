@@ -8,7 +8,7 @@ public class GameFlowManager : MonoBehaviour
 {
     [Header("Scenes")]
     [Tooltip("Name of the menu scene to load on startup")]
-    [SerializeField] private string menuSceneName = "Menu";
+    [SerializeField] private string menuSceneName = "Menu2";
 
     public event Action OnSceneLoadStarted;
     public event Action OnSceneLoadCompleted;

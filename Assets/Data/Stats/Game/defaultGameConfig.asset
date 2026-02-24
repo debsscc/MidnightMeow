@@ -14,5 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameConfig
   victoryDelay: 2
   defeatDelay: 2
-  victorySceneName: Menu2
+  victorySceneName: Victory
   defeatSceneName: GameOver

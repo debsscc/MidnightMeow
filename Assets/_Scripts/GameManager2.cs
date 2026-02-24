@@ -8,6 +8,7 @@ using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 
 public enum GameStates
 {
@@ -35,18 +36,14 @@ public class GameManager2 : MonoBehaviour
     [Tooltip("Optional: reference to the global PlayerProgressionData SO. If left empty, will try ServiceLocator.")]
     [SerializeField] private PlayerProgressionData progressionData;
 
-    // Temporary accumulator for collected ciencia during the current run
     private int _tempCollectedScience = 0;
 
     private void Awake()
     {
-        // Opcional: Registrar no Service Locator se outras classes da fase precisarem ler o CurrentState.
-        // ServiceLocator.RegisterService<GameManager2>(this);
     }
 
     private void Start()
     {
-        // Inicializa o estado jogável e cursores logo no início da cena
         InitializePhase();
     }
 
@@ -62,8 +59,6 @@ public class GameManager2 : MonoBehaviour
         GameEvents.OnNightEnded -= HandleNightEnded;
         GameEvents.OnPlayerDefeated -= HandlePlayerDefeated;
         GameEvents.OnCienciaCollected -= HandleCienciaCollected;
-        
-        // ServiceLocator.UnregisterService<GameManager2>(); // Descomente se registrar no Awake
     }
 
     private void InitializePhase()
@@ -76,7 +71,6 @@ public class GameManager2 : MonoBehaviour
             pauseMenuObject.SetActive(false);
         }
 
-        // Recupera o serviço de cursor globalmente
         if (ServiceLocator.HasService<CursorManager>())
         {
              ServiceLocator.GetService<CursorManager>().SetGameplayCursor();
@@ -86,7 +80,6 @@ public class GameManager2 : MonoBehaviour
             Debug.LogWarning("GameManager2: CursorManager não encontrado no ServiceLocator.");
         }
 
-        // Resolve progression data from ServiceLocator if unset
         if (progressionData == null && ServiceLocator.HasService<PlayerProgressionData>())
         {
             progressionData = ServiceLocator.GetService<PlayerProgressionData>();
@@ -95,7 +88,6 @@ public class GameManager2 : MonoBehaviour
 
     private void Update()
     {
-        // Captura o botão Esc via novo Input System
         if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
         {
             TogglePause();
@@ -144,6 +136,24 @@ public class GameManager2 : MonoBehaviour
             pauseMenuObject.SetActive(false);
     }
 
+    public void RestartCurrentScene()
+    {
+        Time.timeScale = 1f;
+        _tempCollectedScience = 0;
+        
+        string currentSceneName = SceneManager.GetActiveScene().name;
+        
+        if (ServiceLocator.HasService<GameFlowManager>())
+        {
+            var flowManager = ServiceLocator.GetService<GameFlowManager>();
+            flowManager.LoadPhase(currentSceneName);
+        }
+        else
+        {
+            SceneManager.LoadScene(currentSceneName);
+        }
+    }
+
     private void HandleNightEnded()
     {
         StartCoroutine(HandleEndGameSequence(true));
@@ -154,12 +164,8 @@ public class GameManager2 : MonoBehaviour
         StartCoroutine(HandleEndGameSequence(false));
     }
 
-    /// <summary>
-    /// Corrotina unificada para lidar com o fim do jogo (Vitória ou Derrota).
-    /// </summary>
     private IEnumerator HandleEndGameSequence(bool isVictory)
     {
-        // Atualiza o estado para evitar interações (como Pausar o jogo enquanto morre)
         currentState = isVictory ? GameStates.Victory : GameStates.Defeat;
         
         float delay = 2f;
@@ -173,7 +179,6 @@ public class GameManager2 : MonoBehaviour
 
         yield return new WaitForSecondsRealtime(delay);
 
-        // Commit collected ciencia to global progression data before leaving the phase
         if (progressionData != null && _tempCollectedScience > 0)
         {
             progressionData.AddScience(_tempCollectedScience);
@@ -182,7 +187,6 @@ public class GameManager2 : MonoBehaviour
 
         if (!string.IsNullOrEmpty(sceneToLoad))
         {
-            // Utiliza nossa ponte arquitetural para transição de cenas
             if (ServiceLocator.HasService<GameFlowManager>())
             {
                 var flowManager = ServiceLocator.GetService<GameFlowManager>();
