@@ -18,7 +18,7 @@ public class EnemyAnimationHandler : MonoBehaviour
     [SerializeField] private bool isMelee; // Para determinar se o inimigo é corpo a corpo ou ranged, caso ambos os componentes existam.
 
     [Header("Debug")]
-    [SerializeField] private bool debugLogs = true;
+    [SerializeField] private bool debugLogs = false;
 
     private float _lastMoveSpeed = 0f;
     private const float SpeedEpsilon = 0.01f;

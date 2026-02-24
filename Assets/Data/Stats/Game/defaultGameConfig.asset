@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: defaultGameConfig
   m_EditorClassIdentifier: Assembly-CSharp::GameConfig
   victoryDelay: 2
-  defeatDelay: 2
-  victorySceneName: Victory
+  defeatDelay: 1
+  victorySceneName: VictoryScene
   defeatSceneName: GameOver

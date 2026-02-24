@@ -197,6 +197,7 @@ public class GameManager2 : MonoBehaviour
             {
                 var flowManager = ServiceLocator.GetService<GameFlowManager>();
                 flowManager.LoadPhase(sceneToLoad);
+                Debug.Log($"GameManager2: Carregando cena '{sceneToLoad}' após {(isVictory ? "vitória" : "derrota")}.");
             }
             else
             {

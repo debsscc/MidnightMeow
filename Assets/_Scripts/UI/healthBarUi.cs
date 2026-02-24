@@ -22,7 +22,7 @@ public class healthBarUi : MonoBehaviour
 
     private void UpdateHealthBar(float currentHealth, float maxHealth)
     {
-        Debug.Log($"Health updated: {currentHealth}/{maxHealth}");
+//        Debug.Log($"Health updated: {currentHealth}/{maxHealth}");
         if (healthSlider != null && maxHealth > 0)
         {
             healthSlider.value = currentHealth / maxHealth;

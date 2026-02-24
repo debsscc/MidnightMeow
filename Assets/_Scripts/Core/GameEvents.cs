@@ -30,7 +30,7 @@ public static class GameEvents
 
     public static void InvokePlayerHealthChanged(float currentHealth, float maxHealth)
     {
-        Debug.Log($"Player health changed captured by game event: {currentHealth}/{maxHealth}");
+//        Debug.Log($"Player health changed captured by game event: {currentHealth}/{maxHealth}");
         OnPlayerHealthChanged?.Invoke(currentHealth, maxHealth);
     }
 

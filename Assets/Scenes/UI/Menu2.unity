@@ -753,7 +753,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: New Text
+  m_text: 
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -849,7 +849,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &112009084
 RectTransform:
   m_ObjectHideFlags: 0
@@ -889,7 +889,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: New Text
+  m_text: 
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -2074,6 +2074,7 @@ GameObject:
   - component: {fileID: 277874721}
   - component: {fileID: 277874720}
   - component: {fileID: 277874719}
+  - component: {fileID: 277874722}
   m_Layer: 5
   m_Name: Upgrade4
   m_TagString: Untagged
@@ -2096,6 +2097,7 @@ RectTransform:
   - {fileID: 1896533950}
   - {fileID: 1993638143}
   - {fileID: 2080752169}
+  - {fileID: 1089390267}
   m_Father: {fileID: 1929426014}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0.5}
@@ -2185,6 +2187,30 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 277874717}
   m_CullTransparentMesh: 1
+--- !u!114 &277874722
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 277874717}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 406300ac24ef4c545a26835819e2ced3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UpgradeUIView
+  progressionData: {fileID: 11400000, guid: b87f7c79296088641991071b4e517b5c, type: 2}
+  upgradeDefinition: {fileID: 11400000, guid: 3c0498a49c1a64a4baf9d3c2ca6134d5, type: 2}
+  controller: {fileID: 1393694046}
+  upgradeType: 0
+  targetLevel: 2
+  purchaseButton: {fileID: 277874719}
+  iconImage: {fileID: 277874720}
+  costText: {fileID: 1896533951}
+  costContainer: {fileID: 0}
+  availableImage: {fileID: -4134201199001905014, guid: f88a50ece4d66564490268f2cc3eb080, type: 3}
+  purchasedImage: {fileID: 0}
+  lockedObject: {fileID: 1089390266}
 --- !u!1 &286460482
 GameObject:
   m_ObjectHideFlags: 0
@@ -2561,18 +2587,12 @@ RectTransform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 1089390267}
-  - {fileID: 306328736}
-  - {fileID: 1191278404}
-  - {fileID: 1895897156}
-  - {fileID: 389668464}
-  - {fileID: 809991814}
+  m_Children: []
   m_Father: {fileID: 1929426014}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -224.00006, y: 0}
+  m_AnchoredPosition: {x: -224, y: 0}
   m_SizeDelta: {x: -448, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &306328735
@@ -2603,18 +2623,18 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 306328735}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 305111907}
+  m_Father: {fileID: 2022476998}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0.5}
-  m_AnchorMax: {x: 0, y: 0.5}
-  m_AnchoredPosition: {x: 328.5, y: -264}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 210, y: 190}
-  m_Pivot: {x: 0, y: 0.5}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &306328737
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2920,6 +2940,7 @@ GameObject:
   - component: {fileID: 342928190}
   - component: {fileID: 342928189}
   - component: {fileID: 342928188}
+  - component: {fileID: 342928191}
   m_Layer: 5
   m_Name: Upgrade6 (1)
   m_TagString: Untagged
@@ -2942,6 +2963,7 @@ RectTransform:
   - {fileID: 729272331}
   - {fileID: 628708089}
   - {fileID: 1369518348}
+  - {fileID: 809991814}
   m_Father: {fileID: 1929426014}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
@@ -3031,6 +3053,30 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 342928186}
   m_CullTransparentMesh: 1
+--- !u!114 &342928191
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 342928186}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 406300ac24ef4c545a26835819e2ced3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UpgradeUIView
+  progressionData: {fileID: 11400000, guid: b87f7c79296088641991071b4e517b5c, type: 2}
+  upgradeDefinition: {fileID: 11400000, guid: 3040309ef84996940ad5e5d57b204c69, type: 2}
+  controller: {fileID: 1393694046}
+  upgradeType: 2
+  targetLevel: 3
+  purchaseButton: {fileID: 342928188}
+  iconImage: {fileID: 342928189}
+  costText: {fileID: 729272332}
+  costContainer: {fileID: 0}
+  availableImage: {fileID: -122382746821981188, guid: b7efa5273333b04438df201094fb2c61, type: 3}
+  purchasedImage: {fileID: 0}
+  lockedObject: {fileID: 809991813}
 --- !u!1 &343695289
 GameObject:
   m_ObjectHideFlags: 0
@@ -3411,16 +3457,16 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 389668463}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 305111907}
+  m_Father: {fileID: 1015324784}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 108, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 210, y: 190}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &389668465
@@ -8551,7 +8597,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &501710159
 RectTransform:
   m_ObjectHideFlags: 0
@@ -8568,7 +8614,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: -0.40997314, y: 263.00003}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0, y: 0}
 --- !u!114 &501710160
@@ -8591,7 +8637,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: New Text
+  m_text: 
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -8618,15 +8664,15 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 36
-  m_fontSizeBase: 36
+  m_fontSize: 20
+  m_fontSizeBase: 20
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
   m_fontStyle: 0
   m_HorizontalAlignment: 1
-  m_VerticalAlignment: 256
+  m_VerticalAlignment: 1024
   m_textAlignment: 65535
   m_characterSpacing: 0
   m_wordSpacing: 0
@@ -9498,14 +9544,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 406300ac24ef4c545a26835819e2ced3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UpgradeUIView
-  upgradeDefinition: {fileID: 11400000, guid: 3040309ef84996940ad5e5d57b204c69, type: 2}
   progressionData: {fileID: 11400000, guid: b87f7c79296088641991071b4e517b5c, type: 2}
+  upgradeDefinition: {fileID: 11400000, guid: 3040309ef84996940ad5e5d57b204c69, type: 2}
   controller: {fileID: 1393694046}
   upgradeType: 2
+  targetLevel: 1
   purchaseButton: {fileID: 658862923}
-  titleText: {fileID: 176860993}
-  levelText: {fileID: 1989093464}
+  iconImage: {fileID: 658862924}
   costText: {fileID: 104930887}
+  costContainer: {fileID: 0}
+  availableImage: {fileID: 3851253292513377055, guid: 5e7b9677c77d768459987b9c2c443cd0, type: 3}
+  purchasedImage: {fileID: 0}
+  lockedObject: {fileID: 0}
 --- !u!1 &679844679
 GameObject:
   m_ObjectHideFlags: 0
@@ -9561,7 +9611,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &729272331
 RectTransform:
   m_ObjectHideFlags: 0
@@ -9578,7 +9628,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: -413.7, y: 263.00003}
+  m_AnchoredPosition: {x: -0.0000076293945, y: 0}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0, y: 0}
 --- !u!114 &729272332
@@ -9601,7 +9651,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: New Text
+  m_text: 
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -9628,15 +9678,15 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 36
-  m_fontSizeBase: 36
+  m_fontSize: 20
+  m_fontSizeBase: 20
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
   m_fontStyle: 0
   m_HorizontalAlignment: 1
-  m_VerticalAlignment: 256
+  m_VerticalAlignment: 1024
   m_textAlignment: 65535
   m_characterSpacing: 0
   m_wordSpacing: 0
@@ -10167,16 +10217,16 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 809991813}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 305111907}
+  m_Father: {fileID: 342928187}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 108, y: -264}
+  m_AnchoredPosition: {x: 1.1000061, y: -1.7999878}
   m_SizeDelta: {x: 210, y: 190}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &809991815
@@ -11091,6 +11141,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UIActionBridge
   pauseMenuObject: {fileID: 2277025816660959201, guid: 2542914e2b637bb4b871cad284433d66, type: 3}
+  cursorManager: {fileID: 0}
 --- !u!114 &920484129
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -11515,8 +11566,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
-  m_Type: 1
+  m_Sprite: {fileID: 0}
+  m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -11545,14 +11596,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 406300ac24ef4c545a26835819e2ced3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UpgradeUIView
-  upgradeDefinition: {fileID: 11400000, guid: 06032c43e1db8884daeb0725e2d0254c, type: 2}
   progressionData: {fileID: 11400000, guid: b87f7c79296088641991071b4e517b5c, type: 2}
+  upgradeDefinition: {fileID: 11400000, guid: 06032c43e1db8884daeb0725e2d0254c, type: 2}
   controller: {fileID: 1393694046}
   upgradeType: 1
+  targetLevel: 1
   purchaseButton: {fileID: 977893912}
-  titleText: {fileID: 286460484}
-  levelText: {fileID: 919840744}
+  iconImage: {fileID: 977893913}
   costText: {fileID: 1860120704}
+  costContainer: {fileID: 0}
+  availableImage: {fileID: 3851253292513377055, guid: 5e7b9677c77d768459987b9c2c443cd0, type: 3}
+  purchasedImage: {fileID: 0}
+  lockedObject: {fileID: 0}
 --- !u!1 &1015324783
 GameObject:
   m_ObjectHideFlags: 0
@@ -11565,6 +11620,7 @@ GameObject:
   - component: {fileID: 1015324787}
   - component: {fileID: 1015324786}
   - component: {fileID: 1015324785}
+  - component: {fileID: 1015324788}
   m_Layer: 5
   m_Name: Upgrade6
   m_TagString: Untagged
@@ -11587,6 +11643,7 @@ RectTransform:
   - {fileID: 1484344855}
   - {fileID: 1379163806}
   - {fileID: 185104960}
+  - {fileID: 389668464}
   m_Father: {fileID: 1929426014}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
@@ -11676,6 +11733,30 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1015324783}
   m_CullTransparentMesh: 1
+--- !u!114 &1015324788
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1015324783}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 406300ac24ef4c545a26835819e2ced3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UpgradeUIView
+  progressionData: {fileID: 11400000, guid: b87f7c79296088641991071b4e517b5c, type: 2}
+  upgradeDefinition: {fileID: 11400000, guid: 3040309ef84996940ad5e5d57b204c69, type: 2}
+  controller: {fileID: 1393694046}
+  upgradeType: 2
+  targetLevel: 2
+  purchaseButton: {fileID: 1015324785}
+  iconImage: {fileID: 1015324786}
+  costText: {fileID: 1484344856}
+  costContainer: {fileID: 0}
+  availableImage: {fileID: -4134201199001905014, guid: f88a50ece4d66564490268f2cc3eb080, type: 3}
+  purchasedImage: {fileID: 0}
+  lockedObject: {fileID: 389668463}
 --- !u!1 &1022824008
 GameObject:
   m_ObjectHideFlags: 0
@@ -12080,18 +12161,18 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1089390266}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 305111907}
+  m_Father: {fileID: 277874718}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0.5}
-  m_AnchorMax: {x: 0, y: 0.5}
-  m_AnchoredPosition: {x: 328.5, y: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 210, y: 190}
-  m_Pivot: {x: 0, y: 0.5}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1089390268
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -12675,16 +12756,16 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1191278403}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 305111907}
+  m_Father: {fileID: 2084407425}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -98, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 210, y: 190}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1191278405
@@ -13156,14 +13237,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 406300ac24ef4c545a26835819e2ced3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UpgradeUIView
-  upgradeDefinition: {fileID: 11400000, guid: 3c0498a49c1a64a4baf9d3c2ca6134d5, type: 2}
   progressionData: {fileID: 11400000, guid: b87f7c79296088641991071b4e517b5c, type: 2}
+  upgradeDefinition: {fileID: 11400000, guid: 3c0498a49c1a64a4baf9d3c2ca6134d5, type: 2}
   controller: {fileID: 1393694046}
   upgradeType: 0
+  targetLevel: 1
   purchaseButton: {fileID: 1268910436}
-  titleText: {fileID: 311471756}
-  levelText: {fileID: 765134701}
+  iconImage: {fileID: 1268910437}
   costText: {fileID: 112009085}
+  costContainer: {fileID: 0}
+  availableImage: {fileID: 3851253292513377055, guid: 5e7b9677c77d768459987b9c2c443cd0, type: 3}
+  purchasedImage: {fileID: 0}
+  lockedObject: {fileID: 0}
 --- !u!1 &1280428683
 GameObject:
   m_ObjectHideFlags: 0
@@ -13315,7 +13400,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1300774445
 RectTransform:
   m_ObjectHideFlags: 0
@@ -13848,7 +13933,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1366010293
 RectTransform:
   m_ObjectHideFlags: 0
@@ -13865,7 +13950,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: -208.57996, y: 263.00003}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0, y: 0}
 --- !u!114 &1366010294
@@ -13888,7 +13973,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: New Text
+  m_text: 
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -13915,8 +14000,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 36
-  m_fontSizeBase: 36
+  m_fontSize: 20
+  m_fontSizeBase: 20
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -14788,7 +14873,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1422031548
 RectTransform:
   m_ObjectHideFlags: 0
@@ -14805,7 +14890,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: -208.57996, y: 263.00003}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0, y: 0}
 --- !u!114 &1422031549
@@ -14828,7 +14913,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: New Text
+  m_text: 
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -14855,15 +14940,15 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 36
-  m_fontSizeBase: 36
+  m_fontSize: 20
+  m_fontSizeBase: 20
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
   m_fontStyle: 0
   m_HorizontalAlignment: 1
-  m_VerticalAlignment: 256
+  m_VerticalAlignment: 1024
   m_textAlignment: 65535
   m_characterSpacing: 0
   m_wordSpacing: 0
@@ -15101,7 +15186,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1484344855
 RectTransform:
   m_ObjectHideFlags: 0
@@ -15118,7 +15203,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: -413.7, y: 263.00003}
+  m_AnchoredPosition: {x: -0.0000076293945, y: 0}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0, y: 0}
 --- !u!114 &1484344856
@@ -15141,7 +15226,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: New Text
+  m_text: 
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -15168,15 +15253,15 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 36
-  m_fontSizeBase: 36
+  m_fontSize: 20
+  m_fontSizeBase: 20
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
   m_fontStyle: 0
   m_HorizontalAlignment: 1
-  m_VerticalAlignment: 256
+  m_VerticalAlignment: 1024
   m_textAlignment: 65535
   m_characterSpacing: 0
   m_wordSpacing: 0
@@ -15457,6 +15542,7 @@ GameObject:
   - component: {fileID: 1539934023}
   - component: {fileID: 1539934022}
   - component: {fileID: 1539934021}
+  - component: {fileID: 1539934024}
   m_Layer: 5
   m_Name: Upgrade5 (1)
   m_TagString: Untagged
@@ -15479,6 +15565,7 @@ RectTransform:
   - {fileID: 1366010293}
   - {fileID: 1127689827}
   - {fileID: 1374124852}
+  - {fileID: 1895897156}
   m_Father: {fileID: 1929426014}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
@@ -15568,6 +15655,30 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1539934019}
   m_CullTransparentMesh: 1
+--- !u!114 &1539934024
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1539934019}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 406300ac24ef4c545a26835819e2ced3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UpgradeUIView
+  progressionData: {fileID: 11400000, guid: b87f7c79296088641991071b4e517b5c, type: 2}
+  upgradeDefinition: {fileID: 11400000, guid: 06032c43e1db8884daeb0725e2d0254c, type: 2}
+  controller: {fileID: 1393694046}
+  upgradeType: 1
+  targetLevel: 3
+  purchaseButton: {fileID: 1539934021}
+  iconImage: {fileID: 1539934022}
+  costText: {fileID: 1366010294}
+  costContainer: {fileID: 0}
+  availableImage: {fileID: -122382746821981188, guid: b7efa5273333b04438df201094fb2c61, type: 3}
+  purchasedImage: {fileID: 0}
+  lockedObject: {fileID: 1895897155}
 --- !u!1 &1541300556
 GameObject:
   m_ObjectHideFlags: 0
@@ -17231,7 +17342,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: New Text
+  m_text: 
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -17549,16 +17660,16 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1895897155}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 305111907}
+  m_Father: {fileID: 1539934020}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -98, y: -264}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 210, y: 190}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1895897157
@@ -17735,7 +17846,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1896533950
 RectTransform:
   m_ObjectHideFlags: 0
@@ -17752,7 +17863,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: -0.40997314, y: 263.00003}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0, y: 0}
 --- !u!114 &1896533951
@@ -17775,7 +17886,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: New Text
+  m_text: 
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -17802,15 +17913,15 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 36
-  m_fontSizeBase: 36
+  m_fontSize: 20
+  m_fontSizeBase: 20
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
   m_fontStyle: 0
   m_HorizontalAlignment: 1
-  m_VerticalAlignment: 256
+  m_VerticalAlignment: 1024
   m_textAlignment: 65535
   m_characterSpacing: 0
   m_wordSpacing: 0
@@ -18737,6 +18848,7 @@ GameObject:
   - component: {fileID: 2022477001}
   - component: {fileID: 2022477000}
   - component: {fileID: 2022476999}
+  - component: {fileID: 2022477002}
   m_Layer: 5
   m_Name: Upgrade4 (1)
   m_TagString: Untagged
@@ -18759,6 +18871,7 @@ RectTransform:
   - {fileID: 501710159}
   - {fileID: 1864825235}
   - {fileID: 772080694}
+  - {fileID: 306328736}
   m_Father: {fileID: 1929426014}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0.5}
@@ -18848,6 +18961,30 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2022476997}
   m_CullTransparentMesh: 1
+--- !u!114 &2022477002
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2022476997}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 406300ac24ef4c545a26835819e2ced3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UpgradeUIView
+  progressionData: {fileID: 11400000, guid: b87f7c79296088641991071b4e517b5c, type: 2}
+  upgradeDefinition: {fileID: 11400000, guid: 3c0498a49c1a64a4baf9d3c2ca6134d5, type: 2}
+  controller: {fileID: 1393694046}
+  upgradeType: 0
+  targetLevel: 3
+  purchaseButton: {fileID: 2022476999}
+  iconImage: {fileID: 2022477000}
+  costText: {fileID: 501710160}
+  costContainer: {fileID: 0}
+  availableImage: {fileID: -122382746821981188, guid: b7efa5273333b04438df201094fb2c61, type: 3}
+  purchasedImage: {fileID: 0}
+  lockedObject: {fileID: 306328735}
 --- !u!1 &2023896629
 GameObject:
   m_ObjectHideFlags: 0
@@ -19145,6 +19282,7 @@ GameObject:
   - component: {fileID: 2084407428}
   - component: {fileID: 2084407427}
   - component: {fileID: 2084407426}
+  - component: {fileID: 2084407429}
   m_Layer: 5
   m_Name: Upgrade5
   m_TagString: Untagged
@@ -19167,6 +19305,7 @@ RectTransform:
   - {fileID: 1422031548}
   - {fileID: 13305977}
   - {fileID: 1256809806}
+  - {fileID: 1191278404}
   m_Father: {fileID: 1929426014}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
@@ -19256,6 +19395,30 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2084407424}
   m_CullTransparentMesh: 1
+--- !u!114 &2084407429
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2084407424}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 406300ac24ef4c545a26835819e2ced3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UpgradeUIView
+  progressionData: {fileID: 11400000, guid: b87f7c79296088641991071b4e517b5c, type: 2}
+  upgradeDefinition: {fileID: 11400000, guid: 06032c43e1db8884daeb0725e2d0254c, type: 2}
+  controller: {fileID: 1393694046}
+  upgradeType: 1
+  targetLevel: 2
+  purchaseButton: {fileID: 2084407426}
+  iconImage: {fileID: 2084407427}
+  costText: {fileID: 1422031549}
+  costContainer: {fileID: 0}
+  availableImage: {fileID: -4134201199001905014, guid: f88a50ece4d66564490268f2cc3eb080, type: 3}
+  purchasedImage: {fileID: 0}
+  lockedObject: {fileID: 1191278403}
 --- !u!1 &2099240318
 GameObject:
   m_ObjectHideFlags: 0

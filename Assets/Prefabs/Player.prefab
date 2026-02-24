@@ -22,7 +22,6 @@ GameObject:
   - component: {fileID: 944221471755545764}
   - component: {fileID: 6008801279886521943}
   - component: {fileID: 4338388805264836550}
-  - component: {fileID: 1971275511166303136}
   - component: {fileID: 6184364087952878765}
   - component: {fileID: 2753586627441032894}
   - component: {fileID: 5190072827659602972}
@@ -343,19 +342,6 @@ MonoBehaviour:
   OnDied:
     m_PersistentCalls:
       m_Calls: []
---- !u!114 &1971275511166303136
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3845447005448380479}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8f380702a5636374d838c2041f6c7909, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PlayerHealthConfig
-  stats: {fileID: 11400000, guid: 7f4fa052e88f8494f918e2f5d5b9cdd1, type: 2}
 --- !u!114 &6184364087952878765
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -403,9 +389,9 @@ MonoBehaviour:
   baseStats: {fileID: 11400000, guid: 7f4fa052e88f8494f918e2f5d5b9cdd1, type: 2}
   progressionData: {fileID: 11400000, guid: b87f7c79296088641991071b4e517b5c, type: 2}
   upgradeDefinitions:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
+  - {fileID: 11400000, guid: 3c0498a49c1a64a4baf9d3c2ca6134d5, type: 2}
+  - {fileID: 11400000, guid: 06032c43e1db8884daeb0725e2d0254c, type: 2}
+  - {fileID: 11400000, guid: 3040309ef84996940ad5e5d57b204c69, type: 2}
   healthComponent: {fileID: 4338388805264836550}
   playerShooting: {fileID: 8839670001696835616}
 --- !u!1 &5715922893988417228

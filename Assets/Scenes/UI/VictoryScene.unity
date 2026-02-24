@@ -173,12 +173,20 @@ PrefabInstance:
     m_TransformParent: {fileID: 0}
     m_Modifications:
     - target: {fileID: 1925121554048073218, guid: b242745fab239824cb496ab1946bea44, type: 3}
+      propertyPath: m_Camera
+      value: 
+      objectReference: {fileID: 1892709654}
+    - target: {fileID: 1925121554048073218, guid: b242745fab239824cb496ab1946bea44, type: 3}
+      propertyPath: m_RenderMode
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1925121554048073218, guid: b242745fab239824cb496ab1946bea44, type: 3}
       propertyPath: m_AdditionalShaderChannelsFlag
       value: 25
       objectReference: {fileID: 0}
     - target: {fileID: 4063615502301054472, guid: b242745fab239824cb496ab1946bea44, type: 3}
       propertyPath: m_Name
-      value: Victory
+      value: Victory_prefab
       objectReference: {fileID: 0}
     - target: {fileID: 5159794875636062567, guid: b242745fab239824cb496ab1946bea44, type: 3}
       propertyPath: m_Pivot.x

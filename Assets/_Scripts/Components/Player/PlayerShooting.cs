@@ -60,7 +60,7 @@ public class PlayerShooting : MonoBehaviour
         {
             StopFiring();
         }
-        Debug.Log($"Fire input: {(pressed ? "Pressed" : "Released")}. Fire Rate: {CurrentFireRate}, Damage Multiplier: {DamageMultiplier}");
+//        Debug.Log($"Fire input: {(pressed ? "Pressed" : "Released")}. Fire Rate: {CurrentFireRate}, Damage Multiplier: {DamageMultiplier}");
     }
 
     private void StopFiring()
@@ -79,7 +79,7 @@ public class PlayerShooting : MonoBehaviour
             if (_ammo.HasAmmo())
             {
                 _ammo.UseAmmo(1);
-                GameObject projectileInstance = Instantiate(projectilePrefab, firePoint.position, firePoint.rotation);
+                GameObject projectileInstance = Instantiate(projectilePrefab, firePoint.position, firePoint.rotation, this.transform);
 
                 if (projectileInstance.TryGetComponent<Projectile>(out Projectile projectile))
                 {

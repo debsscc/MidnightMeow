@@ -92,7 +92,7 @@ public class WaveGenerator : MonoBehaviour
         }
 
         Transform randomSpawnPoint = spawnPoints[Random.Range(0, spawnPoints.Length)];
-        GameObject enemy = Instantiate(prefab, randomSpawnPoint.position, Quaternion.identity);
+        GameObject enemy = Instantiate(prefab, randomSpawnPoint.position, Quaternion.identity, this.transform);
 
         _enemiesAlive++;
         UpdateWaveStatus();

@@ -49,6 +49,6 @@ public class PlayerAmmo : MonoBehaviour
             _currentAmmo = Mathf.Max(0, _currentAmmo - amount);
         }
         // Disparar evento OnAmmoChanged(_currentAmmo) para a UI
-        Debug.Log($"Muni��o Usada! Restante: {_currentAmmo}");
+//        Debug.Log($"Muni��o Usada! Restante: {_currentAmmo}");
     }
 }

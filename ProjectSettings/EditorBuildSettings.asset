@@ -15,8 +15,14 @@ EditorBuildSettings:
     path: Assets/Scenes/Fases/Fase-1.unity
     guid: b03ed8d147c204945978b0d73ea589ed
   - enabled: 1
+    path: Assets/Scenes/Fases/Fase-2.unity
+    guid: e255d86a6007fb44ba098001dbe41462
+  - enabled: 1
     path: Assets/Scenes/UI/GameOver.unity
     guid: 01b7bafbea2d8814fab40575a612666c
+  - enabled: 1
+    path: Assets/Scenes/UI/VictoryScene.unity
+    guid: 95f67d37a819c9c4caf36b8a126b6e23
   - enabled: 0
     path: Assets/SandBox/SampleScene.unity
     guid: 8c9cfa26abfee488c85f1582747f6a02

@@ -46,7 +46,7 @@ public class PlayerMovement : MonoBehaviour
     private void HandleMoveInput(Vector2 direction)
     {
         _moveDirection = direction;
-        UnityEngine.Debug.Log("Movement input: ");
+//        UnityEngine.Debug.Log("Movement input: ");
         //-------Flip w/ Dust Particle--------
         if (_moveDirection.x > 0 && !facingRight)
         {

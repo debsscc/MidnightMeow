@@ -555,7 +555,6 @@ GameObject:
   m_Component:
   - component: {fileID: 225338398}
   - component: {fileID: 225338399}
-  - component: {fileID: 225338400}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -592,20 +591,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameManager2
   pauseMenuObject: {fileID: 1301115287}
   gameConfig: {fileID: 11400000, guid: ca1e29a8a0f38c04e845505abd2b0638, type: 2}
-  progressionData: {fileID: 0}
---- !u!114 &225338400
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 225338397}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 776ba40b60b116949be0b4b934bec0ef, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::GameFlowManager
-  menuSceneName: Menu2
+  progressionData: {fileID: 11400000, guid: b87f7c79296088641991071b4e517b5c, type: 2}
 --- !u!1 &229745486
 GameObject:
   m_ObjectHideFlags: 0
@@ -1442,7 +1428,6 @@ GameObject:
   - component: {fileID: 565339179}
   - component: {fileID: 565339180}
   - component: {fileID: 565339181}
-  - component: {fileID: 565339182}
   m_Layer: 5
   m_Name: UIManager
   m_TagString: Untagged
@@ -1495,19 +1480,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Buttons
   pauseMenuObject: {fileID: 1301115287}
   cursorManager: {fileID: 565339180}
---- !u!114 &565339182
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 565339178}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 776ba40b60b116949be0b4b934bec0ef, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::GameFlowManager
-  menuSceneName: Menu2
 --- !u!1 &618898878
 GameObject:
   m_ObjectHideFlags: 0
@@ -10308,7 +10280,7 @@ Canvas:
   m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
-  m_SortingOrder: 2
+  m_SortingOrder: 3
   m_TargetDisplay: 0
 --- !u!1 &1918185976
 GameObject:
@@ -16065,7 +16037,7 @@ PrefabInstance:
     - target: {fileID: 4614551189108595181, guid: 2542914e2b637bb4b871cad284433d66, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
-      objectReference: {fileID: 565339182}
+      objectReference: {fileID: 0}
     - target: {fileID: 4855819299429721226, guid: 2542914e2b637bb4b871cad284433d66, type: 3}
       propertyPath: m_fontSize
       value: 30
@@ -16153,7 +16125,15 @@ PrefabInstance:
     - target: {fileID: 7984116940716625791, guid: 2542914e2b637bb4b871cad284433d66, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
-      objectReference: {fileID: 565339181}
+      objectReference: {fileID: 225338399}
+    - target: {fileID: 7984116940716625791, guid: 2542914e2b637bb4b871cad284433d66, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: ResumeGame
+      objectReference: {fileID: 0}
+    - target: {fileID: 7984116940716625791, guid: 2542914e2b637bb4b871cad284433d66, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
+      value: GameManager2, Assembly-CSharp
+      objectReference: {fileID: 0}
     - target: {fileID: 8267934357932325997, guid: 2542914e2b637bb4b871cad284433d66, type: 3}
       propertyPath: m_IsActive
       value: 1
@@ -16191,7 +16171,6 @@ SceneRoots:
   - {fileID: 1031360023}
   - {fileID: 225338398}
   - {fileID: 1182303395}
-  - {fileID: 1930408800}
   - {fileID: 522089202}
   - {fileID: 2035091840}
   - {fileID: 627400939}
@@ -16199,3 +16178,4 @@ SceneRoots:
   - {fileID: 745701341}
   - {fileID: 381877485}
   - {fileID: 1050290119}
+  - {fileID: 1930408800}
