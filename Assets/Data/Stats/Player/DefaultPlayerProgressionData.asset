@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4f6644674ddb6bb4c98c4413bfe10994, type: 3}
   m_Name: DefaultPlayerProgressionData
   m_EditorClassIdentifier: Assembly-CSharp::PlayerProgressionData
-  science: 1330
-  healthLevel: 3
-  fireRateLevel: 3
-  damageLevel: 3
+  science: 33
+  healthLevel: 0
+  fireRateLevel: 0
+  damageLevel: 0
