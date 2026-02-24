@@ -1477,7 +1477,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e00e9511569571a4d8ef24fcd5c07692, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CursorManager
-  defaultSprite: {fileID: 0}
+  defaultSprite: {fileID: 2800000, guid: f1e55371eb92c1d4aa3afb570deeb30b, type: 3}
   gameplayCursor: {fileID: 2800000, guid: 93d6c00510cfef54fa17fc730a8789bc, type: 3}
   onHoverSprite: {fileID: 2800000, guid: f1e55371eb92c1d4aa3afb570deeb30b, type: 3}
   onClickSprite: {fileID: 2800000, guid: f1e55371eb92c1d4aa3afb570deeb30b, type: 3}
@@ -1494,6 +1494,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Buttons
   pauseMenuObject: {fileID: 1301115287}
+  cursorManager: {fileID: 565339180}
 --- !u!114 &565339182
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2564,7 +2565,7 @@ Camera:
   far clip plane: 1000
   field of view: 60
   orthographic: 1
-  orthographic size: 5.4
+  orthographic size: 6
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -9718,7 +9719,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1766818929
 RectTransform:
   m_ObjectHideFlags: 0

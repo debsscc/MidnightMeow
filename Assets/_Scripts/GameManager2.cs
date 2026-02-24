@@ -65,6 +65,8 @@ public class GameManager2 : MonoBehaviour
     {
         currentState = GameStates.Playing;
         Time.timeScale = 1f;
+        // Notify systems that the game is in playing state (not paused)
+        GameEvents.InvokePauseChanged(false);
         
         if (pauseMenuObject != null)
         {
@@ -113,6 +115,8 @@ public class GameManager2 : MonoBehaviour
         currentState = GameStates.Paused;
         Time.timeScale = 0f;
         OnGameStateChanged?.Invoke(currentState);
+        // Inform listeners that the game entered pause state
+        GameEvents.InvokePauseChanged(true);
         
         if (ServiceLocator.HasService<CursorManager>())
             ServiceLocator.GetService<CursorManager>().ResetToDefault();
@@ -128,6 +132,8 @@ public class GameManager2 : MonoBehaviour
         currentState = GameStates.Playing;
         Time.timeScale = 1f;
         OnGameStateChanged?.Invoke(currentState);
+        // Inform listeners that the game left pause state
+        GameEvents.InvokePauseChanged(false);
 
         if (ServiceLocator.HasService<CursorManager>())
             ServiceLocator.GetService<CursorManager>().SetGameplayCursor();

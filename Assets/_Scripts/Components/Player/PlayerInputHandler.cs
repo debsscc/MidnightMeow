@@ -21,6 +21,7 @@ public class PlayerInputHandler : MonoBehaviour
     // We subscribe directly to the underlying InputAction to reliably detect started/canceled.
     private PlayerInput _playerInput;
     private InputAction _fireAction;
+    private bool _isPaused = false;
 
     private void Awake()
     {
@@ -42,6 +43,7 @@ public class PlayerInputHandler : MonoBehaviour
             _fireAction.started += OnFireStarted;
             _fireAction.canceled += OnFireCanceled;
         }
+        GameEvents.OnPauseChanged += HandlePauseChanged;
     }
 
     private void OnDisable()
@@ -51,25 +53,33 @@ public class PlayerInputHandler : MonoBehaviour
             _fireAction.started -= OnFireStarted;
             _fireAction.canceled -= OnFireCanceled;
         }
+        GameEvents.OnPauseChanged -= HandlePauseChanged;
     }
 
     public void OnMove(InputValue value)
     {
+        if (_isPaused) return;
         OnMoveInput?.Invoke(value.Get<Vector2>());
     }
 
     private void OnFireStarted(InputAction.CallbackContext ctx)
     {
+        if (_isPaused) return;
+
         OnFireInput?.Invoke(true);
     }
 
     private void OnFireCanceled(InputAction.CallbackContext ctx)
     {
+        if (_isPaused) return;
+
         OnFireInput?.Invoke(false);
     }
 
     public void OnAbility(InputValue value)
     {
+        if (_isPaused) return;
+
         if (value.isPressed)
         {
             OnAbilityInput?.Invoke();
@@ -78,9 +88,21 @@ public class PlayerInputHandler : MonoBehaviour
 
     public void OnFrenzy(InputValue value)
     {
+        if (_isPaused) return;
+
         if (value.isPressed)
         {
             OnFrenzyInput?.Invoke();
+        }
+    }
+
+    private void HandlePauseChanged(bool paused)
+    {
+        _isPaused = paused;
+        if (paused)
+        {
+            // Force a release signal to stop continuous actions like firing
+            OnFireInput?.Invoke(false);
         }
     }
 }

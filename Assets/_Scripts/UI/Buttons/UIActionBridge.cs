@@ -5,7 +5,8 @@ using System.Collections;
 public class UIActionBridge : MonoBehaviour 
 {
     [Header("UI References (Opcional)")]
-    public GameObject pauseMenuObject; // Adicionado de volta
+    public GameObject pauseMenuObject; 
+    public CursorManager cursorManager;
 
     private IEnumerator DelayedAction(float delay, Action action)
     {
@@ -48,6 +49,11 @@ public class UIActionBridge : MonoBehaviour
         if (pauseMenuObject == null) return;
         Time.timeScale = 0f; 
         ActivateScreen(pauseMenuObject);
+        if (cursorManager != null)
+        {
+            cursorManager.SetDefaultCursor();
+        }
+        
     }
 
     public void ClosePauseMenu()
@@ -55,6 +61,10 @@ public class UIActionBridge : MonoBehaviour
         if (pauseMenuObject == null) return;
         Time.timeScale = 1f;
         DeactivateScreen(pauseMenuObject);
+        if (cursorManager != null)
+        {
+            cursorManager.SetGameplayCursor();
+        }
     }
     // ---------------------------
 

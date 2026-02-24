@@ -15,6 +15,8 @@ public static class GameEvents
     public static event Action<int> OnCienciaCollected;
     public static event Action OnAdrenalineLow;
     public static event Action<int, int, int, int> OnWaveStatusChanged;
+    // Evento global disparado quando o jogo entra/ Sai do estado de pause
+    public static event Action<bool> OnPauseChanged;
     // Evento global disparado quando todas as waves são completadas
     public static event Action OnNightEnded;
     // Evento global disparado quando o jogador morre
@@ -64,5 +66,10 @@ public static class GameEvents
     public static void InvokeWaveStatusChanged(int currentWave, int totalWaves, int enemiesRemaining, int totalKilled)
     {
         OnWaveStatusChanged?.Invoke(currentWave, totalWaves, enemiesRemaining, totalKilled);
+    }
+
+    public static void InvokePauseChanged(bool paused)
+    {
+        OnPauseChanged?.Invoke(paused);
     }
 }
