@@ -14,6 +14,7 @@ public class PlayerInputHandler : MonoBehaviour
     public event Action<Vector2> OnMoveInput;
     // Now reports whether the fire button is pressed (true) or released (false)
     public event Action<bool> OnFireInput;
+    public event Action OnDashInput;
     public event Action OnAbilityInput;
     public event Action OnFrenzyInput;
 
@@ -93,6 +94,16 @@ public class PlayerInputHandler : MonoBehaviour
         if (value.isPressed)
         {
             OnFrenzyInput?.Invoke();
+        }
+    }
+
+    public void OnDash(InputValue value)
+    {
+        if (_isPaused) return;
+
+        if (value.isPressed)
+        {
+            OnDashInput?.Invoke();
         }
     }
 

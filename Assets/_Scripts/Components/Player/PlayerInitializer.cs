@@ -1,3 +1,8 @@
+///* ----------------------------------------------------------------
+// ATUALIZADO EM: 25-02-2026
+// DESCRIÇÃO: Injeta dados globais nos componentes mecânicos (Vida, Tiro, Dash).
+// ---------------------------------------------------------------- */
+
 using UnityEngine;
 
 [DisallowMultipleComponent]
@@ -12,11 +17,13 @@ public class PlayerInitializer : MonoBehaviour
     [Header("Player Components")]
     [SerializeField] private HealthComponent healthComponent;
     [SerializeField] private PlayerShooting playerShooting;
+    [SerializeField] private PlayerDash playerDash; // Nova dependência
 
     private void Awake()
     {
         if (healthComponent == null) healthComponent = GetComponent<HealthComponent>();
         if (playerShooting == null) playerShooting = GetComponent<PlayerShooting>();
+        if (playerDash == null) playerDash = GetComponent<PlayerDash>();
 
         if (progressionData == null && ServiceLocator.HasService<PlayerProgressionData>())
         {
@@ -26,7 +33,6 @@ public class PlayerInitializer : MonoBehaviour
 
     private void OnEnable()
     {
-        // Absorvendo as responsabilidades de eventos do antigo PlayerHealthConfig
         if (healthComponent != null)
         {
             healthComponent.OnHealthChanged.AddListener(HandleHealthChanged);
@@ -50,7 +56,6 @@ public class PlayerInitializer : MonoBehaviour
 
     private void ApplyProgressionToPlayer()
     {
-        // Helper para buscar o bônus seguro
         float GetBonus(PlayerProgressionData.UpgradeType type)
         {
             int level = progressionData != null ? progressionData.GetLevel(type) : 0;
@@ -60,7 +65,7 @@ public class PlayerInitializer : MonoBehaviour
             return 0f;
         }
 
-        // 1. Injeção de Vida (Multiplicador Percentual)
+        // 1. Injeção de Vida
         float healthBonus = GetBonus(PlayerProgressionData.UpgradeType.Health);
         float baseHealth = baseStats != null ? baseStats.maxHealth : (healthComponent != null ? healthComponent.MaxHealth : 100f);
         float finalMaxHealth = baseHealth * (1f + healthBonus);
@@ -68,7 +73,7 @@ public class PlayerInitializer : MonoBehaviour
         if (healthComponent != null)
             healthComponent.Initialize(finalMaxHealth);
 
-        // 2. Injeção de Cadência de Tiro (Multiplicador Percentual)
+        // 2. Injeção de Cadência de Tiro
         float fireRateBonus = GetBonus(PlayerProgressionData.UpgradeType.FireRate);
         if (playerShooting != null)
         {
@@ -76,19 +81,27 @@ public class PlayerInitializer : MonoBehaviour
             playerShooting.SetFireRate(finalRate);
         }
 
-        // 3. Injeção de Dano (Multiplicador Percentual)
+        // 3. Injeção de Dano
         float damageBonus = GetBonus(PlayerProgressionData.UpgradeType.Damage);
         if (playerShooting != null)
         {
-            // O dano base 1 é multiplicado pelas configurações do projétil mais tarde.
             float damageMultiplier = 1f + damageBonus; 
             playerShooting.SetDamageMultiplier(damageMultiplier);
         }
 
-        Debug.Log($"PlayerInitializer: Status -> Vida: {finalMaxHealth}, Cadência: {playerShooting?.CurrentFireRate}, DanoMult: {playerShooting?.DamageMultiplier}");
+        // 4. Inicialização do Dash (Prepara terreno para futuros upgrades)
+        if (playerDash != null)
+        {
+            playerDash.InitializeBaseStats();
+            
+            // Exemplo de como um futuro upgrade seria injetado:
+            // float dashSpeedBonus = GetBonus(PlayerProgressionData.UpgradeType.DashSpeed);
+            // playerDash.SetDashUpgrades(dashSpeedBonus, 0f);
+        }
+
+        Debug.Log($"PlayerInitializer: Status Injetados. Vida: {finalMaxHealth}, DanoMult: {playerShooting?.DamageMultiplier}");
     }
 
-    // --- Event Handlers (Substituem o PlayerHealthConfig) ---
     private void HandleHealthChanged(float currentHealth, float maxHealth)
     {
         GameEvents.InvokePlayerHealthChanged(currentHealth, maxHealth);

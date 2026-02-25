@@ -17,8 +17,8 @@ MonoBehaviour:
   scale: 1
   maxHealth: 3
   moveSpeed: 10
-  attackRange: 1.5
-  attackCooldown: 2
+  attackRange: 3
+  attackCooldown: 0.7
   attackDamage: 1
   rangedAttackRange: 0
   rangedAttackCooldown: 0

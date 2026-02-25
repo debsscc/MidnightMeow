@@ -52,7 +52,7 @@ Rigidbody2D:
   m_LinearDamping: 0
   m_AngularDamping: 0.05
   m_GravityScale: 0
-  m_Material: {fileID: 6200000, guid: 7c59ee19e0314ee42bada7c1eebb60fc, type: 2}
+  m_Material: {fileID: 6200000, guid: 18ff510d091981d4ba14d203ce69dd89, type: 2}
   m_IncludeLayers:
     serializedVersion: 2
     m_Bits: 0

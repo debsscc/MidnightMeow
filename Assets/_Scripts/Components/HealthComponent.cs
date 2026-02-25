@@ -20,6 +20,8 @@ public class HealthComponent : MonoBehaviour, IDamageable
 
     [Header("Events")]
     public UnityEvent<float, float> OnHealthChanged;
+    // Disparado quando o componente perde vida: (damageAmount, instigator GameObject)
+    public UnityEvent OnTakeDamage;
     public UnityEvent OnDied;
 
     public float CurrentHealth => _currentHealth;
@@ -49,8 +51,10 @@ public class HealthComponent : MonoBehaviour, IDamageable
 
         _currentHealth -= amount;
         _currentHealth = Mathf.Clamp(_currentHealth, 0f, _maxHealth);
+        // Notifica listeners que tomou dano
+        OnTakeDamage?.Invoke();
         OnHealthChanged?.Invoke(_currentHealth, _maxHealth);
-//        Debug.Log($"{gameObject.name} took {amount} damage from {instigator.name}. Current Health: {_currentHealth}/{_maxHealth}");
+        Debug.Log($"{gameObject.name} took {amount} damage from {instigator.name}. Current Health: {_currentHealth}/{_maxHealth}");
 
         //quando leva dano, faz o sprite piscar (SpriteBlink.cs)
         if (gameObject.TryGetComponent<SpriteBlink>(out var spriteBlink))

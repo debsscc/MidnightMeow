@@ -18,6 +18,8 @@ public class PlayerShooting : MonoBehaviour
     private PlayerAdrenaline _adrenaline;
 
     public event Action OnShoot;
+    // Evento emitido quando um projétil é instanciado (recebe o GameObject do projétil)
+    public event Action<GameObject> OnProjectileInstantiated;
     public event Action OnOutOfAmmo;
 
     [Header("Shooting")]
@@ -89,6 +91,9 @@ public class PlayerShooting : MonoBehaviour
                         projectile.AddBonusBounces(_adrenaline.GetBonusBounces());
                     }
                 }
+
+                // Notifica listeners sobre a instância do projétil
+                OnProjectileInstantiated?.Invoke(projectileInstance);
 
                 OnShoot?.Invoke();
             }

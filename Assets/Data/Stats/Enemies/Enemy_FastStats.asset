@@ -14,8 +14,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnemyStats
   targetPriority: 0
   targetDetectionRange: 20
+  scale: 1
   maxHealth: 50
   moveSpeed: 5
-  attackRange: 1.5
-  attackCooldown: 2
+  attackRange: 3
+  attackCooldown: 0.7
   attackDamage: 10
+  rangedAttackRange: 10
+  rangedAttackCooldown: 3
+  projectileStats: {fileID: 0}
+  dropChance: 0.5
+  minCienceDrop: 10
+  maxCienceDrop: 20
+  cienciaPrefab: {fileID: 0}

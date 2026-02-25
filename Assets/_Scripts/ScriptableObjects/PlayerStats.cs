@@ -41,4 +41,14 @@ public class PlayerStats : ScriptableObject
 
     [Tooltip("Nível do upgrade de vida (0-3)")]
     [Range(0, 3)] public int healthUpgradeLevel = 0;
+
+    [Header("Dash Settings")]
+    [Tooltip("Tempo em segundos que o dash dura.")]
+    public float dashDuration = 0.2f;
+    
+    [Tooltip("Velocidade do jogador durante o dash.")]
+    public float dashSpeed = 20f;
+    
+    [Tooltip("Tempo de recarga (cooldown) do dash em segundos.")]
+    public float dashCooldown = 1f;
 }
