@@ -1,10 +1,22 @@
 fileFormatVersion: 2
-guid: c903d339fc5dbf64698bae40e4db9bd0
+guid: 2c4c3bbcd7f71f845aab822f47bf530e
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 2985491838642601873
-    second: Defeat PNG 1_0
+      213: 1352956480140249199
+    second: Untitled_Artwork 10_0
+  - first:
+      213: 7905866728006697258
+    second: Untitled_Artwork 10_1
+  - first:
+      213: -7968005969274030745
+    second: Untitled_Artwork 10_2
+  - first:
+      213: 1765210402113590165
+    second: Untitled_Artwork 10_3
+  - first:
+      213: 334744282853236804
+    second: Untitled_Artwork 10_4
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -72,10 +84,10 @@ TextureImporter:
   platformSettings:
   - serializedVersion: 4
     buildTarget: DefaultTexturePlatform
-    maxTextureSize: 8192
+    maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: -1
-    textureCompression: 2
+    textureCompression: 1
     compressionQuality: 50
     crunchedCompression: 0
     allowsAlphaSplitting: 0
@@ -139,13 +151,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Defeat PNG 1_0
+      name: Untitled_Artwork 10_0
       rect:
         serializedVersion: 2
-        x: 1
-        y: 0
-        width: 1179
-        height: 463
+        x: 23
+        y: 20
+        width: 93
+        height: 145
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -154,8 +166,96 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 19fbe1a62099e6920800000000000000
-      internalID: 2985491838642601873
+      spriteID: f68825b10caa6c210800000000000000
+      internalID: 1352956480140249199
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Untitled_Artwork 10_1
+      rect:
+        serializedVersion: 2
+        x: 34
+        y: 151
+        width: 16
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a214b6ce6e747bd60800000000000000
+      internalID: 7905866728006697258
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Untitled_Artwork 10_2
+      rect:
+        serializedVersion: 2
+        x: 104
+        y: 124
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 765ba3989c4fb6190800000000000000
+      internalID: -7968005969274030745
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Untitled_Artwork 10_3
+      rect:
+        serializedVersion: 2
+        x: 123
+        y: 90
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5931ecb12894f7810800000000000000
+      internalID: 1765210402113590165
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Untitled_Artwork 10_4
+      rect:
+        serializedVersion: 2
+        x: 33
+        y: 12
+        width: 15
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4406f06d62045a400800000000000000
+      internalID: 334744282853236804
       vertices: []
       indices: 
       edges: []
@@ -174,7 +274,11 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      Defeat PNG 1_0: 2985491838642601873
+      Untitled_Artwork 10_0: 1352956480140249199
+      Untitled_Artwork 10_1: 7905866728006697258
+      Untitled_Artwork 10_2: -7968005969274030745
+      Untitled_Artwork 10_3: 1765210402113590165
+      Untitled_Artwork 10_4: 334744282853236804
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

@@ -1,10 +1,13 @@
 fileFormatVersion: 2
-guid: b7efa5273333b04438df201094fb2c61
+guid: e17f14d4c524caa4c996d992ba486f0e
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -122382746821981188
-    second: "tr\xEAs de cora\xE7\xE3o_0"
+      213: 6275203181263633164
+    second: "Barra_Mag\xEDcula_0"
+  - first:
+      213: -77167822729041274
+    second: "Barra_Mag\xEDcula_1"
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -46,7 +49,7 @@ TextureImporter:
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 2
+  spriteMode: 1
   spriteExtrude: 1
   spriteMeshType: 1
   alignment: 0
@@ -139,13 +142,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: "tr\xEAs de cora\xE7\xE3o_0"
+      name: "Barra_Mag\xEDcula_0"
       rect:
         serializedVersion: 2
-        x: 3
-        y: 0
-        width: 444
-        height: 611
+        x: 11
+        y: 7
+        width: 387
+        height: 100
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -154,8 +157,30 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: cfb0a094a853d4ef0800000000000000
-      internalID: -122382746821981188
+      spriteID: c0bbe90cb00061750800000000000000
+      internalID: 6275203181263633164
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "Barra_Mag\xEDcula_1"
+      rect:
+        serializedVersion: 2
+        x: 394
+        y: 47
+        width: 20
+        height: 20
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 68a252a2648ddeef0800000000000000
+      internalID: -77167822729041274
       vertices: []
       indices: 
       edges: []
@@ -164,7 +189,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 
+    spriteID: 5e97eb03825dee720800000000000000
     internalID: 0
     vertices: []
     indices: 
@@ -174,7 +199,8 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      "tr\xEAs de cora\xE7\xE3o_0": -122382746821981188
+      "Barra_Mag\xEDcula_0": 6275203181263633164
+      "Barra_Mag\xEDcula_1": -77167822729041274
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

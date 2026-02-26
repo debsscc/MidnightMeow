@@ -1,10 +1,16 @@
 fileFormatVersion: 2
-guid: c903d339fc5dbf64698bae40e4db9bd0
+guid: 15c12ee693b8035479f94d356341c981
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 2985491838642601873
-    second: Defeat PNG 1_0
+      213: 6175165927155358639
+    second: ratorei calma silencio_0
+  - first:
+      213: -2634937007893442343
+    second: ratorei calma silencio_1
+  - first:
+      213: -1090948459053704722
+    second: ratorei calma silencio_2
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -75,7 +81,7 @@ TextureImporter:
     maxTextureSize: 8192
     resizeAlgorithm: 0
     textureFormat: -1
-    textureCompression: 2
+    textureCompression: 1
     compressionQuality: 50
     crunchedCompression: 0
     allowsAlphaSplitting: 0
@@ -139,13 +145,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Defeat PNG 1_0
+      name: ratorei calma silencio_0
       rect:
         serializedVersion: 2
-        x: 1
+        x: 101
         y: 0
-        width: 1179
-        height: 463
+        width: 658
+        height: 748
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -154,8 +160,52 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 19fbe1a62099e6920800000000000000
-      internalID: 2985491838642601873
+      spriteID: fabd03d71b892b550800000000000000
+      internalID: 6175165927155358639
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ratorei calma silencio_1
+      rect:
+        serializedVersion: 2
+        x: 776
+        y: 646
+        width: 17
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9d01bf670c2de6bd0800000000000000
+      internalID: -2634937007893442343
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ratorei calma silencio_2
+      rect:
+        serializedVersion: 2
+        x: 818
+        y: 610
+        width: 24
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ee918d5182c2cd0f0800000000000000
+      internalID: -1090948459053704722
       vertices: []
       indices: 
       edges: []
@@ -174,7 +224,9 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      Defeat PNG 1_0: 2985491838642601873
+      ratorei calma silencio_0: 6175165927155358639
+      ratorei calma silencio_1: -2634937007893442343
+      ratorei calma silencio_2: -1090948459053704722
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

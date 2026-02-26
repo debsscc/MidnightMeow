@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: c903d339fc5dbf64698bae40e4db9bd0
+guid: 6bcec8ff91d100748b486693098325f6
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 2985491838642601873
-    second: Defeat PNG 1_0
+      213: 3108109346036787758
+    second: um de espada_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -75,7 +75,7 @@ TextureImporter:
     maxTextureSize: 8192
     resizeAlgorithm: 0
     textureFormat: -1
-    textureCompression: 2
+    textureCompression: 1
     compressionQuality: 50
     crunchedCompression: 0
     allowsAlphaSplitting: 0
@@ -139,13 +139,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Defeat PNG 1_0
+      name: um de espada_0
       rect:
         serializedVersion: 2
-        x: 1
-        y: 0
-        width: 1179
-        height: 463
+        x: 4
+        y: 7
+        width: 444
+        height: 613
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -154,8 +154,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 19fbe1a62099e6920800000000000000
-      internalID: 2985491838642601873
+      spriteID: e2a28959bf8322b20800000000000000
+      internalID: 3108109346036787758
       vertices: []
       indices: 
       edges: []
@@ -174,7 +174,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      Defeat PNG 1_0: 2985491838642601873
+      um de espada_0: 3108109346036787758
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

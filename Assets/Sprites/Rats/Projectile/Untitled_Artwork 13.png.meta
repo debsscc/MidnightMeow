@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: c903d339fc5dbf64698bae40e4db9bd0
+guid: b5b7b291477ace444b16d05bea80b8d0
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 2985491838642601873
-    second: Defeat PNG 1_0
+      213: 1820409507175287863
+    second: Untitled_Artwork 13_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -72,10 +72,10 @@ TextureImporter:
   platformSettings:
   - serializedVersion: 4
     buildTarget: DefaultTexturePlatform
-    maxTextureSize: 8192
+    maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: -1
-    textureCompression: 2
+    textureCompression: 1
     compressionQuality: 50
     crunchedCompression: 0
     allowsAlphaSplitting: 0
@@ -139,13 +139,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Defeat PNG 1_0
+      name: Untitled_Artwork 13_0
       rect:
         serializedVersion: 2
-        x: 1
-        y: 0
-        width: 1179
-        height: 463
+        x: 24
+        y: 65
+        width: 122
+        height: 59
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -154,8 +154,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 19fbe1a62099e6920800000000000000
-      internalID: 2985491838642601873
+      spriteID: 73c4de44dc4634910800000000000000
+      internalID: 1820409507175287863
       vertices: []
       indices: 
       edges: []
@@ -174,7 +174,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      Defeat PNG 1_0: 2985491838642601873
+      Untitled_Artwork 13_0: 1820409507175287863
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
