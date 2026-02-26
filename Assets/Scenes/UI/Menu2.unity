@@ -17867,7 +17867,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 17, y: -250}
+  m_AnchoredPosition: {x: 0, y: -256}
   m_SizeDelta: {x: 502, y: 174}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1507802927
@@ -17890,7 +17890,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: aahhaahahhahahahhhahahhahahhahahahaa
+  m_text: "Nix agarra-se \xE0 vida\n+3 de vida m\xE1xima"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 1b3470473beb0a94fae0c8ce0d21aa72, type: 2}
   m_sharedMaterial: {fileID: -8751352832925204753, guid: 1b3470473beb0a94fae0c8ce0d21aa72, type: 2}
@@ -17924,7 +17924,7 @@ MonoBehaviour:
   m_fontSizeMin: 18
   m_fontSizeMax: 72
   m_fontStyle: 0
-  m_HorizontalAlignment: 4
+  m_HorizontalAlignment: 2
   m_VerticalAlignment: 256
   m_textAlignment: 65535
   m_characterSpacing: 0
