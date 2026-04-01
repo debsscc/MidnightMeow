@@ -14,12 +14,34 @@ public class UIActionBridge : MonoBehaviour
         action?.Invoke();
     }
 
+    private GameFlowManager GetFlowManager()
+    {
+        if (ServiceLocator.HasService<GameFlowManager>())
+            return ServiceLocator.GetService<GameFlowManager>();
+
+        var fallback = FindFirstObjectByType<GameFlowManager>();
+        if (fallback != null)
+        {
+            ServiceLocator.RegisterService<GameFlowManager>(fallback);
+            return fallback;
+        }
+
+        Debug.LogError("UIActionBridge: GameFlowManager não encontrado na cena nem no ServiceLocator.");
+        return null;
+    }
+
     public void LoadPhase(string phaseName)
     {
         StartCoroutine(DelayedAction(0.2f, () => 
         {
             Time.timeScale = 1f; 
-            var flowManager = ServiceLocator.GetService<GameFlowManager>();
+            if (SceneTransition.Instance != null)
+            {
+                SceneTransition.Instance.ChangeScene(phaseName);
+                return;
+            }
+            var flowManager = GetFlowManager();
+            if (flowManager == null) return;
             flowManager.LoadPhase(phaseName);
         }));
     }
@@ -29,7 +51,13 @@ public class UIActionBridge : MonoBehaviour
         StartCoroutine(DelayedAction(0.2f, () => 
         {
             Time.timeScale = 1f;
-            var flowManager = ServiceLocator.GetService<GameFlowManager>();
+            if (SceneTransition.Instance != null)
+            {
+                SceneTransition.Instance.ChangeScene("Menu2");
+                return;
+            }
+            var flowManager = GetFlowManager();
+            if (flowManager == null) return;
             flowManager.LoadMenu();
         }));
     }
