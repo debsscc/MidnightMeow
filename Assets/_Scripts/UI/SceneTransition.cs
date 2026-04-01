@@ -1,3 +1,11 @@
+///* ----------------------------------------------------------------
+// AUTOR: Débora Carvalho
+// DATA: 2026-04-01
+//DESCRIÇÃO: Gerenciador de transições entre cenas com fade e loading screen opcional. 
+// Permite controle centralizado de transições, desacoplando a lógica de mudança de cena do restante do código.
+// ---------------------------------------------------------------- */
+
+
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;

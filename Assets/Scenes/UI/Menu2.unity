@@ -19332,7 +19332,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: '::'
   fadeTime: 3
-  minLoadingTime: 2
+  minLoadingTime: 5
   fadeImage: {fileID: 1162458845}
   loadingScreen: {fileID: 1248803583}
 --- !u!1 &1650505699
