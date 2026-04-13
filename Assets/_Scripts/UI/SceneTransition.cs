@@ -46,6 +46,7 @@ public class SceneTransition : Singleton<SceneTransition>
 
     void Start()
     {
+        StartCoroutine(DelayedFadeIn());
     }
 
     IEnumerator DelayedFadeIn()

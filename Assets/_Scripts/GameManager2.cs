@@ -193,7 +193,12 @@ public class GameManager2 : MonoBehaviour
 
         if (!string.IsNullOrEmpty(sceneToLoad))
         {
-            if (ServiceLocator.HasService<GameFlowManager>())
+            if (SceneTransition.Instance != null)
+            {
+                Debug.Log($"GameManager2: Carregando cena '{sceneToLoad}' após {(isVictory ? "vitória" : "derrota")}.");
+                SceneTransition.Instance.ChangeScene(sceneToLoad);
+            }
+            else if (ServiceLocator.HasService<GameFlowManager>())
             {
                 var flowManager = ServiceLocator.GetService<GameFlowManager>();
                 flowManager.LoadPhase(sceneToLoad);
@@ -201,7 +206,7 @@ public class GameManager2 : MonoBehaviour
             }
             else
             {
-                Debug.LogError("GameManager2: GameFlowManager não registrado. Impossível trocar de cena.");
+                Debug.LogError("GameManager2: SceneTransition e GameFlowManager não encontrados. Impossível trocar de cena.");
             }
         }
         else
