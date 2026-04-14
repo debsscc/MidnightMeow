@@ -7875,6 +7875,18 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1670168118647358667, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 1.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 1670168118647358667, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 1.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 1670168118647358667, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 1.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 1670168118647358667, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0.18
       objectReference: {fileID: 0}
@@ -7937,6 +7949,66 @@ PrefabInstance:
     - target: {fileID: 6095736318987863571, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
       propertyPath: m_Color.r
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7019984299171805636, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
+      propertyPath: m_ActionEvents.Array.size
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 7019984299171805636, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
+      propertyPath: m_ActionEvents.Array.data[0].m_ActionId
+      value: 6d321618-a0ad-4f88-a6a0-759a3d3b36c2
+      objectReference: {fileID: 0}
+    - target: {fileID: 7019984299171805636, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
+      propertyPath: m_ActionEvents.Array.data[1].m_ActionId
+      value: f95aba8e-1536-4627-9c8a-f9d366878548
+      objectReference: {fileID: 0}
+    - target: {fileID: 7019984299171805636, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
+      propertyPath: m_ActionEvents.Array.data[2].m_ActionId
+      value: f50f2c43-3d0c-4f6a-8eb0-5f4bfb913722
+      objectReference: {fileID: 0}
+    - target: {fileID: 7019984299171805636, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
+      propertyPath: m_ActionEvents.Array.data[3].m_ActionId
+      value: bf6b994f-2024-4531-95bb-19cf7787b614
+      objectReference: {fileID: 0}
+    - target: {fileID: 7019984299171805636, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
+      propertyPath: m_ActionEvents.Array.data[4].m_ActionId
+      value: 2f20b76b-8517-4b41-85f0-ea058f7cabf7
+      objectReference: {fileID: 0}
+    - target: {fileID: 7019984299171805636, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
+      propertyPath: m_ActionEvents.Array.data[0].m_ActionName
+      value: 'Gameplay/Fire[/Mouse/leftButton]'
+      objectReference: {fileID: 0}
+    - target: {fileID: 7019984299171805636, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
+      propertyPath: m_ActionEvents.Array.data[1].m_ActionName
+      value: 'Gameplay/Ability[/Mouse/rightButton]'
+      objectReference: {fileID: 0}
+    - target: {fileID: 7019984299171805636, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
+      propertyPath: m_ActionEvents.Array.data[2].m_ActionName
+      value: 'Gameplay/Move[/Keyboard/w,/Keyboard/s,/Keyboard/a,/Keyboard/d,/Keyboard/upArrow,/Keyboard/downArrow]'
+      objectReference: {fileID: 0}
+    - target: {fileID: 7019984299171805636, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
+      propertyPath: m_ActionEvents.Array.data[3].m_ActionName
+      value: 'Gameplay/Frenzy[/Keyboard/g]'
+      objectReference: {fileID: 0}
+    - target: {fileID: 7019984299171805636, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
+      propertyPath: m_ActionEvents.Array.data[4].m_ActionName
+      value: 'Gameplay/Dash[/Keyboard/shift]'
+      objectReference: {fileID: 0}
+    - target: {fileID: 7019984299171805636, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
+      propertyPath: m_ActionEvents.Array.data[2].m_PersistentCalls.m_Calls.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7019984299171805636, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
+      propertyPath: m_ActionEvents.Array.data[2].m_PersistentCalls.m_Calls.Array.data[0].m_Mode
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7019984299171805636, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
+      propertyPath: m_ActionEvents.Array.data[2].m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 1616983959}
+    - target: {fileID: 7019984299171805636, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
+      propertyPath: m_ActionEvents.Array.data[2].m_PersistentCalls.m_Calls.Array.data[0].m_CallState
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 8195667279442912607, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
       propertyPath: m_SizeDelta.x

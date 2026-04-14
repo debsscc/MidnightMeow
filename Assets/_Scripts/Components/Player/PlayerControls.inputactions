@@ -66,6 +66,17 @@
                 },
                 {
                     "name": "",
+                    "id": "f47e79f1-0ee5-4fbc-ad7a-fc8c1faa1d32",
+                    "path": "<Gamepad>/rightTrigger",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Fire",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
                     "id": "2fc9a4de-0a73-4f47-8ed8-7434184c2803",
                     "path": "<Mouse>/rightButton",
                     "interactions": "",
@@ -76,7 +87,7 @@
                     "isPartOfComposite": false
                 },
                 {
-                    "name": "2D Vector",
+                    "name": "Teclado WASD",
                     "id": "22dce59a-5795-4bb1-823e-ef9004bb0170",
                     "path": "2DVector",
                     "interactions": "",
@@ -131,6 +142,72 @@
                     "isPartOfComposite": true
                 },
                 {
+                    "name": "Teclado Setas",
+                    "id": "3267e191-43e3-439b-9e36-e8dbfe87c376",
+                    "path": "2DVector",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Move",
+                    "isComposite": true,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "up",
+                    "id": "f0b56e6f-91e4-4ae7-821d-0919d29a8297",
+                    "path": "<Keyboard>/upArrow",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Move",
+                    "isComposite": false,
+                    "isPartOfComposite": true
+                },
+                {
+                    "name": "down",
+                    "id": "309c1db6-f5e8-419c-bf02-d52eaf16016f",
+                    "path": "<Keyboard>/downArrow",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Move",
+                    "isComposite": false,
+                    "isPartOfComposite": true
+                },
+                {
+                    "name": "left",
+                    "id": "edf41c8f-0041-4b37-8429-22e67e721abd",
+                    "path": "<Keyboard>/a",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Move",
+                    "isComposite": false,
+                    "isPartOfComposite": true
+                },
+                {
+                    "name": "right",
+                    "id": "9ee9d3fb-0aab-4a68-876d-957bf6ed1867",
+                    "path": "<Keyboard>/d",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Move",
+                    "isComposite": false,
+                    "isPartOfComposite": true
+                },
+                {
+                    "name": "",
+                    "id": "b05f8a40-3215-4882-9218-a84a71fb57c7",
+                    "path": "<Gamepad>/leftStick",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Move",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
                     "name": "",
                     "id": "6dda69df-4268-4d04-9e42-d7441033cda4",
                     "path": "<Keyboard>/g",
@@ -143,8 +220,30 @@
                 },
                 {
                     "name": "",
+                    "id": "5a90ce70-9536-4b02-b51a-2dcc61b04c1e",
+                    "path": "<Gamepad>/buttonNorth",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Frenzy",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
                     "id": "e48e53fc-5acb-427b-beac-d36eb498d0c9",
                     "path": "<Keyboard>/shift",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Dash",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "151ec96c-3a3e-4033-b03e-bd440385e0a4",
+                    "path": "<Gamepad>/rightShoulder",
                     "interactions": "",
                     "processors": "",
                     "groups": "",

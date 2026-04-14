@@ -51,7 +51,7 @@ public class PlayerMovement : MonoBehaviour
         _input.OnMoveInput -= HandleMoveInput;
     }
 
-    private void HandleMoveInput(Vector2 direction)
+    public void HandleMoveInput(Vector2 direction)
     {
         _moveDirection = direction;
         
