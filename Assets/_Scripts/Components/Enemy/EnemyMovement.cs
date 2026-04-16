@@ -22,6 +22,7 @@ public class EnemyMovement : MonoBehaviour
     public event System.Action<bool> OnFlipSprite;
 
     private bool _isFacingRight;
+    private const float FlipThreshold = 0.05f;
 
     private void Awake()
     {
@@ -32,8 +33,12 @@ public class EnemyMovement : MonoBehaviour
         _agent.updateUpAxis = false;
         _agent.speed = stats.moveSpeed;
 
-        // Inicializa estado de orientação com base na escala local X
         _isFacingRight = transform.localScale.x >= 0f;
+    }
+
+    private void Start()
+    {
+        // Dispara no Start para garantir que EnemyAnimationHandler já assinou o evento no OnEnable
         OnFlipSprite?.Invoke(_isFacingRight);
     }
 
@@ -43,12 +48,16 @@ public class EnemyMovement : MonoBehaviour
 
         _agent.SetDestination(_targetFinder.CurrentTarget.position);
 
-        // Detecta direção (simples): se o alvo está à direita do inimigo
-        bool shouldFaceRight = _targetFinder.CurrentTarget.position.x >= transform.position.x;
-        if (shouldFaceRight != _isFacingRight)
+        // Zona morta para evitar flip oscilando quando o alvo está quase na mesma posição X
+        float deltaX = _targetFinder.CurrentTarget.position.x - transform.position.x;
+        if (Mathf.Abs(deltaX) > FlipThreshold)
         {
-            _isFacingRight = shouldFaceRight;
-            OnFlipSprite?.Invoke(_isFacingRight);
+            bool shouldFaceRight = deltaX > 0f;
+            if (shouldFaceRight != _isFacingRight)
+            {
+                _isFacingRight = shouldFaceRight;
+                OnFlipSprite?.Invoke(_isFacingRight);
+            }
         }
 
         float distance = Vector2.Distance(transform.position, _targetFinder.CurrentTarget.position);

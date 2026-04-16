@@ -65,7 +65,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: MOVIMENTO
+  m_text: MOVER
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 1b3470473beb0a94fae0c8ce0d21aa72, type: 2}
   m_sharedMaterial: {fileID: -8751352832925204753, guid: 1b3470473beb0a94fae0c8ce0d21aa72, type: 2}
@@ -223,7 +223,7 @@ SpriteRenderer:
   m_Size: {x: 1.82, y: 1.24}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
-  m_WasSpriteAssigned: 1
+  m_WasSpriteAssigned: 0
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!1 &2672694972877817463
@@ -331,10 +331,10 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 3443803985338459258}
   - {fileID: 6013719965003993433}
   - {fileID: 3759349334791596887}
   - {fileID: 2554231819348181127}
-  - {fileID: 3443803985338459258}
   - {fileID: 9172751779217824178}
   - {fileID: 1126419824318872450}
   m_Father: {fileID: 0}
@@ -575,7 +575,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: FRENEZI
+  m_text: FRENESI
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 1b3470473beb0a94fae0c8ce0d21aa72, type: 2}
   m_sharedMaterial: {fileID: -8751352832925204753, guid: 1b3470473beb0a94fae0c8ce0d21aa72, type: 2}
@@ -711,7 +711,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: SHOOT
+  m_text: ATACAR
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 1b3470473beb0a94fae0c8ce0d21aa72, type: 2}
   m_sharedMaterial: {fileID: -8751352832925204753, guid: 1b3470473beb0a94fae0c8ce0d21aa72, type: 2}
@@ -792,7 +792,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2554231819348181127}
   - component: {fileID: 6693493702661736206}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: "\xCDcone_Mouse_0"
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -898,7 +898,7 @@ Transform:
   m_GameObject: {fileID: 7822246912698651717}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -332, y: -278.63998, z: -9719.999}
+  m_LocalPosition: {x: -332, y: -278.63998, z: 6536.5}
   m_LocalScale: {x: 108, y: 108, z: 108}
   m_ConstrainProportionsScale: 0
   m_Children: []

@@ -11,10 +11,13 @@ public class EnemyAnimationHandler : MonoBehaviour
 {
     private Animator _animator;
     [SerializeField] private EnemyMovement enemyMovement;
+    private int sortingOrderOffset = 5000;
+    [SerializeField] private int sortingPrecision = 100;
     private SpriteRenderer _spriteRenderer;
     private EnemyAttack_Melee _attack;
     private EnemyAttack_Ranged _attackRanged;
     private HealthComponent healthComponent;
+    private Collider2D _collider2D;
     [SerializeField] private bool isMelee; // Para determinar se o inimigo é corpo a corpo ou ranged, caso ambos os componentes existam.
 
     [Header("Debug")]
@@ -35,6 +38,7 @@ public class EnemyAnimationHandler : MonoBehaviour
         if (enemyMovement == null)
             enemyMovement = GetComponent<EnemyMovement>();
         _spriteRenderer = GetComponent<SpriteRenderer>();
+        _collider2D = GetComponent<Collider2D>();
         if (isMelee)
             _attack = GetComponent<EnemyAttack_Melee>();
         else
@@ -93,6 +97,11 @@ public class EnemyAnimationHandler : MonoBehaviour
         }
     }
 
+    private void LateUpdate()
+    {
+        UpdateSortingOrder();
+    }
+
     private void HandleFlipSprite(bool facingRight)
     {
         if (_spriteRenderer != null)
@@ -131,5 +140,16 @@ public class EnemyAnimationHandler : MonoBehaviour
             if (debugLogs) Debug.Log($"EnemyAnimationHandler.Triggering TakeDamage for {gameObject.name}");
             _animator.SetTrigger(_hashOnTakeDamage);
         }
+    }
+
+    private void UpdateSortingOrder()
+    {
+        if (_spriteRenderer == null)
+        {
+            return;
+        }
+
+        float referenceY = _collider2D != null ? _collider2D.bounds.min.y : transform.position.y;
+        _spriteRenderer.sortingOrder = sortingOrderOffset - Mathf.RoundToInt(referenceY * sortingPrecision);
     }
 }

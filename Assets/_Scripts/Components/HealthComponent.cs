@@ -54,6 +54,9 @@ public class HealthComponent : MonoBehaviour, IDamageable
         // Notifica listeners que tomou dano
         OnTakeDamage?.Invoke();
         OnHealthChanged?.Invoke(_currentHealth, _maxHealth);
+
+        if (gameObject.CompareTag("Player"))
+            FollowCamera.Instance?.Shake();
         Debug.Log($"{gameObject.name} took {amount} damage from {instigator.name}. Current Health: {_currentHealth}/{_maxHealth}");
 
         //quando leva dano, faz o sprite piscar (SpriteBlink.cs)
