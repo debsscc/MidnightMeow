@@ -26,6 +26,8 @@ public class Projectile : MonoBehaviour
 
     private Transform _seekTarget;
     private float _seekSpeed;
+    private Vector2 _travelDirection;
+    private bool _hasTravelDirection;
 
     private void Awake()
     {
@@ -35,8 +37,8 @@ public class Projectile : MonoBehaviour
 
     private void Start()
     {
-        // Aplica velocidade inicial
-        _rb.linearVelocity = transform.up * stats.moveSpeed;
+        Vector2 initialDirection = _hasTravelDirection ? _travelDirection : (Vector2)transform.up;
+        SetTravelDirection(initialDirection, stats.moveSpeed);
     }
 
     private void Update()
@@ -107,13 +109,24 @@ public class Projectile : MonoBehaviour
 
     public void ActivateReflect(Vector2 newDirection, float speedMultiplier)
     {
-        // Altera a direção do projétil
         float newSpeed = stats.moveSpeed * speedMultiplier;
-        _rb.linearVelocity = newDirection.normalized * newSpeed;
-        //_canBeCollected = false;
-        // Ajusta a rotação para alinhar com a nova direção
-        float angle = Mathf.Atan2(newDirection.y, newDirection.x) * Mathf.Rad2Deg - 90f;
-        transform.rotation = Quaternion.Euler(0, 0, angle);
+        SetTravelDirection(newDirection, newSpeed);
+    }
+
+    public void InitializeDirection(Vector2 direction)
+    {
+        if (direction.sqrMagnitude <= Mathf.Epsilon)
+        {
+            direction = Vector2.up;
+        }
+
+        _travelDirection = direction.normalized;
+        _hasTravelDirection = true;
+
+        if (_rb != null)
+        {
+            SetTravelDirection(_travelDirection, stats.moveSpeed);
+        }
     }
 
     public void AddBonusBounces(int bonusBounces)
@@ -124,5 +137,17 @@ public class Projectile : MonoBehaviour
     public void SetDamageMultiplier(float multiplier)
     {
         _damageMultiplier = Mathf.Max(0f, multiplier);
+    }
+
+    private void SetTravelDirection(Vector2 direction, float speed)
+    {
+        Vector2 normalizedDirection = direction.sqrMagnitude <= Mathf.Epsilon ? Vector2.up : direction.normalized;
+
+        _travelDirection = normalizedDirection;
+        _hasTravelDirection = true;
+        _rb.linearVelocity = normalizedDirection * speed;
+
+        float angle = Mathf.Atan2(normalizedDirection.y, normalizedDirection.x) * Mathf.Rad2Deg - 90f;
+        transform.rotation = Quaternion.Euler(0, 0, angle);
     }
 }
