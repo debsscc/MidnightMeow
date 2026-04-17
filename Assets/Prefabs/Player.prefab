@@ -322,6 +322,7 @@ GameObject:
   - component: {fileID: 6101838958175283613}
   - component: {fileID: 4984688740703233178}
   - component: {fileID: 7763806561967535413}
+  - component: {fileID: 6478830911135266387}
   m_Layer: 3
   m_Name: Player
   m_TagString: Player
@@ -821,7 +822,7 @@ MonoBehaviour:
   m_FallbackScreenDPI: 96
   m_DefaultSpriteDPI: 96
   m_DynamicPixelsPerUnit: 1
-  m_PresetInfoIsWorld: 1
+  m_PresetInfoIsWorld: 0
 --- !u!114 &7763806561967535413
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -839,6 +840,20 @@ MonoBehaviour:
   m_BlockingMask:
     serializedVersion: 2
     m_Bits: 4294967295
+--- !u!114 &6478830911135266387
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3845447005448380479}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 61afd00b7eb99774b984915710cbcdce, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::KnockbackReceiver
+  force: 8
+  duration: 0.15
 --- !u!1 &4084784925386163396
 GameObject:
   m_ObjectHideFlags: 0
