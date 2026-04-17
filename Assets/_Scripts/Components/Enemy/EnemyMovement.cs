@@ -73,6 +73,7 @@ public class EnemyMovement : MonoBehaviour
             OnDestinationLost?.Invoke();
         }
     }
+
     public float GetCurrentSpeed()
     {
         return _agent.isStopped ? 0f : _agent.velocity.magnitude;

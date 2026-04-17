@@ -40,6 +40,12 @@ public class GameManager2 : MonoBehaviour
 
     private void Awake()
     {
+        // Remove interação física entre Player e Enemy (nenhum empurra o outro).
+        // Triggers de dano (Is Trigger = true) continuam funcionando normalmente.
+        int playerLayer = LayerMask.NameToLayer("Player");
+        int enemyLayer  = LayerMask.NameToLayer("Enemy");
+        if (playerLayer >= 0 && enemyLayer >= 0)
+            Physics2D.IgnoreLayerCollision(playerLayer, enemyLayer, true);
     }
 
     private void Start()

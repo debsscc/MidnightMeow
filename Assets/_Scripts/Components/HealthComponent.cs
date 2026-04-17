@@ -18,6 +18,9 @@ public class HealthComponent : MonoBehaviour, IDamageable
 
 
 
+    [Tooltip("Segundos até o GameObject ser destruído após a morte. Para o Player, use um valor maior que a animação de morte (ex: 5). Para inimigos, mantenha 0.1.")]
+    [SerializeField] private float _destroyDelay = 0.1f;
+
     [Header("Events")]
     public UnityEvent<float, float> OnHealthChanged;
     // Disparado quando o componente perde vida: (damageAmount, instigator GameObject)
@@ -64,10 +67,20 @@ public class HealthComponent : MonoBehaviour, IDamageable
         {
             spriteBlink.Blink();
         }
+
+        // Knockback opcional — só aplica se o componente existir no GameObject
+        if (gameObject.TryGetComponent<KnockbackReceiver>(out var knockback))
+        {
+            knockback.ApplyKnockback(instigator);
+        }
+
         if (_currentHealth <= 0f)
             Die();
         
     }
+
+    /// <summary>Define por código o delay de destruição após a morte. Útil para o player, que precisa esperar a animação de morte.</summary>
+    public void SetDestroyDelay(float delay) => _destroyDelay = Mathf.Max(0f, delay);
 
     private void Die()
     {
@@ -75,6 +88,6 @@ public class HealthComponent : MonoBehaviour, IDamageable
         _isDead = true;
         OnDied?.Invoke();
 
-        Destroy(gameObject, 0.1f);
+        Destroy(gameObject, _destroyDelay);
     }
 }

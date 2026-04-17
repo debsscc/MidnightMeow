@@ -10,6 +10,11 @@ using UnityEngine;
 public class PlayerHealthConfig : MonoBehaviour
 {
     [SerializeField] private PlayerStats stats;
+
+    [Header("Death Settings")]
+    [Tooltip("Segundos que o player fica na cena após morrer (para a animação de morte tocar). Deve ser >= duração da animação de morte.")]
+    [SerializeField] private float _deathDestroyDelay = 4f;
+
     private HealthComponent _healthComponent;
     private float? _initialHealthOverride = null;
 
@@ -30,6 +35,9 @@ public class PlayerHealthConfig : MonoBehaviour
         // Injeta a vida definida no ScriptableObject (pode ser sobrescrita por upgrades)
         float initial = _initialHealthOverride.HasValue ? _initialHealthOverride.Value : stats.maxHealth;
         _healthComponent.Initialize(initial);
+
+        // Garante que o player não seja destruído antes da animação de morte terminar
+        _healthComponent.SetDestroyDelay(_deathDestroyDelay);
     }
     
     private void _OnHealthChanged(float _currentHealth, float _maxHealth) {
