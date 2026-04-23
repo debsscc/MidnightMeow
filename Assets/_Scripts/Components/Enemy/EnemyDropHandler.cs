@@ -11,6 +11,13 @@ public class EnemyDropHandler : MonoBehaviour
 {
     [SerializeField] private EnemyStats stats;
 
+    /// <summary>
+    /// Delegate opcional de spawn para contexto de rede.
+    /// Assinatura: (prefab, position) => GameObject instanciado.
+    /// Utilizado pelo NetworkWaveManager para spawnar drops como NetworkObjects.
+    /// </summary>
+    public System.Func<GameObject, Vector3, GameObject> SpawnDelegate;
+
     private HealthComponent _healthComponent;
 
     private void Awake()
@@ -36,10 +43,13 @@ public class EnemyDropHandler : MonoBehaviour
         if (randomValue <= stats.dropChance)
         {
             int dropAmount = Random.Range(stats.minCienceDrop, stats.maxCienceDrop + 1);
-            
-            GameObject cienciaInstance = Instantiate(stats.cienciaPrefab, transform.position, Quaternion.identity);
-            
-            if (cienciaInstance.TryGetComponent<Ciencia>(out Ciencia ciencia))
+
+            // Usa delegate de rede se disponível; caso contrário usa Instantiate padrão
+            GameObject cienciaInstance = SpawnDelegate != null
+                ? SpawnDelegate(stats.cienciaPrefab, transform.position)
+                : Instantiate(stats.cienciaPrefab, transform.position, Quaternion.identity);
+
+            if (cienciaInstance != null && cienciaInstance.TryGetComponent<Ciencia>(out Ciencia ciencia))
             {
                 ciencia.SetValue(dropAmount);
             }

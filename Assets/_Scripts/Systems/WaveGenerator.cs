@@ -21,6 +21,13 @@ public class WaveGenerator : MonoBehaviour
     private List<GameObject> _currentWaveEnemyPool = new List<GameObject>();
     private bool _isSpawning = false;
 
+    /// <summary>
+    /// Delegate opcional de spawn. Se definido, usado no lugar de Instantiate.
+    /// Assinatura: (prefab, spawnPoint) => GameObject instanciado.
+    /// Utilizado pelo NetworkWaveManager para spawnar inimigos como NetworkObjects.
+    /// </summary>
+    public System.Func<GameObject, Transform, GameObject> SpawnDelegate;
+
     public event System.Action OnAllWavesCleared;
 
     public void Initialize(WaveSettings settings)
@@ -92,7 +99,11 @@ public class WaveGenerator : MonoBehaviour
         }
 
         Transform randomSpawnPoint = spawnPoints[Random.Range(0, spawnPoints.Length)];
-        GameObject enemy = Instantiate(prefab, randomSpawnPoint.position, Quaternion.identity, this.transform);
+
+        // Usa delegate de spawn de rede se disponível; caso contrário usa Instantiate padrão
+        GameObject enemy = SpawnDelegate != null
+            ? SpawnDelegate(prefab, randomSpawnPoint)
+            : Instantiate(prefab, randomSpawnPoint.position, Quaternion.identity, this.transform);
 
         _enemiesAlive++;
         UpdateWaveStatus();

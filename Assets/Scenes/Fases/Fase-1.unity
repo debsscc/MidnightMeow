@@ -425,7 +425,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 13.7630005, y: 0.000035286}
+  m_AnchoredPosition: {x: 13.7630005, y: 0.000036239624}
   m_SizeDelta: {x: -27.52, y: 6.3401}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &193080525
@@ -1974,6 +1974,7 @@ MonoBehaviour:
   m_VerticalAlignment: 256
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -2984,6 +2985,7 @@ MonoBehaviour:
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -3340,7 +3342,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: -12.792}
 --- !u!199 &1167612422
 ParticleSystemRenderer:
-  serializedVersion: 6
+  serializedVersion: 7
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -3386,6 +3388,7 @@ ParticleSystemRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_RenderMode: 1
   m_MeshDistribution: 0
   m_SortMode: 0
@@ -3417,7 +3420,6 @@ ParticleSystemRenderer:
   m_MeshWeighting1: 1
   m_MeshWeighting2: 1
   m_MeshWeighting3: 1
-  m_MaskInteraction: 0
 --- !u!198 &1167612423
 ParticleSystem:
   m_ObjectHideFlags: 0
@@ -8505,6 +8507,18 @@ PrefabInstance:
       propertyPath: m_Color.a
       value: 0.23921569
       objectReference: {fileID: 0}
+    - target: {fileID: 4917491358846736311, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
+      propertyPath: GlobalObjectIdHash
+      value: 3590237862
+      objectReference: {fileID: 0}
+    - target: {fileID: 4917491358846736311, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
+      propertyPath: SceneMigrationSynchronization
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4917491358846736311, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
+      propertyPath: InScenePlacedSourceGlobalObjectIdHash
+      value: 1626128580
+      objectReference: {fileID: 0}
     - target: {fileID: 4984688740703233178, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
       propertyPath: m_PresetInfoIsWorld
       value: 1
@@ -8877,7 +8891,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 3.9, y: 0}
+  m_AnchoredPosition: {x: 3.9000015, y: 0}
   m_SizeDelta: {x: -4.07, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1274755529
@@ -9214,6 +9228,7 @@ MonoBehaviour:
   m_VerticalAlignment: 256
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -9350,6 +9365,7 @@ MonoBehaviour:
   m_VerticalAlignment: 256
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -11042,7 +11058,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: -90, y: 0, z: 0}
 --- !u!199 &1961454130
 ParticleSystemRenderer:
-  serializedVersion: 6
+  serializedVersion: 7
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -11088,6 +11104,7 @@ ParticleSystemRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: -5
+  m_MaskInteraction: 0
   m_RenderMode: 0
   m_MeshDistribution: 0
   m_SortMode: 0
@@ -11119,7 +11136,6 @@ ParticleSystemRenderer:
   m_MeshWeighting1: 1
   m_MeshWeighting2: 1
   m_MeshWeighting3: 1
-  m_MaskInteraction: 0
 --- !u!198 &1961454131
 ParticleSystem:
   m_ObjectHideFlags: 0
