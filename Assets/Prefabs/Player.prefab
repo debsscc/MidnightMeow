@@ -330,6 +330,7 @@ GameObject:
   - component: {fileID: 1143663101967669033}
   - component: {fileID: 8768893663526928813}
   - component: {fileID: 3991573679908005135}
+  - component: {fileID: 6829977954312598915}
   m_Layer: 3
   m_Name: Player
   m_TagString: Player
@@ -874,7 +875,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
-  GlobalObjectIdHash: 3197444296
+  GlobalObjectIdHash: 1626128580
   InScenePlacedSourceGlobalObjectIdHash: 0
   DeferredDespawnTick: 0
   Ownership: 1
@@ -1018,6 +1019,24 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::NetworkProjectileSpawner
   ShowTopMostFoldoutHeaderGroup: 1
   networkProjectilePrefab: {fileID: 691743863976024828, guid: eadee2043abe1c540b4356dff9dbd9a7, type: 3}
+--- !u!114 &6829977954312598915
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3845447005448380479}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a30d165a9b78d0243b561e6d454cc411, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MultiplayerCombatIntegrityLogger
+  ativo: 1
+  prefixo: '[MP-INTEGRITY]'
+  logDirecaoTiro: 1
+  logSpawnServidor: 1
+  logSincronizacaoMunicao: 1
+  logAvisosIntegridade: 1
 --- !u!1 &4084784925386163396
 GameObject:
   m_ObjectHideFlags: 0

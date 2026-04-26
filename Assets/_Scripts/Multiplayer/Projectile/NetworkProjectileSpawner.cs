@@ -9,12 +9,55 @@
 /// SRP: exclusivamente responsável por spawnar projéteis do jogador na rede.
 /// </summary>
 
+using System;
 using Unity.Netcode;
 using UnityEngine;
 
 [RequireComponent(typeof(PlayerShooting))]
 public class NetworkProjectileSpawner : NetworkBehaviour
 {
+    public readonly struct OwnerShotSnapshot
+    {
+        public readonly Vector3 Position;
+        public readonly Vector2 Direction;
+        public readonly Quaternion Rotation;
+        public readonly float DamageMultiplier;
+        public readonly int BonusBounces;
+
+        public OwnerShotSnapshot(Vector3 position, Vector2 direction, Quaternion rotation, float damageMultiplier, int bonusBounces)
+        {
+            Position = position;
+            Direction = direction;
+            Rotation = rotation;
+            DamageMultiplier = damageMultiplier;
+            BonusBounces = bonusBounces;
+        }
+    }
+
+    public readonly struct ServerShotSnapshot
+    {
+        public readonly ulong OwnerClientId;
+        public readonly bool Accepted;
+        public readonly int AmmoBefore;
+        public readonly int AmmoAfter;
+        public readonly Vector2 Direction;
+        public readonly string Reason;
+
+        public ServerShotSnapshot(ulong ownerClientId, bool accepted, int ammoBefore, int ammoAfter, Vector2 direction, string reason)
+        {
+            OwnerClientId = ownerClientId;
+            Accepted = accepted;
+            AmmoBefore = ammoBefore;
+            AmmoAfter = ammoAfter;
+            Direction = direction;
+            Reason = reason;
+        }
+    }
+
+    public event Action<OwnerShotSnapshot> OnOwnerShotPrepared;
+    public event Action<ServerShotSnapshot> OnServerShotValidated;
+    public event Action<ulong, int> OnAmmoSyncSentToOwner;
+
     [Header("Prefab de Projétil de Rede")]
     [Tooltip("Prefab do projétil com NetworkObject e NetworkProjectileController.")]
     [SerializeField] private GameObject networkProjectilePrefab;
@@ -65,6 +108,8 @@ public class NetworkProjectileSpawner : NetworkBehaviour
         if (shooting != null) damageMultiplier = shooting.DamageMultiplier;
         if (adrenaline != null && adrenaline.IsFrenzyActive) bonusBounces = adrenaline.GetBonusBounces();
 
+        OnOwnerShotPrepared?.Invoke(new OwnerShotSnapshot(position, direction, rotation, damageMultiplier, bonusBounces));
+
         Destroy(localProjectile);
 
         SpawnProjectileRpc(position, rotation, direction, damageMultiplier, bonusBounces);
@@ -88,9 +133,17 @@ public class NetworkProjectileSpawner : NetworkBehaviour
         }
 
         PlayerAmmo playerAmmo = GetComponent<PlayerAmmo>();
+        int ammoBeforeValidation = playerAmmo != null ? playerAmmo.CurrentAmmo : -1;
         if (playerAmmo == null || !playerAmmo.HasAmmo())
         {
             Debug.LogWarning("[NetworkProjectileSpawner] Spawn ignorado: sem munição no servidor.");
+            OnServerShotValidated?.Invoke(new ServerShotSnapshot(
+                OwnerClientId,
+                false,
+                ammoBeforeValidation,
+                ammoBeforeValidation,
+                direction,
+                playerAmmo == null ? "PlayerAmmo ausente no servidor" : "Sem munição no servidor"));
             if (playerAmmo != null)
             {
                 var rejectParams = new ClientRpcParams
@@ -98,11 +151,21 @@ public class NetworkProjectileSpawner : NetworkBehaviour
                     Send = new ClientRpcSendParams { TargetClientIds = new[] { OwnerClientId } }
                 };
                 SyncAmmoToOwnerClientRpc(playerAmmo.CurrentAmmo, rejectParams);
+                OnAmmoSyncSentToOwner?.Invoke(OwnerClientId, playerAmmo.CurrentAmmo);
             }
             return;
         }
 
+        int ammoBeforeUse = playerAmmo.CurrentAmmo;
         playerAmmo.UseAmmo(1);
+        int ammoAfterUse = playerAmmo.CurrentAmmo;
+        OnServerShotValidated?.Invoke(new ServerShotSnapshot(
+            OwnerClientId,
+            true,
+            ammoBeforeUse,
+            ammoAfterUse,
+            direction,
+            "Spawn aceito no servidor"));
 
         GameObject projectileObj = Instantiate(networkProjectilePrefab, position, rotation);
         NetworkObject netObj = projectileObj.GetComponent<NetworkObject>();
@@ -131,6 +194,7 @@ public class NetworkProjectileSpawner : NetworkBehaviour
             }
         };
         SyncAmmoToOwnerClientRpc(playerAmmo.CurrentAmmo, clientRpcParams);
+        OnAmmoSyncSentToOwner?.Invoke(OwnerClientId, playerAmmo.CurrentAmmo);
     }
 
     [ClientRpc]

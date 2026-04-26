@@ -164,6 +164,11 @@ public class NetworkPlayerController : NetworkBehaviour
     {
         SetInputComponentsActive(false);
 
+        // O servidor precisa manter PlayerAmmo ativo também para jogadores remotos,
+        // pois a validação autoritativa de disparo/munição acontece no host.
+        if (IsServer && ammo != null)
+            ammo.enabled = true;
+
         // Garante câmera desativada em jogadores remotos — nunca devem ter câmera ativa
         if (playerCamera != null)
             playerCamera.SetActive(false);

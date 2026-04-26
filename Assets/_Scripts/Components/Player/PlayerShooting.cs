@@ -18,12 +18,14 @@ public class PlayerShooting : MonoBehaviour
     private PlayerInputHandler _input;
     private PlayerAmmo _ammo;
     private PlayerAdrenaline _adrenaline;
+    private PlayerAim _aim;
     private Camera _mainCamera;
 
     public event Action OnShoot;
     // Evento emitido quando um projétil é instanciado (direção de mira no plano XY)
     public event Action<GameObject, Vector2> OnProjectileInstantiated;
     public event Action OnOutOfAmmo;
+    public event Action<Vector2, bool, int> OnFireDirectionComputed;
 
     [Header("Shooting")]
     [Tooltip("Shots per second (can be modified by upgrades)")]
@@ -57,6 +59,7 @@ public class PlayerShooting : MonoBehaviour
         _input = GetComponent<PlayerInputHandler>();
         _ammo = GetComponent<PlayerAmmo>();
         _adrenaline = GetComponent<PlayerAdrenaline>();
+        _aim = GetComponent<PlayerAim>();
         _mainCamera = Camera.main;
         CurrentFireRate = baseFireRate;
     }
@@ -104,7 +107,9 @@ public class PlayerShooting : MonoBehaviour
             {
                 if (ShouldConsumeAmmoLocally())
                     _ammo.UseAmmo(1);
-                Vector2 fireDirection = GetFireDirection();
+                bool usedFirePointDirection;
+                Vector2 fireDirection = GetFireDirection(out usedFirePointDirection);
+                OnFireDirectionComputed?.Invoke(fireDirection, usedFirePointDirection, _ammo.CurrentAmmo);
                 float fireAngle = Mathf.Atan2(fireDirection.y, fireDirection.x) * Mathf.Rad2Deg - 90f;
                 Quaternion fireRotation = Quaternion.Euler(0f, 0f, fireAngle);
 
@@ -139,8 +144,14 @@ public class PlayerShooting : MonoBehaviour
         }
     }
 
-    private Vector2 GetFireDirection()
+    private Vector2 GetFireDirection(out bool usedFirePointDirection)
     {
+        if (_aim != null && _aim.TryGetAimDirection(out Vector2 aimDirection, out bool aimUsedFallback))
+        {
+            usedFirePointDirection = aimUsedFallback;
+            return aimDirection.normalized;
+        }
+
         if (_mainCamera == null)
         {
             _mainCamera = Camera.main;
@@ -148,6 +159,7 @@ public class PlayerShooting : MonoBehaviour
 
         if (Mouse.current == null || _mainCamera == null)
         {
+            usedFirePointDirection = true;
             return firePoint != null ? (Vector2)firePoint.up : Vector2.up;
         }
 
@@ -159,9 +171,11 @@ public class PlayerShooting : MonoBehaviour
 
         if (fireDirection.sqrMagnitude <= Mathf.Epsilon)
         {
+            usedFirePointDirection = true;
             return firePoint != null ? (Vector2)firePoint.up : Vector2.up;
         }
 
+        usedFirePointDirection = false;
         return fireDirection.normalized;
     }
 

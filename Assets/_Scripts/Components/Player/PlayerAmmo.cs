@@ -57,7 +57,8 @@ public class PlayerAmmo : MonoBehaviour
     /// </summary>
     public void ApplySyncedAmmo(int value)
     {
-        int max = stats != null ? stats.maxAmmo : int.MaxValue;
-        _currentAmmo = Mathf.Clamp(value, 0, max);
+        // Em multiplayer, o servidor é a fonte de verdade da munição.
+        // Não limitar ao maxAmmo local evita divergência cliente/host por configuração diferente.
+        _currentAmmo = Mathf.Max(0, value);
     }
 }

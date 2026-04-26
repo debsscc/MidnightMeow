@@ -12,15 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3f8ee803f6715ab49befd15d93bfa073, type: 3}
   m_Name: CameraConfig
   m_EditorClassIdentifier: Assembly-CSharp::CameraConfig
-  defaultOrthographicSize: 24.5
-  followDampingX: 1.24
-  followDampingY: 2.35
+  defaultOrthographicSize: 7.38
+  followDampingX: 1.09
+  followDampingY: 3.26
   followOffset: {x: 0, y: 0, z: -10}
-  lookaheadTime: 1.1
-  lookaheadSmoothing: 0.5
-  minOrthographicSize: 3.32
-  maxOrthographicSize: 32
-  zoomLerpSpeed: 5.02
+  lookaheadTime: 0.768
+  lookaheadSmoothing: 0.507
+  minOrthographicSize: 2
+  maxOrthographicSize: 30
+  zoomLerpSpeed: 13.14
   shakeLightIntensity: 0
   shakeLightDuration: 0
   shakeMediumIntensity: 0.2
