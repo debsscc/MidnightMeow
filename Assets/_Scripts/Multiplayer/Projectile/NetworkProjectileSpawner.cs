@@ -45,40 +45,36 @@ public class NetworkProjectileSpawner : NetworkBehaviour
     /// Intercepta o projétil criado localmente pelo PlayerShooting (via Instantiate).
     /// Destrói o objeto local e solicita ao servidor que spawne a versão de rede.
     /// </summary>
-    private void HandleProjectileInstantiatedLocally(GameObject localProjectile)
+    private void HandleProjectileInstantiatedLocally(GameObject localProjectile, Vector2 fireDirection)
     {
         if (localProjectile == null) return;
 
-        // Captura os dados antes de destruir o objeto local
         Vector3 position = localProjectile.transform.position;
-        Quaternion rotation = localProjectile.transform.rotation;
+        Vector2 direction = fireDirection.sqrMagnitude > Mathf.Epsilon
+            ? fireDirection.normalized
+            : (Vector2)localProjectile.transform.up;
 
-        Projectile proj = localProjectile.GetComponent<Projectile>();
+        float fireAngle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg - 90f;
+        Quaternion rotation = Quaternion.Euler(0f, 0f, fireAngle);
+
         float damageMultiplier = 1f;
         int bonusBounces = 0;
 
-        // Extrai multiplicadores do projétil local antes de destruir
-        // (esses valores já foram aplicados pelo PlayerShooting)
         var adrenaline = GetComponent<PlayerAdrenaline>();
         var shooting = GetComponent<PlayerShooting>();
         if (shooting != null) damageMultiplier = shooting.DamageMultiplier;
         if (adrenaline != null && adrenaline.IsFrenzyActive) bonusBounces = adrenaline.GetBonusBounces();
 
-        // Determina a direção com base na rotação do projétil
-        Vector2 direction = rotation * Vector2.up;
-
-        // Destrói o projétil instanciado localmente pelo PlayerShooting
         Destroy(localProjectile);
 
-        // Solicita ao servidor o spawn do projétil de rede
-        SpawnProjectileServerRpc(position, rotation, direction, damageMultiplier, bonusBounces);
+        SpawnProjectileRpc(position, rotation, direction, damageMultiplier, bonusBounces);
     }
 
     /// <summary>
     /// Spawna um projétil de rede no servidor. Replicado para todos os clientes.
     /// </summary>
-    [ServerRpc]
-    private void SpawnProjectileServerRpc(
+    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
+    private void SpawnProjectileRpc(
         Vector3 position,
         Quaternion rotation,
         Vector2 direction,
@@ -90,6 +86,23 @@ public class NetworkProjectileSpawner : NetworkBehaviour
             Debug.LogError("[NetworkProjectileSpawner] networkProjectilePrefab não atribuído!");
             return;
         }
+
+        PlayerAmmo playerAmmo = GetComponent<PlayerAmmo>();
+        if (playerAmmo == null || !playerAmmo.HasAmmo())
+        {
+            Debug.LogWarning("[NetworkProjectileSpawner] Spawn ignorado: sem munição no servidor.");
+            if (playerAmmo != null)
+            {
+                var rejectParams = new ClientRpcParams
+                {
+                    Send = new ClientRpcSendParams { TargetClientIds = new[] { OwnerClientId } }
+                };
+                SyncAmmoToOwnerClientRpc(playerAmmo.CurrentAmmo, rejectParams);
+            }
+            return;
+        }
+
+        playerAmmo.UseAmmo(1);
 
         GameObject projectileObj = Instantiate(networkProjectilePrefab, position, rotation);
         NetworkObject netObj = projectileObj.GetComponent<NetworkObject>();
@@ -107,7 +120,24 @@ public class NetworkProjectileSpawner : NetworkBehaviour
         var networkProjectile = projectileObj.GetComponent<NetworkProjectileController>();
         if (networkProjectile != null)
         {
-            networkProjectile.InitializeServerRpc(direction, damageMultiplier, bonusBounces, OwnerClientId);
+            networkProjectile.ServerApplySpawnData(direction, damageMultiplier, bonusBounces, OwnerClientId);
         }
+
+        var clientRpcParams = new ClientRpcParams
+        {
+            Send = new ClientRpcSendParams
+            {
+                TargetClientIds = new[] { OwnerClientId }
+            }
+        };
+        SyncAmmoToOwnerClientRpc(playerAmmo.CurrentAmmo, clientRpcParams);
+    }
+
+    [ClientRpc]
+    private void SyncAmmoToOwnerClientRpc(int currentAmmo, ClientRpcParams clientRpcParams = default)
+    {
+        var ammo = GetComponent<PlayerAmmo>();
+        if (ammo != null)
+            ammo.ApplySyncedAmmo(currentAmmo);
     }
 }

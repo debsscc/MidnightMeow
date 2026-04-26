@@ -3,7 +3,7 @@
 /// Valida em Start() se todos os componentes obrigatórios da cena Sandbox estão presentes.
 /// Usa Start() em vez de Awake() para garantir que o NetworkManager (que chama DontDestroyOnLoad
 /// no seu próprio Awake) já esteja registrado como Singleton antes da verificação.
-/// Usa FindObjectOfType como fallback para encontrar objetos em DontDestroyOnLoad.
+/// Usa FindFirstObjectByType como fallback para encontrar objetos em DontDestroyOnLoad.
 /// SRP: apenas validação de cena, sem lógica de jogo.
 /// </summary>
 
@@ -36,10 +36,10 @@ public class MultiplayerBootstrapper : MonoBehaviour
     {
         CheckNetworkManager();
         CheckUnityTransport();
-        CheckSingleton("RelayManager", relayManager, FindObjectOfType<RelayManager>());
-        CheckSingleton("ConnectionManager", connectionManager, FindObjectOfType<ConnectionManager>());
-        CheckNetworkBehaviour("MultiplayerGameManager", gameManager, FindObjectOfType<MultiplayerGameManager>());
-        CheckNetworkBehaviour("NetworkWaveManager", waveManager, FindObjectOfType<NetworkWaveManager>());
+        CheckSingleton("RelayManager", relayManager, FindFirstObjectByType<RelayManager>());
+        CheckSingleton("ConnectionManager", connectionManager, FindFirstObjectByType<ConnectionManager>());
+        CheckNetworkBehaviour("MultiplayerGameManager", gameManager, FindFirstObjectByType<MultiplayerGameManager>());
+        CheckNetworkBehaviour("NetworkWaveManager", waveManager, FindFirstObjectByType<NetworkWaveManager>());
         CheckPlayerSpawnManager();
         CheckCameraRig();
         CheckProjectSettings();
@@ -49,8 +49,9 @@ public class MultiplayerBootstrapper : MonoBehaviour
     {
         // NetworkManager.Singleton é a forma preferida, mas o NGO move o objeto para
         // DontDestroyOnLoad no seu próprio Awake. Como usamos Start(), Singleton já está setado.
-        // FindObjectOfType(true) inclui objetos inativos e funciona com DontDestroyOnLoad.
-        bool found = NetworkManager.Singleton != null || FindObjectOfType<NetworkManager>(true) != null;
+        // FindFirstObjectByType(FindObjectsInactive.Include) inclui objetos inativos e funciona com DontDestroyOnLoad.
+        bool found = NetworkManager.Singleton != null ||
+                     FindFirstObjectByType<NetworkManager>(FindObjectsInactive.Include) != null;
 
         if (!found)
         {
@@ -64,13 +65,15 @@ public class MultiplayerBootstrapper : MonoBehaviour
         }
         else
         {
-            string location = NetworkManager.Singleton != null ? "Singleton" : "DontDestroyOnLoad (FindObjectOfType)";
+            string location = NetworkManager.Singleton != null ? "Singleton" : "DontDestroyOnLoad (FindFirstObjectByType)";
             Debug.Log($"[MultiplayerBootstrapper] OK: NetworkManager encontrado via {location}.");
         }
     }
 
     private NetworkManager GetNetworkManager() =>
-        NetworkManager.Singleton != null ? NetworkManager.Singleton : FindObjectOfType<NetworkManager>(true);
+        NetworkManager.Singleton != null
+            ? NetworkManager.Singleton
+            : FindFirstObjectByType<NetworkManager>(FindObjectsInactive.Include);
 
     private void CheckUnityTransport()
     {
@@ -143,7 +146,7 @@ public class MultiplayerBootstrapper : MonoBehaviour
 
     private void CheckPlayerSpawnManager()
     {
-        var psm = FindObjectOfType<PlayerSpawnManager>(true);
+        var psm = FindFirstObjectByType<PlayerSpawnManager>(FindObjectsInactive.Include);
         if (psm == null)
         {
             Debug.LogError(
@@ -177,7 +180,7 @@ public class MultiplayerBootstrapper : MonoBehaviour
 
     private void CheckCameraRig()
     {
-        var cam = FindObjectOfType<MultiplayerCameraController>(true);
+        var cam = FindFirstObjectByType<MultiplayerCameraController>(FindObjectsInactive.Include);
         if (cam == null)
         {
             Debug.LogError(

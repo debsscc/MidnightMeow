@@ -119,8 +119,8 @@ public class NetworkEnemyController : NetworkBehaviour
     /// Aplica dano ao inimigo. Deve ser chamado apenas no servidor.
     /// Projéteis do jogador devem verificar IsServer antes de chamar este método.
     /// </summary>
-    [ServerRpc(RequireOwnership = false)]
-    public void TakeDamageServerRpc(float amount, ulong instigatorClientId)
+    [Rpc(SendTo.Server)]
+    public void TakeDamageRpc(float amount, ulong instigatorClientId)
     {
         if (!IsServer || _networkIsDead.Value) return;
         _health?.TakeDamage(amount, gameObject);

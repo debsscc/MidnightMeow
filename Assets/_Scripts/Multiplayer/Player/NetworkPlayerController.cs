@@ -8,7 +8,8 @@
 /// CÂMERA: O prefab do jogador NÃO deve conter uma câmera própria.
 ///   A câmera da cena (MultiplayerCameraRig) segue o jogador local automaticamente.
 ///   Manter uma câmera no prefab causaria conflito e tela azul (duas câmeras ativas).
-/// SRP: apenas gerencia a inicialização de ownership, não lógica de movimento ou saúde.
+/// Replica flipX do sprite (orientação) via NetworkVariable escrita pelo dono ao mover.
+/// SRP: ownership, cor/nome de rede e orientação visual replicada.
 /// </summary>
 
 using Unity.Netcode;
@@ -59,6 +60,14 @@ public class NetworkPlayerController : NetworkBehaviour
             NetworkVariableWritePermission.Owner
         );
 
+    private readonly NetworkVariable<bool> _networkFacingFlipX = new NetworkVariable<bool>(
+        false,
+        NetworkVariableReadPermission.Everyone,
+        NetworkVariableWritePermission.Owner
+    );
+
+    private bool _subscribedMovementFlip;
+
     public string PlayerName => _playerName.Value.ToString();
     public int ColorIndex => _playerColorIndex.Value;
 
@@ -72,6 +81,14 @@ public class NetworkPlayerController : NetworkBehaviour
 
         _playerColorIndex.OnValueChanged += OnColorIndexChanged;
         ApplyPlayerColor(_playerColorIndex.Value);
+
+        _networkFacingFlipX.OnValueChanged += OnNetworkFacingFlipChanged;
+        ApplyFacingVisual(_networkFacingFlipX.Value);
+        if (IsOwner && movement != null)
+        {
+            movement.OnFlipSprite += OnOwnerMovementFlip;
+            _subscribedMovementFlip = true;
+        }
 
         if (IsOwner)
         {
@@ -89,7 +106,29 @@ public class NetworkPlayerController : NetworkBehaviour
     public override void OnNetworkDespawn()
     {
         _playerColorIndex.OnValueChanged -= OnColorIndexChanged;
+        _networkFacingFlipX.OnValueChanged -= OnNetworkFacingFlipChanged;
+        if (_subscribedMovementFlip && movement != null)
+        {
+            movement.OnFlipSprite -= OnOwnerMovementFlip;
+            _subscribedMovementFlip = false;
+        }
         GameEvents.InvokePlayerLeft(OwnerClientId);
+    }
+
+    private void OnOwnerMovementFlip(bool facingRight)
+    {
+        _networkFacingFlipX.Value = facingRight;
+    }
+
+    private void OnNetworkFacingFlipChanged(bool previous, bool current)
+    {
+        ApplyFacingVisual(current);
+    }
+
+    private void ApplyFacingVisual(bool facingRight)
+    {
+        if (animationHandler != null)
+            animationHandler.ApplyNetworkFacing(facingRight);
     }
 
     private void SetupLocalPlayer()

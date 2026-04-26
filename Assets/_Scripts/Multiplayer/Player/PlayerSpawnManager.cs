@@ -32,7 +32,9 @@ public class PlayerSpawnManager : NetworkBehaviour
 
     [Header("Configuração")]
     [Tooltip("Se verdadeiro, respawna o jogador no spawn point original ao reconectar.")]
+#pragma warning disable CS0414 // reservado para fluxo de reconexão futuro
     [SerializeField] private bool respawnAtOriginalPoint = true;
+#pragma warning restore CS0414
 
     private readonly Dictionary<ulong, NetworkObject> _spawnedPlayers = new Dictionary<ulong, NetworkObject>();
     private readonly Dictionary<ulong, int> _clientSpawnIndex = new Dictionary<ulong, int>();

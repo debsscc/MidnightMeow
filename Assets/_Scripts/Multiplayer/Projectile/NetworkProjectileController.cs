@@ -23,7 +23,6 @@ public class NetworkProjectileController : NetworkBehaviour
     private float _damageMultiplier = 1f;
     private int _bonusBounces = 0;
     private ulong _ownerClientId;
-    private bool _initialized = false;
 
     private void Awake()
     {
@@ -47,10 +46,9 @@ public class NetworkProjectileController : NetworkBehaviour
 
     /// <summary>
     /// Inicializa o projétil no servidor com direção, multiplicadores e identificação do dono.
-    /// Chamado pelo NetworkProjectileSpawner logo após o spawn.
+    /// Chamado apenas no host/servidor pelo NetworkProjectileSpawner após NetworkObject.Spawn (não usar ServerRpc).
     /// </summary>
-    [ServerRpc(RequireOwnership = false)]
-    public void InitializeServerRpc(Vector2 direction, float damageMultiplier, int bonusBounces, ulong ownerClientId)
+    public void ServerApplySpawnData(Vector2 direction, float damageMultiplier, int bonusBounces, ulong ownerClientId)
     {
         if (!IsServer) return;
 
@@ -58,7 +56,6 @@ public class NetworkProjectileController : NetworkBehaviour
         _damageMultiplier = damageMultiplier;
         _bonusBounces = bonusBounces;
         _ownerClientId = ownerClientId;
-        _initialized = true;
 
         // Inicializa o Projectile existente no servidor
         _projectile.InitializeDirection(direction);
@@ -73,21 +70,21 @@ public class NetworkProjectileController : NetworkBehaviour
 
     /// <summary>
     /// Chamado pelo Projectile (server) quando colide com um inimigo.
-    /// Aplica dano via NetworkEnemyController.TakeDamageServerRpc.
+    /// Aplica dano via NetworkEnemyController.TakeDamageRpc.
     /// Este método deve ser conectado ao callback de dano do Projectile na cena de rede.
     /// </summary>
     public void ApplyDamageToEnemy(NetworkEnemyController enemy, float damage)
     {
         if (!IsServer) return;
-        enemy.TakeDamageServerRpc(damage * _damageMultiplier, _ownerClientId);
+        enemy.TakeDamageRpc(damage * _damageMultiplier, _ownerClientId);
     }
 
     /// <summary>
     /// Solicita ao servidor a coleta deste projétil como munição.
     /// Chamado pelo jogador ao entrar em contato com o projétil coletável.
     /// </summary>
-    [ServerRpc(RequireOwnership = false)]
-    public void CollectAmmoServerRpc(ulong collectorClientId)
+    [Rpc(SendTo.Server)]
+    public void CollectAmmoRpc(ulong collectorClientId)
     {
         if (!IsServer) return;
         GrantAmmoClientRpc(collectorClientId);

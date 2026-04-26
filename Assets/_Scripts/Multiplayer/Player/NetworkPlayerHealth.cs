@@ -147,7 +147,8 @@ public class NetworkPlayerHealth : NetworkBehaviour
         }
 
         OnNetworkPlayerDied?.Invoke(OwnerClientId);
-        GameEvents.InvokePlayerDefeated();
+        if (IsOwner)
+            GameEvents.InvokePlayerDefeated();
         Debug.Log($"[NetworkPlayerHealth] Jogador {OwnerClientId} morreu.");
     }
 
@@ -169,8 +170,8 @@ public class NetworkPlayerHealth : NetworkBehaviour
     /// API pública: Server RPC para aplicar dano a este jogador.
     /// Chamado por sistemas de colisão de projéteis/inimigos no servidor.
     /// </summary>
-    [ServerRpc(RequireOwnership = false)]
-    public void TakeDamageServerRpc(float amount, ulong instigatorClientId)
+    [Rpc(SendTo.Server)]
+    public void TakeDamageRpc(float amount, ulong instigatorClientId)
     {
         if (!IsServer || _networkIsDead.Value) return;
         // O instigador pode ser qualquer NetworkObject; usa gameObject do servidor como proxy
@@ -181,8 +182,8 @@ public class NetworkPlayerHealth : NetworkBehaviour
     /// Respawn do jogador no servidor. Define saúde máxima e reativa estado vivo.
     /// Chamado pelo MultiplayerGameManager ou por lógica de respawn futura.
     /// </summary>
-    [ServerRpc(RequireOwnership = false)]
-    public void RespawnServerRpc()
+    [Rpc(SendTo.Server)]
+    public void RespawnRpc()
     {
         if (!IsServer) return;
         if (!_networkIsDead.Value) return;

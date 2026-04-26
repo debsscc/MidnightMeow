@@ -43,11 +43,11 @@ public class NetworkCienciaController : NetworkBehaviour
         if (networkPlayerCtrl == null || !networkPlayerCtrl.IsOwner) return;
 
         ulong collectorId = networkPlayerCtrl.OwnerClientId;
-        RequestCollectServerRpc(collectorId);
+        RequestCollectRpc(collectorId);
     }
 
-    [ServerRpc(RequireOwnership = false)]
-    private void RequestCollectServerRpc(ulong collectorClientId)
+    [Rpc(SendTo.Server)]
+    private void RequestCollectRpc(ulong collectorClientId)
     {
         if (!IsServer || _collected) return;
         _collected = true;

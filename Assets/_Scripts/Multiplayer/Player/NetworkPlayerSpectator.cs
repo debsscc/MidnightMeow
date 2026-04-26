@@ -20,7 +20,6 @@ public class NetworkPlayerSpectator : NetworkBehaviour
     private bool _isSpectating = false;
     private List<Transform> _alivePlayers = new List<Transform>();
     private int _currentTargetIndex = 0;
-    private float _autoSwitchTimer = 0f;
     private Coroutine _autoSwitchCoroutine;
 
     private PlayerInputHandler _inputHandler;

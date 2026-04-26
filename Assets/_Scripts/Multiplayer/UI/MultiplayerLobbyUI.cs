@@ -189,7 +189,7 @@ public class MultiplayerLobbyUI : MonoBehaviour
             return;
         }
 
-        MultiplayerGameManager.Instance.RequestStartGameServerRpc();
+        MultiplayerGameManager.Instance.RequestStartGameRpc();
         SetStatus("Iniciando partida...");
     }
 

@@ -2,8 +2,8 @@
 /// MultiplayerGameManager.cs
 /// NetworkBehaviour server-autoritativo que gerencia o estado global da partida multiplayer.
 /// Replica o estado de jogo (em andamento, pausado, vitória, derrota) para todos os clientes
-/// via NetworkVariable. Ouve eventos de ondas e de morte de jogadores para determinar condições
-/// de vitória/derrota.
+/// via NetworkVariable. Ouve eventos de ondas para vitória; mortes de jogadores vêm de
+/// NetworkPlayerHealth.RegisterPlayerDeath no servidor (sem depender de GameEvents).
 /// IMPORTANTE NO EDITOR: Este componente DEVE estar num GameObject que também tenha NetworkObject.
 /// Como é um scene-object NetworkBehaviour, é automaticamente sincronizado ao host iniciar.
 /// SRP: gerencia apenas o estado macro da partida, não lógica de spawn ou UI.
@@ -56,10 +56,7 @@ public class MultiplayerGameManager : NetworkBehaviour
         _playersAlive.OnValueChanged += HandlePlayersAliveChanged;
 
         if (IsServer)
-        {
             GameEvents.OnNightEnded += HandleNightEnded;
-            GameEvents.OnPlayerDefeated += HandlePlayerDefeated;
-        }
 
         Debug.Log($"[MultiplayerGameManager] Spawned. IsServer={IsServer}, IsHost={IsHost}");
     }
@@ -70,18 +67,15 @@ public class MultiplayerGameManager : NetworkBehaviour
         _playersAlive.OnValueChanged -= HandlePlayersAliveChanged;
 
         if (IsServer)
-        {
             GameEvents.OnNightEnded -= HandleNightEnded;
-            GameEvents.OnPlayerDefeated -= HandlePlayerDefeated;
-        }
     }
 
     /// <summary>
     /// Inicia a partida. Chamado pelo host após todos os jogadores estarem prontos.
-    /// ServerRpc: executa apenas no servidor, pode ser chamado por qualquer cliente.
+    /// Rpc: executa no servidor; qualquer cliente pode invocar.
     /// </summary>
-    [ServerRpc(RequireOwnership = false)]
-    public void RequestStartGameServerRpc()
+    [Rpc(SendTo.Server)]
+    public void RequestStartGameRpc()
     {
         if (_networkGameState.Value != GameState.WaitingForPlayers) return;
 
@@ -104,8 +98,8 @@ public class MultiplayerGameManager : NetworkBehaviour
         _playersAlive.Value = Mathf.Min(_playersAlive.Value + 1, maxPlayers);
     }
 
-    [ServerRpc(RequireOwnership = false)]
-    public void RequestPauseServerRpc()
+    [Rpc(SendTo.Server)]
+    public void RequestPauseRpc()
     {
         if (_networkGameState.Value != GameState.Playing) return;
         // Muda o estado no servidor ANTES do ClientRpc para evitar bug de write em cliente
@@ -113,8 +107,8 @@ public class MultiplayerGameManager : NetworkBehaviour
         ApplyPauseClientRpc(true);
     }
 
-    [ServerRpc(RequireOwnership = false)]
-    public void RequestResumeServerRpc()
+    [Rpc(SendTo.Server)]
+    public void RequestResumeRpc()
     {
         if (_networkGameState.Value != GameState.Paused) return;
         _networkGameState.Value = GameState.Playing;
@@ -137,12 +131,6 @@ public class MultiplayerGameManager : NetworkBehaviour
     {
         if (!IsServer) return;
         StartCoroutine(TriggerVictoryRoutine());
-    }
-
-    private void HandlePlayerDefeated()
-    {
-        if (!IsServer) return;
-        RegisterPlayerDeath();
     }
 
     private void HandlePlayersAliveChanged(int oldValue, int newValue)

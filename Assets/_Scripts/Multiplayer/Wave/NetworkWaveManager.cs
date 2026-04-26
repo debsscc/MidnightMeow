@@ -4,7 +4,7 @@
 /// Apenas o servidor/host executa a lógica de spawn de ondas, instanciando inimigos como
 /// NetworkObjects via NetworkObject.Spawn() para replicação automática a todos os clientes.
 /// IMPORTANTE NO EDITOR: Este componente DEVE estar num GameObject que também tenha NetworkObject.
-/// Pode ser iniciado via evento estático do MultiplayerGameManager OU via StartWavesServerRpc()
+/// Pode ser iniciado via evento estático do MultiplayerGameManager OU via StartWavesRpc()
 /// diretamente do lobby (StartGameButton → ambos chamados no mesmo fluxo).
 /// SRP: exclusivamente gerencia spawning e progresso de ondas na rede.
 /// </summary>
@@ -69,11 +69,11 @@ public class NetworkWaveManager : NetworkBehaviour
     }
 
     /// <summary>
-    /// ServerRpc de fallback que pode ser chamado diretamente pelo lobby
+    /// Rpc de fallback que pode ser chamado diretamente pelo lobby
     /// sem depender da cadeia de eventos do GameState.
     /// </summary>
-    [ServerRpc(RequireOwnership = false)]
-    public void StartWavesServerRpc()
+    [Rpc(SendTo.Server)]
+    public void StartWavesRpc()
     {
         TryStartWaves();
     }

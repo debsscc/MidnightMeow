@@ -5,6 +5,7 @@
 // ---------------------------------------------------------------- */
 using System;
 using System.Collections;
+using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -20,8 +21,8 @@ public class PlayerShooting : MonoBehaviour
     private Camera _mainCamera;
 
     public event Action OnShoot;
-    // Evento emitido quando um projétil é instanciado (recebe o GameObject do projétil)
-    public event Action<GameObject> OnProjectileInstantiated;
+    // Evento emitido quando um projétil é instanciado (direção de mira no plano XY)
+    public event Action<GameObject, Vector2> OnProjectileInstantiated;
     public event Action OnOutOfAmmo;
 
     [Header("Shooting")]
@@ -33,6 +34,24 @@ public class PlayerShooting : MonoBehaviour
     private Coroutine _fireCoroutine;
 
     public float BaseFireRate => baseFireRate;
+
+    /// <summary>
+    /// Em multiplayer, o gasto de munição é feito no servidor ao spawnar o projétil de rede
+    /// (evita gasto duplo no host e mantém validação no servidor).
+    /// </summary>
+    private bool ShouldConsumeAmmoLocally()
+    {
+        var nm = NetworkManager.Singleton;
+        if (nm == null || (!nm.IsClient && !nm.IsServer))
+            return true;
+
+        var spawner = GetComponent<NetworkProjectileSpawner>();
+        if (spawner == null || !spawner.IsSpawned || !spawner.IsOwner)
+            return true;
+
+        return false;
+    }
+
     private void Awake()
     {
         _input = GetComponent<PlayerInputHandler>();
@@ -83,7 +102,8 @@ public class PlayerShooting : MonoBehaviour
         {
             if (_ammo.HasAmmo())
             {
-                _ammo.UseAmmo(1);
+                if (ShouldConsumeAmmoLocally())
+                    _ammo.UseAmmo(1);
                 Vector2 fireDirection = GetFireDirection();
                 float fireAngle = Mathf.Atan2(fireDirection.y, fireDirection.x) * Mathf.Rad2Deg - 90f;
                 Quaternion fireRotation = Quaternion.Euler(0f, 0f, fireAngle);
@@ -102,8 +122,8 @@ public class PlayerShooting : MonoBehaviour
                     }
                 }
 
-                // Notifica listeners sobre a instância do projétil
-                OnProjectileInstantiated?.Invoke(projectileInstance);
+                // Notifica listeners sobre a instância do projétil e a mira (autoritativa no cliente dono)
+                OnProjectileInstantiated?.Invoke(projectileInstance, fireDirection);
 
                 OnShoot?.Invoke();
             }
@@ -132,6 +152,7 @@ public class PlayerShooting : MonoBehaviour
         }
 
         Vector3 mouseScreenPosition = Mouse.current.position.ReadValue();
+        mouseScreenPosition.z = _mainCamera.WorldToScreenPoint(transform.position).z;
         Vector3 mouseWorldPosition = _mainCamera.ScreenToWorldPoint(mouseScreenPosition);
         Vector2 fireOrigin = firePoint != null ? (Vector2)firePoint.position : (Vector2)transform.position;
         Vector2 fireDirection = (Vector2)(mouseWorldPosition - (Vector3)fireOrigin);
