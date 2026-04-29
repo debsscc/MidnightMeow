@@ -5,6 +5,7 @@
 
 using System;
 using UnityEngine;
+using UnityEngine.Audio;
 using UnityEngine.Events;
 
 [DisallowMultipleComponent]
@@ -13,6 +14,9 @@ public class EnemyAudioController : MonoBehaviour
     [Header("Dependencies")]
     [Tooltip("Referência ao componente de vida para escutar OnTakeDamage e OnDied")]
     [SerializeField] private HealthComponent healthComponent;
+
+    [Header("Mixer")]
+    [SerializeField] private AudioMixerGroup sfxMixerGroup;
 
     [Header("Audio Source")]
     [Tooltip("AudioSource para sons gerais (dano, rugidos, etc.)")]
@@ -29,6 +33,11 @@ public class EnemyAudioController : MonoBehaviour
     private void Awake()
     {
         if (healthComponent == null) healthComponent = GetComponent<HealthComponent>();
+
+        if (audioSource != null && sfxMixerGroup != null)
+        {
+            audioSource.outputAudioMixerGroup = sfxMixerGroup;
+        }
     }
 
     private void OnEnable()

@@ -600,6 +600,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyAudioController
   healthComponent: {fileID: 4817587253931695636}
+  sfxMixerGroup: {fileID: -7772116307795827482, guid: 0369658093ea21d40a1c846ecafdd511, type: 2}
   audioSource: {fileID: 8618221672084803984}
   damageClip: {fileID: 8300000, guid: 984a02afb1b115d4fa28f3a0eee66f79, type: 3}
   deathClip: {fileID: 8300000, guid: 1dc0986d3ba643a46a9d460572feb4b7, type: 3}

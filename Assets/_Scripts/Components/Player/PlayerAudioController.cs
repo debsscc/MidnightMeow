@@ -4,6 +4,7 @@
 // ---------------------------------------------------------------- */
 
 using UnityEngine;
+using UnityEngine.Audio;
 
 [DisallowMultipleComponent]
 public class PlayerAudioController : MonoBehaviour
@@ -11,6 +12,9 @@ public class PlayerAudioController : MonoBehaviour
     [Header("Dependencies")]
     [Tooltip("Referência ao componente de movimento para escutar OnMovement e OnStop")]
     [SerializeField] private PlayerMovement playerMovement;
+
+    [Header("Mixer")]
+    [SerializeField] private AudioMixerGroup sfxMixerGroup;
     
     [Tooltip("Referência ao componente de tiro para escutar OnShoot")]
     [SerializeField] private PlayerShooting playerShooting;
@@ -41,6 +45,12 @@ public class PlayerAudioController : MonoBehaviour
         {
             loopSource.loop = true;
             loopSource.playOnAwake = false;
+        }
+
+        if (sfxSource != null)
+        {
+            if (sfxSource != null) sfxSource.outputAudioMixerGroup = sfxMixerGroup;
+            if (dashSource != null) dashSource.outputAudioMixerGroup = sfxMixerGroup;
         }
     }
 
