@@ -28,6 +28,7 @@ public class Projectile : MonoBehaviour
     private float _seekSpeed;
     private Vector2 _travelDirection;
     private bool _hasTravelDirection;
+    private Vector2 _spawnPosition;
 
     private void Awake()
     {
@@ -37,12 +38,20 @@ public class Projectile : MonoBehaviour
 
     private void Start()
     {
+        _spawnPosition = transform.position;
         Vector2 initialDirection = _hasTravelDirection ? _travelDirection : (Vector2)transform.up;
         SetTravelDirection(initialDirection, stats.moveSpeed);
     }
 
     private void Update()
     {
+        if (stats.maxDistance > 0 && _currentState != ProjectileState.Seeking &&
+            Vector2.Distance(_spawnPosition, transform.position) >= stats.maxDistance)
+        {
+            Destroy(gameObject);
+            return;
+        }
+
         if (_currentState == ProjectileState.Seeking && _seekTarget != null)
         {
             Vector2 direction = (_seekTarget.position - transform.position).normalized;

@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 1955699902637321195}
   - component: {fileID: 5376868053908966673}
   - component: {fileID: 7973962463155217233}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Particle System
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4847,7 +4847,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1053668194377193054}
   - component: {fileID: 6489554930592344053}
-  m_Layer: 9
+  m_Layer: 10
   m_Name: Audio
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4975,7 +4975,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7769710525481836737}
-  m_Layer: 9
+  m_Layer: 10
   m_Name: firePoint
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5007,7 +5007,7 @@ GameObject:
   m_Component:
   - component: {fileID: 3549521508288151217}
   - component: {fileID: 4006410471696962147}
-  m_Layer: 9
+  m_Layer: 13
   m_Name: Shadow
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5114,7 +5114,7 @@ GameObject:
   - component: {fileID: 8699465747872324352}
   - component: {fileID: -5757795320946629389}
   - component: {fileID: 8615864432287330084}
-  m_Layer: 9
+  m_Layer: 10
   m_Name: Rato_Eletrico
   m_TagString: Enemy
   m_Icon: {fileID: 0}

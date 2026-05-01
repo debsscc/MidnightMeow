@@ -9,7 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7769710525481836737}
-  m_Layer: 9
+  m_Layer: 10
   m_Name: firePoint
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -41,7 +41,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2524273148383909002}
   - component: {fileID: 4149308233459731649}
-  m_Layer: 9
+  m_Layer: 13
   m_Name: Shadow
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -135,7 +135,7 @@ GameObject:
   m_Component:
   - component: {fileID: 6158057710604537718}
   - component: {fileID: 8416473265528492656}
-  m_Layer: 9
+  m_Layer: 10
   m_Name: Audio
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -278,7 +278,7 @@ GameObject:
   - component: {fileID: 7307871085104724286}
   - component: {fileID: 5057817512247068887}
   - component: {fileID: 7387447173699667402}
-  m_Layer: 9
+  m_Layer: 10
   m_Name: Rato_Padrao_Resistente
   m_TagString: Enemy
   m_Icon: {fileID: 0}
@@ -600,7 +600,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnemyAttack_Ranged
   stats: {fileID: 11400000, guid: 55c90a1f979222246933dfea1a1ca68e, type: 2}
   projectilePrefab: {fileID: 3344960684203597567, guid: 6ededdb4f3eb7e143ae0a036319f5fd3, type: 3}
-  firePoint: {fileID: 7769710525481836737, guid: 860f219ddb4a8314b9c268953d608768, type: 3}
+  firePoint: {fileID: 7769710525481836737}
 --- !u!114 &7387447173699667402
 MonoBehaviour:
   m_ObjectHideFlags: 0

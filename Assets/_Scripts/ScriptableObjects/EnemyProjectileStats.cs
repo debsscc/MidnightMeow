@@ -17,4 +17,8 @@ public class EnemyProjectileStats : ScriptableObject
 
     [Header("Lifetime")]
     public float lifetime = 5f;
+
+    [Header("Distância Máxima")]
+    [Tooltip("Distância máxima percorrida antes de se destruir. 0 = sem limite.")]
+    public float maxDistance = 0f;
 }

@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 6698177665965743234}
   - component: {fileID: 4839949393226928655}
   - component: {fileID: 4589366641767722859}
-  m_Layer: 10
+  m_Layer: 11
   m_Name: Science
   m_TagString: Drop
   m_Icon: {fileID: 0}

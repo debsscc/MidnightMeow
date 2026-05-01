@@ -9976,6 +9976,10 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 12
       objectReference: {fileID: 0}
+    - target: {fileID: 4338388805264836550, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
+      propertyPath: _destroyDelay
+      value: 4
+      objectReference: {fileID: 0}
     - target: {fileID: 4893774097399496419, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
       propertyPath: m_Sprite
       value: 
@@ -13246,8 +13250,8 @@ Canvas:
   m_GameObject: {fileID: 1893041977}
   m_Enabled: 1
   serializedVersion: 3
-  m_RenderMode: 1
-  m_Camera: {fileID: 1031360022}
+  m_RenderMode: 0
+  m_Camera: {fileID: 0}
   m_PlaneDistance: 100
   m_PixelPerfect: 0
   m_ReceivesEvents: 1

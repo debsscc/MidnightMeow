@@ -47,7 +47,14 @@ public class PlayerHealthConfig : MonoBehaviour
 
     private void _OnDied()
     {
-        Debug.Log("PlayerHealthConfig: player died, invoking GameEvents");
+        Debug.Log("PlayerHealthConfig: player died, aguardando animação de morte...");
+        StartCoroutine(DefeatedAfterDelay(_deathDestroyDelay));
+    }
+
+    private System.Collections.IEnumerator DefeatedAfterDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        Debug.Log("PlayerHealthConfig: invocando GameEvents.InvokePlayerDefeated após animação");
         GameEvents.InvokePlayerDefeated();
     }
 

@@ -22,7 +22,7 @@ GameObject:
   - component: {fileID: 974458903785184444}
   - component: {fileID: 5316140801015922341}
   - component: {fileID: 8699465747872324352}
-  m_Layer: 9
+  m_Layer: 10
   m_Name: Enemy 1
   m_TagString: Enemy
   m_Icon: {fileID: 0}
@@ -261,7 +261,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5fbf207ab8623434e909175705a1b8f1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyAnimationHandler
-  healthComponent: {fileID: 4817587253931695636}
+  enemyMovement: {fileID: 0}
+  sortingPrecision: 100
+  isMelee: 0
+  debugLogs: 0
 --- !u!114 &4817587253931695636
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -275,7 +278,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HealthComponent
   _maxHealth: 100
+  _destroyDelay: 0.1
   OnHealthChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  OnTakeDamage:
     m_PersistentCalls:
       m_Calls: []
   OnDied:
