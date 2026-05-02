@@ -15,6 +15,17 @@ public class EnemyProjectile : MonoBehaviour
     private float _lifetimeTimer;
     private Vector2 _spawnPosition;
 
+    [Header("Animation")]
+    [Tooltip("Animator do GameObject do projétil (opcional). Deve ter os estados Spawn, Flying e Hit.")]
+    [SerializeField] private Animator _projectileAnimator;
+    [Tooltip("Duração da animação de Hit em segundos. O objeto é destruído após esse tempo.")]
+    [SerializeField] private float _hitAnimDuration = 0.3f;
+    [Tooltip("Se verdadeiro, reproduz a animação de Hit quando o projétil expirar por tempo ou distância.")]
+    [SerializeField] private bool _playHitOnExpire = false;
+
+    private bool _hasHit = false;
+    private static readonly int _hashOnHit = Animator.StringToHash("OnHit");
+
     private void Awake()
     {
         _rb = GetComponent<Rigidbody2D>();
@@ -32,13 +43,19 @@ public class EnemyProjectile : MonoBehaviour
         _lifetimeTimer -= Time.deltaTime;
         if (_lifetimeTimer <= 0)
         {
-            Destroy(gameObject);
+            if (_playHitOnExpire)
+                TriggerHitAndDestroy();
+            else
+                Destroy(gameObject);
             return;
         }
 
         if (stats.maxDistance > 0 && Vector2.Distance(_spawnPosition, transform.position) >= stats.maxDistance)
         {
-            Destroy(gameObject);
+            if (_playHitOnExpire)
+                TriggerHitAndDestroy();
+            else
+                Destroy(gameObject);
         }
     }
 
@@ -48,7 +65,7 @@ public class EnemyProjectile : MonoBehaviour
         if (collision.gameObject.layer == LayerMask.NameToLayer("Wall") ||
             collision.gameObject.layer == LayerMask.NameToLayer("Structure"))
         {
-            Destroy(gameObject);
+            TriggerHitAndDestroy();
         }
     }
 
@@ -61,7 +78,30 @@ public class EnemyProjectile : MonoBehaviour
             {
                 target.TakeDamage(stats.damage, this.gameObject);
             }
-            Destroy(gameObject);
+            TriggerHitAndDestroy();
         }
+    }
+
+    // Para o projétil, toca a animação de Hit e agenda a destruição
+    private void TriggerHitAndDestroy()
+    {
+        if (_hasHit) return;
+        _hasHit = true;
+
+        // Captura a direção antes de zerar a velocidade
+        float yFlip = _rb.linearVelocity.x >= 0f ? 180f : 0f;
+        _rb.linearVelocity = Vector2.zero;
+        _rb.simulated = false;
+        // Espelha horizontalmente se o projétil estava indo para a direita
+        transform.rotation = Quaternion.Euler(0f, yFlip, 0f);
+
+        // Desabilita os colliders para evitar múltiplas detecções
+        foreach (var col in GetComponents<Collider2D>())
+            col.enabled = false;
+
+        if (_projectileAnimator != null)
+            _projectileAnimator.SetTrigger(_hashOnHit);
+
+        Destroy(gameObject, _hitAnimDuration);
     }
 }

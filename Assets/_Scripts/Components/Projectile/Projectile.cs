@@ -21,6 +21,17 @@ public class Projectile : MonoBehaviour
     // Estado para controlar se pode ser pego
     private bool _canBeCollected = false;
 
+    [Header("Animation")]
+    [Tooltip("Animator do GameObject do projétil (opcional). Deve ter os estados Spawn, Flying e Hit.")]
+    [SerializeField] private Animator _projectileAnimator;
+    [Tooltip("Duração da animação de Hit em segundos. O objeto é destruído após esse tempo.")]
+    [SerializeField] private float _hitAnimDuration = 0.3f;
+    [Tooltip("Se verdadeiro, reproduz a animação de Hit quando o projétil expirar por distância (sem acertar nada).")]
+    [SerializeField] private bool _playHitOnExpire = false;
+
+    private bool _hasHit = false;
+    private static readonly int _hashOnHit = Animator.StringToHash("OnHit");
+
     private enum ProjectileState {  Fired, Seeking}
     private ProjectileState _currentState = ProjectileState.Fired;
 
@@ -48,7 +59,10 @@ public class Projectile : MonoBehaviour
         if (stats.maxDistance > 0 && _currentState != ProjectileState.Seeking &&
             Vector2.Distance(_spawnPosition, transform.position) >= stats.maxDistance)
         {
-            Destroy(gameObject);
+            if (_playHitOnExpire)
+                TriggerHitAndDestroy();
+            else
+                Destroy(gameObject);
             return;
         }
 
@@ -70,7 +84,7 @@ public class Projectile : MonoBehaviour
         {
             _currentBounces++;
             if (!stats.infinityBounces && _currentBounces >= _maxBounces){
-                Destroy(gameObject);
+                TriggerHitAndDestroy();
             }
             // Após o primeiro quique, o projétil vira munição, talvez devemos considerar outra lógica usando delay
             if (!_canBeCollected && stats.collectable)
@@ -103,9 +117,31 @@ public class Projectile : MonoBehaviour
             _currentBounces++;
             target.TakeDamage(stats.damage * _damageMultiplier, this.gameObject);
             if (!stats.infinityBounces && _currentBounces >= _maxBounces){
-                Destroy(gameObject);
+                TriggerHitAndDestroy();
             }
         }
+    }
+
+    // Para o projétil, toca a animação de Hit e agenda a destruição
+    private void TriggerHitAndDestroy()
+    {
+        if (_hasHit) return;
+        _hasHit = true;
+
+        _rb.linearVelocity = Vector2.zero;
+        _rb.simulated = false;
+        // Espelha horizontalmente se o projétil estava indo para a direita
+        float yFlip = _travelDirection.x >= 0f ? 180f : 0f;
+        transform.rotation = Quaternion.Euler(0f, yFlip, 0f);
+
+        // Desabilita os colliders para evitar múltiplas detecções
+        foreach (var col in GetComponents<Collider2D>())
+            col.enabled = false;
+
+        if (_projectileAnimator != null)
+            _projectileAnimator.SetTrigger(_hashOnHit);
+
+        Destroy(gameObject, _hitAnimDuration);
     }
 
     public void ActivatePull(Transform target, float speed)

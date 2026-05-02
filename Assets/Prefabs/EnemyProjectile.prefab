@@ -208,6 +208,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyProjectile
   stats: {fileID: 11400000, guid: 870be12020e715a46b4070e9b935c083, type: 2}
+  _projectileAnimator: {fileID: 5466655054130917712}
+  _hitAnimDuration: 0.3
+  _playHitOnExpire: 0
 --- !u!114 &4895541626581627207
 MonoBehaviour:
   m_ObjectHideFlags: 0
