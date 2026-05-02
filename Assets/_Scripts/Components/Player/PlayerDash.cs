@@ -87,7 +87,9 @@ public class PlayerDash : MonoBehaviour
         {
             // Substitui a velocidade do Rigidbody diretamente na direção do dash
             _rb.linearVelocity = _currentMoveDirection * stats.dashSpeed;
-            
+
+            Shadow.me?.Sombras_skill();
+
             elapsedTime += Time.deltaTime;
             yield return null; // Espera o próximo frame
         }
