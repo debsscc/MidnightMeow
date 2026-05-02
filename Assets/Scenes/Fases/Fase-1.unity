@@ -2201,6 +2201,7 @@ GameObject:
   - component: {fileID: 618898879}
   - component: {fileID: 618898881}
   - component: {fileID: 618898882}
+  - component: {fileID: 618898883}
   m_Layer: 5
   m_Name: AdrenalineBar
   m_TagString: Untagged
@@ -2270,14 +2271,14 @@ MonoBehaviour:
     m_SelectedTrigger: Selected
     m_DisabledTrigger: Disabled
   m_Interactable: 1
-  m_TargetGraphic: {fileID: 0}
+  m_TargetGraphic: {fileID: 1456400329}
   m_FillRect: {fileID: 1456400326}
   m_HandleRect: {fileID: 0}
   m_Direction: 0
   m_MinValue: 0
   m_MaxValue: 1
   m_WholeNumbers: 0
-  m_Value: 0.674
+  m_Value: 1
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []
@@ -2298,6 +2299,24 @@ MonoBehaviour:
   OnAdrenalineLow:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &618898883
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 618898878}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b791ba9adb7e67046a02af318a92bc79, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FrenzyHudEffect
+  hudElement: {fileID: 618898879}
+  glowImage: {fileID: 1456400329}
+  shakeIntensity: 10
+  shakeSpeed: 40
+  glowColor: {r: 0.28235295, g: 0.58431375, b: 0.854902, a: 1}
+  glowPulseSpeed: 6
 --- !u!1 &627400938
 GameObject:
   m_ObjectHideFlags: 0
@@ -9985,6 +10004,34 @@ PrefabInstance:
       propertyPath: _destroyDelay
       value: 4
       objectReference: {fileID: 0}
+    - target: {fileID: 4338388805264836550, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
+      propertyPath: OnDied.m_PersistentCalls.m_Calls.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4338388805264836550, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
+      propertyPath: OnDied.m_PersistentCalls.m_Calls.Array.data[0].m_Mode
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4338388805264836550, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
+      propertyPath: OnDied.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 1616984016}
+    - target: {fileID: 4338388805264836550, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
+      propertyPath: OnDied.m_PersistentCalls.m_Calls.Array.data[0].m_CallState
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 4338388805264836550, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
+      propertyPath: OnDied.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: HandleDeath
+      objectReference: {fileID: 0}
+    - target: {fileID: 4338388805264836550, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
+      propertyPath: OnDied.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
+      value: DissolveEffect, Assembly-CSharp
+      objectReference: {fileID: 0}
+    - target: {fileID: 4338388805264836550, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
+      propertyPath: OnDied.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
+      value: UnityEngine.Object, UnityEngine
+      objectReference: {fileID: 0}
     - target: {fileID: 4893774097399496419, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
       propertyPath: m_Sprite
       value: 
@@ -10020,6 +10067,62 @@ PrefabInstance:
     - target: {fileID: 6095736318987863571, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
       propertyPath: m_Color.r
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6184364087952878765, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
+      propertyPath: OnFrenzyActivated.m_PersistentCalls.m_Calls.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6184364087952878765, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
+      propertyPath: OnFrenzyDeactivated.m_PersistentCalls.m_Calls.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6184364087952878765, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
+      propertyPath: OnFrenzyActivated.m_PersistentCalls.m_Calls.Array.data[0].m_Mode
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6184364087952878765, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
+      propertyPath: OnFrenzyActivated.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 618898883}
+    - target: {fileID: 6184364087952878765, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
+      propertyPath: OnFrenzyDeactivated.m_PersistentCalls.m_Calls.Array.data[0].m_Mode
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6184364087952878765, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
+      propertyPath: OnFrenzyDeactivated.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 618898883}
+    - target: {fileID: 6184364087952878765, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
+      propertyPath: OnFrenzyActivated.m_PersistentCalls.m_Calls.Array.data[0].m_CallState
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 6184364087952878765, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
+      propertyPath: OnFrenzyActivated.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: OnFrenzyStart
+      objectReference: {fileID: 0}
+    - target: {fileID: 6184364087952878765, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
+      propertyPath: OnFrenzyDeactivated.m_PersistentCalls.m_Calls.Array.data[0].m_CallState
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 6184364087952878765, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
+      propertyPath: OnFrenzyDeactivated.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: OnFrenzyEnd
+      objectReference: {fileID: 0}
+    - target: {fileID: 6184364087952878765, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
+      propertyPath: OnFrenzyActivated.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
+      value: FrenzyHudEffect, Assembly-CSharp
+      objectReference: {fileID: 0}
+    - target: {fileID: 6184364087952878765, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
+      propertyPath: OnFrenzyDeactivated.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
+      value: FrenzyHudEffect, Assembly-CSharp
+      objectReference: {fileID: 0}
+    - target: {fileID: 6184364087952878765, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
+      propertyPath: OnFrenzyActivated.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
+      value: UnityEngine.Object, UnityEngine
+      objectReference: {fileID: 0}
+    - target: {fileID: 6184364087952878765, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
+      propertyPath: OnFrenzyDeactivated.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
+      value: UnityEngine.Object, UnityEngine
       objectReference: {fileID: 0}
     - target: {fileID: 6748704965344885581, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
       propertyPath: m_IsActive
@@ -10162,6 +10265,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 3845447005448380479, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1616984015}
+    - targetCorrespondingSourceObject: {fileID: 3845447005448380479, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1616984016}
   m_SourcePrefab: {fileID: 100100000, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
 --- !u!1001 &1191190844
 PrefabInstance:
@@ -10459,7 +10565,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1274755528}
   - component: {fileID: 1274755530}
-  - component: {fileID: 1274755529}
+  - component: {fileID: 1274755531}
   m_Layer: 5
   m_Name: Background
   m_TagString: Untagged
@@ -10486,33 +10592,6 @@ RectTransform:
   m_AnchoredPosition: {x: 3.9000015, y: 0}
   m_SizeDelta: {x: -4.07, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &1274755529
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1274755527}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1344c3c82d62a2a41a3576d8abb8e3ea, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.RawImage
-  m_Material: {fileID: 0}
-  m_Color: {r: 0.1764706, g: 0.14509805, b: 0.06666667, a: 1}
-  m_RaycastTarget: 1
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  m_Texture: {fileID: 0}
-  m_UVRect:
-    serializedVersion: 2
-    x: 0
-    y: 0
-    width: 1
-    height: 1
 --- !u!222 &1274755530
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -10521,6 +10600,36 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1274755527}
   m_CullTransparentMesh: 1
+--- !u!114 &1274755531
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1274755527}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 0}
+  m_Color: {r: 0.1764706, g: 0.14509805, b: 0.06666667, a: 1}
+  m_RaycastTarget: 0
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 0}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
 --- !u!1001 &1276967416
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -11167,7 +11276,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1456400326}
   - component: {fileID: 1456400328}
-  - component: {fileID: 1456400327}
+  - component: {fileID: 1456400329}
   m_Layer: 5
   m_Name: Fill
   m_TagString: Untagged
@@ -11191,36 +11300,9 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 3.1699982, y: 0}
-  m_SizeDelta: {x: -15.43, y: 0}
+  m_AnchoredPosition: {x: 0.000022888184, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &1456400327
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1456400325}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1344c3c82d62a2a41a3576d8abb8e3ea, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.RawImage
-  m_Material: {fileID: 0}
-  m_Color: {r: 0.28235295, g: 0.58431375, b: 0.854902, a: 1}
-  m_RaycastTarget: 1
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  m_Texture: {fileID: 0}
-  m_UVRect:
-    serializedVersion: 2
-    x: 0
-    y: 0
-    width: 1
-    height: 1
 --- !u!222 &1456400328
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -11229,6 +11311,36 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1456400325}
   m_CullTransparentMesh: 1
+--- !u!114 &1456400329
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1456400325}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 0}
+  m_Color: {r: 0.28235295, g: 0.58431375, b: 0.85490197, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 0}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
 --- !u!1 &1474457153
 GameObject:
   m_ObjectHideFlags: 0
@@ -11915,6 +12027,11 @@ CapsuleCollider2D:
   m_CorrespondingSourceObject: {fileID: 7209302714386610755, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
   m_PrefabInstance: {fileID: 1182303395}
   m_PrefabAsset: {fileID: 0}
+--- !u!212 &1616984013 stripped
+SpriteRenderer:
+  m_CorrespondingSourceObject: {fileID: 7050732553715643850, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
+  m_PrefabInstance: {fileID: 1182303395}
+  m_PrefabAsset: {fileID: 0}
 --- !u!114 &1616984015
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -11931,6 +12048,22 @@ MonoBehaviour:
   SombraList: []
   speed: 30
   _color: {r: 0.15849599, g: 0.06863999, b: 0.312, a: 0.69803923}
+--- !u!114 &1616984016
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1616983959}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 42f7e5bea7f7c5c4baa76b1d030ff144, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DissolveEffect
+  spriteRenderer: {fileID: 1616984013}
+  dissolveMaterial: {fileID: 2100000, guid: 33566b8d8d9359649bfd2bf459ae623b, type: 2}
+  duration: 1.5
+  edgeColor: {r: 0.15294118, g: 0.14117648, b: 0.227451, a: 1}
 --- !u!1 &1692897312
 GameObject:
   m_ObjectHideFlags: 0
