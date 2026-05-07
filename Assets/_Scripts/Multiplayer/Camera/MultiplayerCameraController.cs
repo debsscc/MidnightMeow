@@ -28,7 +28,9 @@
 /// </summary>
 
 using System.Collections;
+using System.Collections.Generic;
 using Unity.Cinemachine;
+using Unity.Netcode;
 using UnityEngine;
 
 public class MultiplayerCameraController : MonoBehaviour
@@ -51,12 +53,17 @@ public class MultiplayerCameraController : MonoBehaviour
     [Tooltip("Intervalo em segundos entre tentativas de achar o jogador local.")]
     [SerializeField] private float findPlayerRetryInterval = 0.5f;
 
+    [Header("Diagnostico")]
+    [SerializeField] private bool enableDiagnosticsLogs = true;
+    [SerializeField] private float diagnosticsIntervalSeconds = 2f;
+
     private Transform _currentTarget;
     private float _targetOrthographicSize;
     private bool _isZooming = false;
     private Coroutine _findPlayerCoroutine;
     private Camera _mainCam;
     private bool _useFallbackFollow = false;
+    private Coroutine _diagnosticsCoroutine;
 
     public Transform CurrentTarget => _currentTarget;
     public bool HasTarget => _currentTarget != null;
@@ -78,10 +85,31 @@ public class MultiplayerCameraController : MonoBehaviour
 
     private void Start()
     {
+        AutoResolveVirtualCameraIfNeeded();
         _mainCam = ResolveMainCamera();
+        DisableLegacyCameraFollowIfPresent();
         ApplyConfigToCamera();
         InitializeSubControllers();
         _findPlayerCoroutine = StartCoroutine(FindLocalPlayerRoutine());
+        if (enableDiagnosticsLogs)
+            _diagnosticsCoroutine = StartCoroutine(DiagnosticsRoutine());
+    }
+
+    private void OnEnable()
+    {
+        NetworkPlayerController.OnLocalPlayerSpawned += HandleLocalPlayerSpawned;
+        NetworkPlayerController.OnLocalPlayerDespawned += HandleLocalPlayerDespawned;
+    }
+
+    private void OnDisable()
+    {
+        NetworkPlayerController.OnLocalPlayerSpawned -= HandleLocalPlayerSpawned;
+        NetworkPlayerController.OnLocalPlayerDespawned -= HandleLocalPlayerDespawned;
+        if (_diagnosticsCoroutine != null)
+        {
+            StopCoroutine(_diagnosticsCoroutine);
+            _diagnosticsCoroutine = null;
+        }
     }
 
     private Camera ResolveMainCamera()
@@ -101,10 +129,53 @@ public class MultiplayerCameraController : MonoBehaviour
         return anyCamera;
     }
 
+    private IEnumerator DiagnosticsRoutine()
+    {
+        while (true)
+        {
+            LogDiagnosticSnapshot("tick");
+            yield return new WaitForSeconds(diagnosticsIntervalSeconds);
+        }
+    }
+
+    private void LogDiagnosticSnapshot(string source)
+    {
+        if (!enableDiagnosticsLogs) return;
+
+        string camName = _mainCam != null ? _mainCam.name : "NULL";
+        bool camActive = _mainCam != null && _mainCam.isActiveAndEnabled;
+        string vcName = virtualCamera != null ? virtualCamera.name : "NULL";
+        bool vcActive = virtualCamera != null && virtualCamera.isActiveAndEnabled;
+        string followName = virtualCamera != null && virtualCamera.Follow != null ? virtualCamera.Follow.name : "NULL";
+        string targetName = _currentTarget != null ? _currentTarget.name : "NULL";
+        bool sameTarget = virtualCamera != null && virtualCamera.Follow == _currentTarget;
+        string position = _mainCam != null ? _mainCam.transform.position.ToString("F2") : "N/A";
+
+        Debug.Log(
+            $"[CAM-DIAG][{source}] mainCam={camName} active={camActive} pos={position} | " +
+            $"vCam={vcName} active={vcActive} follow={followName} | target={targetName} sameRef={sameTarget} | " +
+            $"fallbackFollow={_useFallbackFollow}");
+    }
+
+    private void DisableLegacyCameraFollowIfPresent()
+    {
+        if (_mainCam == null) return;
+
+        FollowCamera legacyFollow = _mainCam.GetComponent<FollowCamera>();
+        if (legacyFollow != null && legacyFollow.enabled)
+        {
+            legacyFollow.enabled = false;
+            Debug.Log("[MultiplayerCameraController] FollowCamera legado desabilitado para evitar conflito no multiplayer.");
+        }
+    }
+
     private void Update()
     {
         if (_isZooming && virtualCamera != null)
             AnimateZoom();
+
+        if (_currentTarget == null && _findPlayerCoroutine == null)
+            _findPlayerCoroutine = StartCoroutine(FindLocalPlayerRoutine());
     }
 
     private void LateUpdate()
@@ -163,6 +234,32 @@ public class MultiplayerCameraController : MonoBehaviour
         Debug.Log($"[MultiplayerCameraController] Config aplicada. OrthographicSize={config.defaultOrthographicSize}");
     }
 
+    private void AutoResolveVirtualCameraIfNeeded()
+    {
+        if (virtualCamera != null) return;
+
+        virtualCamera = GetComponentInChildren<CinemachineCamera>(true);
+        if (virtualCamera != null)
+        {
+            Debug.Log($"[MultiplayerCameraController] VirtualCamera auto-resolvida: '{virtualCamera.name}'.");
+            return;
+        }
+
+        var allCams = FindObjectsByType<CinemachineCamera>(FindObjectsSortMode.None);
+        var candidates = new List<CinemachineCamera>(allCams.Length);
+        for (int i = 0; i < allCams.Length; i++)
+        {
+            if (allCams[i] != null && allCams[i].name.Contains("PlayerVirtualCamera"))
+                candidates.Add(allCams[i]);
+        }
+
+        if (candidates.Count > 0)
+        {
+            virtualCamera = candidates[0];
+            Debug.LogWarning($"[MultiplayerCameraController] VirtualCamera atribuida por fallback: '{virtualCamera.name}'.");
+        }
+    }
+
     private void InitializeSubControllers()
     {
         if (cutsceneController != null && virtualCamera != null)
@@ -189,15 +286,45 @@ public class MultiplayerCameraController : MonoBehaviour
     /// </summary>
     public void TryFindLocalPlayer()
     {
+        if (NetworkManager.Singleton != null
+            && NetworkManager.Singleton.LocalClient != null
+            && NetworkManager.Singleton.LocalClient.PlayerObject != null)
+        {
+            Transform playerObjectTransform = NetworkManager.Singleton.LocalClient.PlayerObject.transform;
+            if (enableDiagnosticsLogs)
+                Debug.Log($"[CAM-DIAG][TryFindLocalPlayer] usando LocalClient.PlayerObject: {playerObjectTransform.name}");
+            SetTarget(playerObjectTransform);
+            return;
+        }
+
         var allPlayers = FindObjectsByType<NetworkPlayerController>(FindObjectsSortMode.None);
+        if (enableDiagnosticsLogs)
+            Debug.Log($"[CAM-DIAG][TryFindLocalPlayer] playersEncontrados={allPlayers.Length}");
+
         foreach (var player in allPlayers)
         {
             if (player.IsOwner)
             {
+                if (enableDiagnosticsLogs)
+                    Debug.Log($"[CAM-DIAG][TryFindLocalPlayer] owner encontrado: {player.name} clientId={player.OwnerClientId}");
                 SetTarget(player.transform);
                 return;
             }
         }
+
+        if (enableDiagnosticsLogs)
+            Debug.LogWarning("[CAM-DIAG][TryFindLocalPlayer] nenhum player owner encontrado neste frame.");
+    }
+
+    private void HandleLocalPlayerSpawned(NetworkPlayerController localPlayer)
+    {
+        if (localPlayer == null) return;
+        SetTarget(localPlayer.transform);
+    }
+
+    private void HandleLocalPlayerDespawned(ulong _)
+    {
+        ClearTarget();
     }
 
     // ── API Pública — Alvo ─────────────────────────────────────────────────────
@@ -209,6 +336,7 @@ public class MultiplayerCameraController : MonoBehaviour
     public void SetTarget(Transform target)
     {
         _currentTarget = target;
+        LogDiagnosticSnapshot("SetTarget-before");
 
         if (target == null)
         {
@@ -251,6 +379,7 @@ public class MultiplayerCameraController : MonoBehaviour
         }
 
         Debug.Log($"[MultiplayerCameraController] virtualCamera.Follow definido para '{target.name}'.");
+        LogDiagnosticSnapshot("SetTarget-after");
     }
 
     /// <summary>Remove o alvo atual. A câmera para de se mover.</summary>
@@ -258,6 +387,7 @@ public class MultiplayerCameraController : MonoBehaviour
     {
         _currentTarget = null;
         if (virtualCamera != null) virtualCamera.Follow = null;
+        LogDiagnosticSnapshot("ClearTarget");
     }
 
     // ── API Pública — Zoom ─────────────────────────────────────────────────────

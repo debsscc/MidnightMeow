@@ -57,6 +57,7 @@ public class ConnectionManager : MonoBehaviour
             return;
         }
         Instance = this;
+        DontDestroyOnLoad(gameObject);
         Debug.Log("[ConnectionManager] Singleton inicializado.");
     }
 

@@ -17,6 +17,18 @@ using UnityEngine;
 
 public class NetworkPlayerController : NetworkBehaviour
 {
+    public static event System.Action<NetworkPlayerController> OnLocalPlayerSpawned;
+    public static event System.Action<ulong> OnLocalPlayerDespawned;
+
+    [Header("Diagnostico")]
+    [SerializeField] private bool enableDiagnosticsLogs = true;
+
+    [Header("Camera Binding")]
+    [SerializeField] private float cameraBindRetryInterval = 0.25f;
+    [SerializeField] private float cameraBindTimeoutSeconds = 10f;
+
+    private Coroutine _cameraBindCoroutine;
+
     [Header("Componentes locais a desabilitar em clientes remotos")]
     [SerializeField] private PlayerInputHandler inputHandler;
     [SerializeField] private PlayerMovement movement;
@@ -73,6 +85,12 @@ public class NetworkPlayerController : NetworkBehaviour
 
     public override void OnNetworkSpawn()
     {
+        if (enableDiagnosticsLogs)
+        {
+            Debug.Log($"[PLAYER-DIAG][OnNetworkSpawn] obj={name} ownerId={OwnerClientId} localClientId={NetworkManager.LocalClientId} " +
+                      $"isOwner={IsOwner} isServer={IsServer} isClient={IsClient} isLocalPlayer={IsLocalPlayer}");
+        }
+
         // Servidor atribui um índice de cor único baseado no ClientId
         if (IsServer)
         {
@@ -105,12 +123,23 @@ public class NetworkPlayerController : NetworkBehaviour
 
     public override void OnNetworkDespawn()
     {
+        if (enableDiagnosticsLogs)
+            Debug.Log($"[PLAYER-DIAG][OnNetworkDespawn] obj={name} ownerId={OwnerClientId} isOwner={IsOwner}");
+
+        if (IsOwner)
+            OnLocalPlayerDespawned?.Invoke(OwnerClientId);
+
         _playerColorIndex.OnValueChanged -= OnColorIndexChanged;
         _networkFacingFlipX.OnValueChanged -= OnNetworkFacingFlipChanged;
         if (_subscribedMovementFlip && movement != null)
         {
             movement.OnFlipSprite -= OnOwnerMovementFlip;
             _subscribedMovementFlip = false;
+        }
+        if (_cameraBindCoroutine != null)
+        {
+            StopCoroutine(_cameraBindCoroutine);
+            _cameraBindCoroutine = null;
         }
         GameEvents.InvokePlayerLeft(OwnerClientId);
     }
@@ -133,6 +162,9 @@ public class NetworkPlayerController : NetworkBehaviour
 
     private void SetupLocalPlayer()
     {
+        if (enableDiagnosticsLogs)
+            Debug.Log($"[PLAYER-DIAG][SetupLocalPlayer] obj={name} ownerId={OwnerClientId}");
+
         SetInputComponentsActive(true);
         _playerName.Value = $"Jogador {OwnerClientId + 1}";
 
@@ -157,9 +189,40 @@ public class NetworkPlayerController : NetworkBehaviour
         {
             Debug.LogWarning("[NetworkPlayerController] MultiplayerCameraController não encontrado na cena. " +
                              "Adicione o rig de câmera conforme a hierarquia documentada.");
+            if (_cameraBindCoroutine == null)
+                _cameraBindCoroutine = StartCoroutine(WaitAndBindCameraRoutine());
         }
 
         Debug.Log($"[NetworkPlayerController] Jogador local configurado. ClientId={OwnerClientId}");
+        if (enableDiagnosticsLogs)
+            Debug.Log($"[PLAYER-DIAG][SetupLocalPlayer] disparando OnLocalPlayerSpawned para obj={name}");
+
+        OnLocalPlayerSpawned?.Invoke(this);
+    }
+
+    private System.Collections.IEnumerator WaitAndBindCameraRoutine()
+    {
+        float elapsed = 0f;
+        while (elapsed < cameraBindTimeoutSeconds && IsSpawned && IsOwner)
+        {
+            if (MultiplayerCameraController.Instance != null)
+            {
+                MultiplayerCameraController.Instance.SetTarget(transform);
+                if (aim != null)
+                    aim.SetAimCamera(MultiplayerCameraController.Instance.MainCamera);
+                if (enableDiagnosticsLogs)
+                    Debug.Log($"[PLAYER-DIAG][LateCameraBind] camera vinculada ao player local {name}.");
+                _cameraBindCoroutine = null;
+                yield break;
+            }
+
+            elapsed += cameraBindRetryInterval;
+            yield return new WaitForSeconds(cameraBindRetryInterval);
+        }
+
+        if (enableDiagnosticsLogs)
+            Debug.LogWarning("[PLAYER-DIAG][LateCameraBind] timeout aguardando MultiplayerCameraController.");
+        _cameraBindCoroutine = null;
     }
 
     private void SetupRemotePlayer()

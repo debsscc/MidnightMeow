@@ -62,6 +62,23 @@ public class UIActionBridge : MonoBehaviour
         }));
     }
 
+    public void LoadLobby()
+    {
+        StartCoroutine(DelayedAction(0.2f, () =>
+        {
+            Time.timeScale = 1f;
+            if (SceneTransition.Instance != null)
+            {
+                SceneTransition.Instance.ChangeScene("Lobby");
+                return;
+            }
+
+            var flowManager = GetFlowManager();
+            if (flowManager == null) return;
+            flowManager.LoadLobby();
+        }));
+    }
+
     // --- Métodos Restaurados ---
     public void ActivateScreen(GameObject screen) => screen.SetActive(true);
     public void DeactivateScreen(GameObject screen) => screen.SetActive(false);

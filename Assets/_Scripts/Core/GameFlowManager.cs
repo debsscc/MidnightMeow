@@ -9,6 +9,10 @@ public class GameFlowManager : MonoBehaviour
     [Header("Scenes")]
     [Tooltip("Name of the menu scene to load on startup")]
     [SerializeField] private string menuSceneName = "Menu2";
+    [Tooltip("Name of the multiplayer lobby scene loaded from menu")]
+    [SerializeField] private string lobbySceneName = "Lobby";
+    [Tooltip("Default gameplay scene loaded when starting a match")]
+    [SerializeField] private string defaultGameplaySceneName = "Fase-1";
 
     public event Action OnSceneLoadStarted;
     public event Action OnSceneLoadCompleted;
@@ -34,6 +38,28 @@ public class GameFlowManager : MonoBehaviour
         }
         StartCoroutine(LoadSceneAsync(phaseName));
         Debug.Log($"GameFlowManager: Carregando cena '{phaseName}'.");
+    }
+
+    public void LoadLobby()
+    {
+        if (string.IsNullOrEmpty(lobbySceneName))
+        {
+            Debug.LogError("GameFlowManager: lobbySceneName is empty. Cannot LoadLobby().");
+            return;
+        }
+
+        StartCoroutine(LoadSceneAsync(lobbySceneName));
+    }
+
+    public void LoadDefaultGameplay()
+    {
+        if (string.IsNullOrEmpty(defaultGameplaySceneName))
+        {
+            Debug.LogError("GameFlowManager: defaultGameplaySceneName is empty. Cannot LoadDefaultGameplay().");
+            return;
+        }
+
+        StartCoroutine(LoadSceneAsync(defaultGameplaySceneName));
     }
 
     public void LoadPhase(int buildIndex)

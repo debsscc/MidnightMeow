@@ -10,9 +10,14 @@
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class MultiplayerBootstrapper : MonoBehaviour
 {
+    [Header("Validação por cena")]
+    [SerializeField] private bool skipGameplayChecksOutsideGameplayScene = true;
+    [SerializeField] private string gameplaySceneName = "Fase-1";
+
     [Header("Referências Obrigatórias (auto-detectadas se nulas)")]
     [SerializeField] private RelayManager relayManager;
     [SerializeField] private ConnectionManager connectionManager;
@@ -34,14 +39,25 @@ public class MultiplayerBootstrapper : MonoBehaviour
 
     private void ValidateScene()
     {
+        bool isGameplayScene = !string.IsNullOrWhiteSpace(gameplaySceneName)
+                               && SceneManager.GetActiveScene().name == gameplaySceneName;
+
         CheckNetworkManager();
         CheckUnityTransport();
         CheckSingleton("RelayManager", relayManager, FindFirstObjectByType<RelayManager>());
         CheckSingleton("ConnectionManager", connectionManager, FindFirstObjectByType<ConnectionManager>());
         CheckNetworkBehaviour("MultiplayerGameManager", gameManager, FindFirstObjectByType<MultiplayerGameManager>());
-        CheckNetworkBehaviour("NetworkWaveManager", waveManager, FindFirstObjectByType<NetworkWaveManager>());
-        CheckPlayerSpawnManager();
-        CheckCameraRig();
+        if (!skipGameplayChecksOutsideGameplayScene || isGameplayScene)
+        {
+            CheckNetworkBehaviour("NetworkWaveManager", waveManager, FindFirstObjectByType<NetworkWaveManager>());
+            CheckPlayerSpawnManager();
+            CheckCameraRig();
+        }
+        else
+        {
+            Debug.Log($"[MultiplayerBootstrapper] Cena '{SceneManager.GetActiveScene().name}' marcada como nao-gameplay. " +
+                      "Checks de Wave/Spawn/Camera foram ignorados.");
+        }
         CheckProjectSettings();
     }
 

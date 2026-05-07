@@ -41,7 +41,7 @@ GameObject:
   m_Component:
   - component: {fileID: 7827740900453459883}
   - component: {fileID: 6659564618848341939}
-  m_Layer: 13
+  m_Layer: 10
   m_Name: Shadow
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -281,7 +281,7 @@ GameObject:
   - component: {fileID: -4582580670439278106}
   - component: {fileID: 146336451343428528}
   - component: {fileID: -1209464447139715824}
-  m_Layer: 9
+  m_Layer: 10
   m_Name: Rato_Padrao_Veloz
   m_TagString: Enemy
   m_Icon: {fileID: 0}

@@ -35,6 +35,7 @@ public class RelayManager : MonoBehaviour
             return;
         }
         Instance = this;
+        DontDestroyOnLoad(gameObject);
     }
 
     // ── Inicialização ──────────────────────────────────────────────────────────
