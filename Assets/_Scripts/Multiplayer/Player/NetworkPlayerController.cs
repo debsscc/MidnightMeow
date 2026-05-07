@@ -149,6 +149,8 @@ public class NetworkPlayerController : NetworkBehaviour
         if (MultiplayerCameraController.Instance != null)
         {
             MultiplayerCameraController.Instance.SetTarget(transform);
+            if (aim != null)
+                aim.SetAimCamera(MultiplayerCameraController.Instance.MainCamera);
             Debug.Log($"[NetworkPlayerController] Câmera da cena direcionada para ClientId={OwnerClientId}");
         }
         else

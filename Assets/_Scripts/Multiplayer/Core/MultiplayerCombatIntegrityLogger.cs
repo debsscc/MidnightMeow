@@ -17,6 +17,8 @@ public class MultiplayerCombatIntegrityLogger : MonoBehaviour
 
     [Header("Categorias")]
     [SerializeField] private bool logDirecaoTiro = true;
+    [SerializeField] private bool logAimPipeline = true;
+    [SerializeField] private bool logShootingPipeline = true;
     [SerializeField] private bool logMiraDetalhada = true;
     [SerializeField] private bool logSpawnServidor = true;
     [SerializeField] private bool logSincronizacaoMunicao = true;
@@ -40,14 +42,19 @@ public class MultiplayerCombatIntegrityLogger : MonoBehaviour
         if (_shooting != null)
         {
             _shooting.OnFireDirectionComputed += OnFireDirectionComputed;
+            _shooting.OnShootingPipelineSampled += OnShootingPipelineSampled;
             _shooting.OnProjectileInstantiated += OnProjectileInstantiated;
             _shooting.OnOutOfAmmo += OnOutOfAmmo;
         }
+
+        if (_aim != null)
+            _aim.OnAimPipelineSampled += OnAimPipelineSampled;
 
         if (_networkSpawner != null)
         {
             _networkSpawner.OnOwnerShotPrepared += OnOwnerShotPrepared;
             _networkSpawner.OnServerShotValidated += OnServerShotValidated;
+            _networkSpawner.OnServerProjectileSpawned += OnServerProjectileSpawned;
             _networkSpawner.OnAmmoSyncSentToOwner += OnAmmoSyncSentToOwner;
         }
     }
@@ -57,16 +64,33 @@ public class MultiplayerCombatIntegrityLogger : MonoBehaviour
         if (_shooting != null)
         {
             _shooting.OnFireDirectionComputed -= OnFireDirectionComputed;
+            _shooting.OnShootingPipelineSampled -= OnShootingPipelineSampled;
             _shooting.OnProjectileInstantiated -= OnProjectileInstantiated;
             _shooting.OnOutOfAmmo -= OnOutOfAmmo;
         }
+
+        if (_aim != null)
+            _aim.OnAimPipelineSampled -= OnAimPipelineSampled;
 
         if (_networkSpawner != null)
         {
             _networkSpawner.OnOwnerShotPrepared -= OnOwnerShotPrepared;
             _networkSpawner.OnServerShotValidated -= OnServerShotValidated;
+            _networkSpawner.OnServerProjectileSpawned -= OnServerProjectileSpawned;
             _networkSpawner.OnAmmoSyncSentToOwner -= OnAmmoSyncSentToOwner;
         }
+    }
+
+    private void OnAimPipelineSampled(PlayerAim.AimPipelineSnapshot snapshot)
+    {
+        if (!ativo || !logAimPipeline) return;
+        Log($"{ContextoRede()} Aim[{snapshot.Context}] success={snapshot.Success} reason=\"{snapshot.Reason}\" cam={snapshot.CameraName} camPos={snapshot.CameraPosition} camOrtho={snapshot.CameraIsOrthographic} hasMouse={snapshot.HasMouse} mouseScreen={snapshot.MouseScreenPosition} mouseWorld={snapshot.MouseWorldPosition} rayHit={snapshot.RayHitPlane} playerPos={snapshot.PlayerPosition} fpBeforePos={snapshot.FirePointBeforePosition} fpAfterPos={snapshot.FirePointAfterPosition} fpBeforeEuler={snapshot.FirePointBeforeEuler} fpAfterEuler={snapshot.FirePointAfterEuler} dir={snapshot.AimDirection} radius={snapshot.Radius:0.###}");
+    }
+
+    private void OnShootingPipelineSampled(PlayerShooting.ShootingPipelineSnapshot snapshot)
+    {
+        if (!ativo || !logShootingPipeline) return;
+        Log($"{ContextoRede()} Shooting[{snapshot.Stage}] hasAmmo={snapshot.HasAmmo} consumedLocal={snapshot.ConsumedAmmoLocally} ammo={snapshot.Ammo} prefab={snapshot.ProjectilePrefabName} spawnPos={snapshot.SpawnPosition} firePointPos={snapshot.FirePointPosition} firePointEuler={snapshot.FirePointEuler} projectilePos={snapshot.ProjectilePosition} projectileEuler={snapshot.ProjectileEuler} dir={snapshot.Direction} rotZ={snapshot.RotationZ:0.###}");
     }
 
     private void OnFireDirectionComputed(Vector2 direction, bool usedFirePointDirection, int ammoAtShotStart)
@@ -86,11 +110,11 @@ public class MultiplayerCombatIntegrityLogger : MonoBehaviour
         }
     }
 
-    private void OnProjectileInstantiated(GameObject projectile, Vector2 direction)
+    private void OnProjectileInstantiated(GameObject projectile, Vector3 position, Quaternion rotation, Vector2 direction)
     {
         if (!ativo || !logDirecaoTiro) return;
         string projectileName = projectile != null ? projectile.name : "null";
-        Log($"{ContextoRede()} LocalProjectileInstantiated name={projectileName} dir={direction}");
+        Log($"{ContextoRede()} LocalProjectileInstantiated name={projectileName} pos={position} rotZ={rotation.eulerAngles.z:0.###} dir={direction}");
     }
 
     private void OnOutOfAmmo()
@@ -116,6 +140,12 @@ public class MultiplayerCombatIntegrityLogger : MonoBehaviour
         {
             Warn($"{ContextoRede()} AmmoAfter > AmmoBefore em shot aceito. Possível inconsistência de configuração de munição.");
         }
+    }
+
+    private void OnServerProjectileSpawned(NetworkProjectileSpawner.ServerProjectileSpawnSnapshot snapshot)
+    {
+        if (!ativo || !logSpawnServidor) return;
+        Log($"{ContextoRede()} ServerProjectileSpawned owner={snapshot.OwnerClientId} netObj={snapshot.NetworkObjectId} prefab={snapshot.PrefabName} rpcPos={snapshot.RpcPosition} spawnedPos={snapshot.SpawnedPosition} rotEuler={snapshot.RotationEuler} dir={snapshot.Direction}");
     }
 
     private void OnAmmoSyncSentToOwner(ulong ownerClientId, int syncedAmmo)

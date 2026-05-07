@@ -10,10 +10,57 @@
 
 using Unity.Netcode;
 using UnityEngine;
+using System;
 
 [RequireComponent(typeof(Projectile), typeof(Rigidbody2D))]
 public class NetworkProjectileController : NetworkBehaviour
 {
+    public readonly struct ProjectileNetworkSnapshot
+    {
+        public readonly string Stage;
+        public readonly ulong NetworkObjectId;
+        public readonly ulong OwnerClientId;
+        public readonly bool IsServer;
+        public readonly Vector3 Position;
+        public readonly Vector3 RotationEuler;
+        public readonly Vector2 Direction;
+        public readonly float DamageMultiplier;
+        public readonly int BonusBounces;
+        public readonly bool RigidbodySimulated;
+        public readonly bool ProjectileEnabled;
+        public readonly bool ColliderEnabled;
+
+        public ProjectileNetworkSnapshot(
+            string stage,
+            ulong networkObjectId,
+            ulong ownerClientId,
+            bool isServer,
+            Vector3 position,
+            Vector3 rotationEuler,
+            Vector2 direction,
+            float damageMultiplier,
+            int bonusBounces,
+            bool rigidbodySimulated,
+            bool projectileEnabled,
+            bool colliderEnabled)
+        {
+            Stage = stage;
+            NetworkObjectId = networkObjectId;
+            OwnerClientId = ownerClientId;
+            IsServer = isServer;
+            Position = position;
+            RotationEuler = rotationEuler;
+            Direction = direction;
+            DamageMultiplier = damageMultiplier;
+            BonusBounces = bonusBounces;
+            RigidbodySimulated = rigidbodySimulated;
+            ProjectileEnabled = projectileEnabled;
+            ColliderEnabled = colliderEnabled;
+        }
+    }
+
+    public static event Action<ProjectileNetworkSnapshot> OnProjectileNetworkSampled;
+
     private Projectile _projectile;
     private Rigidbody2D _rb;
     private Collider2D _collider;
@@ -42,6 +89,8 @@ public class NetworkProjectileController : NetworkBehaviour
             // Mantém o collider desabilitado em clientes para evitar dano duplicado
             if (_collider != null) _collider.enabled = false;
         }
+
+        EmitProjectileNetworkSample("OnNetworkSpawn");
     }
 
     /// <summary>
@@ -66,6 +115,29 @@ public class NetworkProjectileController : NetworkBehaviour
         _rb.simulated = true;
         _projectile.enabled = true;
         if (_collider != null) _collider.enabled = true;
+
+        EmitProjectileNetworkSample("ServerApplySpawnData");
+    }
+
+    private void EmitProjectileNetworkSample(string stage)
+    {
+        var snapshot = new ProjectileNetworkSnapshot(
+            stage,
+            NetworkObject != null ? NetworkObject.NetworkObjectId : 0,
+            _ownerClientId,
+            IsServer,
+            transform.position,
+            transform.eulerAngles,
+            _direction,
+            _damageMultiplier,
+            _bonusBounces,
+            _rb != null && _rb.simulated,
+            _projectile != null && _projectile.enabled,
+            _collider != null && _collider.enabled
+        );
+
+        OnProjectileNetworkSampled?.Invoke(snapshot);
+        Debug.Log($"[MP-PROJECTILE] {snapshot.Stage} netObj={snapshot.NetworkObjectId} owner={snapshot.OwnerClientId} isServer={snapshot.IsServer} pos={snapshot.Position} rot={snapshot.RotationEuler} dir={snapshot.Direction} dmgMul={snapshot.DamageMultiplier:0.###} bonusBounces={snapshot.BonusBounces} rbSim={snapshot.RigidbodySimulated} projectileEnabled={snapshot.ProjectileEnabled} colliderEnabled={snapshot.ColliderEnabled}");
     }
 
     /// <summary>

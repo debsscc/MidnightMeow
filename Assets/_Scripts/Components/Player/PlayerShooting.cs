@@ -12,6 +12,50 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(PlayerInputHandler), typeof(PlayerAmmo))]
 public class PlayerShooting : MonoBehaviour
 {
+    public readonly struct ShootingPipelineSnapshot
+    {
+        public readonly string Stage;
+        public readonly bool HasAmmo;
+        public readonly bool ConsumedAmmoLocally;
+        public readonly int Ammo;
+        public readonly Vector3 SpawnPosition;
+        public readonly Vector3 FirePointPosition;
+        public readonly Vector3 FirePointEuler;
+        public readonly Vector3 ProjectilePosition;
+        public readonly Vector3 ProjectileEuler;
+        public readonly Vector2 Direction;
+        public readonly float RotationZ;
+        public readonly string ProjectilePrefabName;
+
+        public ShootingPipelineSnapshot(
+            string stage,
+            bool hasAmmo,
+            bool consumedAmmoLocally,
+            int ammo,
+            Vector3 spawnPosition,
+            Vector3 firePointPosition,
+            Vector3 firePointEuler,
+            Vector3 projectilePosition,
+            Vector3 projectileEuler,
+            Vector2 direction,
+            float rotationZ,
+            string projectilePrefabName)
+        {
+            Stage = stage;
+            HasAmmo = hasAmmo;
+            ConsumedAmmoLocally = consumedAmmoLocally;
+            Ammo = ammo;
+            SpawnPosition = spawnPosition;
+            FirePointPosition = firePointPosition;
+            FirePointEuler = firePointEuler;
+            ProjectilePosition = projectilePosition;
+            ProjectileEuler = projectileEuler;
+            Direction = direction;
+            RotationZ = rotationZ;
+            ProjectilePrefabName = projectilePrefabName;
+        }
+    }
+
     [SerializeField] private GameObject projectilePrefab;
     [SerializeField] private Transform firePoint;
 
@@ -22,10 +66,11 @@ public class PlayerShooting : MonoBehaviour
     private Camera _mainCamera;
 
     public event Action OnShoot;
-    // Evento emitido quando um projétil é instanciado (direção de mira no plano XY)
-    public event Action<GameObject, Vector2> OnProjectileInstantiated;
+    // Evento emitido quando um projétil é instanciado com a pose calculada no cliente dono.
+    public event Action<GameObject, Vector3, Quaternion, Vector2> OnProjectileInstantiated;
     public event Action OnOutOfAmmo;
     public event Action<Vector2, bool, int> OnFireDirectionComputed;
+    public event Action<ShootingPipelineSnapshot> OnShootingPipelineSampled;
 
     [Header("Shooting")]
     [Tooltip("Shots per second (can be modified by upgrades)")]
@@ -103,19 +148,42 @@ public class PlayerShooting : MonoBehaviour
     {
         while (true)
         {
-            if (_ammo.HasAmmo())
+            bool hasAmmo = _ammo.HasAmmo();
+            if (hasAmmo)
             {
-                if (ShouldConsumeAmmoLocally())
+                bool consumedAmmoLocally = ShouldConsumeAmmoLocally();
+                if (consumedAmmoLocally)
                     _ammo.UseAmmo(1);
                 bool usedFirePointDirection;
-                Vector2 fireDirection = GetFireDirection(out usedFirePointDirection);
+                Vector3 spawnPosition;
+                Quaternion fireRotation;
+                Vector2 fireDirection = GetFirePose(out spawnPosition, out fireRotation, out usedFirePointDirection);
+                EmitShootingPipeline(
+                    "AfterFirePose",
+                    true,
+                    consumedAmmoLocally,
+                    spawnPosition,
+                    Vector3.zero,
+                    Vector3.zero,
+                    fireDirection,
+                    fireRotation.eulerAngles.z
+                );
                 OnFireDirectionComputed?.Invoke(fireDirection, usedFirePointDirection, _ammo.CurrentAmmo);
-                float fireAngle = Mathf.Atan2(fireDirection.y, fireDirection.x) * Mathf.Rad2Deg - 90f;
-                Quaternion fireRotation = Quaternion.Euler(0f, 0f, fireAngle);
 
-                firePoint.rotation = fireRotation;
+                if (firePoint != null)
+                    firePoint.SetPositionAndRotation(spawnPosition, fireRotation);
 
-                GameObject projectileInstance = Instantiate(projectilePrefab, firePoint.position, fireRotation);
+                GameObject projectileInstance = Instantiate(projectilePrefab, spawnPosition, fireRotation);
+                EmitShootingPipeline(
+                    "AfterLocalInstantiate",
+                    true,
+                    consumedAmmoLocally,
+                    spawnPosition,
+                    projectileInstance.transform.position,
+                    projectileInstance.transform.eulerAngles,
+                    fireDirection,
+                    fireRotation.eulerAngles.z
+                );
 
                 if (projectileInstance.TryGetComponent<Projectile>(out Projectile projectile))
                 {
@@ -128,12 +196,22 @@ public class PlayerShooting : MonoBehaviour
                 }
 
                 // Notifica listeners sobre a instância do projétil e a mira (autoritativa no cliente dono)
-                OnProjectileInstantiated?.Invoke(projectileInstance, fireDirection);
+                OnProjectileInstantiated?.Invoke(projectileInstance, spawnPosition, fireRotation, fireDirection);
 
                 OnShoot?.Invoke();
             }
             else
             {
+                EmitShootingPipeline(
+                    "OutOfAmmo",
+                    false,
+                    false,
+                    firePoint != null ? firePoint.position : transform.position,
+                    Vector3.zero,
+                    Vector3.zero,
+                    firePoint != null ? (Vector2)firePoint.up : Vector2.up,
+                    firePoint != null ? firePoint.eulerAngles.z : 0f
+                );
                 OnOutOfAmmo?.Invoke();  // Emitir som de clique vazio ou similar
                 Debug.Log("Sem Munição!");
                 yield break;
@@ -144,11 +222,37 @@ public class PlayerShooting : MonoBehaviour
         }
     }
 
-    private Vector2 GetFireDirection(out bool usedFirePointDirection)
+    private void EmitShootingPipeline(
+        string stage,
+        bool hasAmmo,
+        bool consumedAmmoLocally,
+        Vector3 spawnPosition,
+        Vector3 projectilePosition,
+        Vector3 projectileEuler,
+        Vector2 direction,
+        float rotationZ)
     {
-        if (_aim != null && _aim.TryGetAimDirection(out Vector2 aimDirection, out bool aimUsedFallback))
+        OnShootingPipelineSampled?.Invoke(new ShootingPipelineSnapshot(
+            stage,
+            hasAmmo,
+            consumedAmmoLocally,
+            _ammo != null ? _ammo.CurrentAmmo : -1,
+            spawnPosition,
+            firePoint != null ? firePoint.position : transform.position,
+            firePoint != null ? firePoint.eulerAngles : Vector3.zero,
+            projectilePosition,
+            projectileEuler,
+            direction,
+            rotationZ,
+            projectilePrefab != null ? projectilePrefab.name : "null"
+        ));
+    }
+
+    private Vector2 GetFirePose(out Vector3 spawnPosition, out Quaternion fireRotation, out bool usedFirePointDirection)
+    {
+        if (_aim != null && _aim.TryGetFirePose(out spawnPosition, out fireRotation, out Vector2 aimDirection))
         {
-            usedFirePointDirection = aimUsedFallback;
+            usedFirePointDirection = false;
             return aimDirection.normalized;
         }
 
@@ -160,7 +264,10 @@ public class PlayerShooting : MonoBehaviour
         if (Mouse.current == null || _mainCamera == null)
         {
             usedFirePointDirection = true;
-            return firePoint != null ? (Vector2)firePoint.up : Vector2.up;
+            Vector2 fallbackDirection = firePoint != null ? (Vector2)firePoint.up : Vector2.up;
+            spawnPosition = firePoint != null ? firePoint.position : transform.position;
+            fireRotation = Quaternion.Euler(0f, 0f, Mathf.Atan2(fallbackDirection.y, fallbackDirection.x) * Mathf.Rad2Deg - 90f);
+            return fallbackDirection;
         }
 
         Vector3 mouseScreenPosition = Mouse.current.position.ReadValue();
@@ -172,11 +279,14 @@ public class PlayerShooting : MonoBehaviour
         if (fireDirection.sqrMagnitude <= Mathf.Epsilon)
         {
             usedFirePointDirection = true;
-            return firePoint != null ? (Vector2)firePoint.up : Vector2.up;
+            fireDirection = firePoint != null ? (Vector2)firePoint.up : Vector2.up;
         }
 
         usedFirePointDirection = false;
-        return fireDirection.normalized;
+        fireDirection = fireDirection.normalized;
+        spawnPosition = firePoint != null ? firePoint.position : transform.position;
+        fireRotation = Quaternion.Euler(0f, 0f, Mathf.Atan2(fireDirection.y, fireDirection.x) * Mathf.Rad2Deg - 90f);
+        return fireDirection;
     }
 
     // API: allow external systems (upgrades) to change fire rate and damage

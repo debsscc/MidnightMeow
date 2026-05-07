@@ -1034,6 +1034,7 @@ MonoBehaviour:
   ativo: 1
   prefixo: '[MP-INTEGRITY]'
   logDirecaoTiro: 1
+  logMiraDetalhada: 1
   logSpawnServidor: 1
   logSincronizacaoMunicao: 1
   logAvisosIntegridade: 1
@@ -1351,15 +1352,15 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 0}
-  m_Color: {r: 0, g: 0, b: 0, a: 1}
+  m_Sprite: {fileID: -2413806693520163455, guid: 3e34535e2ec051c489bc3757b34a862b, type: 3}
+  m_Color: {r: 1, g: 0, b: 0, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
-  m_Size: {x: 19.286, y: 17.220001}
+  m_Size: {x: 1, y: 1}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
-  m_WasSpriteAssigned: 0
+  m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
 --- !u!1 &6748704965344885581
 GameObject:

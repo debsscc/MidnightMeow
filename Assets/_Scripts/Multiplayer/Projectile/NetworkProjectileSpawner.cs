@@ -54,8 +54,38 @@ public class NetworkProjectileSpawner : NetworkBehaviour
         }
     }
 
+    public readonly struct ServerProjectileSpawnSnapshot
+    {
+        public readonly ulong OwnerClientId;
+        public readonly ulong NetworkObjectId;
+        public readonly Vector3 RpcPosition;
+        public readonly Vector3 SpawnedPosition;
+        public readonly Vector3 RotationEuler;
+        public readonly Vector2 Direction;
+        public readonly string PrefabName;
+
+        public ServerProjectileSpawnSnapshot(
+            ulong ownerClientId,
+            ulong networkObjectId,
+            Vector3 rpcPosition,
+            Vector3 spawnedPosition,
+            Vector3 rotationEuler,
+            Vector2 direction,
+            string prefabName)
+        {
+            OwnerClientId = ownerClientId;
+            NetworkObjectId = networkObjectId;
+            RpcPosition = rpcPosition;
+            SpawnedPosition = spawnedPosition;
+            RotationEuler = rotationEuler;
+            Direction = direction;
+            PrefabName = prefabName;
+        }
+    }
+
     public event Action<OwnerShotSnapshot> OnOwnerShotPrepared;
     public event Action<ServerShotSnapshot> OnServerShotValidated;
+    public event Action<ServerProjectileSpawnSnapshot> OnServerProjectileSpawned;
     public event Action<ulong, int> OnAmmoSyncSentToOwner;
 
     [Header("Prefab de Projétil de Rede")]
@@ -88,17 +118,21 @@ public class NetworkProjectileSpawner : NetworkBehaviour
     /// Intercepta o projétil criado localmente pelo PlayerShooting (via Instantiate).
     /// Destrói o objeto local e solicita ao servidor que spawne a versão de rede.
     /// </summary>
-    private void HandleProjectileInstantiatedLocally(GameObject localProjectile, Vector2 fireDirection)
+    private void HandleProjectileInstantiatedLocally(
+        GameObject localProjectile,
+        Vector3 shotPosition,
+        Quaternion shotRotation,
+        Vector2 fireDirection)
     {
         if (localProjectile == null) return;
 
-        Vector3 position = localProjectile.transform.position;
         Vector2 direction = fireDirection.sqrMagnitude > Mathf.Epsilon
             ? fireDirection.normalized
             : (Vector2)localProjectile.transform.up;
 
-        float fireAngle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg - 90f;
-        Quaternion rotation = Quaternion.Euler(0f, 0f, fireAngle);
+        Quaternion rotation = direction.sqrMagnitude > Mathf.Epsilon
+            ? Quaternion.Euler(0f, 0f, Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg - 90f)
+            : shotRotation;
 
         float damageMultiplier = 1f;
         int bonusBounces = 0;
@@ -108,11 +142,11 @@ public class NetworkProjectileSpawner : NetworkBehaviour
         if (shooting != null) damageMultiplier = shooting.DamageMultiplier;
         if (adrenaline != null && adrenaline.IsFrenzyActive) bonusBounces = adrenaline.GetBonusBounces();
 
-        OnOwnerShotPrepared?.Invoke(new OwnerShotSnapshot(position, direction, rotation, damageMultiplier, bonusBounces));
+        OnOwnerShotPrepared?.Invoke(new OwnerShotSnapshot(shotPosition, direction, rotation, damageMultiplier, bonusBounces));
 
         Destroy(localProjectile);
 
-        SpawnProjectileRpc(position, rotation, direction, damageMultiplier, bonusBounces);
+        SpawnProjectileRpc(shotPosition, rotation, direction, damageMultiplier, bonusBounces);
     }
 
     /// <summary>
@@ -126,6 +160,8 @@ public class NetworkProjectileSpawner : NetworkBehaviour
         float damageMultiplier,
         int bonusBounces)
     {
+        Debug.Log($"[MP-SHOT-RPC] Received owner={OwnerClientId} pos={position} rotZ={rotation.eulerAngles.z:0.###} dir={direction} dmgMul={damageMultiplier:0.###} bonusBounces={bonusBounces}");
+
         if (networkProjectilePrefab == null)
         {
             Debug.LogError("[NetworkProjectileSpawner] networkProjectilePrefab não atribuído!");
@@ -178,6 +214,16 @@ public class NetworkProjectileSpawner : NetworkBehaviour
         }
 
         netObj.Spawn(true);
+        OnServerProjectileSpawned?.Invoke(new ServerProjectileSpawnSnapshot(
+            OwnerClientId,
+            netObj.NetworkObjectId,
+            position,
+            projectileObj.transform.position,
+            projectileObj.transform.eulerAngles,
+            direction,
+            networkProjectilePrefab != null ? networkProjectilePrefab.name : "null"
+        ));
+        Debug.Log($"[MP-SHOT-SPAWN] Spawned owner={OwnerClientId} netObj={netObj.NetworkObjectId} prefab={networkProjectilePrefab.name} pos={projectileObj.transform.position} rot={projectileObj.transform.eulerAngles} dir={direction}");
 
         // Inicializa o projétil após o spawn na rede
         var networkProjectile = projectileObj.GetComponent<NetworkProjectileController>();

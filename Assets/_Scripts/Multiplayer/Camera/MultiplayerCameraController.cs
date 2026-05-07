@@ -60,6 +60,15 @@ public class MultiplayerCameraController : MonoBehaviour
 
     public Transform CurrentTarget => _currentTarget;
     public bool HasTarget => _currentTarget != null;
+    public Camera MainCamera
+    {
+        get
+        {
+            if (_mainCam == null || !_mainCam.isActiveAndEnabled)
+                _mainCam = ResolveMainCamera();
+            return _mainCam;
+        }
+    }
 
     private void Awake()
     {
@@ -69,10 +78,27 @@ public class MultiplayerCameraController : MonoBehaviour
 
     private void Start()
     {
-        _mainCam = Camera.main;
+        _mainCam = ResolveMainCamera();
         ApplyConfigToCamera();
         InitializeSubControllers();
         _findPlayerCoroutine = StartCoroutine(FindLocalPlayerRoutine());
+    }
+
+    private Camera ResolveMainCamera()
+    {
+        Camera taggedCamera = Camera.main;
+        if (taggedCamera != null && taggedCamera.isActiveAndEnabled)
+            return taggedCamera;
+
+        Camera childCamera = GetComponentInChildren<Camera>(true);
+        if (childCamera != null && childCamera.isActiveAndEnabled)
+            return childCamera;
+
+        Camera anyCamera = FindFirstObjectByType<Camera>(FindObjectsInactive.Exclude);
+        if (anyCamera != null)
+            Debug.LogWarning($"[MultiplayerCameraController] Camera.main não encontrada; usando fallback '{anyCamera.name}'. Configure a tag MainCamera no objeto correto.");
+
+        return anyCamera;
     }
 
     private void Update()
@@ -206,7 +232,12 @@ public class MultiplayerCameraController : MonoBehaviour
         // Teleporta a câmera principal imediatamente para evitar lerp inicial longo
         // Nota: virtualCamera é CinemachineCamera, não tem componente Camera.
         // Usamos Camera.main (o CinemachineBrain) para o teleporte direto.
-        if (_mainCam == null) _mainCam = Camera.main;
+        if (_mainCam == null || !_mainCam.isActiveAndEnabled)
+            _mainCam = ResolveMainCamera();
+        PlayerAim aim = target.GetComponent<PlayerAim>();
+        if (aim != null)
+            aim.SetAimCamera(_mainCam);
+
         if (_mainCam != null)
         {
             float zOffset = _mainCam.transform.position.z;
