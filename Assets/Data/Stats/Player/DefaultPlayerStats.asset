@@ -16,7 +16,7 @@ MonoBehaviour:
   moveSpeed: 10
   maxAmmo: 5
   infinityAmmo: 1
-  firePointRadius: 1
+  firePointRadius: 4
   maxAdrenaline: 10
   adrenalineDecayRate: 0.5
   adrenalineGainPerCiencia: 2
@@ -28,3 +28,6 @@ MonoBehaviour:
   damageUpgradeLevel: 0
   fireRateUpgradeLevel: 0
   healthUpgradeLevel: 0
+  dashDuration: 0.2
+  dashSpeed: 20
+  dashCooldown: 1

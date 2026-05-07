@@ -72,4 +72,28 @@ public static class GameEvents
     {
         OnPauseChanged?.Invoke(paused);
     }
+
+    // --- Eventos de Multiplayer ---
+
+    // Disparado quando qualquer jogador entra na partida (clientId, isLocalPlayer)
+    public static event System.Action<ulong, bool> OnPlayerJoined;
+    // Disparado quando qualquer jogador sai da partida (clientId)
+    public static event System.Action<ulong> OnPlayerLeft;
+    // Disparado quando todos os jogadores estão mortos no multiplayer
+    public static event System.Action OnAllPlayersDefeated;
+
+    public static void InvokePlayerJoined(ulong clientId, bool isLocalPlayer)
+    {
+        OnPlayerJoined?.Invoke(clientId, isLocalPlayer);
+    }
+
+    public static void InvokePlayerLeft(ulong clientId)
+    {
+        OnPlayerLeft?.Invoke(clientId);
+    }
+
+    public static void InvokeAllPlayersDefeated()
+    {
+        OnAllPlayersDefeated?.Invoke();
+    }
 }

@@ -15,16 +15,10 @@ public class Lock_Button : MonoBehaviour, IPointerDownHandler
     [SerializeField] private bool shakeOnDisabledClick = true;
     [SerializeField] private float shakeIntensity = 10f;
     [SerializeField] private float shakeDuration = 0.3f;
-    [SerializeField] private int shakeVibrations = 5;
-
-    [Header("Audio (Opcional)")]
-    [SerializeField] private AudioClip errorSound;
-    [SerializeField] [Range(0f, 1f)] private float volume = 0.5f;
 
     private Vector3 originalPosition;
     private Button button;
     private bool isShaking = false;
-    private AudioSource audioSource;
 
     private void Awake()
     {

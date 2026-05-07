@@ -51,4 +51,14 @@ public class PlayerAmmo : MonoBehaviour
         // Disparar evento OnAmmoChanged(_currentAmmo) para a UI
 //        Debug.Log($"Muni��o Usada! Restante: {_currentAmmo}");
     }
+
+    /// <summary>
+    /// Alinha a munição local com o valor autoritativo do servidor (ex.: após disparo em rede).
+    /// </summary>
+    public void ApplySyncedAmmo(int value)
+    {
+        // Em multiplayer, o servidor é a fonte de verdade da munição.
+        // Não limitar ao maxAmmo local evita divergência cliente/host por configuração diferente.
+        _currentAmmo = Mathf.Max(0, value);
+    }
 }

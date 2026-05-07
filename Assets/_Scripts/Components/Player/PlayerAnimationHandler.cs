@@ -109,7 +109,21 @@ public class PlayerAnimationHandler : MonoBehaviour
 
     private void HandleFlipSprite(bool facingRight)
     {
-        _spriteRenderer.flipX = facingRight;
+        ApplyFacingToRenderers(facingRight);
+    }
+
+    /// <summary>
+    /// Aplica flip vindo da rede (mesma convenção de HandleFlipSprite / movimento).
+    /// </summary>
+    public void ApplyNetworkFacing(bool facingRight)
+    {
+        ApplyFacingToRenderers(facingRight);
+    }
+
+    private void ApplyFacingToRenderers(bool facingRight)
+    {
+        if (_spriteRenderer != null)
+            _spriteRenderer.flipX = facingRight;
         if (shadowSpriteRenderer != null)
             shadowSpriteRenderer.flipX = facingRight;
     }

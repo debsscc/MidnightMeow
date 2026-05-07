@@ -17,7 +17,6 @@ public class CursorManager : MonoBehaviour
     [SerializeField] private Texture2D onClickSprite;
 
     private Vector2 hotspot = Vector2.zero;
-    private bool isInGameplay = false;
 
     private void Awake()
     {
@@ -40,14 +39,12 @@ public class CursorManager : MonoBehaviour
         if (gameplayCursor != null)
         {
             Cursor.SetCursor(gameplayCursor, hotspot, CursorMode.Auto);
-            isInGameplay = true;
         }
     }
 
     public void ResetToDefault()
     {
         SetDefaultCursor();
-        isInGameplay = false;
     }
 
     public void SetHoverCursor()
