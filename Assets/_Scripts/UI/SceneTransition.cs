@@ -20,6 +20,7 @@ public class SceneTransition : Singleton<SceneTransition>
     public Image fadeImage;
 
     public GameObject loadingScreen;
+    public AsyncOperation CurrentAsyncLoad { get; private set; }
     private string currentSceneName;
     
     protected override void Awake()
@@ -121,6 +122,7 @@ public class SceneTransition : Singleton<SceneTransition>
 
         // Inicia o carregamento em background
         AsyncOperation asyncLoad = SceneManager.LoadSceneAsync(sceneName);
+        CurrentAsyncLoad = asyncLoad;
         asyncLoad.allowSceneActivation = false;
 
         // Aguarda o tempo mínimo da loading screen e a cena estar pronta

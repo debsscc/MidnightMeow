@@ -109,6 +109,6 @@ public class PlayerInitializer : MonoBehaviour
 
     private void HandlePlayerDied()
     {
-        GameEvents.InvokePlayerDefeated();
+        // Não invoca aqui — PlayerHealthConfig cuida do delay após a animação de morte
     }
 }

@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 5876246105377474110}
   - component: {fileID: 193700089205433316}
   - component: {fileID: 8774810331573887915}
+  - component: {fileID: 2508901696074553980}
   - component: {fileID: 7020199169544275390}
   - component: {fileID: 615921695041690204}
   - component: {fileID: 4895541626581627207}
@@ -54,7 +55,7 @@ Rigidbody2D:
   m_Mass: 1
   m_LinearDamping: 0
   m_AngularDamping: 0.05
-  m_GravityScale: 1
+  m_GravityScale: 0
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2
@@ -101,7 +102,43 @@ CircleCollider2D:
   m_CompositeOperation: 0
   m_CompositeOrder: 0
   m_Offset: {x: 0, y: 0}
-  m_Radius: 0.5
+  m_Radius: 0.6992357
+--- !u!58 &2508901696074553980
+CircleCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3344960684203597567}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 576
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_CompositeOperation: 0
+  m_CompositeOrder: 0
+  m_Offset: {x: 0, y: 0}
+  m_Radius: 0.6992357
 --- !u!212 &7020199169544275390
 SpriteRenderer:
   serializedVersion: 2
@@ -174,6 +211,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyProjectile
   stats: {fileID: 11400000, guid: 870be12020e715a46b4070e9b935c083, type: 2}
+  _projectileAnimator: {fileID: 5466655054130917712}
+  _hitAnimDuration: 0.3
+  _playHitOnExpire: 0
 --- !u!114 &4895541626581627207
 MonoBehaviour:
   m_ObjectHideFlags: 0

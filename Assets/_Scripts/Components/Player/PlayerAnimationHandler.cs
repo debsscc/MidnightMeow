@@ -27,6 +27,7 @@ public class PlayerAnimationHandler : MonoBehaviour
     private readonly int _hashOnShoot = Animator.StringToHash("OnShoot");
     private readonly int _hashOnPull = Animator.StringToHash("OnPull");
     private readonly int _hashOnHit = Animator.StringToHash("OnHit");
+    private readonly int _hashOnTakeDamage = Animator.StringToHash("OnDamage");
     private readonly int _hashOnDie = Animator.StringToHash("OnDie");
     private readonly int _hashAttackSpeed = Animator.StringToHash("AttackSpeed");
 
@@ -59,7 +60,7 @@ public class PlayerAnimationHandler : MonoBehaviour
         playerAbilityHandler.OnAbilityActivated += HandleAbility;
         playerMovement.OnFlipSprite += HandleFlipSprite;
         healthComponent.OnDied.AddListener(HandleDeath);
-        
+        healthComponent.OnTakeDamage.AddListener(HandleHit);
     }
 
     private void OnDisable()
@@ -69,6 +70,7 @@ public class PlayerAnimationHandler : MonoBehaviour
         playerAbilityHandler.OnAbilityActivated -= HandleAbility;
         playerMovement.OnFlipSprite -= HandleFlipSprite;
         healthComponent.OnDied.RemoveListener(HandleDeath);
+        healthComponent.OnTakeDamage.RemoveListener(HandleHit);
     }
 
     private void Update()
@@ -124,6 +126,12 @@ public class PlayerAnimationHandler : MonoBehaviour
             _spriteRenderer.flipX = facingRight;
         if (shadowSpriteRenderer != null)
             shadowSpriteRenderer.flipX = facingRight;
+    }
+
+    private void HandleHit()
+    {
+        if (!healthComponent.IsDead)
+            _animator.SetTrigger(_hashOnTakeDamage);
     }
 
     private void HandleAbility(Ability ability)

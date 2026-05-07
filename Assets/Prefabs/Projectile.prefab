@@ -80,6 +80,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Projectile
   stats: {fileID: 11400000, guid: caabe74a63e4a0b489c486933be32f4c, type: 2}
+  _projectileAnimator: {fileID: 837554023910005732}
+  _hitAnimDuration: 0.3
+  _playHitOnExpire: 0
 --- !u!58 &8008792262262434319
 CircleCollider2D:
   m_ObjectHideFlags: 0

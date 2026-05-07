@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 821278348028313884}
   - component: {fileID: 6875491737160429849}
-  m_Layer: 9
+  m_Layer: 13
   m_Name: Shadow
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -105,7 +105,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4015565037223295377}
   - component: {fileID: 1399404183805424336}
-  m_Layer: 9
+  m_Layer: 10
   m_Name: Audio
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -233,7 +233,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7769710525481836737}
-  m_Layer: 9
+  m_Layer: 10
   m_Name: firePoint
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -605,6 +605,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyAudioController
   healthComponent: {fileID: 4817587253931695636}
+  sfxMixerGroup: {fileID: -7772116307795827482, guid: 0369658093ea21d40a1c846ecafdd511, type: 2}
   audioSource: {fileID: 1399404183805424336}
   damageClip: {fileID: 8300000, guid: 984a02afb1b115d4fa28f3a0eee66f79, type: 3}
   deathClip: {fileID: 8300000, guid: 1dc0986d3ba643a46a9d460572feb4b7, type: 3}

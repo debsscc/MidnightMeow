@@ -761,6 +761,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerAudioController
   playerMovement: {fileID: 584514799452680066}
+  sfxMixerGroup: {fileID: 0}
   playerShooting: {fileID: 8839670001696835616}
   playerDash: {fileID: 6300129357974945871}
   loopSource: {fileID: 7014871134434566207}
@@ -1049,7 +1050,7 @@ GameObject:
   - component: {fileID: 3792582112880836218}
   - component: {fileID: 5429929203945972508}
   - component: {fileID: 7586571213150045003}
-  m_Layer: 12
+  m_Layer: 13
   m_Name: Shadow
   m_TagString: Untagged
   m_Icon: {fileID: 0}
