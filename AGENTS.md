@@ -1,14 +1,14 @@
 <!-- UNITY CODE ASSIST INSTRUCTIONS START -->
 - Project name: MidnightMeow
-- Unity version: Unity 6000.2.9f1
+- Unity version: Unity 6000.3.13f1
 - Active scene:
-  - Name: Projectile
+  - Name: Fase-1
   - Tags:
     - Untagged, Respawn, Finish, EditorOnly, MainCamera, Player, GameController, Structure, Enemy, Drop
   - Layers:
     - Default, TransparentFX, Ignore Raycast, Player, Water, UI, Wall, Projectile, ProjectileEnemy, Structure, Enemy, Collectable, DashableWall, Shadow
 - Active game object:
-  - Name: Projectile
+  - Name: Navigation
   - Tag: Untagged
-  - Layer: Projectile
+  - Layer: Default
 <!-- UNITY CODE ASSIST INSTRUCTIONS END -->

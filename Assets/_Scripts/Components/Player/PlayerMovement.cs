@@ -20,6 +20,7 @@ public class PlayerMovement : MonoBehaviour
     
     // Referência ao novo componente de Dash
     private PlayerDash _dash;
+    private KnockbackReceiver _knockback;
 
     private Vector2 _moveDirection;
 
@@ -39,6 +40,7 @@ public class PlayerMovement : MonoBehaviour
         _input = GetComponent<PlayerInputHandler>();
         _adrenaline = GetComponent<PlayerAdrenaline>();
         _dash = GetComponent<PlayerDash>(); // Busca o componente de Dash
+        _knockback = GetComponent<KnockbackReceiver>();
     }
 
     private void OnEnable()
@@ -86,11 +88,12 @@ public class PlayerMovement : MonoBehaviour
     private void FixedUpdate()
     {
         // Regra de Ouro (Baixo Acoplamento): 
-        // Se o Dash estiver ocorrendo, o PlayerMovement cede o controle do Rigidbody.
+        // Se o Dash ou Knockback estiverem ocorrendo, o PlayerMovement cede o controle do Rigidbody.
         if (_dash != null && _dash.IsDashing)
-        {
             return;
-        }
+
+        if (_knockback != null && _knockback.IsKnockedBack)
+            return;
 
         float speedMultiplier = _adrenaline != null ? _adrenaline.GetSpeedMultiplier() : 1f;
         // Nota: Substituído linearVelocity por velocity (compatibilidade genérica Unity)
