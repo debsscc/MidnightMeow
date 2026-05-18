@@ -5182,7 +5182,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3845447005448380479, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3949259305019153142, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
       propertyPath: m_Sprite
@@ -5238,7 +5238,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4917491358846736311, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
       propertyPath: GlobalObjectIdHash
-      value: 3590237862
+      value: 869589066
       objectReference: {fileID: 0}
     - target: {fileID: 4917491358846736311, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
       propertyPath: SceneMigrationSynchronization
@@ -5250,7 +5250,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4984688740703233178, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
       propertyPath: m_PresetInfoIsWorld
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5225120796015774809, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
       propertyPath: m_Mass
