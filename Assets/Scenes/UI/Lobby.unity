@@ -176,7 +176,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Selecionar Nixie
+  m_text: Selecionar Cora
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -264,6 +264,30 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 5849628911542613791, guid: 70da8d146a7b8f74ab6e0219dd144bf5, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5849628911542613791, guid: 70da8d146a7b8f74ab6e0219dd144bf5, type: 3}
+      propertyPath: masterEnabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5849628911542613791, guid: 70da8d146a7b8f74ab6e0219dd144bf5, type: 3}
+      propertyPath: logEnemyDamage
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5849628911542613791, guid: 70da8d146a7b8f74ab6e0219dd144bf5, type: 3}
+      propertyPath: useConfigAsset
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5849628911542613791, guid: 70da8d146a7b8f74ab6e0219dd144bf5, type: 3}
+      propertyPath: logProjectileHits
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5849628911542613791, guid: 70da8d146a7b8f74ab6e0219dd144bf5, type: 3}
+      propertyPath: logProjectileNetwork
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7783943828499482095, guid: 70da8d146a7b8f74ab6e0219dd144bf5, type: 3}
       propertyPath: m_Name
       value: MultiplayerManagers
@@ -321,6 +345,22 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 350806967226991315, guid: 24e00425b52f50342a9d45ab5cc1b682, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 362757249190117100, guid: 24e00425b52f50342a9d45ab5cc1b682, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 300
+      objectReference: {fileID: 0}
+    - target: {fileID: 2108697296320336258, guid: 24e00425b52f50342a9d45ab5cc1b682, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2398742512118571201, guid: 24e00425b52f50342a9d45ab5cc1b682, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 2927582762117110935, guid: 24e00425b52f50342a9d45ab5cc1b682, type: 3}
       propertyPath: m_Pivot.x
       value: 0
@@ -401,25 +441,53 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3258607563233103826, guid: 24e00425b52f50342a9d45ab5cc1b682, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3578743308927526020, guid: 24e00425b52f50342a9d45ab5cc1b682, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 1000
+      objectReference: {fileID: 0}
+    - target: {fileID: 3578743308927526020, guid: 24e00425b52f50342a9d45ab5cc1b682, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 200
+      objectReference: {fileID: 0}
     - target: {fileID: 4750325410051478647, guid: 24e00425b52f50342a9d45ab5cc1b682, type: 3}
       propertyPath: m_AnchorMax.x
-      value: 0
+      value: 0.674
       objectReference: {fileID: 0}
     - target: {fileID: 4750325410051478647, guid: 24e00425b52f50342a9d45ab5cc1b682, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 0
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5963882004212376461, guid: 24e00425b52f50342a9d45ab5cc1b682, type: 3}
+      propertyPath: m_VerticalAlignment
+      value: 512
+      objectReference: {fileID: 0}
+    - target: {fileID: 5963882004212376461, guid: 24e00425b52f50342a9d45ab5cc1b682, type: 3}
+      propertyPath: m_HorizontalAlignment
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 6497465713990082988, guid: 24e00425b52f50342a9d45ab5cc1b682, type: 3}
+      propertyPath: m_Enabled
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6516786664438705995, guid: 24e00425b52f50342a9d45ab5cc1b682, type: 3}
       propertyPath: m_AnchorMax.x
-      value: 0
+      value: 0.674
       objectReference: {fileID: 0}
     - target: {fileID: 6516786664438705995, guid: 24e00425b52f50342a9d45ab5cc1b682, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6872967978143185493, guid: 24e00425b52f50342a9d45ab5cc1b682, type: 3}
       propertyPath: m_Name
       value: Lobby
+      objectReference: {fileID: 0}
+    - target: {fileID: 8488530722324404796, guid: 24e00425b52f50342a9d45ab5cc1b682, type: 3}
+      propertyPath: m_text
+      value: "C\xF3digo de Erro"
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 8673509337511492290, guid: 24e00425b52f50342a9d45ab5cc1b682, type: 3}
@@ -858,7 +926,9 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Selecionar Corvo
+  m_text: 'Selecionar Nixie
+
+'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -1236,7 +1306,7 @@ MonoBehaviour:
   onValueChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_IsOn: 1
+  m_IsOn: 0
 --- !u!1 &1046270974
 GameObject:
   m_ObjectHideFlags: 0

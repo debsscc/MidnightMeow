@@ -236,6 +236,10 @@ MonoBehaviour:
   cutsceneController: {fileID: 2111996333208018311}
   config: {fileID: 11400000, guid: 514d91b9a43fae64e845ebdf992f0743, type: 2}
   findPlayerRetryInterval: 0.5
+  diagnosticConfig: {fileID: 11400000, guid: c2120b9ffc02ccb489963e2aa905cbe7, type: 2}
+  useConfigAsset: 1
+  enableDiagnosticsLogs: 0
+  diagnosticsIntervalSeconds: 2
 --- !u!114 &2111996333208018311
 MonoBehaviour:
   m_ObjectHideFlags: 0

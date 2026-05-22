@@ -1,0 +1,84 @@
+# Estrutura de Assets
+
+Última revisão: 2026-05-22
+
+## Visão geral
+
+```
+Assets/
+├── Art/                 # Sprites, Materials, Shaders, Fonts, Models
+├── Audio/               # Música e SFX (consolidação gradual)
+├── Data/                # Instâncias ScriptableObject (balanceamento)
+├── Prefabs/
+│   ├── Characters/
+│   ├── Enemies/
+│   ├── Combat/
+│   ├── Environment/
+│   ├── UI/
+│   ├── Multiplayer/
+│   └── _Legacy/         # Prefabs antigos (`_Legacy/oLD/`)
+├── Scenes/
+│   ├── BootstrapScene/
+│   ├── Fases/
+│   └── UI/
+├── Scripts/             # C# (antigo _Scripts)
+├── Settings/            # URP, Build Profiles
+├── Resources/           # Assets carregados por Resources.Load
+├── NavMeshComponents/   # Extensão 2D NavMesh (terceiros)
+├── Plugins/             # DOTween, etc.
+├── Samples/             # Amostras Unity (AI Navigation)
+├── TextMesh Pro/        # Pacote TMP (não mover)
+├── _Sandbox/            # Cenas e testes (não build release)
+└── Unity.VisualScripting.Generated/
+```
+
+## Scripts (`Assets/Scripts/`)
+
+| Pasta | Conteúdo |
+|-------|----------|
+| `Core/` | Bootstrap, GameFlow, ServiceLocator, GameEvents |
+| `Systems/` | Day/Night, Waves |
+| `Components/` | Player, Enemy, Projectile, Collectibles, Health |
+| `Multiplayer/` | NGO, lobby, câmera, wave rede |
+| `ScriptableObjects/` | Definições de SO (código) |
+| `UI/` | HUD, menus, botões |
+| `VFX/` | Efeitos visuais |
+| `Audio/` | Scripts de áudio de menu |
+
+**Removido:** `_Scripts/Scriptables/` (pasta vazia duplicada de `ScriptableObjects`).
+
+## Data (`Assets/Data/`)
+
+Somente **assets** (.asset), não código. Organizar por domínio: `Stats/Player`, `Stats/Enemies`, etc.
+
+## Prefabs — convenção de nomes
+
+- `PascalCase` ou padrão já usado (`Rato_Padrao_Base`)
+- Um prefab por arquivo; variantes Unity permitidas para inimigos
+
+## Áudio (dívida técnica)
+
+Existem pastas legadas `Audio/Music & Sound/` e duplicatas entre `Music/` e `Music/Musica atualizada/`.  
+**Não mover clips em massa** sem plano de substituição de referências. Meta futura:
+
+```
+Audio/
+├── Music/
+└── SFX/
+    ├── Player/
+    ├── Enemy/
+    └── Environment/
+```
+
+## O que não reorganizar sem necessidade
+
+- `TextMesh Pro/`, `Samples/`, `Plugins/Demigiant/` — pacotes externos
+- `Unity.VisualScripting.Generated/` — gerado automaticamente
+
+## Artes (`Assets/Art/`)
+
+Guia completo para artistas: [docs/practices/10-artes-e-visual.md](../practices/10-artes-e-visual.md).
+
+## Para agentes
+
+Ao adicionar asset: coloque na pasta da tabela acima e atualize este arquivo se criar categoria nova.
