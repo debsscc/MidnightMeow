@@ -267,6 +267,7 @@ GameObject:
   - component: {fileID: 1568681497}
   - component: {fileID: 1568681499}
   - component: {fileID: 1568681498}
+  - component: {fileID: 1568681500}
   m_Layer: 0
   m_Name: GlobalSystems
   m_TagString: Untagged
@@ -302,6 +303,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameFlowManager
   menuSceneName: Menu2
+  lobbySceneName: Lobby
+  defaultGameplaySceneName: Fase-1
+  catalog: {fileID: 11400000, guid: d1e2f3a4b5c6478890a1b2c3d4e5f600, type: 2}
 --- !u!114 &1568681499
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -315,7 +319,30 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Bootstrapper
   gameFlowManager: {fileID: 1568681498}
+  screenFlowController: {fileID: 1568681500}
+  sceneFlowCatalog: {fileID: 11400000, guid: d1e2f3a4b5c6478890a1b2c3d4e5f600, type: 2}
   progressionData: {fileID: 11400000, guid: b87f7c79296088641991071b4e517b5c, type: 2}
+--- !u!114 &1568681500
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1568681496}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c6d0e4f3a2b51c9d8e7f6a5b4c3d2e20, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ScreenFlowController
+  catalog: {fileID: 11400000, guid: d1e2f3a4b5c6478890a1b2c3d4e5f600, type: 2}
+  defaultFadeTime: 1
+  defaultMinLoadingTime: 2
+  onAnyTransitionStarted:
+    m_PersistentCalls:
+      m_Calls: []
+  onAnyTransitionCompleted:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

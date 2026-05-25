@@ -1,0 +1,75 @@
+///* ----------------------------------------------------------------
+// CRIADO EM: 21-11-2025
+// FEITO POR: Pedro Caurio
+// DESCRI��O: Gerencia o ciclo da noite, iniciando e terminando as ondas de inimigos.
+// ---------------------------------------------------------------- */
+
+using Unity.Netcode;
+using UnityEngine;
+
+public class NightManager : MonoBehaviour
+{
+    [Header("References")]
+    [SerializeField] private WaveGenerator waveGenerator;
+
+    [Header("Config")]
+    [SerializeField] private WaveSettings nightConfiguration;
+
+    public event System.Action OnNightEnded;
+
+    private void OnEnable()
+    {
+        waveGenerator.OnAllWavesCleared += HandleVictory;
+    }
+
+    private void OnDisable()
+    {
+        waveGenerator.OnAllWavesCleared -= HandleVictory;
+    }
+
+    private void Start()
+    {
+        if (ShouldDeferToNetworkWaveManager())
+        {
+            Debug.Log("[NightManager] Multiplayer ativo — ondas delegadas ao NetworkWaveManager.");
+            return;
+        }
+
+        StartNight();
+    }
+
+    private static bool ShouldDeferToNetworkWaveManager()
+    {
+        var nm = NetworkManager.Singleton;
+        if (nm == null || (!nm.IsClient && !nm.IsServer))
+            return false;
+
+        return Object.FindFirstObjectByType<NetworkWaveManager>(FindObjectsInactive.Include) != null;
+    }
+
+    public void StartNight()
+    {
+        if (nightConfiguration != null)
+        {
+            waveGenerator.Initialize(nightConfiguration);
+            waveGenerator.StartSpawning();
+        }
+        else
+        {
+            Debug.LogError("Nenhuma configura��o de wave atribu�da ao NightManager!");
+        }
+    }
+
+    public void ForceStop()
+    {
+        waveGenerator.StopSpawning();
+    }
+
+    private void HandleVictory()
+    {
+        Debug.Log("Todas as waves foram completadas!");
+        // Emite evento local e global para sinalizar fim das waves
+        GameEvents.InvokeNightEnded();
+        OnNightEnded?.Invoke();
+    }
+}

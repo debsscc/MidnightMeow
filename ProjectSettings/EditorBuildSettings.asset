@@ -27,10 +27,10 @@ EditorBuildSettings:
     path: Assets/Scenes/UI/VictoryScene.unity
     guid: 95f67d37a819c9c4caf36b8a126b6e23
   - enabled: 0
-    path: Assets/SandBox/SampleScene.unity
+    path: Assets/_Sandbox/SampleScene.unity
     guid: 8c9cfa26abfee488c85f1582747f6a02
   - enabled: 1
-    path: Assets/SandBox/Teste_MultiplayerFase-1.unity
+    path: Assets/_Sandbox/Teste_MultiplayerFase-1.unity
     guid: 2a6a69c1569de3b4ca82606021a601f5
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: d757f3a72ed88d6418f497744000d395, type: 3}

@@ -24,6 +24,6 @@ MonoBehaviour:
   rangedAttackCooldown: 0
   projectileStats: {fileID: 0}
   dropChance: 0.5
-  minCienceDrop: 0
+  minCienceDrop: 1
   maxCienceDrop: 1
   cienciaPrefab: {fileID: 5963488170890689818, guid: 41457ddb74133c14884342c60f3aa8ba, type: 3}

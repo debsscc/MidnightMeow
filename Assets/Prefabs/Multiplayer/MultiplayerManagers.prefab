@@ -13,6 +13,8 @@ GameObject:
   - component: {fileID: 4716939762629055414}
   - component: {fileID: 2358794274323725634}
   - component: {fileID: 5596943774770305685}
+  - component: {fileID: 5849628911542613791}
+  - component: {fileID: 6660551652154032770}
   m_Layer: 0
   m_Name: MultiplayerManagers
   m_TagString: Untagged
@@ -73,6 +75,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e865d9b386b21f142b331d0cd7686959, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MultiplayerBootstrapper
+  skipGameplayChecksOutsideGameplayScene: 1
+  gameplaySceneName: Fase-1
   relayManager: {fileID: 3761289531255460530}
   connectionManager: {fileID: 4716939762629055414}
   gameManager: {fileID: 0}
@@ -89,10 +93,45 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4b8dd8e711018ed409a8e55b2f285d6c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MultiplayerLogger
-  logConexao: 1
-  logEstadoJogo: 1
-  logOndas: 1
-  logJogadores: 1
-  logRede: 1
+  logConexao: 0
+  logEstadoJogo: 0
+  logOndas: 0
+  logJogadores: 0
+  logRede: 0
   prefixo: '[MP]'
-  ativo: 1
+  ativo: 0
+--- !u!114 &5849628911542613791
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7783943828499482095}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9f99fb8a7cef12341a605a4bb846be27, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameplayDiagnosticListener
+  config: {fileID: 11400000, guid: c2120b9ffc02ccb489963e2aa905cbe7, type: 2}
+  useConfigAsset: 1
+  masterEnabled: 1
+  logProjectileHits: 1
+  logProjectileNetwork: 1
+  logEnemyDamage: 1
+  prefix: '[DIAG]'
+--- !u!114 &6660551652154032770
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7783943828499482095}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 753e0a8d39326dd4c88b36c51f8d5370, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DamageIndicatorPresenter
+  floatDistance: 0.8
+  lifetime: 0.75
+  damageColor: {r: 1, g: 0.35, b: 0.25, a: 1}
+  fontSize: 4
