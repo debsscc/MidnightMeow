@@ -16,6 +16,7 @@ public class EnemyAnimationHandler : MonoBehaviour
     private SpriteRenderer _spriteRenderer;
     private EnemyAttack_Melee _attack;
     private EnemyAttack_Ranged _attackRanged;
+    private EnemyTelegraphedAttacker _telegraphedAttacker;
     private HealthComponent healthComponent;
     private Collider2D _collider2D;
     [SerializeField] private bool isMelee; // Para determinar se o inimigo é corpo a corpo ou ranged, caso ambos os componentes existam.
@@ -39,6 +40,7 @@ public class EnemyAnimationHandler : MonoBehaviour
             enemyMovement = GetComponent<EnemyMovement>();
         _spriteRenderer = GetComponent<SpriteRenderer>();
         _collider2D = GetComponent<Collider2D>();
+        _telegraphedAttacker = GetComponent<EnemyTelegraphedAttacker>();
         if (isMelee)
             _attack = GetComponent<EnemyAttack_Melee>();
         else
@@ -53,7 +55,9 @@ public class EnemyAnimationHandler : MonoBehaviour
 
     private void OnEnable()
     {
-        if (isMelee && _attack != null)
+        if (_telegraphedAttacker != null && _telegraphedAttacker.HasActivePattern)
+            _telegraphedAttacker.OnAttackWindup += HandleAttack;
+        else if (isMelee && _attack != null)
             _attack.OnAttack += HandleAttack;
         else if (!isMelee && _attackRanged != null)
             _attackRanged.OnAttack += HandleAttack;
@@ -69,6 +73,8 @@ public class EnemyAnimationHandler : MonoBehaviour
 
     private void OnDisable()
     {
+        if (_telegraphedAttacker != null)
+            _telegraphedAttacker.OnAttackWindup -= HandleAttack;
         if (isMelee && _attack != null)
             _attack.OnAttack -= HandleAttack;
         else if (!isMelee && _attackRanged != null)

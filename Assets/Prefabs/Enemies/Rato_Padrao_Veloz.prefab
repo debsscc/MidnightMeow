@@ -282,6 +282,7 @@ GameObject:
   - component: {fileID: 146336451343428528}
   - component: {fileID: -1209464447139715824}
   - component: {fileID: 65845335612496854}
+  - component: {fileID: 999000002000000002}
   m_Layer: 10
   m_Name: Rato_Padrao_Veloz
   m_TagString: Enemy
@@ -707,3 +708,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyHitStun
   stats: {fileID: 11400000, guid: 043ef7f570a893342aeb88db51916ede, type: 2}
+--- !u!114 &999000002000000002
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8336658271261246405}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e7070707070707070707070707070707, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyTelegraphModuleInstaller
+  attackPattern: {fileID: 11400000, guid: b2020202020202020202020202020202, type: 2}
+  visualStyle: {fileID: 11400000, guid: a1b2c3d4e5f6789012345678abcdef01, type: 2}
+  attackOrigin: {fileID: 7769710525481836737}

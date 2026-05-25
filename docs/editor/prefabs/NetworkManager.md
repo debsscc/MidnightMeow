@@ -5,24 +5,31 @@
 
 ## Resumo
 
-`Unity.Netcode.NetworkManager` + transporte UTP para host/client.
+`Unity.Netcode.NetworkManager` + `UnityTransport` (UTP / Relay).
 
 ## Componentes
 
 | Componente | Notas |
 |------------|--------|
-| `NetworkManager` | Player prefab list, protocolo |
-| `UnityTransport` | Endereço, porta, relay |
+| `NetworkManager` | Listas de prefabs NGO |
+| `UnityTransport` | Conexão / relay |
 
-## Valores a confirmar no Editor
+## Campos (YAML)
 
-| Campo (NetworkManager) | Valor esperado | Valor atual |
-|------------------------|----------------|-------------|
-| Network Prefabs Lists | Inclui `Player`, projéteis, inimigos? | |
-| Player Prefab | `Assets/Prefabs/Characters/Player.prefab` | |
-| Run In Background | | |
-| UnityTransport | Connection data / relay | |
+| Campo | Valor |
+|-------|--------|
+| `PlayerPrefab` | **None** (`fileID: 0`) — spawn via `PlayerSpawnManager`, não auto-spawn NGO default |
+| `AutoSpawnPlayerPrefabClientSide` | `true` *(sem PlayerPrefab efetivo)* |
+| `NetworkPrefabsLists` | Asset de lista default — deve incluir Cora, Nixie, Projectile, inimigos, Science, etc. |
+
+## Checklist de prefabs na lista
+
+- [Cora.md](Cora.md) / [Nixie.md](Nixie.md)
+- [Projectile.md](Projectile.md)
+- [Rato-variants.md](Rato-variants.md) — ratos usados nas ondas
+- [Science.md](Science.md)
+- [EnemyProjectile.md](EnemyProjectile.md)
 
 ## Crítico
 
-Lista de prefabs registrados deve bater com tudo que spawna via `NetworkObject.Spawn`.
+Tudo que chama `NetworkObject.Spawn` precisa estar registrado. O jogador **não** é `Player.prefab` (removido).

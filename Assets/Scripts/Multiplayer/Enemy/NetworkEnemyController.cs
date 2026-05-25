@@ -16,6 +16,7 @@ public class NetworkEnemyController : NetworkBehaviour
     private EnemyTargetFinder _targetFinder;
     private EnemyAttack_Melee _meleAttack;
     private EnemyAttack_Ranged _rangedAttack;
+    private EnemyTelegraphedAttacker _telegraphedAttacker;
     private EnemyAnimationHandler _animationHandler;
     private EnemyDropHandler _dropHandler;
     private EnemyHitStun _hitStun;
@@ -51,6 +52,7 @@ public class NetworkEnemyController : NetworkBehaviour
         _targetFinder = GetComponent<EnemyTargetFinder>();
         _meleAttack = GetComponent<EnemyAttack_Melee>();
         _rangedAttack = GetComponent<EnemyAttack_Ranged>();
+        _telegraphedAttacker = GetComponent<EnemyTelegraphedAttacker>();
         _animationHandler = GetComponent<EnemyAnimationHandler>();
         _dropHandler = GetComponent<EnemyDropHandler>();
         _hitStun = GetComponent<EnemyHitStun>();
@@ -61,10 +63,11 @@ public class NetworkEnemyController : NetworkBehaviour
         _health.OnDied.AddListener(HandleDied);
     }
 
-    private void OnDestroy()
+    public override void OnDestroy()
     {
         if (_health != null)
             _health.OnDied.RemoveListener(HandleDied);
+        base.OnDestroy();
     }
 
     public override void OnNetworkSpawn()
@@ -77,6 +80,7 @@ public class NetworkEnemyController : NetworkBehaviour
         if (IsServer)
         {
             SetAIComponentsActive(true);
+            WireTelegraphedAttackerProjectileSpawn();
 
             _health.OnHealthChanged.RemoveListener(HandleHealthChangedOnServer);
             _health.OnHealthChanged.AddListener(HandleHealthChangedOnServer);
@@ -431,10 +435,32 @@ public class NetworkEnemyController : NetworkBehaviour
     {
         if (_movement != null) _movement.enabled = active;
         if (_targetFinder != null) _targetFinder.enabled = active;
-        if (_meleAttack != null) _meleAttack.enabled = active;
-        if (_rangedAttack != null) _rangedAttack.enabled = active;
+
+        bool useTelegraph = _telegraphedAttacker != null && _telegraphedAttacker.HasActivePattern;
+        if (_meleAttack != null) _meleAttack.enabled = active && !useTelegraph;
+        if (_rangedAttack != null) _rangedAttack.enabled = active && !useTelegraph;
+        if (_telegraphedAttacker != null) _telegraphedAttacker.enabled = active && useTelegraph;
+
         if (_dropHandler != null) _dropHandler.enabled = active;
         if (_hitStun != null) _hitStun.enabled = active;
         if (_agent != null && active) _agent.enabled = true;
+    }
+
+    private void WireTelegraphedAttackerProjectileSpawn()
+    {
+        if (_telegraphedAttacker == null) return;
+        _telegraphedAttacker.ProjectileSpawnDelegate = SpawnEnemyProjectileNetworked;
+    }
+
+    private GameObject SpawnEnemyProjectileNetworked(GameObject prefab, Vector3 position, Quaternion rotation)
+    {
+        if (prefab == null) return null;
+
+        var instance = Instantiate(prefab, position, rotation);
+        var networkObject = instance.GetComponent<NetworkObject>();
+        if (networkObject != null && !networkObject.IsSpawned)
+            networkObject.Spawn();
+
+        return instance;
     }
 }

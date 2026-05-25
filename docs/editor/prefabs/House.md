@@ -20,7 +20,7 @@ Estrutura defendida (casa) — alvo dos ratos. Tag `Structure`.
 
 | Campo | Descrição | Valor atual |
 |-------|-----------|-------------|
-| Tag | `Structure` | |
+| Tag (filho principal) | `Structure` | layer **8** |
 | maxHealth | SO ou serialize | |
 | Colliders | Hitbox vs ambiente | |
 | Referência em `EnemyTargetFinder` | Prioridade alvo | |

@@ -51,9 +51,9 @@ public class DownedPlayerWorldUI : MonoBehaviour
             if (_health.IsBleedingOut)
                 _statusLabel.text = "Sem tempo";
             else if (_health.IsReviveTimerPaused)
-                _statusLabel.text = "Sendo revivido";
+                _statusLabel.text = "Sendo revivido — aguarde aliado na área";
             else
-                _statusLabel.text = "Inconsciente";
+                _statusLabel.text = "Inconsciente — aliado deve entrar na área verde";
         }
     }
 

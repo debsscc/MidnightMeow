@@ -25,6 +25,14 @@ Documentação para desenvolvedores e **agentes de IA** que trabalham neste proj
 9. [Otimização de rede](practices/09-otimizacao-rede.md) — NGO, bandwidth, RPCs, Relay
 10. [Artes e visual](practices/10-artes-e-visual.md) — Pipeline para artistas no Editor
 
+### Combate
+
+- [Ataques inimigos com telegraph](combat/enemy-telegraph-attacks.md) — zonas preenchíveis (estilo Hades), SOs, rede
+
+### Multiplayer
+
+- [Reviver por zona](multiplayer/revive-zone.md) — área ao redor do jogador caído (sem botão Interact)
+
 ### Editor (para agentes sem acesso ao Unity)
 
 - [Contexto do projeto](editor/project-context.md) — Tags, layers, pacotes

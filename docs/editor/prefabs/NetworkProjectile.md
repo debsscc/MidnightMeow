@@ -5,25 +5,22 @@
 
 ## Resumo
 
-**Obsoleto para spawn:** prefab mínimo sem `CircleCollider2D`. O `NetworkProjectileSpawner` no Player deve apontar para **`Projectile.prefab`** (GUID `eadee2043abe1c540b4356dff9dbd9a7`).
+Prefabs **legado / incompleto**: apenas `NetworkObject`, `NetworkTransform`, `Projectile`, `NetworkProjectileController` — **sem colliders nem Rigidbody2D**.
 
-## Componentes
+## Estado atual
 
-| Componente | Notas |
-|------------|--------|
-| `NetworkObject` | |
-| `NetworkTransform` | |
-| `Projectile` | Lógica de impacto |
-| `NetworkProjectileController` | Autoridade servidor |
+| Presente | Ausente |
+|----------|---------|
+| NGO + transform sync | `CircleCollider2D`, `Rigidbody2D`, Animator |
 
-## Valores a confirmar no Editor
+## Uso recomendado
 
-| Campo | Descrição | Valor atual |
-|-------|-----------|-------------|
-| Diferença vs `Projectile.prefab` | Por que dois prefabs? | |
-| stats SO | Mesmo asset que Projectile? | |
-| Spawn apenas no servidor? | | |
+**Não usar em produção.** O jogador (Cora) dispara `Projectile.prefab`, que já inclui rede + física + dano.
 
-## Referenciado por
+## Se reativar este prefab
 
-- `Player` → `NetworkProjectileSpawner.networkProjectilePrefab`
+Espelhar `Projectile.prefab`: dois colliders, layer Projectile (7), `DefaultProjectileStats`, registro em Default Network Prefabs.
+
+## Relacionados
+
+- [Projectile.md](Projectile.md)

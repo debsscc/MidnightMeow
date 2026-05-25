@@ -26,6 +26,7 @@ public class EnemyMovement : MonoBehaviour
 
     private float _nextRandomWalkTime;
     private bool _hasRandomDestination;
+    private bool _attackPaused;
 
     private void Awake()
     {
@@ -47,10 +48,30 @@ public class EnemyMovement : MonoBehaviour
         OnFlipSprite?.Invoke(_isFacingRight);
     }
 
+    public bool IsAttackPaused => _attackPaused;
+
+    public void SetAttackPaused(bool paused)
+    {
+        _attackPaused = paused;
+        if (!paused || _agent == null) return;
+
+        _agent.isStopped = true;
+        _agent.velocity = Vector3.zero;
+        _agent.ResetPath();
+        _hasRandomDestination = false;
+    }
+
     private void Update()
     {
         if (stats == null) return;
         if (_health != null && !_health.IsAlive) return;
+
+        if (_attackPaused)
+        {
+            _agent.isStopped = true;
+            _agent.velocity = Vector3.zero;
+            return;
+        }
 
         if (_hitStun != null && _hitStun.IsStunned)
         {
@@ -113,6 +134,7 @@ public class EnemyMovement : MonoBehaviour
 
     public float GetCurrentSpeed()
     {
+        if (_attackPaused) return 0f;
         if (_hitStun != null && _hitStun.IsStunned) return 0f;
         return _agent.isStopped ? 0f : _agent.velocity.magnitude;
     }

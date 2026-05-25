@@ -234,9 +234,11 @@ public class NetworkPlayerHealth : NetworkBehaviour
 
     {
 
-        if (!IsServer || !_networkIsUnconscious.Value || _networkIsBleedingOut.Value) return;
+        if (!IsServer) return;
 
+        DownedReviveZoneSystem.TickServer(downedConfig);
 
+        if (!_networkIsUnconscious.Value || _networkIsBleedingOut.Value) return;
 
         if (!_networkRevivePaused.Value)
 
@@ -245,8 +247,6 @@ public class NetworkPlayerHealth : NetworkBehaviour
             float next = _networkUnconsciousTimeRemaining.Value - Time.deltaTime;
 
             _networkUnconsciousTimeRemaining.Value = Mathf.Max(0f, next);
-
-
 
             if (_networkUnconsciousTimeRemaining.Value <= 0f)
 

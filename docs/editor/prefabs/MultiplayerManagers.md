@@ -5,36 +5,33 @@
 
 ## Resumo
 
-Bootstrap de rede: Relay, conexão, orquestração e log MP.
+Bootstrap de rede: Relay, conexão, orquestração, log MP e apresentação de dano flutuante.
 
 ## GameObject raiz
 
-| Propriedade | Valor no YAML |
-|-------------|---------------|
+| Propriedade | Valor |
+|-------------|--------|
 | Nome | `MultiplayerManagers` |
 | Tag | Untagged |
-| Layer | Default |
+| Layer | Default (0) |
 
 ## Componentes
 
-| Script | Campos serializados (snapshot YAML) |
-|--------|-------------------------------------|
-| `RelayManager` | `config: {fileID: 0}` *(confirmar SO)* |
-| `ConnectionManager` | `config` → GUID `50a79734eaf520a409e26b037cab7b62` |
-| `MultiplayerBootstrapper` | `relayManager`, `connectionManager` wired; `gameManager: 0`, `waveManager: 0` |
-| `MultiplayerLogger` | `ativo: 1`, `prefixo: '[MP]'`, flags de log `1` |
-| `GameplayDiagnosticListener` *(adicionar)* | SO `GameplayDiagnosticConfig` — ver [diagnostics.md](../diagnostics.md) |
+| Script | Campos (YAML) |
+|--------|----------------|
+| `RelayManager` | `config` — confirmar `MultiplayerConfig` no Inspector |
+| `ConnectionManager` | `config` → `MultiplayerConfig.asset` (`50a79734`) |
+| `MultiplayerBootstrapper` | `relayManager`, `connectionManager` wired; `gameManager` / `waveManager` = **0** (resolver na cena) |
+| `MultiplayerLogger` | `ativo: true`, `prefixo: '[MP]'` |
+| `GameplayDiagnosticListener` | SO `GameplayDiagnosticConfig` — ver [diagnostics.md](../diagnostics.md) |
+| `DamageIndicatorPresenter` | Escuta `GameEvents.OnDamageShown`; números world-space |
 
-## Valores a confirmar no Editor
+## ScriptableObjects
 
-| Script | Campo | Valor esperado | Valor atual |
-|--------|-------|----------------|-------------|
-| RelayManager | config | `MultiplayerConfig` asset | |
-| ConnectionManager | config | mesmo SO acima | |
-| MultiplayerBootstrapper | gameManager | ref `MultiplayerGameManager` na cena/prefab | |
-| MultiplayerBootstrapper | waveManager | ref `WaveSystem` / `NetworkWaveManager` | |
-| MultiplayerLogger | ativo | só dev? | |
+| Asset | Caminho |
+|-------|---------|
+| `MultiplayerConfig` | `Assets/Data/Multiplayer/MultiplayerConfig.asset` |
 
-## SO relacionado
+## Cena
 
-- `MultiplayerConfig` — localizar asset com GUID `50a79734eaf520a409e26b037cab7b62` em `Assets/Data/`
+Referências a `MultiplayerGameManager` e `WaveSystem` são preenchidas na instância da cena (Lobby / Fase-1), não no prefab isolado.

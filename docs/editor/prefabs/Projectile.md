@@ -1,16 +1,17 @@
 # Prefab: Projectile
 
 Última revisão: 2026-05-22  
-**Caminho:** `Assets/Prefabs/Combat/Projectile.prefab`
+**Caminho:** `Assets/Prefabs/Combat/Projectile.prefab`  
+**GUID:** `eadee2043abe1c540b4356dff9dbd9a7`
 
 ## Resumo
 
-Projétil do jogador (local + componentes de rede no mesmo prefab).
+Projétil do **jogador** (Cora): física local + sincronização NGO no mesmo prefab.
 
 ## GameObject raiz
 
-| Propriedade | Valor no YAML |
-|-------------|---------------|
+| Propriedade | Valor |
+|-------------|--------|
 | Nome | `Projectile` |
 | Layer | `Projectile` (7) |
 
@@ -18,31 +19,32 @@ Projétil do jogador (local + componentes de rede no mesmo prefab).
 
 | Componente | Notas |
 |------------|--------|
-| `Rigidbody2D` | massa baixa, gravity 0 |
-| 2× `CircleCollider2D` | Sólido (paredes) + trigger (dano em inimigos); **sem Exclude Layers em Enemy** |
-| `Projectile` | `stats` → GUID `caabe74a63e4a0b489c486933be32f4c` |
-| `NetworkObject` | |
+| `Rigidbody2D` | gravity 0 |
+| 2× `CircleCollider2D` | Sólido (paredes) + trigger (inimigos) |
+| `Projectile` | `stats` → `DefaultProjectileStats.asset` |
+| `NetworkObject` | Registrado em Default Network Prefabs |
 | `NetworkProjectileController` | |
 | `NetworkTransform` | |
-| `Animator` | `_projectileAnimator` |
+| `Animator` | Hit / expire |
 
-## Campos snapshot (YAML)
+## ScriptableObjects
+
+| Campo | Asset |
+|-------|--------|
+| `stats` | `Assets/Data/Stats/Projectiles/DefaultProjectileStats.asset` |
+
+## Campos (YAML)
 
 | Campo | Valor |
 |-------|--------|
-| stats | `caabe74a63e4a0b489c486933be32f4c` |
-| _hitAnimDuration | 0.3 |
-| _playHitOnExpire | 0 |
-
-## Valores a confirmar no Editor
-
-| Campo | Descrição | Valor atual |
-|-------|-----------|-------------|
-| stats | Asset `ProjectileStats` em `Assets/Data/Stats/Projectiles/` | |
-| Layer collision matrix | Colide com Enemy, Wall, etc. | |
-| Network prefab registration | Na lista do NetworkManager | |
-| Velocidade / lifetime | No SO ou script | |
+| `_hitAnimDuration` | 0.3 |
+| `_playHitOnExpire` | false |
 
 ## Referenciado por
 
-- `Player.prefab` → `PlayerShooting.projectilePrefab`
+- [Cora.md](Cora.md) → `PlayerShooting.projectilePrefab`, `NetworkProjectileSpawner`
+
+## Não confundir com
+
+- [NetworkProjectile.md](NetworkProjectile.md) — prefab mínimo **sem colliders**; não usar em produção
+- [EnemyProjectile.md](EnemyProjectile.md) — projétil inimigo

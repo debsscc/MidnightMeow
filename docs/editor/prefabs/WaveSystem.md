@@ -5,23 +5,34 @@
 
 ## Resumo
 
-Ondas de inimigos autoritativas no servidor (`NetworkWaveManager`).
+Ondas autoritativas no servidor (`NetworkWaveManager`). Instanciado em Fase-1 sob `---- Sistemas ----` / `_GameLoop`.
 
 ## Componentes
 
 | Componente | Notas |
 |------------|--------|
 | `NetworkObject` | |
-| `NetworkWaveManager` | Lê `WaveSettings` SO |
+| `NetworkWaveManager` | Spawns inimigos + ciência |
 
-## Valores a confirmar no Editor
+## Campos no prefab asset (YAML)
 
-| Campo | Descrição | Valor atual |
-|-------|-----------|-------------|
-| waveSettings | Asset em `Assets/Data/` | |
-| Prefabs de inimigos por tipo | Rato_Base, Veloz, etc. | |
-| Intervalos / quantidades | Balanceamento | |
+| Campo | Valor no prefab | Notas |
+|-------|-----------------|--------|
+| `waveSettings` | `null` | **Sobrescrito na cena** Fase-1 |
+| `spawnPoints` | `null` | Pontos na hierarquia da cena |
+| `networkCienciaPrefab` | `NetworkCiencia.prefab` (`d39f5e5c`) | |
+
+## Override em Fase-1
+
+Na cena `Assets/Scenes/Fases/Fase-1.unity`, `_GameLoop` / `NetworkWaveManager`:
+
+| Campo | Valor em produção |
+|-------|-------------------|
+| `networkCienciaPrefab` | **Science.prefab** (`41457ddb`) |
+
+Usar **Science** (visual + collider Collectable), não o prefab mínimo `NetworkCiencia`, salvo testes.
 
 ## Ligação
 
-- `MultiplayerBootstrapper.waveManager` deve referenciar esta instância.
+- `MultiplayerBootstrapper.waveManager` → instância na cena
+- Estado `Playing` necessário para iniciar ondas — ver [scenes.md](../scenes.md)

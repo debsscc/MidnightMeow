@@ -28,17 +28,16 @@
 | Player | 3 | Corpo do jogador |
 | Wall | 6 | Paredes |
 | Projectile | 7 | Projéteis do jogador |
-| ProjectileEnemy | 8 | Projéteis inimigos |
-| Structure | 9 | Estruturas |
-| Enemy | 10 | Inimigos |
-| Collectable | 11 | Ciência / pickups |
+| Structure | 8 | Casa / estruturas |
+| Enemy | 11 | Inimigos |
+| Collectable | 10 | Ciência (`Science.prefab`, tag `Drop`) |
 | DashableWall | 12 | Paredes atravessáveis no dash |
 | Shadow | 13 | Sombra projetada do personagem |
 | UI | 5 | Interface |
 
 ## Input
 
-- **Input System** package (`PlayerInput` no prefab Player)
+- **Input System** package (`PlayerInput` nos prefabs [Cora](prefabs/Cora.md) / [Nixie](prefabs/Nixie.md))
 - Action Map: `Gameplay` (Move, Fire, Ability, Frenzy, Dash)
 
 ## Pastas de código

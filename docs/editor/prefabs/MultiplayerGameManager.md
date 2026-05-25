@@ -5,22 +5,28 @@
 
 ## Resumo
 
-Estado global da sessão multiplayer (rede).
+Estado global da sessão MP: fase de jogo, vitória/derrota, transição para gameplay (`ServerBeginGameplaySession` ao carregar Fase-1).
 
 ## Componentes
 
 | Componente | Notas |
 |------------|--------|
-| `NetworkObject` | Objeto de rede |
-| `MultiplayerGameManager` | Regras de sessão, spawn, fim de partida |
-
-## Valores a confirmar no Editor
-
-| Campo | Descrição | Valor atual |
-|-------|-----------|-------------|
-| *(todos os SerializeField de MultiplayerGameManager)* | Preencher após abrir script | |
+| `NetworkObject` | Persiste na sessão |
+| `MultiplayerGameManager` | `NetworkVariable` de estado; cena de gameplay configurável no script |
 
 ## Instanciação
 
-- Deve existir uma instância por sessão (bootstrap ou cena MP).
-- Verificar ligação em `MultiplayerBootstrapper.gameManager`.
+- Uma instância por sessão (Lobby ou bootstrap).
+- `MultiplayerBootstrapper.gameManager` — referência **0** no prefab `MultiplayerManagers`; ligar na cena.
+
+## Comportamento documentado (código)
+
+- Ao entrar em cena com nome = `gameplaySceneName` (ex. **Fase-1**), servidor pode forçar estado `Playing` para ondas iniciarem.
+- Ver [scenes.md](../scenes.md)
+
+## ScriptableObjects (YAML)
+
+| Campo | Asset |
+|-------|--------|
+| `multiplayerConfig` | `Assets/Data/Multiplayer/MultiplayerConfig.asset` |
+| `gameConfig` | `Assets/Data/Stats/Game/defaultGameConfig.asset` |

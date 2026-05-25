@@ -1,14 +1,16 @@
-# Prefab: Player_Melee (guia de criação)
+# Guia: personagem melee (Nixie)
 
 Última revisão: 2026-05-22
 
+> **Prefab de produção:** `Assets/Prefabs/Characters/Nixie.prefab` — documentação completa em [Nixie.md](Nixie.md).
+
 ## Resumo
 
-Segundo personagem **corpo a corpo**: sem tiro, com dash, ataque em cone na direção do mouse e knockback definido pelo SO do jogador.
+Personagem **corpo a corpo**: sem tiro, com dash, ataque em trapézio na direção da mira e knockback no servidor.
 
-## Passo a passo no Unity
+## Passo a passo no Unity (se criar variante nova)
 
-1. Duplique `Assets/Prefabs/Characters/Player.prefab` → `Player_Melee.prefab`.
+1. Duplique `Cora.prefab` → novo prefab (ex.: outro melee).
 2. No prefab duplicado:
   - **Desative ou remova** `PlayerShooting`, `PlayerAmmo`, `NetworkProjectileSpawner`.
   - **Adicione** `PlayerMeleeCombat` (Fire do Input System = ataque).

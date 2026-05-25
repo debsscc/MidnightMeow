@@ -8,6 +8,7 @@ public class PlayerGameplayModuleInstaller : MonoBehaviour
 {
     [SerializeField] private bool installDamageImmunity = true;
     [SerializeField] private bool installDownedUI = true;
+    [SerializeField] private bool installReviveZoneVisual = true;
     [SerializeField] private bool installRevivePromptUI = true;
     [SerializeField] private bool installMeleeDebugVisual = true;
 
@@ -18,6 +19,9 @@ public class PlayerGameplayModuleInstaller : MonoBehaviour
 
         if (installDownedUI && GetComponent<DownedPlayerWorldUI>() == null)
             gameObject.AddComponent<DownedPlayerWorldUI>();
+
+        if (installReviveZoneVisual && GetComponent<DownedReviveZoneVisual>() == null)
+            gameObject.AddComponent<DownedReviveZoneVisual>();
 
         if (installRevivePromptUI && GetComponent<NetworkPlayerRevive>() != null &&
             GetComponent<RevivePromptWorldUI>() == null)

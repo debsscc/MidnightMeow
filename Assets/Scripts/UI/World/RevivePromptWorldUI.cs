@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// Prompt e barra de reviver acima do jogador que está reanimando um aliado.
+/// Indicação para aliado vivo: permanecer na zona de reviver (sem botão de interação).
 /// </summary>
 [RequireComponent(typeof(NetworkPlayerRevive), typeof(NetworkPlayerHealth))]
 public class RevivePromptWorldUI : MonoBehaviour
@@ -33,43 +33,43 @@ public class RevivePromptWorldUI : MonoBehaviour
 
     private void LateUpdate()
     {
-        if (_canvas == null || !_selfHealth.IsSpawned) return;
+        if (_canvas == null || !_selfHealth.IsSpawned || downedConfig == null) return;
 
-        bool showPrompt = _selfHealth.CanFight && HasDownedTeammateNearby();
-        bool showProgress = _revive.IsReviving;
+        bool nearDowned = _selfHealth.CanFight && HasDownedTeammateNearby();
+        bool inZone = _revive.IsContributingToRevive;
+        bool show = nearDowned || inZone;
 
-        SetVisible(showPrompt || showProgress);
-        if (!showPrompt && !showProgress) return;
+        SetVisible(show);
+        if (!show) return;
 
         _canvas.transform.position = transform.position + offset;
 
         if (_promptLabel != null)
-            _promptLabel.gameObject.SetActive(showPrompt && !showProgress);
+            _promptLabel.gameObject.SetActive(nearDowned && !inZone);
 
         if (_progressFill != null)
         {
-            _progressFill.transform.parent.gameObject.SetActive(showProgress);
-            if (showProgress)
-                _progressFill.fillAmount = FindTargetProgress();
+            _progressFill.transform.parent.gameObject.SetActive(inZone);
+            if (inZone)
+                _progressFill.fillAmount = GetActiveDownedProgress();
         }
     }
 
-    private float FindTargetProgress()
+    private float GetActiveDownedProgress()
     {
-        float best = 0f;
         foreach (var h in FindObjectsByType<NetworkPlayerHealth>(FindObjectsSortMode.None))
         {
-            if (!h.IsSpawned || h.OwnerClientId == _selfHealth.OwnerClientId) continue;
-            if (h.ReviveProgress > best)
-                best = h.ReviveProgress;
+            if (!h.IsSpawned || !h.CanBeRevived) continue;
+            if (DownedReviveZoneSystem.IsAllyInsideReviveZone(h, _selfHealth, downedConfig))
+                return h.ReviveProgress;
         }
 
-        return best;
+        return 0f;
     }
 
     private bool HasDownedTeammateNearby()
     {
-        float range = downedConfig != null ? downedConfig.reviveRange : 2.5f;
+        float range = downedConfig.reviveZoneRadius * 1.5f;
         Vector2 pos = transform.position;
 
         foreach (var h in FindObjectsByType<NetworkPlayerHealth>(FindObjectsSortMode.None))
@@ -99,18 +99,18 @@ public class RevivePromptWorldUI : MonoBehaviour
         root.AddComponent<CanvasScaler>().dynamicPixelsPerUnit = 40f;
 
         var rect = root.GetComponent<RectTransform>();
-        rect.sizeDelta = new Vector2(2.2f, 0.6f);
+        rect.sizeDelta = new Vector2(2.4f, 0.6f);
 
         var labelGo = new GameObject("Prompt");
         labelGo.transform.SetParent(root.transform, false);
         var labelRect = labelGo.AddComponent<RectTransform>();
-        labelRect.sizeDelta = new Vector2(2.2f, 0.3f);
+        labelRect.sizeDelta = new Vector2(2.4f, 0.3f);
         labelRect.anchoredPosition = new Vector2(0f, 0.15f);
         _promptLabel = labelGo.AddComponent<TextMeshProUGUI>();
-        _promptLabel.text = "Interagir para Ressuscitar";
-        _promptLabel.fontSize = 2.2f;
+        _promptLabel.text = "Entre na área verde para reviver";
+        _promptLabel.fontSize = 2f;
         _promptLabel.alignment = TextAlignmentOptions.Center;
-        _promptLabel.color = new Color(0.9f, 0.95f, 1f, 1f);
+        _promptLabel.color = new Color(0.85f, 1f, 0.9f, 1f);
 
         var barBg = new GameObject("ReviveProgressBg");
         barBg.transform.SetParent(root.transform, false);
@@ -127,7 +127,7 @@ public class RevivePromptWorldUI : MonoBehaviour
         fillRect.offsetMin = Vector2.zero;
         fillRect.offsetMax = Vector2.zero;
         _progressFill = fillGo.AddComponent<Image>();
-        _progressFill.color = new Color(0.25f, 0.8f, 1f, 1f);
+        _progressFill.color = new Color(0.35f, 1f, 0.55f, 1f);
         _progressFill.type = Image.Type.Filled;
         _progressFill.fillMethod = Image.FillMethod.Horizontal;
         _progressFill.fillOrigin = (int)Image.OriginHorizontal.Left;

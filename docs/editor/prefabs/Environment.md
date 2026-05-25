@@ -35,6 +35,11 @@
 
 **Caminho:** `Assets/Prefabs/Environment/Wall.prefab`
 
+| Propriedade | Valor YAML |
+|-------------|------------|
+| Layer | **Wall** (6) |
+| Tag | Untagged |
+
 | Componente | Função |
 |------------|--------|
 | Collider2D | Bloqueio |

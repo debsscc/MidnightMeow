@@ -14,7 +14,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DownedPlayerConfig
   unconsciousDuration: 45
   reviveHealthFraction: 0.5
-  reviveRange: 2.5
+  reviveZoneRadius: 2.2
+  reviveZoneFillDuration: 3
+  reviveZoneProgressDecayPerSecond: 0.75
+  reviveZoneBackgroundColor: {r: 0.2, g: 0.85, b: 0.45, a: 0.2}
+  reviveZoneFillColor: {r: 0.35, g: 1, b: 0.55, a: 0.45}
+  reviveZoneOutlineColor: {r: 0.9, g: 1, b: 0.95, a: 0.9}
+  reviveRange: 2.2
   reviveHoldDuration: 3
   reviveProgressDecayPerSecond: 0.75
   reviveProgressSendInterval: 0.1

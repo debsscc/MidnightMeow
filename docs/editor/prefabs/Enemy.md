@@ -5,46 +5,46 @@
 
 ## Resumo
 
-Inimigo rato base (ranged). Variantes em `Rato_*.prefab` herdam ou duplicam esta estrutura.
+Template de inimigo rato (ranged). Variantes de produção estão em `Rato_*.prefab` — ver [Rato-variants.md](Rato-variants.md).
 
 ## GameObject raiz
 
-| Propriedade | *(confirmar no Editor)* |
-|-------------|-------------------------|
+| Propriedade | Valor |
+|-------------|--------|
 | Tag | `Enemy` |
-| Layer | `Enemy` |
+| Layer | `Enemy` (11) |
 
-## Scripts (Assembly-CSharp)
+## Scripts principais
 
 | Script | Responsabilidade |
 |--------|------------------|
-| `EnemyTargetFinder` | Alvo mais próximo no `targetDetectionRange` |
-| `EnemyMovement` | Persegue ou random walk (patrulha) |
-| `EnemyHitStun` | Parado após dano (`hitStunDuration` no EnemyStats) |
-| `NetworkEnemyController` | Vida/morte em rede; IA só no servidor; após morte → `NetworkObject.Despawn(true)` (delay em `EnemyStats.deathDespawnDelay`) |
-| `EnemyHealthConfig` | **Stats** → SO `EnemyStats` (`maxHealth`, etc.) — ver [diagnostics.md](../diagnostics.md) |
+| `EnemyTargetFinder` | Alvo no `targetDetectionRange` |
+| `EnemyMovement` | Perseguição / patrulha |
+| `EnemyHitStun` | Parada após dano |
+| `NetworkEnemyController` | IA servidor; vida; despawn; knockback RPC |
+| `EnemyHealthConfig` | `stats` → `EnemyStats` SO |
+| `HealthComponent` | Vida; `_allowDestroyOnDeath: false` em MP |
 | `EnemyAnimationHandler` | Animações |
-| `HealthComponent` | Vida e morte |
-| `EnemyHealthConfig` | Config de vida (SO?) |
 | `EnemyScaleConfig` | Escala visual |
-| `EnemyDropHandler` | Drops ao morrer |
-| `EnemyAttack_Ranged` | Ataque à distância |
-| `EnemyAudioController` | SFX |
-| `NetworkEnemyController` | Sincronização MP |
+| `EnemyDropHandler` | Drop ciência / itens |
+| `EnemyTelegraphedAttacker` | Telegraph estilo Hades (SO `EnemyAttackPatternDefinition`) |
+| `EnemyTelegraphZoneFactory` | Instancia zonas de perigo |
+| `NetworkEnemyTelegraphRelay` | Réplica visual em clientes MP |
+| `EnemyAttack_Ranged` | Legado — tiro instantâneo |
+| `EnemyAttack_Melee` | Legado — dano instantâneo ao chegar perto |
+| `EnemyAudioController` | SFX dano/morte |
+| `NetworkObject` + `NetworkTransform` | NGO |
 
-## Valores a confirmar no Editor
+## Multiplayer
 
-| Script | Campo | Valor esperado | Valor atual |
-|--------|-------|----------------|-------------|
-| EnemyMovement | stats / speed SO | `EnemyStats` em `Assets/Data/Stats/Enemies/` | |
-| EnemyAttack_Ranged | projectilePrefab | `EnemyProjectile.prefab` | |
-| EnemyHealthConfig | config asset | | |
-| HealthComponent | _maxHealth | Vem do SO? | |
-| EnemyStats | deathDespawnDelay | ~0,4s até remover o prefab | |
-| HealthComponent | _allowDestroyOnDeath | **false** em MP (destruição via despawn) | |
-| NetworkEnemyController | deathDespawnDelay | Fallback se SO não definir | 0,4 |
+- Morte: `NetworkObject.Despawn` após `EnemyStats.deathDespawnDelay` (~0,4s)
+- Dano ao jogador: servidor autoritativo
+
+## Ataques com telegraph
+
+Ver [enemy-telegraph-attacks.md](../../combat/enemy-telegraph-attacks.md). Ao atribuir um pattern SO, desligar ranged/melee legado automaticamente.
 
 ## Prefabs relacionados
 
 - [Rato-variants.md](Rato-variants.md)
-- `Enemy 1.prefab` — documentar diferença vs `Enemy.prefab`
+- `Enemy 1.prefab` — legado

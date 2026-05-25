@@ -51,8 +51,9 @@ public class EnemyAttack_Ranged : MonoBehaviour
         if (projectilePrefab != null && firePoint != null)
         {
             Vector2 direction = (_targetFinder.CurrentTarget.position - firePoint.position).normalized;
-            float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg - 90f;
-            Quaternion rotation = Quaternion.Euler(0, 0, angle);
+            Quaternion rotation = ProjectileAimUtility.RotationFromDirection(
+                direction,
+                ProjectileAimUtility.EnemyRatProjectileForwardOffsetDegrees);
             
             Instantiate(projectilePrefab, firePoint.position, rotation);
         }
