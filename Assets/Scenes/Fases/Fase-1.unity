@@ -955,6 +955,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameManager2
   pauseMenuObject: {fileID: 1301115287}
+  sceneOverlayController: {fileID: 565339182}
+  pauseOverlayId: pause
   gameConfig: {fileID: 11400000, guid: ca1e29a8a0f38c04e845505abd2b0638, type: 2}
   progressionData: {fileID: 11400000, guid: b87f7c79296088641991071b4e517b5c, type: 2}
 --- !u!1 &229745486
@@ -2332,6 +2334,7 @@ GameObject:
   - component: {fileID: 565339179}
   - component: {fileID: 565339180}
   - component: {fileID: 565339181}
+  - component: {fileID: 565339182}
   m_Layer: 5
   m_Name: UIManager
   m_TagString: Untagged
@@ -2381,9 +2384,56 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6511d266c658c4c4aa4ae1caec7cfa37, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Buttons
+  m_EditorClassIdentifier: Assembly-CSharp::UIActionBridge
   pauseMenuObject: {fileID: 1301115287}
   cursorManager: {fileID: 565339180}
+  lobbyRouteId: menu_lobby
+  menuRouteId: return_menu
+  overlayController: {fileID: 565339182}
+  pauseOverlayId: pause
+--- !u!114 &565339182
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 565339178}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 953d80b0e62df944ea2d2d295e0eea01, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SceneOverlayController
+  overlays:
+  - overlayId: pause
+    root: {fileID: 1301115287}
+    pauseGameTime: 0
+    closeOthersOnOpen: 1
+  onOverlayOpened:
+    m_PersistentCalls:
+      m_Calls: []
+  onOverlayClosed:
+    m_PersistentCalls:
+      m_Calls: []
+  openEvents:
+    onBefore:
+      m_PersistentCalls:
+        m_Calls: []
+    onAfter:
+      m_PersistentCalls:
+        m_Calls: []
+    clipOnBefore: {fileID: 0}
+    clipOnAfter: {fileID: 0}
+    audioSourceOverride: {fileID: 0}
+  closeEvents:
+    onBefore:
+      m_PersistentCalls:
+        m_Calls: []
+    onAfter:
+      m_PersistentCalls:
+        m_Calls: []
+    clipOnBefore: {fileID: 0}
+    clipOnAfter: {fileID: 0}
+    audioSourceOverride: {fileID: 0}
 --- !u!1 &618898878
 GameObject:
   m_ObjectHideFlags: 0

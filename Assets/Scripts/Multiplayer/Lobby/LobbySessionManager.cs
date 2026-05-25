@@ -120,6 +120,13 @@ public class LobbySessionManager : NetworkBehaviour
         }
 
         LobbySelectionStore.Capture(_players);
+
+        if (ScreenFlowController.Instance != null
+            && ScreenFlowController.Instance.RequestRoute(SceneFlowRouteIds.LobbyToGameplay))
+        {
+            return;
+        }
+
         NetworkManager.SceneManager.LoadScene(gameplaySceneName, LoadSceneMode.Single);
     }
 

@@ -4,35 +4,38 @@ using System.Collections;
 
 public class LoadingBar : MonoBehaviour
 {
-    private SceneTransition sceneTransition;
-    public Image loadingBar; //Ref da image que vai ser preenchida
-    public float fillSpeed = 0.1f; //Velocidade de preenchimento
+    public Image loadingBar;
+    public float fillSpeed = 0.1f;
 
     private void Start()
     {
-        sceneTransition = SceneTransition.Instance;
+        if (loadingBar == null)
+            return;
+
         loadingBar.fillAmount = 0f;
         StartCoroutine(UpdateLoadingBar());
     }
 
     private IEnumerator UpdateLoadingBar()
     {
-        // Aguarda o AsyncOperation ser iniciado
-        while (sceneTransition.CurrentAsyncLoad == null)
+        ScreenFlowController flow = ScreenFlowController.Instance;
+        if (flow == null)
+            yield break;
+
+        while (flow.CurrentAsyncLoad == null)
             yield return null;
 
-        // Preenche a barra suavemente conforme o progresso (0 a 0.9 = cena pronta)
-        while (sceneTransition.CurrentAsyncLoad.progress < 0.9f)
+        AsyncOperation asyncLoad = flow.CurrentAsyncLoad;
+        while (asyncLoad != null && asyncLoad.progress < 0.9f)
         {
-            float target = sceneTransition.CurrentAsyncLoad.progress / 0.9f;
-            loadingBar.fillAmount = Mathf.MoveTowards(loadingBar.fillAmount, target, fillSpeed * Time.deltaTime);
+            float target = asyncLoad.progress / 0.9f;
+            loadingBar.fillAmount = Mathf.MoveTowards(loadingBar.fillAmount, target, fillSpeed * Time.unscaledDeltaTime);
             yield return null;
         }
 
-        // Completa a barra até 1
         while (loadingBar.fillAmount < 1f)
         {
-            loadingBar.fillAmount = Mathf.MoveTowards(loadingBar.fillAmount, 1f, fillSpeed * Time.deltaTime);
+            loadingBar.fillAmount = Mathf.MoveTowards(loadingBar.fillAmount, 1f, fillSpeed * Time.unscaledDeltaTime);
             yield return null;
         }
     }

@@ -23,6 +23,11 @@ public class GameManager2 : MonoBehaviour
     [Header("References")]
     [Tooltip("Arraste o painel principal do Pause Menu aqui.")]
     [SerializeField] private GameObject pauseMenuObject;
+
+    [Tooltip("Opcional: gerencia visibilidade do pause via SceneOverlayController.")]
+    [SerializeField] private SceneOverlayController sceneOverlayController;
+
+    [SerializeField] private string pauseOverlayId = "pause";
     
     [Tooltip("Configurações de delay e cenas para vitória/derrota.")]
     [SerializeField] private GameConfig gameConfig;
@@ -69,10 +74,13 @@ public class GameManager2 : MonoBehaviour
         // Notify systems that the game is in playing state (not paused)
         GameEvents.InvokePauseChanged(false);
         
-        if (pauseMenuObject != null)
-        {
+        if (sceneOverlayController == null)
+            sceneOverlayController = FindFirstObjectByType<SceneOverlayController>();
+
+        if (sceneOverlayController != null)
+            sceneOverlayController.CloseAllOverlays();
+        else if (pauseMenuObject != null)
             pauseMenuObject.SetActive(false);
-        }
 
         if (ServiceLocator.HasService<CursorManager>())
         {
@@ -122,7 +130,12 @@ public class GameManager2 : MonoBehaviour
         if (ServiceLocator.HasService<CursorManager>())
             ServiceLocator.GetService<CursorManager>().ResetToDefault();
         
-        if (pauseMenuObject != null)
+        if (sceneOverlayController == null)
+            sceneOverlayController = FindFirstObjectByType<SceneOverlayController>();
+
+        if (sceneOverlayController != null)
+            sceneOverlayController.OpenOverlay(pauseOverlayId);
+        else if (pauseMenuObject != null)
             pauseMenuObject.SetActive(true);
     }
 
@@ -139,7 +152,12 @@ public class GameManager2 : MonoBehaviour
         if (ServiceLocator.HasService<CursorManager>())
             ServiceLocator.GetService<CursorManager>().SetGameplayCursor();
 
-        if (pauseMenuObject != null)
+        if (sceneOverlayController == null)
+            sceneOverlayController = FindFirstObjectByType<SceneOverlayController>();
+
+        if (sceneOverlayController != null)
+            sceneOverlayController.CloseOverlay(pauseOverlayId);
+        else if (pauseMenuObject != null)
             pauseMenuObject.SetActive(false);
     }
 
@@ -194,10 +212,10 @@ public class GameManager2 : MonoBehaviour
 
         if (!string.IsNullOrEmpty(sceneToLoad))
         {
-            if (SceneTransition.Instance != null)
+            if (ScreenFlowController.Instance != null)
             {
                 Debug.Log($"GameManager2: Carregando cena '{sceneToLoad}' após {(isVictory ? "vitória" : "derrota")}.");
-                SceneTransition.Instance.ChangeScene(sceneToLoad);
+                ScreenFlowController.Instance.TryBeginTransition(sceneToLoad);
             }
             else if (ServiceLocator.HasService<GameFlowManager>())
             {
@@ -207,7 +225,7 @@ public class GameManager2 : MonoBehaviour
             }
             else
             {
-                Debug.LogError("GameManager2: SceneTransition e GameFlowManager não encontrados. Impossível trocar de cena.");
+                Debug.LogError("GameManager2: ScreenFlowController e GameFlowManager não encontrados. Impossível trocar de cena.");
             }
         }
         else

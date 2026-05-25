@@ -2,17 +2,14 @@
 
 Última revisão: 2026-05-22
 
+> Documentação completa: [screen-flow.md](./screen-flow.md)
+
 ## Comportamento
 
-- Botão **PLAY** (`Level1`) → `UIActionBridge.LoadLobby()` → `SceneTransition.TryBeginTransition("Lobby")`.
-- Cliques extras são **ignorados** enquanto `_sceneLoadPending` ou `SceneTransition.IsTransitioning`.
-- Transição usa `Time.unscaledDeltaTime` (fade/loading não travam com `timeScale`).
+- Botão **PLAY** → `UIActionBridge.LoadLobby()` → rota `menu_lobby` no `ScreenFlowController` (fade + loading).
+- Cliques extras ignorados enquanto `ScreenFlowController.IsTransitioning`.
+- Visuais de fade/loading: objeto com `SceneTransition` na cena Menu2 (registra no controller persistente).
 
-## Arquivos
+## Catálogo
 
-- `Assets/Scripts/UI/SceneTransition.cs` — guard `IsTransitioning`
-- `Assets/Scripts/UI/Buttons/UIActionBridge.cs` — debounce
-
-## Ajuste opcional no Editor
-
-No botão PLAY, pode desmarcar **Interactable** via animação; o código já impede loads duplicados.
+Rota `menu_lobby` em `Assets/Data/UI/ScreenFlow/Route_Menu_Lobby.asset` (fade 3s, loading mín. 5s).

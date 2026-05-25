@@ -1,13 +1,20 @@
 using UnityEngine;
-using UnityEngine.UI;
 using System;
 using System.Collections;
 
-public class UIActionBridge : MonoBehaviour 
+public class UIActionBridge : MonoBehaviour
 {
     [Header("UI References (Opcional)")]
-    public GameObject pauseMenuObject; 
+    public GameObject pauseMenuObject;
     public CursorManager cursorManager;
+
+    [Header("Screen Flow (preferir ScreenFlowRequest no botão)")]
+    [SerializeField] private string lobbyRouteId = SceneFlowRouteIds.MenuToLobby;
+    [SerializeField] private string menuRouteId = SceneFlowRouteIds.ReturnToMenu;
+
+    [Header("Overlay (opcional — preferir SceneOverlayRequest)")]
+    [SerializeField] private SceneOverlayController overlayController;
+    [SerializeField] private string pauseOverlayId = "pause";
 
     private bool _sceneLoadPending;
 
@@ -18,7 +25,6 @@ public class UIActionBridge : MonoBehaviour
 
         _sceneLoadPending = true;
         yield return new WaitForSecondsRealtime(delay);
-
         loadAction?.Invoke();
         _sceneLoadPending = false;
     }
@@ -27,14 +33,13 @@ public class UIActionBridge : MonoBehaviour
     {
         Time.timeScale = 1f;
 
-        if (SceneTransition.Instance != null)
-        {
-            SceneTransition.Instance.TryBeginTransition(sceneName);
+        ScreenFlowController flow = ScreenFlowController.Instance;
+        if (flow != null && flow.TryBeginTransition(sceneName))
             return;
-        }
 
-        var flowManager = GetFlowManager();
-        if (flowManager == null) return;
+        GameFlowManager flowManager = GetFlowManager();
+        if (flowManager == null)
+            return;
 
         switch (sceneName)
         {
@@ -50,25 +55,43 @@ public class UIActionBridge : MonoBehaviour
         }
     }
 
+    private void BeginRoute(string routeId, string sceneFallback)
+    {
+        Time.timeScale = 1f;
+
+        ScreenFlowController flow = ScreenFlowController.Instance;
+        if (flow != null && flow.RequestRoute(routeId))
+            return;
+
+        if (!string.IsNullOrEmpty(sceneFallback))
+            BeginSceneTransition(sceneFallback);
+    }
+
     private GameFlowManager GetFlowManager()
     {
         if (ServiceLocator.HasService<GameFlowManager>())
             return ServiceLocator.GetService<GameFlowManager>();
 
-        var fallback = FindFirstObjectByType<GameFlowManager>();
+        GameFlowManager fallback = FindFirstObjectByType<GameFlowManager>();
         if (fallback != null)
         {
             ServiceLocator.RegisterService<GameFlowManager>(fallback);
             return fallback;
         }
 
-        Debug.LogError("UIActionBridge: GameFlowManager não encontrado na cena nem no ServiceLocator.");
+        Debug.LogError("UIActionBridge: GameFlowManager não encontrado.");
         return null;
+    }
+
+    private bool IsBlocked()
+    {
+        return _sceneLoadPending
+            || (ScreenFlowController.Instance != null && ScreenFlowController.Instance.IsTransitioning);
     }
 
     public void LoadPhase(string phaseName)
     {
-        if (_sceneLoadPending || SceneTransition.Instance != null && SceneTransition.Instance.IsTransitioning)
+        if (IsBlocked())
             return;
 
         StartCoroutine(DelayedSceneLoad(0.2f, () => BeginSceneTransition(phaseName)));
@@ -76,23 +99,23 @@ public class UIActionBridge : MonoBehaviour
 
     public void LoadMenu()
     {
-        if (_sceneLoadPending || SceneTransition.Instance != null && SceneTransition.Instance.IsTransitioning)
+        if (IsBlocked())
             return;
 
-        StartCoroutine(DelayedSceneLoad(0.2f, () => BeginSceneTransition("Menu2")));
+        StartCoroutine(DelayedSceneLoad(0.2f, () => BeginRoute(menuRouteId, "Menu2")));
     }
 
     public void LoadLobby()
     {
-        if (_sceneLoadPending || SceneTransition.Instance != null && SceneTransition.Instance.IsTransitioning)
+        if (IsBlocked())
             return;
 
-        StartCoroutine(DelayedSceneLoad(0.2f, () => BeginSceneTransition("Lobby")));
+        StartCoroutine(DelayedSceneLoad(0.2f, () => BeginRoute(lobbyRouteId, "Lobby")));
     }
 
     public void ActivateScreen(GameObject screen) => screen.SetActive(true);
     public void DeactivateScreen(GameObject screen) => screen.SetActive(false);
-    
+
     public void ToggleScreen(GameObject screenDesactivate, GameObject screenActivate)
     {
         screenDesactivate.SetActive(false);
@@ -101,8 +124,18 @@ public class UIActionBridge : MonoBehaviour
 
     public void OpenPauseMenu()
     {
-        if (pauseMenuObject == null) return;
-        Time.timeScale = 0f; 
+        if (overlayController != null)
+        {
+            overlayController.OpenOverlay(pauseOverlayId);
+            if (cursorManager != null)
+                cursorManager.SetDefaultCursor();
+            return;
+        }
+
+        if (pauseMenuObject == null)
+            return;
+
+        Time.timeScale = 0f;
         ActivateScreen(pauseMenuObject);
         if (cursorManager != null)
             cursorManager.SetDefaultCursor();
@@ -110,7 +143,17 @@ public class UIActionBridge : MonoBehaviour
 
     public void ClosePauseMenu()
     {
-        if (pauseMenuObject == null) return;
+        if (overlayController != null)
+        {
+            overlayController.CloseOverlay(pauseOverlayId);
+            if (cursorManager != null)
+                cursorManager.SetGameplayCursor();
+            return;
+        }
+
+        if (pauseMenuObject == null)
+            return;
+
         Time.timeScale = 1f;
         DeactivateScreen(pauseMenuObject);
         if (cursorManager != null)
@@ -119,7 +162,8 @@ public class UIActionBridge : MonoBehaviour
 
     public void QuitGame()
     {
-        if (_sceneLoadPending) return;
+        if (_sceneLoadPending)
+            return;
 
         StartCoroutine(DelayedSceneLoad(0.2f, () =>
         {

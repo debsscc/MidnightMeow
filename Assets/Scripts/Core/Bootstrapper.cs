@@ -3,66 +3,71 @@ using UnityEngine;
 [DisallowMultipleComponent]
 public class Bootstrapper : MonoBehaviour
 {
-    // ---> LINHA FALTANTE ADICIONADA AQUI <---
     private static Bootstrapper _instance;
 
-    [Tooltip("If set, bootstrapper will register this GameFlowManager instance. Otherwise it will look for one on the same GameObject.")]
     [SerializeField] private GameFlowManager gameFlowManager;
-    [Tooltip("Optional: assign the PlayerProgressionData asset to register it as a global service")]
+    [SerializeField] private ScreenFlowController screenFlowController;
+    [SerializeField] private SceneFlowCatalog sceneFlowCatalog;
     [SerializeField] private PlayerProgressionData progressionData;
 
     private void Awake()
     {
-        // Agora _instance existe e o código compilará
         if (_instance != null && _instance != this)
         {
             Destroy(gameObject);
             return;
         }
+
         _instance = this;
-        
-        // Ensure persistence of the bootstrapper GameObject
         DontDestroyOnLoad(gameObject);
+
+        if (screenFlowController == null)
+            screenFlowController = GetComponent<ScreenFlowController>();
+
+        if (screenFlowController == null)
+            screenFlowController = gameObject.AddComponent<ScreenFlowController>();
+
+        if (sceneFlowCatalog != null)
+            screenFlowController.SetCatalog(sceneFlowCatalog);
 
         if (gameFlowManager == null)
             gameFlowManager = GetComponent<GameFlowManager>();
 
         if (gameFlowManager == null)
         {
-            Debug.LogError("Bootstrapper: GameFlowManager not found on GameObject. Attach a GameFlowManager to the bootstrapper.");
+            Debug.LogError("Bootstrapper: GameFlowManager não encontrado.");
             return;
         }
 
-        // Register into ServiceLocator. If a GameFlowManager is already registered, replace it.
-        try
-        {
-            ServiceLocator.RegisterService<GameFlowManager>(gameFlowManager);
-        }
-        catch (System.Exception ex)
-        {
-            Debug.LogError($"Bootstrapper: Failed to register GameFlowManager: {ex.Message}");
-        }
+        RegisterService(gameFlowManager);
+        RegisterService(screenFlowController);
 
         if (progressionData != null)
-        {
-            try
-            {
-                ServiceLocator.RegisterService<PlayerProgressionData>(progressionData);
-            }
-            catch (System.Exception ex)
-            {
-                Debug.LogError($"Bootstrapper: Failed to register PlayerProgressionData: {ex.Message}");
-            }
-        }
+            RegisterService(progressionData);
     }
 
     private void Start()
     {
-        // Delegate the initial flow to the GameFlowManager
-        var gf = ServiceLocator.GetService<GameFlowManager>();
-        if (gf != null)
+        ScreenFlowController flow = ScreenFlowController.Instance;
+        if (flow != null)
         {
-            gf.LoadMenu();
+            flow.RequestRoute(SceneFlowRouteIds.BootstrapToMenu);
+            return;
+        }
+
+        GameFlowManager gf = ServiceLocator.GetService<GameFlowManager>();
+        gf?.LoadMenu();
+    }
+
+    private static void RegisterService<T>(T service) where T : class
+    {
+        try
+        {
+            ServiceLocator.RegisterService<T>(service);
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError($"Bootstrapper: falha ao registrar {typeof(T).Name}: {ex.Message}");
         }
     }
 }
