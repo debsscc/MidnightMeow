@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8c4e2f1a9b3d64e5f0a1b2c3d4e5f6a7, type: 3}
+  m_Name: DownedPlayerConfig
+  m_EditorClassIdentifier: Assembly-CSharp::DownedPlayerConfig
+  unconsciousDuration: 45
+  reviveHealthFraction: 0.5
+  reviveZoneRadius: 2.2
+  reviveZoneFillDuration: 3
+  reviveZoneProgressDecayPerSecond: 0.75
+  reviveZoneBackgroundColor: {r: 0.2, g: 0.85, b: 0.45, a: 0.2}
+  reviveZoneFillColor: {r: 0.35, g: 1, b: 0.55, a: 0.45}
+  reviveZoneOutlineColor: {r: 0.9, g: 1, b: 0.95, a: 0.9}
+  reviveRange: 2.2
+  reviveHoldDuration: 3
+  reviveProgressDecayPerSecond: 0.75
+  reviveProgressSendInterval: 0.1

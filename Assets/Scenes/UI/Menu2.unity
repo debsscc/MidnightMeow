@@ -13083,6 +13083,7 @@ GameObject:
   - component: {fileID: 920484127}
   - component: {fileID: 920484128}
   - component: {fileID: 920484129}
+  - component: {fileID: 920484130}
   m_Layer: 0
   m_Name: UIManager
   m_TagString: Untagged
@@ -13153,6 +13154,33 @@ MonoBehaviour:
   - {fileID: 1300774444}
   - {fileID: 66845560}
   defaultTab: {fileID: 1250871020}
+--- !u!114 &920484130
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 920484124}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f2eaccb92defe4641a571b662d65a60b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ScreenFlowRequest
+  catalog: {fileID: 11400000, guid: d1e2f3a4b5c6478890a1b2c3d4e5f600, type: 2}
+  routeAsset: {fileID: 0}
+  routeId: menu_lobby
+  modeOverride: 0
+  delaySeconds: 0
+  flowEvents:
+    onBefore:
+      m_PersistentCalls:
+        m_Calls: []
+    onAfter:
+      m_PersistentCalls:
+        m_Calls: []
+    clipOnBefore: {fileID: 0}
+    clipOnAfter: {fileID: 0}
+    audioSourceOverride: {fileID: 0}
 --- !u!1 &929364237
 GameObject:
   m_ObjectHideFlags: 0
@@ -20843,16 +20871,16 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 920484128}
-        m_TargetAssemblyTypeName: UIActionBridge, Assembly-CSharp
-        m_MethodName: LoadLobby
+      - m_Target: {fileID: 920484130}
+        m_TargetAssemblyTypeName: ScreenFlowRequest, Assembly-CSharp
+        m_MethodName: Execute
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
-          m_StringArgument: Fase-1
+          m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
       - m_Target: {fileID: 1520145641}

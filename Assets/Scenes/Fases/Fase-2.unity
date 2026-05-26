@@ -300,6 +300,7 @@ MonoBehaviour:
   m_VerticalAlignment: 256
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -1658,6 +1659,7 @@ MonoBehaviour:
   m_VerticalAlignment: 256
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -1852,7 +1854,7 @@ PrefabInstance:
     - target: {fileID: 8967742787879189, guid: 076a589773359ff4e8a30dcef68883fd, type: 3}
       propertyPath: m_Sprite
       value: 
-      objectReference: {fileID: 21300000, guid: 9fef3a5c363bac140993181d8d5c97f8, type: 3}
+      objectReference: {fileID: 21300000, guid: 1aa168e61069a2f46b517da229548a5b, type: 3}
     - target: {fileID: 8967742787879189, guid: 076a589773359ff4e8a30dcef68883fd, type: 3}
       propertyPath: m_Color.b
       value: 1
@@ -3233,7 +3235,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: -12.792}
 --- !u!199 &1167612422
 ParticleSystemRenderer:
-  serializedVersion: 6
+  serializedVersion: 7
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -3279,6 +3281,7 @@ ParticleSystemRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_RenderMode: 1
   m_MeshDistribution: 0
   m_SortMode: 0
@@ -3310,7 +3313,6 @@ ParticleSystemRenderer:
   m_MeshWeighting1: 1
   m_MeshWeighting2: 1
   m_MeshWeighting3: 1
-  m_MaskInteraction: 0
 --- !u!198 &1167612423
 ParticleSystem:
   m_ObjectHideFlags: 0
@@ -8159,6 +8161,10 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7050732553715643850, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: -8074366800028865057, guid: 364fb641be8103c4d9d4dc79074e77c2, type: 3}
+    - target: {fileID: 7050732553715643850, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: 932dce8f24bb3174a97f03ef6c211f84, type: 2}
@@ -8899,6 +8905,7 @@ MonoBehaviour:
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -9240,6 +9247,7 @@ MonoBehaviour:
   m_VerticalAlignment: 256
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -9707,7 +9715,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4625726351851317203, guid: 9dfe366e7244702459c1b35aa279dc08, type: 3}
       propertyPath: m_Color.a
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4625726351851317203, guid: 9dfe366e7244702459c1b35aa279dc08, type: 3}
       propertyPath: m_Color.b
@@ -10087,7 +10095,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: -90, y: 0, z: 0}
 --- !u!199 &1961454130
 ParticleSystemRenderer:
-  serializedVersion: 6
+  serializedVersion: 7
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -10133,6 +10141,7 @@ ParticleSystemRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: -5
+  m_MaskInteraction: 0
   m_RenderMode: 0
   m_MeshDistribution: 0
   m_SortMode: 0
@@ -10164,7 +10173,6 @@ ParticleSystemRenderer:
   m_MeshWeighting1: 1
   m_MeshWeighting2: 1
   m_MeshWeighting3: 1
-  m_MaskInteraction: 0
 --- !u!198 &1961454131
 ParticleSystem:
   m_ObjectHideFlags: 0
