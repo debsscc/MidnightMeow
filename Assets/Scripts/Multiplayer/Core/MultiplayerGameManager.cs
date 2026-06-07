@@ -204,6 +204,35 @@ public class MultiplayerGameManager : NetworkBehaviour
             case GameState.Victory: OnVictory?.Invoke(); break;
             case GameState.Defeat:  OnDefeat?.Invoke();  break;
         }
+
+        if (IsServer && (newState == GameState.Victory || newState == GameState.Defeat))
+            StartCoroutine(ReturnToPreparationRoutine(newState));
+    }
+
+    private IEnumerator ReturnToPreparationRoutine(GameState endState)
+    {
+        float delay = gameConfig != null
+            ? (endState == GameState.Victory ? gameConfig.victoryDelay : gameConfig.defeatDelay)
+            : 2f;
+        yield return new WaitForSecondsRealtime(delay);
+
+        SaveProfileStore save = SaveProfileStore.Instance;
+        if (save?.Active != null)
+        {
+            if (endState == GameState.Victory)
+                save.AddMagiculas(1);
+
+            save.Active.Touch(NetworkManager.Singleton != null && NetworkManager.Singleton.IsHost,
+                ConnectionManager.Instance != null ? ConnectionManager.Instance.CurrentJoinCode : string.Empty,
+                "Preparation");
+            save.SaveActive();
+        }
+
+        GameSessionContext.PendingRouteId = string.Empty;
+        if (GameFlowOrchestrator.Instance != null)
+            GameFlowOrchestrator.Instance.TryRequestRoute(SceneFlowRouteIds.GameplayToPreparation);
+        else
+            ScreenFlowController.Instance?.RequestRoute(SceneFlowRouteIds.GameplayToPreparation);
     }
 }
 

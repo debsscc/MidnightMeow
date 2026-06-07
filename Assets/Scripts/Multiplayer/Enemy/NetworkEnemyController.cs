@@ -39,6 +39,7 @@ public class NetworkEnemyController : NetworkBehaviour
         NetworkVariableWritePermission.Server);
 
     private float _lastSyncedHealth = -1f;
+    private ulong _lastInstigatorClientId;
     private bool _deathFinalized;
     private Coroutine _despawnCoroutine;
     private Coroutine _knockbackCoroutine;
@@ -61,6 +62,9 @@ public class NetworkEnemyController : NetworkBehaviour
 
         _health.SetAllowDestroyOnDeath(false);
         _health.OnDied.AddListener(HandleDied);
+
+        if (GetComponent<EnemySlowEffect>() == null)
+            gameObject.AddComponent<EnemySlowEffect>();
     }
 
     public override void OnDestroy()
@@ -151,6 +155,8 @@ public class NetworkEnemyController : NetworkBehaviour
 
         if (_dropHandler != null)
             _dropHandler.TrySpawnDrop();
+
+        GameEvents.InvokeEnemyKilledByPlayer(_lastInstigatorClientId);
 
         PlayDeathVisualClientRpc();
         ScheduleDeathDespawn(GetDeathDespawnDelay());
@@ -307,6 +313,7 @@ public class NetworkEnemyController : NetworkBehaviour
         }
 
         float before = _health.CurrentHealth;
+        _lastInstigatorClientId = instigatorClientId;
         _health.TakeDamage(amount, gameObject);
 
         if (_health.IsDead)
@@ -333,6 +340,22 @@ public class NetworkEnemyController : NetworkBehaviour
             ShowDamageNumberClientRpc(dealt);
 
         return true;
+    }
+
+    [Rpc(SendTo.Server)]
+    public void ApplySlowRpc(float speedMultiplier, float duration)
+    {
+        if (!IsServer || IsDeadOnNetwork || duration <= 0f) return;
+
+        var slow = GetComponent<EnemySlowEffect>() ?? gameObject.AddComponent<EnemySlowEffect>();
+        slow.ApplySlow(speedMultiplier, duration);
+    }
+
+    [Rpc(SendTo.Server)]
+    public void ApplyStunRpc(float duration)
+    {
+        if (!IsServer || IsDeadOnNetwork || duration <= 0f) return;
+        _hitStun?.ApplyStun(duration);
     }
 
     [Rpc(SendTo.Server)]

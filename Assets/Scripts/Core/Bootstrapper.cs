@@ -9,6 +9,8 @@ public class Bootstrapper : MonoBehaviour
     [SerializeField] private ScreenFlowController screenFlowController;
     [SerializeField] private SceneFlowCatalog sceneFlowCatalog;
     [SerializeField] private PlayerProgressionData progressionData;
+    [SerializeField] private SaveProfileStore saveProfileStore;
+    [SerializeField] private GameFlowOrchestrator gameFlowOrchestrator;
 
     private void Awake()
     {
@@ -44,6 +46,18 @@ public class Bootstrapper : MonoBehaviour
 
         if (progressionData != null)
             RegisterService(progressionData);
+
+        if (saveProfileStore == null)
+            saveProfileStore = GetComponent<SaveProfileStore>();
+        if (saveProfileStore == null)
+            saveProfileStore = gameObject.AddComponent<SaveProfileStore>();
+        RegisterService(saveProfileStore);
+
+        if (gameFlowOrchestrator == null)
+            gameFlowOrchestrator = GetComponent<GameFlowOrchestrator>();
+        if (gameFlowOrchestrator == null)
+            gameFlowOrchestrator = gameObject.AddComponent<GameFlowOrchestrator>();
+        RegisterService(gameFlowOrchestrator);
     }
 
     private void Start()

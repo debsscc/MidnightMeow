@@ -5170,6 +5170,12 @@ GameObject:
   - component: {fileID: 7671819681489115091}
   - component: {fileID: 1595175843066875490}
   - component: {fileID: -6993549697573688914}
+  - component: {fileID: 910001001001001001}
+  - component: {fileID: 910001001001001002}
+  - component: {fileID: 910001001001001003}
+  - component: {fileID: 910001001001001004}
+  - component: {fileID: 910001001001001005}
+  - component: {fileID: 910001001001001006}
   m_Layer: 3
   m_Name: Nixie
   m_TagString: Player
@@ -5438,8 +5444,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 83da08afb0b42174a91a15e1cb2b289c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerAbilityHandler
-  currentAbility: {fileID: 0}
+  abilitySet: {fileID: 11400000, guid: b2a1c3d4e5f6478990a1b2c3d4e5f010, type: 2}
+  barrierPrefab: {fileID: 0}
+  poolPrefab: {fileID: 0}
   firePoint: {fileID: 874212205570085287}
+  aim: {fileID: 5631259045198985370}
+  dash: {fileID: 6300129357974945871}
+  unlockAllAbilitySlotsOnStart: 1
+  _progression:
+    phaseIndex: 1
+    ability1Unlocked: 0
+    ability2Unlocked: 0
+    primaryTier: 1
+    ability1Tier: 1
+    ability2Tier: 1
 --- !u!95 &944221471755545764
 Animator:
   serializedVersion: 7
@@ -5475,6 +5493,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerAnimationHandler
   playerShooting: {fileID: 0}
+  playerMeleeCombat: {fileID: -6993549697573688914}
   playerAbilityHandler: {fileID: 5792988918660519372}
   healthComponent: {fileID: 4338388805264836550}
   playerMovement: {fileID: 584514799452680066}
@@ -5594,7 +5613,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 3040309ef84996940ad5e5d57b204c69, type: 2}
   healthComponent: {fileID: 4338388805264836550}
   playerShooting: {fileID: 0}
-  playerDash: {fileID: 0}
+  playerDash: {fileID: 6300129357974945871}
 --- !u!114 &1783710480787252871
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5631,6 +5650,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerDash
   inputHandler: {fileID: 5786198820618361475}
   stats: {fileID: 11400000, guid: 7f4fa052e88f8494f918e2f5d5b9cdd1, type: 2}
+  drawDebugGizmos: 1
+  dashGizmoWidth: 0.6
   passThroughLayer:
     serializedVersion: 2
     m_Bits: 2048
@@ -5724,7 +5745,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
-  GlobalObjectIdHash: 4217278500
+  GlobalObjectIdHash: 1259787695
   InScenePlacedSourceGlobalObjectIdHash: 1626128580
   DeferredDespawnTick: 0
   Ownership: 1
@@ -5802,7 +5823,7 @@ MonoBehaviour:
   inputHandler: {fileID: 5786198820618361475}
   movement: {fileID: 584514799452680066}
   shooting: {fileID: 0}
-  meleeCombat: {fileID: 0}
+  meleeCombat: {fileID: -6993549697573688914}
   aim: {fileID: 5631259045198985370}
   dash: {fileID: 6300129357974945871}
   abilityHandler: {fileID: 5792988918660519372}
@@ -6113,8 +6134,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerGameplayModuleInstaller
   installDamageImmunity: 1
   installDownedUI: 1
+  installReviveZoneVisual: 1
   installRevivePromptUI: 1
   installMeleeDebugVisual: 1
+  installAbilityDebugVisual: 1
 --- !u!114 &-6993549697573688914
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6133,6 +6156,94 @@ MonoBehaviour:
     m_Bits: 1024
   attackOrigin: {fileID: 1670168118647358667}
   drawDebugHits: 1
+--- !u!114 &910001001001001001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3845447005448380479}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a1f301a1b2c3d4e5f6012345678abcd1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NixPushAbilityExecutor
+  enemyLayers:
+    serializedVersion: 2
+    m_Bits: 1024
+  attackOrigin: {fileID: 874212205570085287}
+  drawDebugGizmos: 1
+--- !u!114 &910001001001001002
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3845447005448380479}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a1f301a1b2c3d4e5f6012345678abcd2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NixChargeAbilityExecutor
+  enemyLayers:
+    serializedVersion: 2
+    m_Bits: 1024
+  attackOrigin: {fileID: 874212205570085287}
+  drawDebugGizmos: 1
+--- !u!114 &910001001001001003
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3845447005448380479}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a1f301a1b2c3d4e5f6012345678abcd5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerPassiveHandler
+  abilitySet: {fileID: 11400000, guid: b2a1c3d4e5f6478990a1b2c3d4e5f010, type: 2}
+--- !u!114 &910001001001001004
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3845447005448380479}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a1f301a1b2c3d4e5f6012345678abcd6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerAbilityStatScaler
+  abilityHandler: {fileID: 5792988918660519372}
+  meleeCombat: {fileID: -6993549697573688914}
+  shooting: {fileID: 0}
+--- !u!114 &910001001001001005
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3845447005448380479}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a1f301a1b2c3d4e5f6012345678abce3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NetworkPlayerAbilityRelay
+  ShowTopMostFoldoutHeaderGroup: 1
+--- !u!114 &910001001001001006
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3845447005448380479}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a1f301a1b2c3d4e5f6012345678abce4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NetworkAbilityObjectSpawner
+  ShowTopMostFoldoutHeaderGroup: 1
 --- !u!1 &4084784925386163396
 GameObject:
   m_ObjectHideFlags: 0

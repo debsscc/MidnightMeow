@@ -6,6 +6,7 @@ using UnityEngine;
 [RequireComponent(typeof(PlayerMeleeCombat))]
 public class MeleeAttackDebugVisual : MonoBehaviour
 {
+    [SerializeField] private bool drawDebugGizmos = true;
     [SerializeField] private bool showInPlayMode = true;
     [SerializeField] private Color fillColor = new Color(1f, 0.35f, 0.1f, 0.25f);
     [SerializeField] private Color outlineColor = new Color(1f, 0.9f, 0.2f, 0.9f);
@@ -90,13 +91,28 @@ public class MeleeAttackDebugVisual : MonoBehaviour
         _lineRenderer.useWorldSpace = true;
         _lineRenderer.loop = false;
         _lineRenderer.widthMultiplier = lineWidth;
-        _lineRenderer.material = new Material(Shader.Find("Sprites/Default"));
+        var shader = Shader.Find("MidnightMeow/AbilityZoneFill");
+        if (shader == null)
+            shader = Shader.Find("Sprites/Default");
+        _lineRenderer.material = new Material(shader);
         _lineRenderer.startColor = outlineColor;
         _lineRenderer.endColor = outlineColor;
         _lineRenderer.sortingOrder = 50;
     }
 
+    private void OnDrawGizmos()
+    {
+        if (!drawDebugGizmos) return;
+        DrawGizmoShape();
+    }
+
     private void OnDrawGizmosSelected()
+    {
+        if (!drawDebugGizmos) return;
+        DrawGizmoShape();
+    }
+
+    private void DrawGizmoShape()
     {
         if (_melee == null)
             _melee = GetComponent<PlayerMeleeCombat>();

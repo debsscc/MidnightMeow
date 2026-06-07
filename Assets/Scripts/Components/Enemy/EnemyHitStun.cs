@@ -39,7 +39,12 @@ public class EnemyHitStun : MonoBehaviour
 
     public void ApplyStun()
     {
-        if (stats == null || stats.hitStunDuration <= 0f) return;
-        _stunEndTime = Time.time + stats.hitStunDuration;
+        ApplyStun(stats != null ? stats.hitStunDuration : 0f);
+    }
+
+    public void ApplyStun(float duration)
+    {
+        if (duration <= 0f) return;
+        _stunEndTime = Mathf.Max(_stunEndTime, Time.time + duration);
     }
 }

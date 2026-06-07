@@ -1,20 +1,23 @@
 ///* ----------------------------------------------------------------
-// DESCRIÇÃO: Controla a habilidade de Dash do jogador, incluindo cooldown,
-// movimento físico e travessia temporária de layers específicos.
+// DESCRIÇÃO: Controla a habilidade de Dash do jogador. Ativação via PlayerAbilityHandler.
 // ---------------------------------------------------------------- */
 
 using System;
-using System.Collections;
 using Unity.Netcode;
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody2D))]
+[DefaultExecutionOrder(-40)]
 [DisallowMultipleComponent]
 public class PlayerDash : MonoBehaviour
 {
     [Header("Dependencies")]
     [SerializeField] private PlayerInputHandler inputHandler;
     [SerializeField] private PlayerStats stats;
+
+    [Header("Debug")]
+    [SerializeField] private bool drawDebugGizmos = true;
+    [SerializeField] private float dashGizmoWidth = 0.6f;
 
     [Header("Collision Bypass")]
     [SerializeField] private LayerMask passThroughLayer;
@@ -27,47 +30,64 @@ public class PlayerDash : MonoBehaviour
 
     private Rigidbody2D _rb;
     private NetworkObject _networkObject;
+    private AbilityDebugVisualHost _debugHost;
     private Vector2 _currentMoveDirection = Vector2.up;
+    private Vector2 _activeDashDirection = Vector2.up;
     private bool _isDashing;
+    private float _dashTimeRemaining;
+    private float _dashSpeedActive;
     private float _lastDashEndTime = -Mathf.Infinity;
-    private Coroutine _dashRoutine;
     private float _dashFailsafeDeadline = -1f;
+    private int[] _ignoredLayers = Array.Empty<int>();
+    private int _playerLayer;
 
-    public bool IsDashing => _dashRoutine != null;
+    public bool IsDashing => _isDashing;
 
     private void Awake()
     {
         _rb = GetComponent<Rigidbody2D>();
         _networkObject = GetComponent<NetworkObject>();
+        _debugHost = GetComponent<AbilityDebugVisualHost>();
         if (inputHandler == null) inputHandler = GetComponent<PlayerInputHandler>();
+        _playerLayer = gameObject.layer;
         RefreshDashStats();
     }
 
     private void OnEnable()
     {
-        if (inputHandler == null) return;
-        inputHandler.OnMoveInput += UpdateMoveDirection;
-        inputHandler.OnDashInput += HandleDashInput;
+        if (inputHandler != null)
+            inputHandler.OnMoveInput += UpdateMoveDirection;
         RefreshDashStats();
     }
 
     private void OnDisable()
     {
         if (inputHandler != null)
-        {
             inputHandler.OnMoveInput -= UpdateMoveDirection;
-            inputHandler.OnDashInput -= HandleDashInput;
-        }
 
         InterruptDash("OnDisable");
     }
 
     private void Update()
     {
-        if (!IsDashing || _dashFailsafeDeadline < 0f) return;
+        if (!_isDashing || _dashFailsafeDeadline < 0f) return;
 
         if (Time.unscaledTime > _dashFailsafeDeadline)
             InterruptDash("failsafe-timeout");
+    }
+
+    private void FixedUpdate()
+    {
+        if (!_isDashing) return;
+
+        if (_rb != null)
+            _rb.linearVelocity = _activeDashDirection * _dashSpeedActive;
+
+        Shadow.me?.Sombras_skill();
+
+        _dashTimeRemaining -= Time.fixedDeltaTime;
+        if (_dashTimeRemaining <= 0f)
+            CompleteDash();
     }
 
     private void UpdateMoveDirection(Vector2 direction)
@@ -76,15 +96,18 @@ public class PlayerDash : MonoBehaviour
             _currentMoveDirection = direction.normalized;
     }
 
-    private void HandleDashInput()
+    /// <summary>
+    /// Chamado pelo PlayerAbilityHandler após validar bloqueio e cooldown.
+    /// </summary>
+    public bool TryStartDash()
     {
-        if (IsDashing || stats == null) return;
+        if (_isDashing || stats == null) return false;
 
         if (TryGetComponent<NetworkPlayerRevive>(out var revive) && revive.IsReviving)
-            return;
+            return false;
 
         if (_networkObject != null && _networkObject.IsSpawned && !_networkObject.IsOwner)
-            return;
+            return false;
 
         float cooldown = _currentDashCooldown > 0f ? _currentDashCooldown : stats.dashCooldown;
         if (Time.time < _lastDashEndTime + cooldown)
@@ -96,32 +119,41 @@ public class PlayerDash : MonoBehaviour
                 0f,
                 _networkObject != null && _networkObject.IsOwner,
                 NetworkManager.Singleton != null && NetworkManager.Singleton.IsServer));
-            return;
+            return false;
         }
 
         float duration = _currentDashDuration > 0f ? _currentDashDuration : stats.dashDuration;
-        if (duration <= 0f || (_currentDashSpeed <= 0f && stats.dashSpeed <= 0f))
+        float speed = _currentDashSpeed > 0f ? _currentDashSpeed : stats.dashSpeed;
+        if (duration <= 0f || speed <= 0f)
         {
             GameplayDiagnosticHub.EmitPlayerDash(new PlayerDashDiagnostic(
                 gameObject.name,
                 "rejected-invalid-stats",
                 duration,
-                _currentDashSpeed,
+                speed,
                 _networkObject != null && _networkObject.IsOwner,
                 NetworkManager.Singleton != null && NetworkManager.Singleton.IsServer));
-            return;
+            return false;
         }
 
-        _dashFailsafeDeadline = Time.unscaledTime + duration + dashFailsafeExtraSeconds;
-        _dashRoutine = StartCoroutine(DashRoutine());
-    }
+        _activeDashDirection = _currentMoveDirection.sqrMagnitude > 0.0001f
+            ? _currentMoveDirection
+            : Vector2.up;
 
-    private IEnumerator DashRoutine()
-    {
+        _dashTimeRemaining = duration;
+        _dashSpeedActive = speed;
         _isDashing = true;
+        _dashFailsafeDeadline = Time.unscaledTime + duration + dashFailsafeExtraSeconds;
 
-        float duration = _currentDashDuration > 0f ? _currentDashDuration : stats.dashDuration;
-        float speed = _currentDashSpeed > 0f ? _currentDashSpeed : stats.dashSpeed;
+        _ignoredLayers = GetLayersFromMask(passThroughLayer);
+        foreach (int layer in _ignoredLayers)
+            Physics2D.IgnoreLayerCollision(_playerLayer, layer, true);
+
+        if (_debugHost != null)
+        {
+            float distance = speed * duration;
+            _debugHost.ShowDash((Vector2)transform.position, _activeDashDirection, distance, dashGizmoWidth);
+        }
 
         OnDashStarted?.Invoke();
         GameplayDiagnosticHub.EmitPlayerDash(new PlayerDashDiagnostic(
@@ -131,36 +163,25 @@ public class PlayerDash : MonoBehaviour
             speed,
             _networkObject != null && _networkObject.IsOwner,
             NetworkManager.Singleton != null && NetworkManager.Singleton.IsServer));
+        return true;
+    }
 
-        int playerLayer = gameObject.layer;
-        int[] ignoredLayers = GetLayersFromMask(passThroughLayer);
+    public float GetDashLockDuration()
+    {
+        if (stats == null) return 0.2f;
+        return _currentDashDuration > 0f ? _currentDashDuration : stats.dashDuration;
+    }
 
-        foreach (int layer in ignoredLayers)
-            Physics2D.IgnoreLayerCollision(playerLayer, layer, true);
-
-        Vector2 dashDirection = _currentMoveDirection.sqrMagnitude > 0.0001f
-            ? _currentMoveDirection
-            : Vector2.up;
-
-        float elapsed = 0f;
-        while (elapsed < duration)
-        {
-            if (_rb != null)
-                _rb.linearVelocity = dashDirection * speed;
-
-            Shadow.me?.Sombras_skill();
-            elapsed += Time.fixedDeltaTime;
-            yield return new WaitForFixedUpdate();
-        }
+    private void CompleteDash()
+    {
+        if (!_isDashing) return;
 
         if (_rb != null)
             _rb.linearVelocity = Vector2.zero;
 
-        foreach (int layer in ignoredLayers)
-            Physics2D.IgnoreLayerCollision(playerLayer, layer, false);
-
+        RestoreCollisions();
         _isDashing = false;
-        _dashRoutine = null;
+        _dashTimeRemaining = 0f;
         _dashFailsafeDeadline = -1f;
         _lastDashEndTime = Time.time;
 
@@ -168,34 +189,26 @@ public class PlayerDash : MonoBehaviour
         GameplayDiagnosticHub.EmitPlayerDash(new PlayerDashDiagnostic(
             gameObject.name,
             "complete",
-            duration,
-            speed,
+            _currentDashDuration > 0f ? _currentDashDuration : stats.dashDuration,
+            _dashSpeedActive,
             _networkObject != null && _networkObject.IsOwner,
             NetworkManager.Singleton != null && NetworkManager.Singleton.IsServer));
     }
 
     private void InterruptDash(string reason)
     {
-        if (_dashRoutine != null)
-        {
-            StopCoroutine(_dashRoutine);
-            _dashRoutine = null;
-        }
-
         if (!_isDashing)
         {
             _dashFailsafeDeadline = -1f;
             return;
         }
 
-        int playerLayer = gameObject.layer;
-        foreach (int layer in GetLayersFromMask(passThroughLayer))
-            Physics2D.IgnoreLayerCollision(playerLayer, layer, false);
-
         if (_rb != null)
             _rb.linearVelocity = Vector2.zero;
 
+        RestoreCollisions();
         _isDashing = false;
+        _dashTimeRemaining = 0f;
         _dashFailsafeDeadline = -1f;
         _lastDashEndTime = Time.time;
 
@@ -207,6 +220,13 @@ public class PlayerDash : MonoBehaviour
             0f,
             _networkObject != null && _networkObject.IsOwner,
             NetworkManager.Singleton != null && NetworkManager.Singleton.IsServer));
+    }
+
+    private void RestoreCollisions()
+    {
+        foreach (int layer in _ignoredLayers)
+            Physics2D.IgnoreLayerCollision(_playerLayer, layer, false);
+        _ignoredLayers = Array.Empty<int>();
     }
 
     private static int[] GetLayersFromMask(LayerMask mask)
@@ -238,6 +258,25 @@ public class PlayerDash : MonoBehaviour
         RefreshDashStats();
         _currentDashSpeed += extraSpeed;
         _currentDashCooldown = Mathf.Max(0.1f, _currentDashCooldown - cooldownReduction);
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        if (!drawDebugGizmos || stats == null) return;
+
+        float duration = _currentDashDuration > 0f ? _currentDashDuration : stats.dashDuration;
+        float speed = _currentDashSpeed > 0f ? _currentDashSpeed : stats.dashSpeed;
+        Vector2 direction = Application.isPlaying ? _activeDashDirection : _currentMoveDirection;
+        if (direction.sqrMagnitude < 0.0001f)
+            direction = Vector2.up;
+
+        AbilityDebugGizmoUtility.DrawDash(
+            transform.position,
+            direction,
+            speed * duration,
+            dashGizmoWidth,
+            new Color(0.2f, 0.95f, 0.95f, 0.25f),
+            new Color(0.6f, 1f, 1f, 0.9f));
     }
 
     private float _currentDashSpeed;

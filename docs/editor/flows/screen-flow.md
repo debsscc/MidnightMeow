@@ -1,70 +1,76 @@
 # Fluxo de telas unificado
 
-Última revisão: 2026-05-22
+Última revisão: 2026-06-07
+
+> Requisitos completos: [screen-flow.md](../screen-flow.md)
 
 ## Visão geral
 
 | Responsabilidade | Componente / asset |
 |------------------|-------------------|
-| Troca de **cena** (Menu → Lobby → Fase) | `ScreenFlowController` + `SceneFlowCatalog` |
-| Evento do Inspector → cena | `ScreenFlowRequest` |
-| **Overlay** na mesma cena (pause, baú) | `SceneOverlayController` + `SceneOverlayRequest` |
-| SFX/VFX no clique | `FlowEventRelay` (UnityEvents + AudioClip opcional) |
-| Fade / loading visuais (Menu2) | `SceneTransition` (registra imagens no controller) |
+| Troca de **cena** | `ScreenFlowController` + `SceneFlowCatalog` |
+| Orquestração (pause / corrida) | `GameFlowOrchestrator` |
+| Persistência (magículas, tiers, host) | `SaveProfileStore` + `GameSaveData` |
+| Contexto volátil da sessão | `GameSessionContext` |
+| **Overlay** (pause) | `SceneOverlayController` + `PauseMenuActions` |
+| Bootstrap por cena | `ScreenFlowSceneBootstrap` (auto via `RuntimeInitializeOnLoadMethod`) |
+| UI placeholder 1920×1080 | `ScreenFlowPlaceholderFactory` |
 
-## Fluxo inicial do jogo
+## Fluxo completo (implementado)
 
 ```
-BootstrapScene  --(bootstrap_menu, Instant)-->
-Menu2           --(menu_lobby, LoadingScreen)-->
-Lobby           --(lobby_gameplay, NetcodeHost)-->
-Fase-1
+BootstrapScene → Menu2 (MainMenuController)
+  ├─ Novo Jogo → Lobby (LobbyFlowController: mode_select)
+  │    ├─ Hostear → host_waiting → [2 jogadores] → Loading1
+  │    ├─ Entrar → client_join → [conectou] → (host carrega) Loading1
+  │    └─ Personagens → Characters (upgrades only) → return_lobby
+  └─ Continuar (host + save) → Lobby (auto-host) → host_waiting → ...
+
+Loading1 → Preparation (PreparationScreenController + PreparationSessionManager)
+  ├─ Escolher Personagem → Characters (selection) → preparation_hub
+  └─ [2× Pronto] → Loading2 → Fase-1 (gameplay)
+
+Fase-1 → [vitória/derrota] → Preparation (loop)
 ```
 
-Rotas em `Assets/Data/UI/ScreenFlow/`. IDs em `SceneFlowRouteIds`.
+## Rotas (`Assets/Data/UI/ScreenFlow/`)
 
-## Para game designers
+| ID | Cena | Load |
+|----|------|------|
+| `bootstrap_menu` | Menu2 | Single |
+| `menu_lobby` | Lobby | Single + loading |
+| `lobby_loading1` | Loading1 | **NetcodeHost** |
+| `loading1_preparation` | Preparation | **NetcodeHost** |
+| `lobby_characters` | Characters | Single |
+| `return_lobby` | Lobby | Single |
+| `preparation_characters` | Characters | Single |
+| `preparation_hub` | Preparation | Single |
+| `preparation_loading2` | Loading2 | **NetcodeHost** |
+| `loading2_gameplay` | Fase-1 | **NetcodeHost** |
+| `gameplay_preparation` | Preparation | **NetcodeHost** |
+| `return_menu` | Menu2 | Single |
 
-### Botão → outra cena
+## Persistência
 
-1. No botão, **On Click** → componente com `ScreenFlowRequest.Execute()`.
-2. Preencher **Route Id** (ex.: `menu_lobby`) ou arrastar um asset `Scene Flow Route`.
-3. Em **Flow Events**, ligar `On Before` / `On After` a sons ou partículas.
+- Arquivo: `{persistentDataPath}/MidnightMeow/saves/save_slot_0.json`
+- **Continuar** habilitado só se `wasHost == true` no save
+- Magículas e tiers por personagem (Nix/Cora) via `CharacterSaveData`
 
-Alternativa legada: `UIActionBridge.LoadLobby()` (já usa as rotas se o `ScreenFlowController` existir).
+## Contratos
 
-### Pause / painel na mesma cena
+SOs em `Assets/Data/Contracts/Contract_1..3.asset` (`ContractDefinition`).
 
-1. Na cena, criar `SceneOverlayController` no Canvas.
-2. Lista **Overlays**: id `pause`, referência ao GameObject do menu, marcar **Pause Game Time** se necessário.
-3. Botão → `SceneOverlayRequest.Open()` / `Close()`.
+## Pause
 
-### Nova rota (ex.: tela de upgrades)
+- Single-player / fase: `GameManager2` + `GameFlowOrchestrator.RequestPause/Resume`
+- Multiplayer: `MultiplayerGameManager.RequestPauseRpc/RequestResumeRpc`
+- Prefab `PauseMenu` → `PauseMenuActions` (substitui classe `Buttons` removida)
 
-1. **Create → MidnightMeow → Screen Flow → Scene Route**
-2. Adicionar o asset ao array `routes` em `SceneFlowCatalog.asset`
-3. Usar o novo `routeId` em `ScreenFlowRequest`
+## Para artistas
 
-### Modos de transição (`ScreenTransitionMode`)
+Placeholders usam:
+- Canvas Scaler **1920×1080**, `matchWidthOrHeight = 0.5`
+- Retângulos coloridos para Nix (azul) e Cora (vermelho) na loading
+- `CursorManager` sprites existentes via `ScreenFlowPlaceholderFactory.ApplyMenuCursor()`
 
-| Valor | Efeito |
-|-------|--------|
-| Instant | Carga imediata |
-| Fade | Fade out → carga → fade in (`Time.unscaledDeltaTime`) |
-| LoadingScreen | Fade + tela de loading + tempo mínimo (barra usa `LoadingBar` + `CurrentAsyncLoad`) |
-
-`NetcodeHost` na rota: só o **host** chama `NetworkManager.SceneManager.LoadScene` (lobby → gameplay).
-
-## Arquivos principais
-
-- `Assets/Scripts/UI/ScreenFlow/ScreenFlowController.cs`
-- `Assets/Scripts/UI/ScreenFlow/ScreenFlowRequest.cs`
-- `Assets/Scripts/UI/ScreenFlow/SceneOverlayController.cs`
-- `Assets/Data/UI/ScreenFlow/SceneFlowCatalog.asset`
-- `Assets/Scripts/Core/Bootstrapper.cs` — inicia com `bootstrap_menu`
-
-## Migração
-
-- `GameFlowManager.LoadMenu/Lobby` → delegam ao catálogo.
-- `SceneTransition` deixou de ser Singleton; visuais do Menu2 continuam no mesmo objeto.
-- Game Over / Victory: podem trocar botões para `ScreenFlowRequest` com `return_menu`.
+Substituir placeholders mantendo **ancoragens** dos botões gerados pelos controllers.

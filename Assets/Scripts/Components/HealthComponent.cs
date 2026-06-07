@@ -130,6 +130,9 @@ public class HealthComponent : MonoBehaviour, IDamageable
         OnHealthChanged?.Invoke(_currentHealth, _maxHealth);
         OnDied?.Invoke();
 
+        if (gameObject.CompareTag("Enemy") && !TryGetComponent<NetworkEnemyController>(out _))
+            GameEvents.InvokeEnemyKilledByPlayer(0);
+
         if (_allowDestroyOnDeath)
             Destroy(gameObject, _destroyDelay);
     }

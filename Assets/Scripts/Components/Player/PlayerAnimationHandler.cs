@@ -9,6 +9,7 @@ using UnityEngine;
 public class PlayerAnimationHandler : MonoBehaviour
 {
     [SerializeField] private PlayerShooting playerShooting;
+    [SerializeField] private PlayerMeleeCombat playerMeleeCombat;
     [SerializeField] private PlayerAbilityHandler playerAbilityHandler;
     [SerializeField] private HealthComponent healthComponent;
     [SerializeField] private PlayerMovement playerMovement;
@@ -22,7 +23,6 @@ public class PlayerAnimationHandler : MonoBehaviour
     private SpriteRenderer _spriteRenderer;
     private Collider2D _collider2D;
 
-    // Hashes dos parametros para performance (evita usar strings)
     private readonly int _hashMoveSpeed = Animator.StringToHash("MoveSpeed");
     private readonly int _hashOnShoot = Animator.StringToHash("OnShoot");
     private readonly int _hashOnPull = Animator.StringToHash("OnPull");
@@ -30,19 +30,18 @@ public class PlayerAnimationHandler : MonoBehaviour
     private readonly int _hashOnTakeDamage = Animator.StringToHash("OnDamage");
     private readonly int _hashOnDie = Animator.StringToHash("OnDie");
     private readonly int _hashAttackSpeed = Animator.StringToHash("AttackSpeed");
+    private readonly int _hashOnAbility1 = Animator.StringToHash("OnAbility1");
+    private readonly int _hashOnAbility2 = Animator.StringToHash("OnAbility2");
+    private readonly int _hashOnDash = Animator.StringToHash("OnDash");
 
     [Header("Attack Animation")]
-    [Tooltip("Duração do clip de ataque em segundos com speed=1. Ajuste para coincidir com o clip real no Animator.")]
     [SerializeField] private float _attackAnimClipLength = 0.333f;
 
     [Header("Death Animation")]
-    [Tooltip("Segundos que o player deve existir após morrer (deve ser >= duração do clip de morte).")]
     [SerializeField] private float _deathDestroyDelay = 4f;
 
-    // Controla se a animação de ataque já está rodando para não cancelá-la
     private float _lastAttackTriggerTime = float.NegativeInfinity;
-
-    private bool _loggedOnce = false;
+    private bool _loggedOnce;
 
     private void Awake()
     {
@@ -51,39 +50,55 @@ public class PlayerAnimationHandler : MonoBehaviour
         _spriteRenderer = GetComponent<SpriteRenderer>();
         _collider2D = GetComponent<Collider2D>();
 
-        Debug.Log($"[PlayerAnimationHandler] Awake | SpriteRenderer={_spriteRenderer != null} | Collider2D={_collider2D != null} | SortingOffset={sortingOrderOffset} | Precision={sortingPrecision}");
+        if (playerShooting == null) playerShooting = GetComponent<PlayerShooting>();
+        if (playerMeleeCombat == null) playerMeleeCombat = GetComponent<PlayerMeleeCombat>();
+        if (playerAbilityHandler == null) playerAbilityHandler = GetComponent<PlayerAbilityHandler>();
     }
 
     private void OnEnable()
     {
-        playerShooting.OnShoot += HandleShoot;
-        playerAbilityHandler.OnAbilityActivated += HandleAbility;
-        playerMovement.OnFlipSprite += HandleFlipSprite;
-        healthComponent.OnDied.AddListener(HandleDeath);
-        healthComponent.OnTakeDamage.AddListener(HandleHit);
+        if (playerShooting != null)
+            playerShooting.OnShoot += HandleShoot;
+        if (playerMeleeCombat != null)
+            playerMeleeCombat.OnAttackPerformed += HandleMeleeAttack;
+        if (playerAbilityHandler != null)
+            playerAbilityHandler.OnAbilityActivated += HandleAbility;
+        if (playerMovement != null)
+            playerMovement.OnFlipSprite += HandleFlipSprite;
+        if (healthComponent != null)
+        {
+            healthComponent.OnDied.AddListener(HandleDeath);
+            healthComponent.OnTakeDamage.AddListener(HandleHit);
+        }
     }
 
     private void OnDisable()
     {
-        // Limpa as assinaturas
-        playerShooting.OnShoot -= HandleShoot;
-        playerAbilityHandler.OnAbilityActivated -= HandleAbility;
-        playerMovement.OnFlipSprite -= HandleFlipSprite;
-        healthComponent.OnDied.RemoveListener(HandleDeath);
-        healthComponent.OnTakeDamage.RemoveListener(HandleHit);
+        if (playerShooting != null)
+            playerShooting.OnShoot -= HandleShoot;
+        if (playerMeleeCombat != null)
+            playerMeleeCombat.OnAttackPerformed -= HandleMeleeAttack;
+        if (playerAbilityHandler != null)
+            playerAbilityHandler.OnAbilityActivated -= HandleAbility;
+        if (playerMovement != null)
+            playerMovement.OnFlipSprite -= HandleFlipSprite;
+        if (healthComponent != null)
+        {
+            healthComponent.OnDied.RemoveListener(HandleDeath);
+            healthComponent.OnTakeDamage.RemoveListener(HandleHit);
+        }
     }
 
     private void Update()
     {
         _animator.SetFloat(_hashMoveSpeed, _rb.linearVelocity.magnitude);
 
-        // Sincroniza a velocidade da animação de ataque com o fire rate atual.
-        // AttackSpeed = (duração_clip * CurrentFireRate) → animação sempre dura exatamente 1/CurrentFireRate segundos.
-        // IMPORTANTE: adicione o parâmetro float "AttackSpeed" no Animator e use-o como
-        // Multiplier de Speed no estado de ataque.
-        float attackSpeedMult = (playerShooting != null && playerShooting.BaseFireRate > 0f)
-            ? _attackAnimClipLength * playerShooting.CurrentFireRate
-            : 1f;
+        float attackSpeedMult = 1f;
+        if (playerShooting != null && playerShooting.BaseFireRate > 0f)
+            attackSpeedMult = _attackAnimClipLength * playerShooting.CurrentFireRate;
+        else if (playerMeleeCombat != null && playerMeleeCombat.CombatStats != null)
+            attackSpeedMult = _attackAnimClipLength / Mathf.Max(0.1f, playerMeleeCombat.CombatStats.attackCooldown);
+
         _animator.SetFloat(_hashAttackSpeed, Mathf.Max(0.1f, attackSpeedMult));
     }
 
@@ -92,33 +107,48 @@ public class PlayerAnimationHandler : MonoBehaviour
         UpdateSortingOrder();
     }
 
-    private void HandleShoot()
+    public void PlayAbilityAnimation(CharacterAbilityType abilityType)
     {
-        // Só re-aciona a animação se o intervalo mínimo passou (evita cancelar a animação corrente).
-        float attackInterval = (playerShooting != null && playerShooting.CurrentFireRate > 0f)
-            ? 1f / playerShooting.CurrentFireRate
-            : 0.2f;
+        switch (abilityType)
+        {
+            case CharacterAbilityType.NixPush:
+            case CharacterAbilityType.CoraBarrier:
+                _animator.SetTrigger(_hashOnAbility1);
+                break;
+            case CharacterAbilityType.NixCharge:
+            case CharacterAbilityType.CoraPool:
+                _animator.SetTrigger(_hashOnAbility2);
+                break;
+            case CharacterAbilityType.Dash:
+                _animator.SetTrigger(_hashOnDash);
+                break;
+        }
+    }
+
+    private void HandleShoot() => TriggerAttackAnimation();
+
+    private void HandleMeleeAttack(Vector2 origin, Vector2 direction, MeleeCombatStats stats)
+        => TriggerAttackAnimation();
+
+    private void TriggerAttackAnimation()
+    {
+        float attackInterval = 0.2f;
+        if (playerShooting != null && playerShooting.CurrentFireRate > 0f)
+            attackInterval = 1f / playerShooting.CurrentFireRate;
+        else if (playerMeleeCombat?.CombatStats != null)
+            attackInterval = playerMeleeCombat.CombatStats.attackCooldown;
 
         if (Time.time - _lastAttackTriggerTime >= attackInterval - 0.016f)
         {
-            _animator.ResetTrigger(_hashOnShoot); // limpa trigger em fila antes de reativar
+            _animator.ResetTrigger(_hashOnShoot);
             _animator.SetTrigger(_hashOnShoot);
             _lastAttackTriggerTime = Time.time;
         }
     }
 
-    private void HandleFlipSprite(bool facingRight)
-    {
-        ApplyFacingToRenderers(facingRight);
-    }
+    private void HandleFlipSprite(bool facingRight) => ApplyFacingToRenderers(facingRight);
 
-    /// <summary>
-    /// Aplica flip vindo da rede (mesma convenção de HandleFlipSprite / movimento).
-    /// </summary>
-    public void ApplyNetworkFacing(bool facingRight)
-    {
-        ApplyFacingToRenderers(facingRight);
-    }
+    public void ApplyNetworkFacing(bool facingRight) => ApplyFacingToRenderers(facingRight);
 
     private void ApplyFacingToRenderers(bool facingRight)
     {
@@ -130,32 +160,17 @@ public class PlayerAnimationHandler : MonoBehaviour
 
     private void HandleHit()
     {
-        if (!healthComponent.IsDead)
+        if (healthComponent != null && !healthComponent.IsDead)
             _animator.SetTrigger(_hashOnTakeDamage);
     }
 
-    private void HandleAbility(Ability ability)
-    {
-        if (ability is Ability_ProjectilePull)
-        {
-            _animator.SetTrigger(_hashOnPull);
-        }
-        else if (ability is Ability_ProjectileReflect)
-        {
-            _animator.SetTrigger(_hashOnHit);
-        }
-    }
+    private void HandleAbility(CharacterAbilityType abilityType) => PlayAbilityAnimation(abilityType);
 
     public void HandleDeath()
     {
-        // SetDestroyDelay é chamado AQUI porque HandleDeath() é invocado dentro de
-        // OnDied?.Invoke(), que ocorre ANTES de Destroy(gameObject, _destroyDelay) em
-        // HealthComponent.Die(). Assim o delay correto é garantido na ordem certa.
         if (healthComponent != null)
             healthComponent.SetDestroyDelay(_deathDestroyDelay);
 
-        // Para o player no lugar e desativa controles para que a animação de morte
-        // possa tocar completamente antes do objeto ser destruído.
         _rb.linearVelocity = Vector2.zero;
         _rb.simulated = false;
 
@@ -168,11 +183,7 @@ public class PlayerAnimationHandler : MonoBehaviour
 
     private void UpdateSortingOrder()
     {
-        if (_spriteRenderer == null)
-        {
-            Debug.LogWarning("[PlayerAnimationHandler] SpriteRenderer é null! O sprite não será desenhado.");
-            return;
-        }
+        if (_spriteRenderer == null) return;
 
         float referenceY = _collider2D != null ? _collider2D.bounds.min.y : transform.position.y;
         int newOrder = sortingOrderOffset - Mathf.RoundToInt(referenceY * sortingPrecision);
@@ -180,7 +191,7 @@ public class PlayerAnimationHandler : MonoBehaviour
         if (!_loggedOnce)
         {
             _loggedOnce = true;
-            Debug.Log($"[PlayerAnimationHandler] Primeiro LateUpdate | posY={transform.position.y:F2} | colliderMinY={referenceY:F2} | sortingOrder={newOrder} | enabled={_spriteRenderer.enabled} | color={_spriteRenderer.color}");
+            Debug.Log($"[PlayerAnimationHandler] sortingOrder={newOrder}");
         }
 
         _spriteRenderer.sortingOrder = newOrder;

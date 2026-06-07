@@ -27,6 +27,8 @@ Documentação para desenvolvedores e **agentes de IA** que trabalham neste proj
 
 ### Combate
 
+- [Habilidades de personagem (design)](combat/character-abilities.md) — Nix / Cora, tiers, passivas
+- [Habilidades de personagem (implementação)](combat/character-abilities-implementation.md) — arquitetura, rede, setup
 - [Ataques inimigos com telegraph](combat/enemy-telegraph-attacks.md) — zonas preenchíveis (estilo Hades), SOs, rede
 
 ### Multiplayer

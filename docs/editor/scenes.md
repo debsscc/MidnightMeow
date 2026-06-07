@@ -1,6 +1,6 @@
 # Cenas
 
-Última revisão: 2026-05-22
+Última revisão: 2026-06-07
 
 ## Bootstrap e fluxo
 
@@ -8,14 +8,18 @@
 | Cena              | Caminho                                             | Função                                  |
 | ----------------- | --------------------------------------------------- | --------------------------------------- |
 | Bootstrap         | `Assets/Scenes/BootstrapScene/BootstrapScene.unity` | Inicialização, carregamento de serviços |
-| Menu principal    | `Assets/Scenes/UI/Menu2.unity`                      | Menu / tabs                             |
-| Lobby             | `Assets/Scenes/UI/Lobby.unity`                      | Multiplayer lobby                       |
+| Menu principal    | `Assets/Scenes/UI/Menu2.unity`                      | MainMenuController (Novo Jogo / Continuar / Sair) |
+| Lobby             | `Assets/Scenes/UI/Lobby.unity`                      | LobbyFlowController + multiplayer       |
+| Loading 1         | `Assets/Scenes/UI/Loading1.unity`                   | Arte placeholder Nix/Cora → Preparação  |
+| Preparação        | `Assets/Scenes/UI/Preparation.unity`                | Contratos, pronto, escolha de personagem |
+| Personagens       | `Assets/Scenes/UI/Characters.unity`                  | Upgrades (magículas) e seleção          |
+| Loading 2         | `Assets/Scenes/UI/Loading2.unity`                   | Transição para gameplay                 |
 | Jogo (UI wrapper) | `Assets/Scenes/UI/Game.unity`                       | Fluxo de partida com UI                 |
 | Game (legado?)    | `Assets/Scenes/Game.unity`                          | Verificar Build Settings antes de usar  |
 | Fase 1            | `Assets/Scenes/Fases/Fase-1.unity`                  | Level principal                         |
 | Fase 2            | `Assets/Scenes/Fases/Fase-2.unity`                  | Segundo level                           |
-| Game Over         | `Assets/Scenes/UI/GameOver.unity`                   | Derrota                                 |
-| Vitória           | `Assets/Scenes/UI/VictoryScene.unity`               | Vitória                                 |
+| Game Over         | `Assets/Scenes/UI/GameOver.unity`                   | Derrota (legado — loop usa Preparação)  |
+| Vitória           | `Assets/Scenes/UI/VictoryScene.unity`               | Vitória (legado — loop usa Preparação)  |
 
 
 ## Sandbox (não produção)

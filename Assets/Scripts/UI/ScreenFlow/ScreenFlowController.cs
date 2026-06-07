@@ -296,5 +296,15 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
         _fadeImage.color = c;
     }
 
+    public bool TryGetRouteLoadKind(string routeId, out SceneLoadKind loadKind)
+    {
+        loadKind = SceneLoadKind.SinglePlayer;
+        if (catalog == null || !catalog.TryGetRoute(routeId, out SceneFlowRouteDefinition route))
+            return false;
+
+        loadKind = route.loadKind;
+        return true;
+    }
+
     public void ChangeScene(string sceneName) => TryBeginTransition(sceneName);
 }

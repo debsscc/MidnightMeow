@@ -63,6 +63,8 @@ public class PlayerShooting : MonoBehaviour
     private PlayerAmmo _ammo;
     private PlayerAdrenaline _adrenaline;
     private PlayerAim _aim;
+    private PlayerAbilityHandler _abilityHandler;
+    private PlayerPassiveHandler _passiveHandler;
     private Camera _mainCamera;
 
     public event Action OnShoot;
@@ -105,6 +107,8 @@ public class PlayerShooting : MonoBehaviour
         _ammo = GetComponent<PlayerAmmo>();
         _adrenaline = GetComponent<PlayerAdrenaline>();
         _aim = GetComponent<PlayerAim>();
+        _abilityHandler = GetComponent<PlayerAbilityHandler>();
+        _passiveHandler = GetComponent<PlayerPassiveHandler>();
         _mainCamera = Camera.main;
         CurrentFireRate = baseFireRate;
     }
@@ -151,6 +155,12 @@ public class PlayerShooting : MonoBehaviour
     {
         while (true)
         {
+            if (_abilityHandler != null && _abilityHandler.IsActionLocked)
+            {
+                yield return null;
+                continue;
+            }
+
             bool hasAmmo = _ammo.HasAmmo();
             if (hasAmmo)
             {
@@ -192,10 +202,13 @@ public class PlayerShooting : MonoBehaviour
                 {
                     projectile.InitializeDirection(fireDirection);
                     projectile.SetDamageMultiplier(DamageMultiplier);
+                    int bonusBounces = 0;
                     if (_adrenaline != null && _adrenaline.IsFrenzyActive)
-                    {
-                        projectile.AddBonusBounces(_adrenaline.GetBonusBounces());
-                    }
+                        bonusBounces += _adrenaline.GetBonusBounces();
+                    if (_passiveHandler != null)
+                        bonusBounces += _passiveHandler.BonusProjectileBounces;
+                    if (bonusBounces > 0)
+                        projectile.AddBonusBounces(bonusBounces);
                 }
 
                 // Notifica listeners sobre a instância do projétil e a mira (autoritativa no cliente dono)

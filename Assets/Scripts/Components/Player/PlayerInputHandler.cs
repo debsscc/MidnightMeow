@@ -3,9 +3,9 @@
 // FEITO POR: Pedro Caurio
 // DESCRI��O: Manipula o input do jogador e dispara eventos que outros componentes podem assinar.
 // ---------------------------------------------------------------- */
+using System;
 using UnityEngine;
-using UnityEngine.InputSystem; 
-using System; 
+using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(PlayerInput))]
 public class PlayerInputHandler : MonoBehaviour
@@ -15,7 +15,8 @@ public class PlayerInputHandler : MonoBehaviour
     // Now reports whether the fire button is pressed (true) or released (false)
     public event Action<bool> OnFireInput;
     public event Action OnDashInput;
-    public event Action OnAbilityInput;
+    public event Action OnAbility1Input;
+    public event Action OnAbility2Input;
     public event Action OnFrenzyInput;
     public event Action<bool> OnInteractHoldChanged;
 
@@ -90,15 +91,22 @@ public class PlayerInputHandler : MonoBehaviour
         OnFireInput?.Invoke(false);
     }
 
-    public void OnAbility(InputValue value)
+    public void OnAbility1(InputValue value)
     {
         if (_isPaused) return;
-
         if (value.isPressed)
-        {
-            OnAbilityInput?.Invoke();
-        }
+            OnAbility1Input?.Invoke();
     }
+
+    public void OnAbility2(InputValue value)
+    {
+        if (_isPaused) return;
+        if (value.isPressed)
+            OnAbility2Input?.Invoke();
+    }
+
+    [Obsolete("Use OnAbility1.")]
+    public void OnAbility(InputValue value) => OnAbility1(value);
 
     public void OnFrenzy(InputValue value)
     {

@@ -40,6 +40,9 @@ public class EnemyMovement : MonoBehaviour
         if (stats != null)
             _agent.speed = stats.moveSpeed;
 
+        if (GetComponent<EnemySlowEffect>() == null)
+            gameObject.AddComponent<EnemySlowEffect>();
+
         _isFacingRight = transform.localScale.x >= 0f;
     }
 
@@ -79,6 +82,13 @@ public class EnemyMovement : MonoBehaviour
             _agent.velocity = Vector3.zero;
             return;
         }
+
+        float slowMultiplier = 1f;
+        if (TryGetComponent<EnemySlowEffect>(out var slowEffect))
+            slowMultiplier = slowEffect.SpeedMultiplier;
+
+        if (stats != null)
+            _agent.speed = stats.moveSpeed * slowMultiplier;
 
         if (!_targetFinder.HasTarget)
         {

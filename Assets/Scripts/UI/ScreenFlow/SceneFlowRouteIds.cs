@@ -9,4 +9,14 @@ public static class SceneFlowRouteIds
     public const string MenuToMenu = "menu_reload";
     public const string LobbyToGameplay = "lobby_gameplay";
     public const string ReturnToMenu = "return_menu";
+
+    public const string LobbyToLoading1 = "lobby_loading1";
+    public const string Loading1ToPreparation = "loading1_preparation";
+    public const string LobbyToCharacters = "lobby_characters";
+    public const string ReturnToLobby = "return_lobby";
+    public const string PreparationToCharacters = "preparation_characters";
+    public const string PreparationToHub = "preparation_hub";
+    public const string PreparationToLoading2 = "preparation_loading2";
+    public const string Loading2ToGameplay = "loading2_gameplay";
+    public const string GameplayToPreparation = "gameplay_preparation";
 }

@@ -109,10 +109,26 @@ public class GameManager2 : MonoBehaviour
     {
         if (currentState == GameStates.Playing) 
         {
+            if (GameFlowOrchestrator.Instance != null)
+            {
+                GameFlowOrchestrator.Instance.RequestPause();
+                currentState = GameStates.Paused;
+                OnGameStateChanged?.Invoke(currentState);
+                return;
+            }
+
             PauseGame();
         }
         else if (currentState == GameStates.Paused) 
         {
+            if (GameFlowOrchestrator.Instance != null)
+            {
+                GameFlowOrchestrator.Instance.RequestResume();
+                currentState = GameStates.Playing;
+                OnGameStateChanged?.Invoke(currentState);
+                return;
+            }
+
             ResumeGame();
         }
     }
@@ -212,7 +228,16 @@ public class GameManager2 : MonoBehaviour
 
         if (!string.IsNullOrEmpty(sceneToLoad))
         {
-            if (ScreenFlowController.Instance != null)
+            string routeId = SceneFlowRouteIds.GameplayToPreparation;
+            if (GameFlowOrchestrator.Instance != null && GameFlowOrchestrator.Instance.TryRequestRoute(routeId))
+            {
+                Debug.Log($"GameManager2: Retornando à Preparação após {(isVictory ? "vitória" : "derrota")}.");
+            }
+            else if (ScreenFlowController.Instance != null && ScreenFlowController.Instance.RequestRoute(routeId))
+            {
+                Debug.Log($"GameManager2: Retornando à Preparação após {(isVictory ? "vitória" : "derrota")}.");
+            }
+            else if (ScreenFlowController.Instance != null)
             {
                 Debug.Log($"GameManager2: Carregando cena '{sceneToLoad}' após {(isVictory ? "vitória" : "derrota")}.");
                 ScreenFlowController.Instance.TryBeginTransition(sceneToLoad);

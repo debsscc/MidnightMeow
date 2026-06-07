@@ -1,6 +1,6 @@
 # Prefab: Nixie
 
-Última revisão: 2026-05-22  
+Última revisão: 2026-06-07  
 **Caminho:** `Assets/Prefabs/Characters/Nixie.prefab`  
 **GUID:** `7b87bef79bcba89408883a628d686c78`
 
@@ -34,7 +34,13 @@ Nixie
 | `PlayerInputHandler` | Fire = ataque melee |
 | `PlayerMovement` | |
 | `PlayerAim` | Direção do trapézio |
-| `PlayerAbilityHandler` | |
+| `PlayerAbilityHandler` | `abilitySet` → NixAbilitySet |
+| `NixPushAbilityExecutor` | Habilidade Q |
+| `NixChargeAbilityExecutor` | Habilidade R |
+| `PlayerPassiveHandler` | Kill streak / cleave |
+| `PlayerAbilityStatScaler` | Tiers do ataque normal |
+| `NetworkPlayerAbilityRelay` | Sync animações MP |
+| `NetworkAbilityObjectSpawner` | — (Nix não usa spawn) |
 | `PlayerAnimationHandler` | |
 | `HealthComponent` | `_maxHealth: 100` |
 | `PlayerAdrenaline` | |
@@ -50,7 +56,8 @@ Nixie
 | `NetworkPlayerSpectator` | |
 | `NetworkPlayerRevive` | |
 | `Shadow`, `DissolveEffect` | |
-| `PlayerGameplayModuleInstaller` | + `installMeleeDebugVisual` |
+| `PlayerGameplayModuleInstaller` | `installMeleeDebugVisual` + `installAbilityDebugVisual` |
+| `AbilityDebugVisualHost` | Instalado em runtime; shader `AbilityZoneFill`; gizmos ON |
 
 **Ausente vs Cora:** `PlayerShooting`, `PlayerAmmo`, `NetworkProjectileSpawner`.
 
@@ -60,6 +67,7 @@ Nixie
 |-------|--------|
 | `stats` | `Assets/Data/Stats/Player/DefaultPlayerStats.asset` |
 | `PlayerMeleeCombat.combatStats` | `Assets/Data/Stats/Player/MeleeCombatStats.asset` |
+| `PlayerAbilityHandler.abilitySet` | `Assets/Data/Abilities/NixAbilitySet.asset` |
 | `enemyLayers` | Layer Enemy (1024) |
 
 ## Debug / combate

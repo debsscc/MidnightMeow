@@ -17,11 +17,17 @@ public class PlayerMeleeCombat : MonoBehaviour
 
     public event Action<Vector2, Vector2, MeleeCombatStats> OnAttackPerformed;
 
-    public MeleeCombatStats CombatStats => combatStats;
+    public MeleeCombatStats CombatStats => _runtimeCombatStats != null ? _runtimeCombatStats : combatStats;
+
+    private MeleeCombatStats _runtimeCombatStats;
+
+    public void ApplyRuntimeStats(MeleeCombatStats runtimeStats) => _runtimeCombatStats = runtimeStats;
     public Vector2 AttackOriginPosition => attackOrigin != null ? (Vector2)attackOrigin.position : (Vector2)transform.position;
 
     private PlayerInputHandler _input;
     private PlayerAim _aim;
+    private PlayerAbilityHandler _abilityHandler;
+    private PlayerPassiveHandler _passiveHandler;
     private float _lastAttackTime = -999f;
     private bool _isAttacking;
     private Coroutine _attackRoutine;
@@ -32,6 +38,8 @@ public class PlayerMeleeCombat : MonoBehaviour
     {
         _input = GetComponent<PlayerInputHandler>();
         _aim = GetComponent<PlayerAim>();
+        _abilityHandler = GetComponent<PlayerAbilityHandler>();
+        _passiveHandler = GetComponent<PlayerPassiveHandler>();
 
         if (attackOrigin == null)
             attackOrigin = transform;
@@ -61,12 +69,15 @@ public class PlayerMeleeCombat : MonoBehaviour
 
     private void HandleFireInput(bool pressed)
     {
-        if (!pressed || combatStats == null || IsAttacking) return;
+        if (!pressed || CombatStats == null || IsAttacking) return;
+
+        if (_abilityHandler != null && !_abilityHandler.TryRequestPrimaryAttack())
+            return;
 
         if (TryGetComponent<NetworkPlayerRevive>(out var revive) && revive.IsReviving)
             return;
 
-        if (Time.time < _lastAttackTime + combatStats.attackCooldown) return;
+        if (Time.time < _lastAttackTime + CombatStats.attackCooldown) return;
 
         _attackRoutine = StartCoroutine(MeleeAttackRoutine());
     }
@@ -76,8 +87,8 @@ public class PlayerMeleeCombat : MonoBehaviour
         _isAttacking = true;
         _lastAttackTime = Time.time;
 
-        if (combatStats.windupDelay > 0f)
-            yield return new WaitForSeconds(combatStats.windupDelay);
+        if (CombatStats.windupDelay > 0f)
+            yield return new WaitForSeconds(CombatStats.windupDelay);
 
         if (!_aim.TryGetAimDirection(out Vector2 direction, out _))
             direction = Vector2.up;
@@ -99,16 +110,18 @@ public class PlayerMeleeCombat : MonoBehaviour
 
     private void PerformMeleeHit(Vector2 direction)
     {
-        if (combatStats == null) return;
+        if (CombatStats == null) return;
 
         Vector2 origin = AttackOriginPosition;
         direction = direction.sqrMagnitude > 0.0001f ? direction.normalized : Vector2.up;
 
-        OnAttackPerformed?.Invoke(origin, direction, combatStats);
+        OnAttackPerformed?.Invoke(origin, direction, CombatStats);
 
-        float searchRadius = combatStats.attackRange + combatStats.farHalfWidth + 0.5f;
+        float searchRadius = CombatStats.attackRange + CombatStats.farHalfWidth + 0.5f;
         var hits = Physics2D.OverlapCircleAll(origin, searchRadius, enemyLayers);
         var processed = new HashSet<int>();
+        int maxTargets = _passiveHandler != null ? _passiveHandler.CleaveMaxTargets : 1;
+        int hitCount = 0;
 
         foreach (var hit in hits)
         {
@@ -124,21 +137,23 @@ public class PlayerMeleeCombat : MonoBehaviour
             if (!MeleeHitUtility.IsInsideTrapezoid(
                     origin,
                     direction,
-                    combatStats.attackRange,
-                    combatStats.nearHalfWidth,
-                    combatStats.farHalfWidth,
+                    CombatStats.attackRange,
+                    CombatStats.nearHalfWidth,
+                    CombatStats.farHalfWidth,
                     targetPoint))
                 continue;
 
             var targetRoot = damageable.gameObject;
             ApplyHitToTarget(targetRoot, direction, targetPoint);
+            hitCount++;
+            if (hitCount >= maxTargets) break;
 
             if (drawDebugHits)
             {
                 GameplayDiagnosticHub.EmitMelee(new MeleeHitDiagnostic(
                     name,
                     targetRoot.name,
-                    combatStats.damage,
+                    CombatStats.damage,
                     true,
                     "trapezoid hit"));
             }
@@ -154,7 +169,7 @@ public class PlayerMeleeCombat : MonoBehaviour
 
     private void ApplyHitToTarget(GameObject target, Vector2 attackDirection, Vector2 hitPoint)
     {
-        float damage = combatStats.damage;
+        float damage = CombatStats.damage;
         Vector2 knockDir = ((Vector2)target.transform.position - AttackOriginPosition).normalized;
         if (knockDir.sqrMagnitude < 0.0001f)
             knockDir = attackDirection;
@@ -163,14 +178,14 @@ public class PlayerMeleeCombat : MonoBehaviour
         {
             ulong localId = NetworkManager.Singleton != null ? NetworkManager.Singleton.LocalClientId : 0;
             networkEnemy.TakeDamageRpc(damage, localId);
-            networkEnemy.ApplyKnockbackRpc(knockDir, combatStats.knockbackDistance, combatStats.knockbackDuration);
+            networkEnemy.ApplyKnockbackRpc(knockDir, CombatStats.knockbackDistance, CombatStats.knockbackDuration);
         }
         else if (target.TryGetComponent<HealthComponent>(out var health))
         {
             health.TakeDamage(damage, gameObject);
             if (target.TryGetComponent<KnockbackReceiver>(out var knockback))
             {
-                knockback.ApplyKnockback(knockDir, combatStats.knockbackForce, combatStats.knockbackDuration);
+                knockback.ApplyKnockback(knockDir, CombatStats.knockbackForce, CombatStats.knockbackDuration);
             }
         }
 

@@ -88,6 +88,8 @@ public static class GameEvents
     public static event System.Action<ulong> OnPlayerLeft;
     // Disparado quando todos os jogadores estão mortos no multiplayer
     public static event System.Action OnAllPlayersDefeated;
+    // Disparado quando um inimigo morre (ClientId do instigador)
+    public static event System.Action<ulong> OnEnemyKilledByPlayer;
 
     public static void InvokePlayerJoined(ulong clientId, bool isLocalPlayer)
     {
@@ -102,5 +104,10 @@ public static class GameEvents
     public static void InvokeAllPlayersDefeated()
     {
         OnAllPlayersDefeated?.Invoke();
+    }
+
+    public static void InvokeEnemyKilledByPlayer(ulong killerClientId)
+    {
+        OnEnemyKilledByPlayer?.Invoke(killerClientId);
     }
 }

@@ -11,6 +11,7 @@ public class PlayerGameplayModuleInstaller : MonoBehaviour
     [SerializeField] private bool installReviveZoneVisual = true;
     [SerializeField] private bool installRevivePromptUI = true;
     [SerializeField] private bool installMeleeDebugVisual = true;
+    [SerializeField] private bool installAbilityDebugVisual = true;
 
     private void Awake()
     {
@@ -30,5 +31,9 @@ public class PlayerGameplayModuleInstaller : MonoBehaviour
         if (installMeleeDebugVisual && GetComponent<PlayerMeleeCombat>() != null &&
             GetComponent<MeleeAttackDebugVisual>() == null)
             gameObject.AddComponent<MeleeAttackDebugVisual>();
+
+        if (installAbilityDebugVisual && GetComponent<PlayerAbilityHandler>() != null &&
+            GetComponent<AbilityDebugVisualHost>() == null)
+            gameObject.AddComponent<AbilityDebugVisualHost>();
     }
 }
