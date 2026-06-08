@@ -154,6 +154,14 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
         if (_activeSceneName == sceneName)
             return false;
 
+        if (HubSceneNavigator.ShouldUseAdditiveNavigation(sceneName, loadKind))
+        {
+            if (sceneName == HubSceneNavigator.HubBaseScene
+                && _activeSceneName == HubSceneNavigator.HubBaseScene
+                && !HubSceneNavigator.IsOverlayLoaded())
+                return false;
+        }
+
         float ft = fadeTime > 0f ? fadeTime : (_fadeTime > 0f ? _fadeTime : defaultFadeTime);
         float ml = minLoadingTime > 0f ? minLoadingTime : (_minLoadingTime > 0f ? _minLoadingTime : defaultMinLoadingTime);
 
@@ -249,6 +257,13 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
                 while (SceneManager.GetActiveScene().name != sceneName)
                     yield return null;
 
+                loadSucceeded = true;
+            }
+            else if (HubSceneNavigator.ShouldUseAdditiveNavigation(sceneName, loadKind))
+            {
+                yield return HubSceneNavigator.RunAdditiveTransition(sceneName, minLoadingTime, useLoading);
+                _activeSceneName = sceneName;
+                SetLoadingScreenActive(false);
                 loadSucceeded = true;
             }
             else

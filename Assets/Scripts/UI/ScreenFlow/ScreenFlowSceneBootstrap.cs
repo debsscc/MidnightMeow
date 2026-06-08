@@ -76,6 +76,7 @@ public class ScreenFlowSceneBootstrap : MonoBehaviour
                 break;
 
             case "Lobby":
+                HubSessionNetworkSpawner.EnsureSpawned();
                 if (FindFirstObjectByType<LobbySceneUIController>() == null
                     && FindFirstObjectByType<LobbyFlowController>() == null)
                 {
@@ -101,6 +102,7 @@ public class ScreenFlowSceneBootstrap : MonoBehaviour
 
             case "Preparation":
                 EnsurePreparationNetwork();
+                PreparationSessionManager.Instance?.ResyncPlayerRoster();
                 if (FindFirstObjectByType<PreparationScreenController>() == null)
                 {
                     GameObject go = new GameObject("PreparationScreenController");
@@ -110,6 +112,7 @@ public class ScreenFlowSceneBootstrap : MonoBehaviour
 
             case "Characters":
                 EnsureCharactersNetwork();
+                PreparationSessionManager.Instance?.ResyncPlayerRoster();
                 if (FindFirstObjectByType<CharactersScreenController>() == null)
                 {
                     GameObject go = new GameObject("CharactersScreenController");

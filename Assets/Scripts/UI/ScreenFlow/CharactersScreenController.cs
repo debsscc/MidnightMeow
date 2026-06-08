@@ -176,12 +176,14 @@ public class CharactersScreenController : MonoBehaviour
             return;
         }
 
-        CharactersSessionManager session = CharactersSessionManager.Instance;
-        if (session != null)
-            session.RequestSetCharacterRpc((byte)type);
-        else
-            PreparationSessionManager.Instance?.RequestSetCharacterRpc((byte)type);
+        PreparationSessionManager session = HubSessionStateReader.GetPreparationSession();
+        if (session == null)
+        {
+            ShowFeedback("Aguardando sessão de rede...");
+            return;
+        }
 
+        session.RequestSetCharacterRpc((byte)type);
         RefreshView();
     }
 
@@ -292,13 +294,7 @@ public class CharactersScreenController : MonoBehaviour
             return false;
 
         ulong localId = NetworkManager.Singleton != null ? NetworkManager.Singleton.LocalClientId : 0;
-
-        CharactersSessionManager session = CharactersSessionManager.Instance;
-        if (session != null)
-            return session.IsCharacterTakenByOther(localId, type);
-
-        PreparationSessionManager prep = PreparationSessionManager.Instance;
-        return prep != null && prep.IsCharacterTakenByOther(localId, type);
+        return HubSessionStateReader.IsCharacterTakenByOther(localId, type);
     }
 
     private void UpdateCharacterOwnershipLabel(Button button, LobbyCharacterType type, LobbyCharacterType localSelection)
@@ -311,7 +307,7 @@ public class CharactersScreenController : MonoBehaviour
             return;
 
         string baseName = type == LobbyCharacterType.CharacterB ? "Cora" : "Nixie";
-        ulong? ownerId = FindCharacterOwnerId(type);
+        ulong? ownerId = HubSessionStateReader.FindCharacterOwnerId(type);
         ulong localId = NetworkManager.Singleton != null ? NetworkManager.Singleton.LocalClientId : 0;
 
         if (localSelection == type)
@@ -320,16 +316,6 @@ public class CharactersScreenController : MonoBehaviour
             label.text = $"{baseName}\n(Jogador {ownerId.Value + 1})";
         else
             label.text = baseName;
-    }
-
-    private ulong? FindCharacterOwnerId(LobbyCharacterType type)
-    {
-        CharactersSessionManager session = CharactersSessionManager.Instance;
-        if (session != null)
-            return session.FindCharacterOwnerId(type);
-
-        PreparationSessionManager prep = PreparationSessionManager.Instance;
-        return prep?.FindCharacterOwnerId(type);
     }
 
     private LobbyCharacterType ResolveLocalSelection()
@@ -341,12 +327,7 @@ public class CharactersScreenController : MonoBehaviour
             return LobbyCharacterType.Default;
         }
 
-        CharactersSessionManager session = CharactersSessionManager.Instance;
-        if (session != null)
-            return session.GetLocalCharacterType();
-
-        PreparationSessionManager prep = PreparationSessionManager.Instance;
-        return prep != null ? prep.GetLocalCharacterType() : LobbyCharacterType.Default;
+        return HubSessionStateReader.GetLocalCharacterType();
     }
 
     private void UpdateSkillButtonLabels()

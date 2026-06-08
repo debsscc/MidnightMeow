@@ -54,15 +54,13 @@ public class PreparationScreenController : MonoBehaviour
 
     private void ResolveContracts()
     {
-        if (contracts != null && contracts.Length >= ContractCount)
+        if (contracts != null && contracts.Length >= ContractCount && contracts[0] != null)
             return;
 
-        ContractDefinition[] loaded = Resources.FindObjectsOfTypeAll<ContractDefinition>();
-        System.Array.Sort(loaded, (a, b) => string.CompareOrdinal(a.name, b.name));
-
         contracts = new ContractDefinition[ContractCount];
-        if (loaded.Length > 0)
-            contracts[0] = loaded[0];
+        contracts[0] = FindContractAsset("Contract_1");
+        contracts[1] = FindContractAsset("Contract_2");
+        contracts[2] = FindContractAsset("Contract_3");
 
         for (int i = 0; i < ContractCount; i++)
         {
@@ -70,9 +68,21 @@ public class PreparationScreenController : MonoBehaviour
                 continue;
 
             contracts[i] = ScriptableObject.CreateInstance<ContractDefinition>();
-            contracts[i].displayName = i == 0 ? "Contrato 1" : $"Contrato {i + 1}";
+            contracts[i].displayName = $"Contrato {i + 1}";
             contracts[i].description = i == 0 ? "Fase inicial." : "Bloqueado por enquanto.";
         }
+    }
+
+    private static ContractDefinition FindContractAsset(string assetName)
+    {
+        ContractDefinition[] loaded = Resources.FindObjectsOfTypeAll<ContractDefinition>();
+        for (int i = 0; i < loaded.Length; i++)
+        {
+            if (loaded[i] != null && loaded[i].name == assetName)
+                return loaded[i];
+        }
+
+        return null;
     }
 
     private void OnEnable()
@@ -86,6 +96,7 @@ public class PreparationScreenController : MonoBehaviour
 
     private void OnDisable()
     {
+        CancelInvoke(nameof(RefreshView));
         PreparationSessionManager.OnInstanceAvailable -= TrySubscribeSession;
         UnsubscribeSession();
     }
@@ -189,7 +200,7 @@ public class PreparationScreenController : MonoBehaviour
 
         if (!GameSessionContext.IsSinglePlayer)
         {
-            PreparationSessionManager session = PreparationSessionManager.Instance;
+            PreparationSessionManager session = HubSessionStateReader.GetPreparationSession();
             session?.RequestSelectContractRpc(index);
             session?.RequestSetReadyRpc(false);
         }
@@ -207,10 +218,9 @@ public class PreparationScreenController : MonoBehaviour
 
     private void ToggleReady()
     {
-        _localReady = !_localReady;
-
         if (GameSessionContext.IsSinglePlayer)
         {
+            _localReady = !_localReady;
             string error = ValidateSinglePlayerReady();
             if (!string.IsNullOrEmpty(error))
             {
@@ -231,8 +241,16 @@ public class PreparationScreenController : MonoBehaviour
             return;
         }
 
-        PreparationSessionManager session = PreparationSessionManager.Instance;
-        session?.RequestSetReadyRpc(_localReady);
+        PreparationSessionManager session = HubSessionStateReader.GetPreparationSession();
+        if (session == null)
+        {
+            ShowFeedback("Aguardando sessão de rede...");
+            RefreshView();
+            return;
+        }
+
+        bool targetReady = !session.GetLocalReadyState();
+        session.RequestSetReadyRpc(targetReady);
         RefreshView();
     }
 
@@ -319,6 +337,9 @@ public class PreparationScreenController : MonoBehaviour
     {
         if (readyStatusText != null)
             readyStatusText.text = message;
+
+        if (!GameSessionContext.IsSinglePlayer && !string.IsNullOrEmpty(message))
+            Invoke(nameof(RefreshView), 2f);
     }
 
     private void RefreshCharacterLabel()
@@ -341,8 +362,7 @@ public class PreparationScreenController : MonoBehaviour
             return _soloCharacter = LobbyCharacterType.Default;
         }
 
-        PreparationSessionManager session = PreparationSessionManager.Instance;
-        return session != null ? session.GetLocalCharacterType() : LobbyCharacterType.Default;
+        return HubSessionStateReader.GetLocalCharacterType();
     }
 
     private void RefreshView()
@@ -368,7 +388,7 @@ public class PreparationScreenController : MonoBehaviour
             return;
         }
 
-        PreparationSessionManager session = PreparationSessionManager.Instance;
+        PreparationSessionManager session = HubSessionStateReader.GetPreparationSession();
         if (session == null)
         {
             if (readyStatusText != null)
@@ -388,19 +408,48 @@ public class PreparationScreenController : MonoBehaviour
 
         if (readyStatusText != null)
         {
+            string localReadyLabel = session.GetLocalReadyState() ? " (você pronto)" : string.Empty;
             readyStatusText.text = session.SelectedContractIndex < 0
-                ? "Escolha um contrato"
-                : $"Prontos: {readyCount}/{session.Players.Count} | Personagens: {charCount}/{session.Players.Count}";
+                ? "Aguardando o host escolher o contrato"
+                : $"Prontos: {readyCount}/{session.Players.Count} | Personagens: {charCount}/{session.Players.Count}{localReadyLabel}";
         }
 
+        ApplyContractButtonLabels();
         if (session.SelectedContractIndex >= 0)
             HighlightSelectedContract(session.SelectedContractIndex);
+    }
+
+    private void ApplyContractButtonLabels()
+    {
+        if (contractButtons == null)
+            return;
+
+        for (int i = 0; i < contractButtons.Length && i < ContractCount; i++)
+        {
+            if (contractButtons[i] == null)
+                continue;
+
+            TMP_Text label = contractButtons[i].GetComponentInChildren<TMP_Text>();
+            if (label == null)
+                continue;
+
+            if (i == 0)
+                label.text = contracts != null && contracts[0] != null
+                    ? contracts[0].displayName
+                    : "Contrato 1";
+            else
+                label.text = $"Contrato {i + 1}\n(bloqueado)";
+        }
     }
 
     private void HighlightSelectedContract(int index)
     {
         if (contractButtons == null)
             return;
+
+        Color selected = new Color(0.75f, 0.15f, 0.15f, 0.95f);
+        Color normal = new Color(0.18f, 0.18f, 0.22f, 0.95f);
+        Color locked = new Color(0.12f, 0.12f, 0.14f, 0.7f);
 
         for (int i = 0; i < contractButtons.Length; i++)
         {
@@ -411,12 +460,12 @@ public class PreparationScreenController : MonoBehaviour
             if (image == null)
                 continue;
 
-            if (i > 0)
-                image.color = new Color(0.12f, 0.12f, 0.14f, 0.7f);
+            if (i == index)
+                image.color = selected;
+            else if (i > 0)
+                image.color = locked;
             else
-                image.color = i == index
-                    ? new Color(0.75f, 0.15f, 0.15f, 0.95f)
-                    : new Color(0.18f, 0.18f, 0.22f, 0.95f);
+                image.color = normal;
         }
     }
 
@@ -434,7 +483,7 @@ public class PreparationScreenController : MonoBehaviour
             float x = 0.25f + i * 0.25f;
             string label = i == 0 && contracts[0] != null
                 ? contracts[0].displayName
-                : $"Contrato {i + 1} (bloqueado)";
+                : $"Contrato {i + 1}\n(bloqueado)";
             contractButtons[i] = ScreenFlowPlaceholderFactory.CreateButton(panel.transform, label,
                 new Vector2(x, 0.55f), new Vector2(x, 0.55f),
                 new Vector2(-140f, -140f), new Vector2(140f, 140f));

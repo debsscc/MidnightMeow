@@ -47,6 +47,8 @@ public static class HubSessionNetworkSpawner
         }
 
         if (!networkObject.IsSpawned)
-            networkObject.Spawn();
+            networkObject.Spawn(destroyWithScene: false);
+
+        Debug.Log($"[HubSessionNetworkSpawner] Spawned {typeof(T).Name} (NetworkObjectId={networkObject.NetworkObjectId}).");
     }
 }

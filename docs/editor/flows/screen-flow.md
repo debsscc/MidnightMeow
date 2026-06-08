@@ -93,7 +93,7 @@ Fase-1 → [vitória/derrota] → VictoryScene / GameOver
 - Mensagens de erro ao apertar pronto sem requisitos (ex.: personagem, contrato, outro jogador).
 - Hover no contrato exibe tooltip (ref. `hover_contract.png`).
 - **Multiplayer:** apenas o **host** seleciona o contrato; o cliente vê tooltip e o contrato escolhido pelo host.
-- **Multiplayer:** cada jogador navega livremente entre Preparation e Characters (rotas `preparation_characters` / `characters_preparation` com carga local).
+- **Multiplayer:** cada jogador navega livremente entre Preparation e Characters (rotas `preparation_characters` / `characters_preparation` com **carga aditiva** — Preparation permanece carregada para preservar o estado de rede).
 - Quando **todos** estão prontos (contrato + personagem), o host dispara `preparation_loading2` (NetcodeHost) para todos.
 
 ### Personagens

@@ -26,7 +26,9 @@ public class CharactersSessionManager : NetworkBehaviour
 
 
 
-    private readonly NetworkList<CharactersPlayerState> _players = new NetworkList<CharactersPlayerState>();
+    private readonly NetworkList<CharactersPlayerState> _players = new NetworkList<CharactersPlayerState>(
+        readPerm: NetworkVariableReadPermission.Everyone,
+        writePerm: NetworkVariableWritePermission.Server);
 
 
 
@@ -67,6 +69,9 @@ public class CharactersSessionManager : NetworkBehaviour
 
     {
 
+        Instance = this;
+        DontDestroyOnLoad(gameObject);
+
         _players.OnListChanged += HandleListChanged;
 
 
@@ -85,6 +90,7 @@ public class CharactersSessionManager : NetworkBehaviour
 
 
 
+        OnInstanceAvailable?.Invoke();
         OnCharactersStateChanged?.Invoke();
 
     }
@@ -416,6 +422,37 @@ public class CharactersSessionManager : NetworkBehaviour
             return;
 
         _players.Add(CreateDefault(clientId));
+    }
+
+    public void SyncAllFromPreparation(NetworkList<PreparationPlayerState> prepPlayers)
+    {
+        if (!IsServer || prepPlayers == null)
+            return;
+
+        _players.Clear();
+        for (int i = 0; i < prepPlayers.Count; i++)
+        {
+            PreparationPlayerState p = prepPlayers[i];
+            _players.Add(new CharactersPlayerState
+            {
+                ClientId = p.ClientId,
+                CharacterType = p.CharacterType,
+                DisplayName = p.DisplayName
+            });
+        }
+    }
+
+    public void NotifyStateChangedFromPreparation()
+    {
+        OnCharactersStateChanged?.Invoke();
+        if (IsServer)
+            NotifyCharactersStateChangedClientRpc();
+    }
+
+    [ClientRpc]
+    private void NotifyCharactersStateChangedClientRpc()
+    {
+        OnCharactersStateChanged?.Invoke();
     }
 
     public void SyncPlayerCharacter(ulong clientId, LobbyCharacterType type)

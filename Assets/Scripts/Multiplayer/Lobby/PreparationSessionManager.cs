@@ -22,7 +22,9 @@ public class PreparationSessionManager : NetworkBehaviour
         NetworkVariableReadPermission.Everyone,
         NetworkVariableWritePermission.Server);
 
-    private readonly NetworkList<PreparationPlayerState> _players = new NetworkList<PreparationPlayerState>();
+    private readonly NetworkList<PreparationPlayerState> _players = new NetworkList<PreparationPlayerState>(
+        readPerm: NetworkVariableReadPermission.Everyone,
+        writePerm: NetworkVariableWritePermission.Server);
 
     public event Action OnPreparationStateChanged;
 
@@ -44,6 +46,9 @@ public class PreparationSessionManager : NetworkBehaviour
 
     public override void OnNetworkSpawn()
     {
+        Instance = this;
+        DontDestroyOnLoad(gameObject);
+
         _selectedContractIndex.OnValueChanged += HandleContractChanged;
         _players.OnListChanged += HandleListChanged;
 
@@ -52,8 +57,10 @@ public class PreparationSessionManager : NetworkBehaviour
             SyncConnectedClients();
             NetworkManager.OnClientConnectedCallback += HandleClientConnected;
             NetworkManager.OnClientDisconnectCallback += HandleClientDisconnected;
+            PushCharactersSessionSnapshot();
         }
 
+        OnInstanceAvailable?.Invoke();
         OnPreparationStateChanged?.Invoke();
     }
 
@@ -88,6 +95,7 @@ public class PreparationSessionManager : NetworkBehaviour
 
         _selectedContractIndex.Value = contractIndex;
         ClearAllReady();
+        BroadcastHubStateChanged();
     }
 
     [Rpc(SendTo.Server)]
@@ -114,6 +122,8 @@ public class PreparationSessionManager : NetworkBehaviour
 
         if (isReady && AreAllReady())
             BeginLoading2();
+
+        BroadcastHubStateChanged();
     }
 
     [Rpc(SendTo.Server)]
@@ -147,10 +157,17 @@ public class PreparationSessionManager : NetworkBehaviour
         state.IsReady = false;
         _players[index] = state;
 
-        CharactersSessionManager.Instance?.SyncPlayerCharacter(clientId, type);
+        PushCharactersSessionSnapshot();
         ApplyCharacterToSave(clientId, type);
         LobbySelectionStore.CaptureFromPreparation(_players);
+        BroadcastHubStateChanged();
         return true;
+    }
+
+    [ClientRpc]
+    private void NotifyHubStateChangedClientRpc()
+    {
+        OnPreparationStateChanged?.Invoke();
     }
 
     [ClientRpc]
@@ -200,6 +217,33 @@ public class PreparationSessionManager : NetworkBehaviour
         }
 
         return null;
+    }
+
+    public bool GetLocalReadyState()
+    {
+        if (NetworkManager == null)
+            return false;
+
+        ulong localId = NetworkManager.LocalClientId;
+        for (int i = 0; i < _players.Count; i++)
+        {
+            if (_players[i].ClientId == localId)
+                return _players[i].IsReady;
+        }
+
+        return false;
+    }
+
+    public void ResyncPlayerRoster()
+    {
+        if (!IsServer || NetworkManager == null)
+            return;
+
+        foreach (ulong clientId in NetworkManager.ConnectedClientsIds)
+            EnsurePlayerIndex(clientId);
+
+        PushCharactersSessionSnapshot();
+        BroadcastHubStateChanged();
     }
 
     private string ValidateReady(ulong callerId)
@@ -369,8 +413,36 @@ public class PreparationSessionManager : NetworkBehaviour
         return FindPlayerIndex(clientId);
     }
 
-    private void HandleContractChanged(int _, int __) => OnPreparationStateChanged?.Invoke();
-    private void HandleListChanged(NetworkListEvent<PreparationPlayerState> _) => OnPreparationStateChanged?.Invoke();
+    private void HandleContractChanged(int _, int __)
+    {
+        OnPreparationStateChanged?.Invoke();
+        if (IsServer)
+            BroadcastHubStateChanged();
+    }
+
+    private void HandleListChanged(NetworkListEvent<PreparationPlayerState> _)
+    {
+        if (IsServer)
+            PushCharactersSessionSnapshot();
+
+        OnPreparationStateChanged?.Invoke();
+        if (IsServer)
+            BroadcastHubStateChanged();
+    }
+
+    private void PushCharactersSessionSnapshot()
+    {
+        CharactersSessionManager.Instance?.SyncAllFromPreparation(_players);
+    }
+
+    private void BroadcastHubStateChanged()
+    {
+        if (!IsServer)
+            return;
+
+        NotifyHubStateChangedClientRpc();
+        CharactersSessionManager.Instance?.NotifyStateChangedFromPreparation();
+    }
 }
 
 public struct PreparationPlayerState : INetworkSerializable, IEquatable<PreparationPlayerState>
