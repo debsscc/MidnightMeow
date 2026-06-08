@@ -123,6 +123,8 @@ public class PreparationScreenController : MonoBehaviour
             {
                 if (index > 0)
                     ShowFeedback("Este contrato está bloqueado por enquanto.");
+                else if (!IsLocalHost())
+                    ShowFeedback("Apenas o host pode escolher o contrato.");
                 else
                     SelectContract(index);
             });
@@ -153,9 +155,18 @@ public class PreparationScreenController : MonoBehaviour
         ScreenFlowStateMachine.OpenCharactersFromPreparation();
     }
 
+    private static bool IsLocalHost()
+    {
+        if (GameSessionContext.IsSinglePlayer)
+            return true;
+
+        NetworkManager net = NetworkManager.Singleton;
+        return net == null || net.IsServer;
+    }
+
     private void SelectContract(int index)
     {
-        if (index > 0)
+        if (index > 0 || !IsLocalHost())
             return;
 
         _localSelectedContract = index;

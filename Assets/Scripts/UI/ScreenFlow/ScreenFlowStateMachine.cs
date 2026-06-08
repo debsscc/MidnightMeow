@@ -116,7 +116,7 @@ public static class ScreenFlowStateMachine
 
         GameSessionContext.CharactersOrigin = GameSessionContext.CharactersScreenOrigin.Preparation;
 
-        GameSessionContext.ReturnRouteId = SceneFlowRouteIds.Loading1ToPreparation; // destino: Preparation
+        GameSessionContext.ReturnRouteId = SceneFlowRouteIds.CharactersToPreparation;
 
 
 

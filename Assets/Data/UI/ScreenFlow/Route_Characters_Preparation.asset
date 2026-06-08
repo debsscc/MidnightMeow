@@ -15,6 +15,6 @@ MonoBehaviour:
   routeId: characters_preparation
   sceneName: Preparation
   transitionMode: 2
-  loadKind: 1
+  loadKind: 0
   fadeTime: 0.5
   minLoadingTime: 0

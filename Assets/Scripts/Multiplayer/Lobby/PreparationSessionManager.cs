@@ -77,6 +77,10 @@ public class PreparationSessionManager : NetworkBehaviour
     [Rpc(SendTo.Server)]
     public void RequestSelectContractRpc(int contractIndex, RpcParams rpcParams = default)
     {
+        ulong caller = rpcParams.Receive.SenderClientId;
+        if (NetworkManager.Singleton != null && caller != NetworkManager.ServerClientId)
+            return;
+
         if (contractIndex < 0 || contracts == null || contractIndex >= contracts.Length)
             return;
 
@@ -141,6 +145,7 @@ public class PreparationSessionManager : NetworkBehaviour
         state.IsReady = false;
         _players[index] = state;
 
+        CharactersSessionManager.Instance?.SyncPlayerCharacter(clientId, type);
         ApplyCharacterToSave(clientId, type);
         LobbySelectionStore.CaptureFromPreparation(_players);
         return true;
@@ -182,6 +187,17 @@ public class PreparationSessionManager : NetworkBehaviour
         }
 
         return LobbyCharacterType.Default;
+    }
+
+    public ulong? FindCharacterOwnerId(LobbyCharacterType type)
+    {
+        for (int i = 0; i < _players.Count; i++)
+        {
+            if (_players[i].CharacterType == type)
+                return _players[i].ClientId;
+        }
+
+        return null;
     }
 
     private string ValidateReady(ulong callerId)

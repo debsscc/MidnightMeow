@@ -65,7 +65,8 @@ Fase-1 → [vitória/derrota] → VictoryScene / GameOver
 | `lobby_loading1` | Loading1 | NetcodeHost / Single |
 | `loading1_preparation` | Preparation | NetcodeHost / Single |
 | `lobby_characters` | Characters | Single |
-| `preparation_characters` | Characters | NetcodeHost / Single |
+| `preparation_characters` | Characters | Single (navegação local por jogador) |
+| `characters_preparation` | Preparation | Single (navegação local por jogador) |
 | `return_lobby` | Lobby | Single |
 | `preparation_loading2` | Loading2 | NetcodeHost / Single |
 | `loading2_gameplay` | Fase-1 | NetcodeHost / Single |
@@ -91,10 +92,15 @@ Fase-1 → [vitória/derrota] → VictoryScene / GameOver
 - Sem ordem obrigatória entre contrato, personagem e pronto.
 - Mensagens de erro ao apertar pronto sem requisitos (ex.: personagem, contrato, outro jogador).
 - Hover no contrato exibe tooltip (ref. `hover_contract.png`).
+- **Multiplayer:** apenas o **host** seleciona o contrato; o cliente vê tooltip e o contrato escolhido pelo host.
+- **Multiplayer:** cada jogador navega livremente entre Preparation e Characters (rotas `preparation_characters` / `characters_preparation` com carga local).
+- Quando **todos** estão prontos (contrato + personagem), o host dispara `preparation_loading2` (NetcodeHost) para todos.
 
 ### Personagens
 - **Menu/Lobby**: somente descrição das skills (modo `UpgradesOnly`).
 - **Preparação**: seleção sincronizada (Nix/Cora exclusivos) + upgrades com magículas.
+- **Multiplayer:** ambos escolhem personagem; escolha replicada via `PreparationSessionManager` + `CharactersSessionManager` (DDOL no servidor).
+- Personagem já escolhido por outro jogador fica **bloqueado** e exibe rótulo `Jogador N`.
 - 6 botões de skill (3 Nix + 3 Cora); popup de upgrade (ref. `levelupskill.png`).
 
 ### Vitória / Derrota

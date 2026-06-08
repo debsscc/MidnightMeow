@@ -126,31 +126,28 @@ public class ScreenFlowSceneBootstrap : MonoBehaviour
         }
     }
 
-    private static void EnsurePreparationNetwork()
-    {
-        if (PreparationSessionManager.Instance != null)
-            return;
+    private static void EnsurePreparationNetwork() => EnsureHubSessionManagers();
 
+    private static void EnsureCharactersNetwork() => EnsureHubSessionManagers();
+
+    private static void EnsureHubSessionManagers()
+    {
         if (Unity.Netcode.NetworkManager.Singleton == null || !Unity.Netcode.NetworkManager.Singleton.IsServer)
             return;
 
-        GameObject go = new GameObject("PreparationSessionManager");
-        go.AddComponent<Unity.Netcode.NetworkObject>();
-        go.AddComponent<PreparationSessionManager>();
-        go.GetComponent<Unity.Netcode.NetworkObject>().Spawn();
+        EnsureHubManager<PreparationSessionManager>("PreparationSessionManager");
+        EnsureHubManager<CharactersSessionManager>("CharactersSessionManager");
     }
 
-    private static void EnsureCharactersNetwork()
+    private static void EnsureHubManager<T>(string objectName) where T : Unity.Netcode.NetworkBehaviour
     {
-        if (CharactersSessionManager.Instance != null)
+        if (UnityEngine.Object.FindFirstObjectByType<T>() != null)
             return;
 
-        if (Unity.Netcode.NetworkManager.Singleton == null || !Unity.Netcode.NetworkManager.Singleton.IsServer)
-            return;
-
-        GameObject go = new GameObject("CharactersSessionManager");
+        GameObject go = new GameObject(objectName);
+        UnityEngine.Object.DontDestroyOnLoad(go);
         go.AddComponent<Unity.Netcode.NetworkObject>();
-        go.AddComponent<CharactersSessionManager>();
+        go.AddComponent<T>();
         go.GetComponent<Unity.Netcode.NetworkObject>().Spawn();
     }
 

@@ -394,6 +394,31 @@ public class CharactersSessionManager : NetworkBehaviour
 
 
 
+    public void SyncPlayerCharacter(ulong clientId, LobbyCharacterType type)
+    {
+        if (!IsServer)
+            return;
+
+        int index = FindPlayerIndex(clientId);
+        if (index < 0)
+            return;
+
+        CharactersPlayerState state = _players[index];
+        state.CharacterType = type;
+        _players[index] = state;
+    }
+
+    public ulong? FindCharacterOwnerId(LobbyCharacterType type)
+    {
+        for (int i = 0; i < _players.Count; i++)
+        {
+            if (_players[i].CharacterType == type)
+                return _players[i].ClientId;
+        }
+
+        return null;
+    }
+
     private void HandleListChanged(NetworkListEvent<CharactersPlayerState> _) =>
 
         OnCharactersStateChanged?.Invoke();

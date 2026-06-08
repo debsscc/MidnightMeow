@@ -85,6 +85,13 @@ public class CharactersScreenController : MonoBehaviour
             session.OnCharactersFeedback += ShowFeedback;
         }
 
+        PreparationSessionManager prep = PreparationSessionManager.Instance;
+        if (prep != null)
+        {
+            prep.OnPreparationStateChanged += RefreshView;
+            prep.OnPreparationFeedback += ShowFeedback;
+        }
+
         RefreshView();
         ScreenFlowPlaceholderFactory.ApplyMenuCursor();
     }
@@ -100,6 +107,13 @@ public class CharactersScreenController : MonoBehaviour
         {
             session.OnCharactersStateChanged -= RefreshView;
             session.OnCharactersFeedback -= ShowFeedback;
+        }
+
+        PreparationSessionManager prep = PreparationSessionManager.Instance;
+        if (prep != null)
+        {
+            prep.OnPreparationStateChanged -= RefreshView;
+            prep.OnPreparationFeedback -= ShowFeedback;
         }
     }
 
@@ -132,7 +146,11 @@ public class CharactersScreenController : MonoBehaviour
         }
 
         CharactersSessionManager session = CharactersSessionManager.Instance;
-        session?.RequestSetCharacterRpc((byte)type);
+        if (session != null)
+            session.RequestSetCharacterRpc((byte)type);
+        else
+            PreparationSessionManager.Instance?.RequestSetCharacterRpc((byte)type);
+
         RefreshView();
     }
 
@@ -226,12 +244,14 @@ public class CharactersScreenController : MonoBehaviour
         {
             nixSelectButton.interactable = allowSelect && !IsCharacterBlocked(LobbyCharacterType.CharacterA);
             SetPanelHighlight(nixSelectButton, local == LobbyCharacterType.CharacterA);
+            UpdateCharacterOwnershipLabel(nixSelectButton, LobbyCharacterType.CharacterA, local);
         }
 
         if (coraSelectButton != null)
         {
             coraSelectButton.interactable = allowSelect && !IsCharacterBlocked(LobbyCharacterType.CharacterB);
             SetPanelHighlight(coraSelectButton, local == LobbyCharacterType.CharacterB);
+            UpdateCharacterOwnershipLabel(coraSelectButton, LobbyCharacterType.CharacterB, local);
         }
     }
 
@@ -240,12 +260,45 @@ public class CharactersScreenController : MonoBehaviour
         if (!AllowSelection || GameSessionContext.IsSinglePlayer)
             return false;
 
-        CharactersSessionManager session = CharactersSessionManager.Instance;
-        if (session == null)
-            return false;
-
         ulong localId = NetworkManager.Singleton != null ? NetworkManager.Singleton.LocalClientId : 0;
-        return session.IsCharacterTakenByOther(localId, type);
+
+        CharactersSessionManager session = CharactersSessionManager.Instance;
+        if (session != null)
+            return session.IsCharacterTakenByOther(localId, type);
+
+        PreparationSessionManager prep = PreparationSessionManager.Instance;
+        return prep != null && prep.IsCharacterTakenByOther(localId, type);
+    }
+
+    private void UpdateCharacterOwnershipLabel(Button button, LobbyCharacterType type, LobbyCharacterType localSelection)
+    {
+        if (button == null || !AllowSelection || GameSessionContext.IsSinglePlayer)
+            return;
+
+        TMP_Text label = button.GetComponentInChildren<TMP_Text>();
+        if (label == null)
+            return;
+
+        string baseName = type == LobbyCharacterType.CharacterB ? "Cora" : "Nixie";
+        ulong? ownerId = FindCharacterOwnerId(type);
+        ulong localId = NetworkManager.Singleton != null ? NetworkManager.Singleton.LocalClientId : 0;
+
+        if (localSelection == type)
+            label.text = $"{baseName}\n(Você)";
+        else if (ownerId.HasValue && ownerId.Value != localId)
+            label.text = $"{baseName}\n(Jogador {ownerId.Value + 1})";
+        else
+            label.text = baseName;
+    }
+
+    private ulong? FindCharacterOwnerId(LobbyCharacterType type)
+    {
+        CharactersSessionManager session = CharactersSessionManager.Instance;
+        if (session != null)
+            return session.FindCharacterOwnerId(type);
+
+        PreparationSessionManager prep = PreparationSessionManager.Instance;
+        return prep?.FindCharacterOwnerId(type);
     }
 
     private LobbyCharacterType ResolveLocalSelection()
