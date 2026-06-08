@@ -113,16 +113,39 @@ public class PlayerAnimationHandler : MonoBehaviour
         {
             case CharacterAbilityType.NixPush:
             case CharacterAbilityType.CoraBarrier:
-                _animator.SetTrigger(_hashOnAbility1);
+                TrySetTrigger(_hashOnAbility1);
                 break;
             case CharacterAbilityType.NixCharge:
             case CharacterAbilityType.CoraPool:
-                _animator.SetTrigger(_hashOnAbility2);
+                TrySetTrigger(_hashOnAbility2);
                 break;
             case CharacterAbilityType.Dash:
-                _animator.SetTrigger(_hashOnDash);
+                TrySetTrigger(_hashOnDash);
                 break;
         }
+    }
+
+    private void TrySetTrigger(int hash)
+    {
+        if (!HasAnimatorTrigger(hash))
+            return;
+
+        _animator.SetTrigger(hash);
+    }
+
+    private bool HasAnimatorTrigger(int hash)
+    {
+        if (_animator == null || _animator.runtimeAnimatorController == null)
+            return false;
+
+        AnimatorControllerParameter[] parameters = _animator.parameters;
+        for (int i = 0; i < parameters.Length; i++)
+        {
+            if (parameters[i].type == AnimatorControllerParameterType.Trigger && parameters[i].nameHash == hash)
+                return true;
+        }
+
+        return false;
     }
 
     private void HandleShoot() => TriggerAttackAnimation();

@@ -8,7 +8,7 @@ using UnityEngine.UI;
 [DisallowMultipleComponent]
 public class ScreenFlowSceneBootstrap : MonoBehaviour
 {
-    [SerializeField] private bool ensureEventSystem = true;
+    [SerializeField] private bool ensureEventSystem = false;
     [SerializeField] private bool ensurePersistenceServices = true;
 
     private void Awake()
@@ -17,7 +17,7 @@ public class ScreenFlowSceneBootstrap : MonoBehaviour
         SuppressLegacyMenuButton();
 
         if (ensureEventSystem)
-            EnsureEventSystem();
+            EventSystemGlobalBootstrap.Reconcile();
 
         if (ensurePersistenceServices)
             EnsurePersistenceServices();
@@ -34,14 +34,6 @@ public class ScreenFlowSceneBootstrap : MonoBehaviour
         Button legacyMenu = ScreenFlowUiLookup.FindButton("Button_Menu");
         if (legacyMenu != null)
             legacyMenu.gameObject.SetActive(false);
-    }
-
-    private static void EnsureEventSystem()
-    {
-        if (FindFirstObjectByType<EventSystem>() != null)
-            return;
-
-        GameObject es = new GameObject("EventSystem", typeof(EventSystem), typeof(StandaloneInputModule));
     }
 
     private static void EnsurePersistenceServices()

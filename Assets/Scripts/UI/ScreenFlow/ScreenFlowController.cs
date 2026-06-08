@@ -73,6 +73,9 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
         _fadeImage = null;
         _loadingScreen = null;
         SetLoadingScreenActive(false);
+
+        if (scene.name.StartsWith("Fase-", System.StringComparison.Ordinal) || scene.name is "Game" or "Gameplay")
+            ClearTransitionOverlay();
     }
 
     /// <summary>
@@ -154,13 +157,8 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
         if (_activeSceneName == sceneName)
             return false;
 
-        if (HubSceneNavigator.ShouldUseAdditiveNavigation(sceneName, loadKind))
-        {
-            if (sceneName == HubSceneNavigator.HubBaseScene
-                && _activeSceneName == HubSceneNavigator.HubBaseScene
-                && !HubSceneNavigator.IsOverlayLoaded())
-                return false;
-        }
+        if (HubSceneNavigator.CanSkipTransition(sceneName))
+            return false;
 
         float ft = fadeTime > 0f ? fadeTime : (_fadeTime > 0f ? _fadeTime : defaultFadeTime);
         float ml = minLoadingTime > 0f ? minLoadingTime : (_minLoadingTime > 0f ? _minLoadingTime : defaultMinLoadingTime);
@@ -245,19 +243,28 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
 
             if (loadKind == SceneLoadKind.NetcodeHost)
             {
-                if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsServer)
+                NetworkManager net = NetworkManager.Singleton;
+                if (net == null || !net.IsListening)
                 {
-                    Debug.LogWarning("ScreenFlowController: NetcodeHost exige host. Carga ignorada.");
+                    Debug.LogWarning($"ScreenFlowController: NetcodeHost sem rede ativa para '{sceneName}'.");
                     yield break;
                 }
 
-                NetworkManager.Singleton.SceneManager.LoadScene(sceneName, LoadSceneMode.Single);
-                CurrentAsyncLoad = null;
+                if (!net.IsServer)
+                {
+                    yield return NetworkSceneSyncUtility.WaitForActiveScene(sceneName);
+                    loadSucceeded = SceneManager.GetActiveScene().name == sceneName;
+                }
+                else
+                {
+                    net.SceneManager.LoadScene(sceneName, LoadSceneMode.Single);
+                    CurrentAsyncLoad = null;
 
-                while (SceneManager.GetActiveScene().name != sceneName)
-                    yield return null;
+                    while (SceneManager.GetActiveScene().name != sceneName)
+                        yield return null;
 
-                loadSucceeded = true;
+                    loadSucceeded = true;
+                }
             }
             else if (HubSceneNavigator.ShouldUseAdditiveNavigation(sceneName, loadKind))
             {

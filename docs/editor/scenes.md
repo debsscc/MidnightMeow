@@ -2,6 +2,14 @@
 
 Última revisão: 2026-06-08
 
+## EventSystem
+
+Cenas de UI (Menu2, Lobby, Loading, Preparation, Characters) e Fase-1 mantêm um `EventSystem` **desativado** na hierarquia (legado). Em runtime, `EventSystemGlobalBootstrap` garante um único `GlobalEventSystem` (DDOL) e remove duplicatas ao carregar cenas.
+
+Clientes em rotas `NetcodeHost` aguardam a cena via `NetworkSceneSyncUtility` (NGO Scene Management do host) — não carregam localmente.
+
+Gameplay: `GameplayPrefabCatalog` em `Resources/` instancia `MultiplayerCameraRig` se a Fase-* carregar sem o rig. Jogadores só spawnam em cenas `Fase-*` (após `SynchronizeComplete`).
+
 ## Bootstrap e fluxo
 
 

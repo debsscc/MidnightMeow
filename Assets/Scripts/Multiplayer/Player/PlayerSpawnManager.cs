@@ -17,6 +17,7 @@
 using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class PlayerSpawnManager : NetworkBehaviour
 {
@@ -44,7 +45,7 @@ public class PlayerSpawnManager : NetworkBehaviour
 #pragma warning disable CS0414 // reservado para fluxo de reconexão futuro
     [SerializeField] private bool respawnAtOriginalPoint = true;
 #pragma warning restore CS0414
-    [SerializeField] private bool enableDiagnosticsLogs = true;
+    [SerializeField] private bool enableDiagnosticsLogs = false;
     [SerializeField] private float spawnRecoveryInterval = 1f;
 
     private readonly Dictionary<ulong, NetworkObject> _spawnedPlayers = new Dictionary<ulong, NetworkObject>();
@@ -52,6 +53,9 @@ public class PlayerSpawnManager : NetworkBehaviour
     private int _nextSpawnIndex = 0;
     private Coroutine _spawnRecoveryCoroutine;
     private Coroutine _forceRespawnCoroutine;
+    private Coroutine _gameplaySpawnRoutine;
+    private bool _spawnedForCurrentGameplayRound;
+    [SerializeField] private float gameplaySpawnDelaySeconds = 2.5f;
 
     private void Awake()
     {
@@ -71,16 +75,12 @@ public class PlayerSpawnManager : NetworkBehaviour
         if (spawnPoints == null || spawnPoints.Length == 0)
             Debug.LogWarning("[PlayerSpawnManager] AVISO: nenhum SpawnPoint configurado. Jogadores surgirão em (0,0,0).");
 
-        // Spawna jogadores que já estão conectados (evita race condition com a ordem do OnNetworkSpawn)
-        foreach (ulong clientId in NetworkManager.ConnectedClientsIds)
-            SpawnPlayerForClient(clientId);
-
         NetworkManager.OnClientConnectedCallback    += SpawnPlayerForClient;
         NetworkManager.OnClientDisconnectCallback   += HandleClientDisconnected;
         if (NetworkManager.SceneManager != null)
             NetworkManager.SceneManager.OnSceneEvent += HandleSceneEvent;
         _spawnRecoveryCoroutine = StartCoroutine(EnsurePlayersSpawnedRoutine());
-        _forceRespawnCoroutine = StartCoroutine(ForceRespawnAfterStartupRoutine());
+        _forceRespawnCoroutine = StartCoroutine(ReplaceAutoSpawnedPlayersOnceRoutine());
     }
 
     public override void OnNetworkDespawn()
@@ -106,74 +106,164 @@ public class PlayerSpawnManager : NetworkBehaviour
     private void HandleSceneEvent(SceneEvent sceneEvent)
     {
         if (!IsServer) return;
-        if (sceneEvent.SceneEventType != SceneEventType.LoadEventCompleted) return;
 
-        if (enableDiagnosticsLogs)
-            Debug.Log($"[PlayerSpawnManager][DIAG] LoadEventCompleted recebido para cena '{sceneEvent.SceneName}'. Reconciliando players...");
-
-        StartCoroutine(DelayedReconcileAfterSceneLoad(forceRespawn: true));
-    }
-
-    private System.Collections.IEnumerator DelayedReconcileAfterSceneLoad(bool forceRespawn)
-    {
-        yield return null;
-        yield return null;
-
-        foreach (ulong clientId in NetworkManager.ConnectedClientsIds)
+        if (sceneEvent.SceneEventType == SceneEventType.Load
+            && !ShouldReconcilePlayersForScene(sceneEvent.SceneName))
         {
-            if (forceRespawn)
-            {
-                ForceRespawnPlayerObject(clientId, "scene-load");
-                continue;
-            }
+            _spawnedForCurrentGameplayRound = false;
+            DespawnAllPlayers();
+            return;
+        }
 
-            bool hasPlayerObjectInConnection = NetworkManager.ConnectedClients.TryGetValue(clientId, out var clientData)
-                                               && clientData.PlayerObject != null
-                                               && clientData.PlayerObject.IsSpawned;
-            if (!hasPlayerObjectInConnection)
-            {
-                if (enableDiagnosticsLogs)
-                    Debug.LogWarning($"[PlayerSpawnManager][DIAG] Pos-load sem PlayerObject para ClientId={clientId}. Forcando respawn.");
-                SpawnPlayerForClient(clientId);
-            }
+        if (!ShouldReconcilePlayersForScene(sceneEvent.SceneName))
+            return;
+
+        if (sceneEvent.SceneEventType == SceneEventType.SynchronizeComplete)
+        {
+            ScheduleGameplaySpawn(waitSeconds: 0f);
+            return;
+        }
+
+        if (sceneEvent.SceneEventType == SceneEventType.LoadEventCompleted
+            && sceneEvent.ClientId == NetworkManager.ServerClientId)
+        {
+            ScheduleGameplaySpawnFallback();
         }
     }
 
-    private System.Collections.IEnumerator ForceRespawnAfterStartupRoutine()
+    private void ScheduleGameplaySpawn(float waitSeconds)
     {
-        // Aguarda o ciclo inicial de spawn/sincronização para então substituir
-        // qualquer PlayerObject automático do NGO pelo fluxo autoritativo deste manager.
+        if (_gameplaySpawnRoutine != null)
+            StopCoroutine(_gameplaySpawnRoutine);
+
+        _gameplaySpawnRoutine = StartCoroutine(DelayedReconcileAfterSceneLoad(waitSeconds));
+    }
+
+    private void ScheduleGameplaySpawnFallback()
+    {
+        StartCoroutine(GameplaySpawnFallbackRoutine());
+    }
+
+    private System.Collections.IEnumerator GameplaySpawnFallbackRoutine()
+    {
+        yield return new WaitForSeconds(gameplaySpawnDelaySeconds);
+
+        if (_spawnedForCurrentGameplayRound || !IsGameplaySceneLoaded())
+            yield break;
+
+        if (enableDiagnosticsLogs)
+            Debug.Log("[PlayerSpawnManager][DIAG] Fallback de spawn após LoadEventCompleted (SynchronizeComplete não disparou).");
+
+        yield return DelayedReconcileAfterSceneLoad(0f);
+    }
+
+    private static bool ShouldReconcilePlayersForScene(string sceneName)
+    {
+        if (string.IsNullOrEmpty(sceneName))
+            return false;
+
+        return sceneName.StartsWith("Fase-", System.StringComparison.Ordinal)
+               || sceneName is "Game" or "Gameplay";
+    }
+
+    private System.Collections.IEnumerator DelayedReconcileAfterSceneLoad(float waitSeconds)
+    {
+        if (waitSeconds > 0f)
+            yield return new WaitForSeconds(waitSeconds);
+
+        yield return null;
+        yield return null;
+
+        if (!IsGameplaySceneLoaded())
+        {
+            _gameplaySpawnRoutine = null;
+            yield break;
+        }
+
+        foreach (ulong clientId in NetworkManager.ConnectedClientsIds)
+            ReconcilePlayerAfterSceneLoad(clientId, forceRespawn: true);
+
+        _spawnedForCurrentGameplayRound = true;
+        _gameplaySpawnRoutine = null;
+    }
+
+    private void DespawnAllPlayers()
+    {
+        foreach (ulong clientId in NetworkManager.ConnectedClientsIds)
+        {
+            if (!NetworkManager.ConnectedClients.TryGetValue(clientId, out var clientData))
+                continue;
+
+            NetworkObject existing = clientData.PlayerObject;
+            if (existing != null && existing.IsSpawned)
+                existing.Despawn(true);
+        }
+
+        _spawnedPlayers.Clear();
+    }
+
+    private System.Collections.IEnumerator ReplaceAutoSpawnedPlayersOnceRoutine()
+    {
         yield return null;
         yield return null;
         yield return new WaitForSeconds(0.2f);
 
-        if (!IsServer || NetworkManager == null) yield break;
+        if (!IsServer || NetworkManager == null)
+            yield break;
+
+        if (!IsGameplaySceneLoaded())
+            yield break;
 
         foreach (ulong clientId in NetworkManager.ConnectedClientsIds)
         {
-            ForceRespawnPlayerObject(clientId, "startup");
+            if (!NetworkManager.ConnectedClients.TryGetValue(clientId, out var clientData))
+                continue;
+
+            NetworkObject existingPlayer = clientData.PlayerObject;
+            if (existingPlayer == null || !existingPlayer.IsSpawned)
+            {
+                SpawnPlayerForClient(clientId);
+                continue;
+            }
+
+            GameObject expectedPrefab = GetPrefabForClient(clientId);
+            if (expectedPrefab == null)
+                continue;
+
+            string expectedName = expectedPrefab.name;
+            if (existingPlayer.name.StartsWith(expectedName, System.StringComparison.Ordinal))
+                continue;
+
+            if (enableDiagnosticsLogs)
+            {
+                Debug.Log($"[PlayerSpawnManager][DIAG] Substituindo PlayerObject automático do NGO para ClientId={clientId} " +
+                          $"(atual='{existingPlayer.name}', esperado='{expectedName}').");
+            }
+
+            existingPlayer.Despawn(true);
+            _spawnedPlayers.Remove(clientId);
+            SpawnPlayerForClient(clientId);
         }
     }
 
-    private void ForceRespawnPlayerObject(ulong clientId, string reason)
+    private void ReconcilePlayerAfterSceneLoad(ulong clientId, bool forceRespawn)
     {
-        if (!IsServer || NetworkManager == null) return;
-
         if (NetworkManager.ConnectedClients.TryGetValue(clientId, out var clientData))
         {
-            NetworkObject existingPlayer = clientData.PlayerObject;
-            if (existingPlayer != null && existingPlayer.IsSpawned)
+            NetworkObject existing = clientData.PlayerObject;
+            if (forceRespawn && existing != null && existing.IsSpawned)
             {
                 if (enableDiagnosticsLogs)
-                {
-                    Debug.LogWarning($"[PlayerSpawnManager][DIAG] ForceRespawn ({reason}) para ClientId={clientId}. " +
-                                     $"Despawn antigo NetworkObjectId={existingPlayer.NetworkObjectId}.");
-                }
-                existingPlayer.Despawn(true);
+                    Debug.Log($"[PlayerSpawnManager][DIAG] Force respawn pós-sync para ClientId={clientId}.");
+                existing.Despawn(true);
+                _spawnedPlayers.Remove(clientId);
+            }
+            else if (!forceRespawn && existing != null && existing.IsSpawned)
+            {
+                return;
             }
         }
 
-        _spawnedPlayers.Remove(clientId);
         SpawnPlayerForClient(clientId);
     }
 
@@ -184,6 +274,8 @@ public class PlayerSpawnManager : NetworkBehaviour
     private void SpawnPlayerForClient(ulong clientId)
     {
         if (!IsServer) return;
+        if (!IsGameplaySceneLoaded())
+            return;
 
         if (_spawnedPlayers.ContainsKey(clientId))
         {
@@ -231,10 +323,21 @@ public class PlayerSpawnManager : NetworkBehaviour
         Debug.Log($"[PlayerSpawnManager] Jogador spawnado com sucesso. ClientId={clientId}, NetworkObjectId={networkObject.NetworkObjectId}");
     }
 
+    private static bool IsGameplaySceneLoaded()
+    {
+        return ShouldReconcilePlayersForScene(SceneManager.GetActiveScene().name);
+    }
+
     private System.Collections.IEnumerator EnsurePlayersSpawnedRoutine()
     {
         while (IsServer && NetworkManager != null)
         {
+            if (!IsGameplaySceneLoaded())
+            {
+                yield return new WaitForSeconds(spawnRecoveryInterval);
+                continue;
+            }
+
             foreach (ulong clientId in NetworkManager.ConnectedClientsIds)
             {
                 bool hasLiveSpawnInCache = _spawnedPlayers.TryGetValue(clientId, out var cachedObj)

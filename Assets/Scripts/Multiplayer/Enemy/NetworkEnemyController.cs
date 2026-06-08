@@ -441,6 +441,42 @@ public class NetworkEnemyController : NetworkBehaviour
             sr.enabled = false;
     }
 
+    public void BroadcastTelegraphToClients(
+        TelegraphStrikeDefinition strike,
+        EnemyTelegraphVisualStyle style,
+        Vector2 worldPosition,
+        float rotationDegrees)
+    {
+        if (!IsServer || !IsSpawned)
+            return;
+
+        TelegraphClientSnapshot snapshot = TelegraphClientSnapshot.From(strike, style, worldPosition, rotationDegrees);
+        PlayTelegraphVisualClientRpc(snapshot);
+    }
+
+    [ClientRpc]
+    private void PlayTelegraphVisualClientRpc(TelegraphClientSnapshot snapshot)
+    {
+        if (IsServer)
+            return;
+
+        EnemyTelegraphZoneFactory factory = GetComponent<EnemyTelegraphZoneFactory>();
+        if (factory == null)
+            return;
+
+        TelegraphStrikeDefinition strike = snapshot.ToStrikeDefinition();
+        EnemyTelegraphVisualStyle style = snapshot.ToVisualStyle();
+
+        factory.Spawn(
+            strike,
+            style,
+            snapshot.WorldPosition,
+            snapshot.RotationDegrees,
+            gameObject,
+            transform,
+            visualOnly: true);
+    }
+
     private IEnumerator SyncHealthAfterConfigsRoutine()
     {
         yield return null;

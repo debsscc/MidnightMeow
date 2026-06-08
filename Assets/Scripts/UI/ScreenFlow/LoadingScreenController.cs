@@ -59,10 +59,24 @@ public class LoadingScreenController : MonoBehaviour
 
         if (nextRoute == SceneFlowRouteIds.Loading2ToGameplay)
         {
+            yield return GameplaySessionStarter.EnsureReadyForGameplay();
+
+            if (NetworkSceneSyncUtility.IsNetworkClientAwaitingHost)
+            {
+                string gameplayScene = string.IsNullOrEmpty(GameSessionContext.ActiveGameplaySceneName)
+                    ? "Fase-1"
+                    : GameSessionContext.ActiveGameplaySceneName;
+
+                if (statusText != null)
+                    statusText.text = "Aguardando host iniciar partida...";
+
+                yield return NetworkSceneSyncUtility.WaitForActiveScene(gameplayScene);
+                yield break;
+            }
+
             if (statusText != null)
                 statusText.text = "Iniciando partida...";
 
-            yield return GameplaySessionStarter.EnsureReadyForGameplay();
             ScreenFlowStateMachine.EnterGameplay();
             yield break;
         }

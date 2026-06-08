@@ -1,16 +1,16 @@
 using Unity.Netcode;
 using UnityEngine;
 
-/// <summary>Replica telegraphs visuais nos clientes (servidor mantém zona autoritativa).</summary>
-[RequireComponent(typeof(NetworkObject))]
-public class NetworkEnemyTelegraphRelay : NetworkBehaviour
+/// <summary>
+/// Encaminha telegraphs visuais para <see cref="NetworkEnemyController"/> (RPC registrado no prefab).
+/// </summary>
+public class NetworkEnemyTelegraphRelay : MonoBehaviour
 {
-    [SerializeField] private EnemyTelegraphZoneFactory clientVisualFactory;
+    private NetworkEnemyController _controller;
 
     private void Awake()
     {
-        if (clientVisualFactory == null)
-            clientVisualFactory = GetComponent<EnemyTelegraphZoneFactory>();
+        _controller = GetComponent<NetworkEnemyController>();
     }
 
     public void BroadcastTelegraph(
@@ -19,30 +19,10 @@ public class NetworkEnemyTelegraphRelay : NetworkBehaviour
         Vector2 worldPosition,
         float rotationDegrees)
     {
-        if (!IsServer) return;
+        if (_controller == null)
+            _controller = GetComponent<NetworkEnemyController>();
 
-        var snapshot = TelegraphClientSnapshot.From(strike, style, worldPosition, rotationDegrees);
-        BroadcastTelegraphClientRpc(snapshot);
-    }
-
-    [ClientRpc]
-    private void BroadcastTelegraphClientRpc(TelegraphClientSnapshot snapshot)
-    {
-        if (IsServer) return;
-
-        if (clientVisualFactory == null) return;
-
-        var strike = snapshot.ToStrikeDefinition();
-        var style = snapshot.ToVisualStyle();
-
-        clientVisualFactory.Spawn(
-            strike,
-            style,
-            snapshot.WorldPosition,
-            snapshot.RotationDegrees,
-            gameObject,
-            transform,
-            visualOnly: true);
+        _controller?.BroadcastTelegraphToClients(strike, style, worldPosition, rotationDegrees);
     }
 }
 

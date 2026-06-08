@@ -28,7 +28,19 @@ public class PreparationSessionManager : NetworkBehaviour
 
     public event Action OnPreparationStateChanged;
 
-    public int SelectedContractIndex => _selectedContractIndex.Value;
+    private int _clientContractIndex = -1;
+
+    public int SelectedContractIndex
+    {
+        get
+        {
+            if (IsServer)
+                return _selectedContractIndex.Value;
+
+            return _clientContractIndex >= 0 ? _clientContractIndex : _selectedContractIndex.Value;
+        }
+    }
+
     public NetworkList<PreparationPlayerState> Players => _players;
 
     private void Awake()
@@ -60,6 +72,9 @@ public class PreparationSessionManager : NetworkBehaviour
             PushCharactersSessionSnapshot();
         }
 
+        if (!IsServer)
+            _clientContractIndex = _selectedContractIndex.Value;
+
         OnInstanceAvailable?.Invoke();
         OnPreparationStateChanged?.Invoke();
     }
@@ -83,11 +98,9 @@ public class PreparationSessionManager : NetworkBehaviour
         base.OnDestroy();
     }
 
-    [Rpc(SendTo.Server)]
-    public void RequestSelectContractRpc(int contractIndex, RpcParams rpcParams = default)
+    public void SetContractIndexOnServer(int contractIndex)
     {
-        ulong caller = rpcParams.Receive.SenderClientId;
-        if (NetworkManager.Singleton != null && caller != NetworkManager.ServerClientId)
+        if (!IsServer)
             return;
 
         if (contractIndex < 0 || contracts == null || contractIndex >= contracts.Length)
@@ -96,6 +109,16 @@ public class PreparationSessionManager : NetworkBehaviour
         _selectedContractIndex.Value = contractIndex;
         ClearAllReady();
         BroadcastHubStateChanged();
+    }
+
+    [Rpc(SendTo.Server)]
+    public void RequestSelectContractRpc(int contractIndex, RpcParams rpcParams = default)
+    {
+        ulong caller = rpcParams.Receive.SenderClientId;
+        if (NetworkManager.Singleton != null && caller != NetworkManager.ServerClientId)
+            return;
+
+        SetContractIndexOnServer(contractIndex);
     }
 
     [Rpc(SendTo.Server)]
@@ -165,8 +188,9 @@ public class PreparationSessionManager : NetworkBehaviour
     }
 
     [ClientRpc]
-    private void NotifyHubStateChangedClientRpc()
+    private void NotifyHubStateChangedClientRpc(int contractIndex)
     {
+        _clientContractIndex = contractIndex;
         OnPreparationStateChanged?.Invoke();
     }
 
@@ -303,11 +327,12 @@ public class PreparationSessionManager : NetworkBehaviour
         if (!IsServer)
             return;
 
-        ApplySelectedContractToSession();
+        string gameplayScene = ApplySelectedContractToSession();
+        SyncGameplaySceneClientRpc(new FixedString64Bytes(gameplayScene));
         ScreenFlowStateMachine.BeginGameplayLoading();
     }
 
-    private void ApplySelectedContractToSession()
+    private string ApplySelectedContractToSession()
     {
         int index = _selectedContractIndex.Value;
         string sceneName = "Fase-1";
@@ -316,6 +341,16 @@ public class PreparationSessionManager : NetworkBehaviour
             sceneName = contracts[index].gameplaySceneName;
 
         GameSessionContext.ActiveGameplaySceneName = sceneName;
+        return sceneName;
+    }
+
+    [ClientRpc]
+    private void SyncGameplaySceneClientRpc(FixedString64Bytes sceneName)
+    {
+        if (IsServer || sceneName.Length == 0)
+            return;
+
+        GameSessionContext.ActiveGameplaySceneName = sceneName.ToString();
     }
 
     private bool AreAllReady()
@@ -348,15 +383,37 @@ public class PreparationSessionManager : NetworkBehaviour
 
     private void ResolveContracts()
     {
-        if (contracts != null && contracts.Length > 0)
+        if (contracts != null && contracts.Length >= 3 && contracts[0] != null)
             return;
 
+        contracts = new[]
+        {
+            FindContractAsset("Contract_1"),
+            FindContractAsset("Contract_2"),
+            FindContractAsset("Contract_3")
+        };
+
+        for (int i = 0; i < contracts.Length; i++)
+        {
+            if (contracts[i] != null)
+                continue;
+
+            contracts[i] = ScriptableObject.CreateInstance<ContractDefinition>();
+            contracts[i].displayName = $"Contrato {i + 1}";
+            contracts[i].description = i == 0 ? "Fase inicial." : "Bloqueado por enquanto.";
+        }
+    }
+
+    private static ContractDefinition FindContractAsset(string assetName)
+    {
         ContractDefinition[] loaded = Resources.FindObjectsOfTypeAll<ContractDefinition>();
-        if (loaded.Length == 0)
-            return;
+        for (int i = 0; i < loaded.Length; i++)
+        {
+            if (loaded[i] != null && loaded[i].name == assetName)
+                return loaded[i];
+        }
 
-        System.Array.Sort(loaded, (a, b) => string.CompareOrdinal(a.name, b.name));
-        contracts = new[] { loaded[0] };
+        return null;
     }
 
     private void SyncConnectedClients()
@@ -413,8 +470,11 @@ public class PreparationSessionManager : NetworkBehaviour
         return FindPlayerIndex(clientId);
     }
 
-    private void HandleContractChanged(int _, int __)
+    private void HandleContractChanged(int _, int next)
     {
+        if (!IsServer)
+            _clientContractIndex = next;
+
         OnPreparationStateChanged?.Invoke();
         if (IsServer)
             BroadcastHubStateChanged();
@@ -440,7 +500,7 @@ public class PreparationSessionManager : NetworkBehaviour
         if (!IsServer)
             return;
 
-        NotifyHubStateChangedClientRpc();
+        NotifyHubStateChangedClientRpc(_selectedContractIndex.Value);
         CharactersSessionManager.Instance?.NotifyStateChangedFromPreparation();
     }
 }

@@ -85,6 +85,13 @@ public class PreparationScreenController : MonoBehaviour
         return null;
     }
 
+    public void RefreshFromHubNavigation()
+    {
+        TrySubscribeSession();
+        RefreshCharacterLabel();
+        RefreshView();
+    }
+
     private void OnEnable()
     {
         PreparationSessionManager.OnInstanceAvailable += TrySubscribeSession;
@@ -201,8 +208,18 @@ public class PreparationScreenController : MonoBehaviour
         if (!GameSessionContext.IsSinglePlayer)
         {
             PreparationSessionManager session = HubSessionStateReader.GetPreparationSession();
-            session?.RequestSelectContractRpc(index);
-            session?.RequestSetReadyRpc(false);
+            if (session == null)
+            {
+                ShowFeedback("Aguardando sessão de rede...");
+                return;
+            }
+
+            if (session.IsServer)
+                session.SetContractIndexOnServer(index);
+            else
+                session.RequestSelectContractRpc(index);
+
+            session.RequestSetReadyRpc(false);
         }
 
         SaveProfileStore save = SaveProfileStore.Instance;
@@ -212,7 +229,6 @@ public class PreparationScreenController : MonoBehaviour
             save.SaveActive();
         }
 
-        HighlightSelectedContract(index);
         RefreshView();
     }
 
@@ -409,9 +425,19 @@ public class PreparationScreenController : MonoBehaviour
         if (readyStatusText != null)
         {
             string localReadyLabel = session.GetLocalReadyState() ? " (você pronto)" : string.Empty;
-            readyStatusText.text = session.SelectedContractIndex < 0
-                ? "Aguardando o host escolher o contrato"
-                : $"Prontos: {readyCount}/{session.Players.Count} | Personagens: {charCount}/{session.Players.Count}{localReadyLabel}";
+            int contractIndex = session.SelectedContractIndex;
+
+            if (contractIndex < 0)
+            {
+                readyStatusText.text = IsLocalHost()
+                    ? "Escolha um contrato"
+                    : "Aguardando o host escolher o contrato";
+            }
+            else
+            {
+                readyStatusText.text =
+                    $"Prontos: {readyCount}/{session.Players.Count} | Personagens: {charCount}/{session.Players.Count}{localReadyLabel}";
+            }
         }
 
         ApplyContractButtonLabels();

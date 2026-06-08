@@ -16,7 +16,8 @@ Dar ao jogador (especialmente **melee**) tempo de reação: a área de dano apar
 | `EnemyTelegraphZoneFactory` | `Combat/Telegraph/` | Instancia zonas |
 | `EnemyTelegraphZoneInstance` | `Combat/Telegraph/` | Timer de fill + dano/projétil |
 | `EnemyTelegraphZoneView` | `Combat/Telegraph/` | Material + shader |
-| `NetworkEnemyTelegraphRelay` | `Multiplayer/Enemy/` | ClientRpc só visual |
+| `NetworkEnemyTelegraphRelay` | `Multiplayer/Enemy/` | Encaminha para `NetworkEnemyController` (ClientRpc no prefab) |
+| `NetworkEnemyController` | `Multiplayer/Enemy/` | `PlayTelegraphVisualClientRpc` — visual nos clientes |
 | `EnemyTelegraphEvents` | `Combat/Telegraph/` | Eventos globais (SFX/VFX) |
 | Shader | `Assets/Art/Shaders/TelegraphFill.shader` | Círculo ou retângulo preenchível |
 

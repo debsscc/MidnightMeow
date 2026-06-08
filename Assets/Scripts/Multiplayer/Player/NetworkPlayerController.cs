@@ -14,6 +14,7 @@
 
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class NetworkPlayerController : NetworkBehaviour
 {
@@ -25,7 +26,7 @@ public class NetworkPlayerController : NetworkBehaviour
 
     [Header("Camera Binding")]
     [SerializeField] private float cameraBindRetryInterval = 0.25f;
-    [SerializeField] private float cameraBindTimeoutSeconds = 10f;
+    [SerializeField] private float cameraBindTimeoutSeconds = 30f;
 
     private Coroutine _cameraBindCoroutine;
 
@@ -83,6 +84,37 @@ public class NetworkPlayerController : NetworkBehaviour
 
     public string PlayerName => _playerName.Value.ToString();
     public int ColorIndex => _playerColorIndex.Value;
+
+    private void OnEnable()
+    {
+        SceneManager.sceneLoaded += HandleSceneLoaded;
+    }
+
+    private void OnDisable()
+    {
+        SceneManager.sceneLoaded -= HandleSceneLoaded;
+    }
+
+    public static void RebindLocalPlayerCameras()
+    {
+        NetworkPlayerController[] players =
+            Object.FindObjectsByType<NetworkPlayerController>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+
+        for (int i = 0; i < players.Length; i++)
+        {
+            if (players[i] != null && players[i].IsSpawned && players[i].IsOwner)
+                players[i].TryBindCameraNow();
+        }
+    }
+
+    private void HandleSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        if (!IsOwner || !IsSpawned)
+            return;
+
+        if (GameplaySceneBootstrap.IsGameplayScene(scene.name))
+            TryBindCameraNow();
+    }
 
     public override void OnNetworkSpawn()
     {
@@ -164,7 +196,7 @@ public class NetworkPlayerController : NetworkBehaviour
     private void SetupLocalPlayer()
     {
         if (enableDiagnosticsLogs)
-            Debug.Log($"[PLAYER-DIAG][SetupLocalPlayer] obj={name} ownerId={OwnerClientId}");
+            Debug.Log($"[PLAYER-DIAG][SetupLocalPlayer] obj={name} ownerId={OwnerClientId} scene={SceneManager.GetActiveScene().name}");
 
         SetInputComponentsActive(true);
         _playerName.Value = $"Jogador {OwnerClientId + 1}";
@@ -178,21 +210,8 @@ public class NetworkPlayerController : NetworkBehaviour
                              "Câmeras no prefab causam conflito (tela azul). Deixe o campo vazio no Inspector do prefab.");
         }
 
-        // Notifica a câmera da cena para seguir este jogador local
-        if (MultiplayerCameraController.Instance != null)
-        {
-            MultiplayerCameraController.Instance.SetTarget(transform);
-            if (aim != null)
-                aim.SetAimCamera(MultiplayerCameraController.Instance.MainCamera);
-            Debug.Log($"[NetworkPlayerController] Câmera da cena direcionada para ClientId={OwnerClientId}");
-        }
-        else
-        {
-            Debug.LogWarning("[NetworkPlayerController] MultiplayerCameraController não encontrado na cena. " +
-                             "Adicione o rig de câmera conforme a hierarquia documentada.");
-            if (_cameraBindCoroutine == null)
-                _cameraBindCoroutine = StartCoroutine(WaitAndBindCameraRoutine());
-        }
+        if (!TryBindCameraNow() && _cameraBindCoroutine == null)
+            _cameraBindCoroutine = StartCoroutine(WaitAndBindCameraRoutine());
 
         Debug.Log($"[NetworkPlayerController] Jogador local configurado. ClientId={OwnerClientId}");
         if (enableDiagnosticsLogs)
@@ -201,18 +220,30 @@ public class NetworkPlayerController : NetworkBehaviour
         OnLocalPlayerSpawned?.Invoke(this);
     }
 
+    private bool TryBindCameraNow()
+    {
+        GameplaySceneBootstrap.EnsureCameraRig();
+
+        if (MultiplayerCameraController.Instance == null)
+            return false;
+
+        MultiplayerCameraController.Instance.SetTarget(transform);
+        if (aim != null)
+            aim.SetAimCamera(MultiplayerCameraController.Instance.MainCamera);
+
+        if (enableDiagnosticsLogs)
+            Debug.Log($"[NetworkPlayerController] Câmera vinculada ao jogador local ClientId={OwnerClientId}");
+
+        return true;
+    }
+
     private System.Collections.IEnumerator WaitAndBindCameraRoutine()
     {
         float elapsed = 0f;
         while (elapsed < cameraBindTimeoutSeconds && IsSpawned && IsOwner)
         {
-            if (MultiplayerCameraController.Instance != null)
+            if (TryBindCameraNow())
             {
-                MultiplayerCameraController.Instance.SetTarget(transform);
-                if (aim != null)
-                    aim.SetAimCamera(MultiplayerCameraController.Instance.MainCamera);
-                if (enableDiagnosticsLogs)
-                    Debug.Log($"[PLAYER-DIAG][LateCameraBind] camera vinculada ao player local {name}.");
                 _cameraBindCoroutine = null;
                 yield break;
             }
@@ -221,8 +252,12 @@ public class NetworkPlayerController : NetworkBehaviour
             yield return new WaitForSeconds(cameraBindRetryInterval);
         }
 
-        if (enableDiagnosticsLogs)
-            Debug.LogWarning("[PLAYER-DIAG][LateCameraBind] timeout aguardando MultiplayerCameraController.");
+        if (GameplaySceneBootstrap.IsGameplayScene(SceneManager.GetActiveScene().name))
+        {
+            Debug.LogWarning("[NetworkPlayerController] MultiplayerCameraController não encontrado após timeout. " +
+                             "Verifique GameplayPrefabCatalog e MultiplayerCameraRig.");
+        }
+
         _cameraBindCoroutine = null;
     }
 

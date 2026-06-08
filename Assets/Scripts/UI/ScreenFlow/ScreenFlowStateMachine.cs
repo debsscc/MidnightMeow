@@ -278,6 +278,14 @@ public static class ScreenFlowStateMachine
 
 
 
+        NetworkManager networkManager = NetworkManager.Singleton;
+
+        if (NetworkSceneSyncUtility.IsNetworkClientAwaitingHost)
+
+            return true;
+
+
+
         if (ScreenFlowController.Instance != null
 
             && ScreenFlowController.Instance.RequestScene(
@@ -299,8 +307,6 @@ public static class ScreenFlowStateMachine
         }
 
 
-
-        NetworkManager networkManager = NetworkManager.Singleton;
 
         if (networkManager != null && networkManager.IsServer)
 
