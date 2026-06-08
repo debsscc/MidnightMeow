@@ -7,28 +7,31 @@ using UnityEngine;
 /// </summary>
 public static class HubSessionNetworkSpawner
 {
-    private const string PreparationPrefabPath = "Multiplayer/PreparationSessionManager";
-    private const string CharactersPrefabPath = "Multiplayer/CharactersSessionManager";
-
     public static void EnsureSpawned()
     {
         NetworkManager net = NetworkManager.Singleton;
         if (net == null || !net.IsServer)
             return;
 
-        EnsureSpawned<PreparationSessionManager>(PreparationPrefabPath);
-        EnsureSpawned<CharactersSessionManager>(CharactersPrefabPath);
+        HubSessionPrefabCatalog catalog = HubSessionPrefabCatalog.LoadCached();
+        if (catalog == null)
+        {
+            Debug.LogError("[HubSessionNetworkSpawner] HubSessionPrefabCatalog não encontrado em Resources/HubSessionPrefabCatalog.");
+            return;
+        }
+
+        EnsureSpawned<PreparationSessionManager>(catalog.preparationSessionManagerPrefab);
+        EnsureSpawned<CharactersSessionManager>(catalog.charactersSessionManagerPrefab);
     }
 
-    private static void EnsureSpawned<T>(string resourcePath) where T : NetworkBehaviour
+    private static void EnsureSpawned<T>(GameObject prefab) where T : NetworkBehaviour
     {
         if (Object.FindFirstObjectByType<T>() != null)
             return;
 
-        GameObject prefab = Resources.Load<GameObject>(resourcePath);
         if (prefab == null)
         {
-            Debug.LogError($"[HubSessionNetworkSpawner] Prefab não encontrado em Resources: '{resourcePath}'.");
+            Debug.LogError($"[HubSessionNetworkSpawner] Prefab ausente para {typeof(T).Name} no HubSessionPrefabCatalog.");
             return;
         }
 
@@ -38,7 +41,7 @@ public static class HubSessionNetworkSpawner
         NetworkObject networkObject = instance.GetComponent<NetworkObject>();
         if (networkObject == null)
         {
-            Debug.LogError($"[HubSessionNetworkSpawner] Prefab '{resourcePath}' sem NetworkObject.");
+            Debug.LogError($"[HubSessionNetworkSpawner] Prefab '{prefab.name}' sem NetworkObject.");
             Object.Destroy(instance);
             return;
         }

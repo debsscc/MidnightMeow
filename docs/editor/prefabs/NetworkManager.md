@@ -29,6 +29,7 @@
 - [Rato-variants.md](Rato-variants.md) — ratos usados nas ondas
 - [Science.md](Science.md)
 - [EnemyProjectile.md](EnemyProjectile.md)
+- `PreparationSessionManager.prefab` / `CharactersSessionManager.prefab` (hub Preparation ↔ Characters)
 
 ## Crítico
 
