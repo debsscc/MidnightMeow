@@ -72,7 +72,15 @@ public class EnemyTelegraphZoneInstance : MonoBehaviour
         int hits = 0;
         bool usedTravelVisual = false;
 
-        if (!_visualOnly)
+        if (_visualOnly)
+        {
+            if (_strike.resolution == EnemyTelegraphResolution.ProjectileToZone)
+            {
+                yield return PlayTravelVisualOnly(worldPosition, rotationDegrees);
+                usedTravelVisual = true;
+            }
+        }
+        else
         {
             switch (_strike.resolution)
             {
@@ -99,6 +107,44 @@ public class EnemyTelegraphZoneInstance : MonoBehaviour
     {
         SpawnZoneEffect(worldPosition, rotationDegrees);
         return ApplyAreaDamage(worldPosition, rotationDegrees);
+    }
+
+    private IEnumerator PlayTravelVisualOnly(Vector2 worldPosition, float rotationDegrees)
+    {
+        var travelPrefab = GetTravelVisualPrefab();
+        if (travelPrefab == null)
+            yield break;
+
+        Vector2 spawnPos = _attackOrigin != null ? (Vector2)_attackOrigin.position : (Vector2)_instigator.transform.position;
+        Vector2 dir = worldPosition - spawnPos;
+        var rotation = ProjectileAimUtility.RotationFromDirection(
+            dir,
+            ProjectileAimUtility.EnemyRatProjectileForwardOffsetDegrees);
+
+        GameObject travelerGo = Instantiate(travelPrefab, spawnPos, rotation);
+        if (travelerGo == null)
+            yield break;
+
+        DisableTravelProjectilePhysics(travelerGo);
+        ProjectileAimUtility.ApplyRotation(
+            travelerGo.transform,
+            dir,
+            ProjectileAimUtility.EnemyRatProjectileForwardOffsetDegrees);
+
+        var traveler = travelerGo.GetComponent<TelegraphZoneTraveler>();
+        if (traveler == null)
+            traveler = travelerGo.AddComponent<TelegraphZoneTraveler>();
+
+        float speed = _strike.travelSpeed > 0f
+            ? _strike.travelSpeed
+            : (_strike.projectileSpeedOverride > 0f ? _strike.projectileSpeedOverride : 12f);
+
+        traveler.Launch(worldPosition, speed);
+
+        while (!traveler.HasArrived)
+            yield return null;
+
+        Destroy(travelerGo, 0.5f);
     }
 
     private IEnumerator ResolveProjectileToZone(Vector2 worldPosition, float rotationDegrees, Action<int> onComplete)

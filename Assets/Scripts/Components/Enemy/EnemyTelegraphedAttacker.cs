@@ -23,6 +23,7 @@ public class EnemyTelegraphedAttacker : MonoBehaviour
     private EnemyTargetFinder _targetFinder;
     private EnemyMovement _movement;
     private EnemyHitStun _hitStun;
+    private NetworkEnemyController _networkEnemy;
     private NetworkEnemyTelegraphRelay _relay;
     private float _cooldownTimer;
     private bool _isExecuting;
@@ -46,6 +47,18 @@ public class EnemyTelegraphedAttacker : MonoBehaviour
             fallbackVisualStyle = style;
         if (origin != null)
             attackOrigin = origin;
+
+        EnsureTelegraphWiring();
+    }
+
+    public void EnsureTelegraphWiring()
+    {
+        if (telegraphFactory == null)
+            telegraphFactory = GetComponent<EnemyTelegraphZoneFactory>();
+        if (_networkEnemy == null)
+            _networkEnemy = GetComponent<NetworkEnemyController>();
+        if (_relay == null)
+            _relay = GetComponent<NetworkEnemyTelegraphRelay>();
     }
 
     private void Awake()
@@ -53,13 +66,10 @@ public class EnemyTelegraphedAttacker : MonoBehaviour
         _targetFinder = GetComponent<EnemyTargetFinder>();
         _movement = GetComponent<EnemyMovement>();
         _hitStun = GetComponent<EnemyHitStun>();
-        _relay = GetComponent<NetworkEnemyTelegraphRelay>();
+        EnsureTelegraphWiring();
 
         if (attackOrigin == null)
             attackOrigin = transform;
-
-        if (telegraphFactory == null)
-            telegraphFactory = GetComponent<EnemyTelegraphZoneFactory>();
 
         if (disableLegacyAttackComponents && pattern != null)
         {
@@ -113,8 +123,13 @@ public class EnemyTelegraphedAttacker : MonoBehaviour
         var target = _targetFinder.CurrentTarget;
         var style = pattern.visualStyle != null ? pattern.visualStyle : fallbackVisualStyle;
 
-        if (pattern.strikes != null && telegraphFactory != null)
+        EnsureTelegraphWiring();
+
+        if (pattern.strikes != null)
         {
+            if (telegraphFactory == null)
+                telegraphFactory = GetComponent<EnemyTelegraphZoneFactory>();
+
             foreach (var strike in pattern.strikes)
             {
                 if (strike == null) continue;
@@ -129,8 +144,10 @@ public class EnemyTelegraphedAttacker : MonoBehaviour
                     out var worldPos,
                     out var rotation);
 
-                if (_relay != null)
-                    _relay.BroadcastTelegraph(strike, style, worldPos, rotation);
+                BroadcastTelegraphVisualToClients(strike, style, worldPos, rotation);
+
+                if (telegraphFactory == null)
+                    continue;
 
                 var zone = telegraphFactory.Spawn(
                     strike,
@@ -154,6 +171,23 @@ public class EnemyTelegraphedAttacker : MonoBehaviour
             _movement.SetAttackPaused(false);
 
         _isExecuting = false;
+    }
+
+    private void BroadcastTelegraphVisualToClients(
+        TelegraphStrikeDefinition strike,
+        EnemyTelegraphVisualStyle style,
+        Vector2 worldPos,
+        float rotation)
+    {
+        EnsureTelegraphWiring();
+
+        if (_networkEnemy != null)
+        {
+            _networkEnemy.BroadcastTelegraphToClients(strike, style, worldPos, rotation);
+            return;
+        }
+
+        _relay?.BroadcastTelegraph(strike, style, worldPos, rotation);
     }
 
     /// <summary>Dispara um padrão arbitrário (útil para scripts de boss).</summary>

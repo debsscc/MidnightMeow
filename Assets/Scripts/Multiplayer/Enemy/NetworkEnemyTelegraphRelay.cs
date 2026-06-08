@@ -66,6 +66,14 @@ public struct TelegraphClientSnapshot : INetworkSerializable
             snap.OutlineWidth = style.outlineWidth;
             snap.SortingOrder = style.sortingOrder;
         }
+        else
+        {
+            snap.BackgroundColor = new Color(1f, 0.92f, 0.22f, 0.55f);
+            snap.FillColor = new Color(0.9f, 0.12f, 0.08f, 0.85f);
+            snap.OutlineColor = new Color(0.95f, 0.15f, 0.1f, 1f);
+            snap.OutlineWidth = 0.06f;
+            snap.SortingOrder = 50;
+        }
 
         return snap;
     }

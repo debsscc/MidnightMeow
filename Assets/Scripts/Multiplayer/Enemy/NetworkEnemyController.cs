@@ -81,6 +81,8 @@ public class NetworkEnemyController : NetworkBehaviour
         if (_animationHandler != null)
             _animationHandler.enabled = true;
 
+        EnsureTelegraphClientComponents();
+
         if (IsServer)
         {
             SetAIComponentsActive(true);
@@ -460,21 +462,28 @@ public class NetworkEnemyController : NetworkBehaviour
         if (IsServer)
             return;
 
-        EnemyTelegraphZoneFactory factory = GetComponent<EnemyTelegraphZoneFactory>();
-        if (factory == null)
-            return;
-
         TelegraphStrikeDefinition strike = snapshot.ToStrikeDefinition();
         EnemyTelegraphVisualStyle style = snapshot.ToVisualStyle();
 
-        factory.Spawn(
+        EnemyTelegraphZoneFactory.SpawnClientVisual(
             strike,
             style,
             snapshot.WorldPosition,
             snapshot.RotationDegrees,
             gameObject,
-            transform,
-            visualOnly: true);
+            transform);
+    }
+
+    private void EnsureTelegraphClientComponents()
+    {
+        if (GetComponent<EnemyTelegraphZoneFactory>() == null)
+            gameObject.AddComponent<EnemyTelegraphZoneFactory>();
+
+        if (GetComponent<NetworkEnemyTelegraphRelay>() == null)
+            gameObject.AddComponent<NetworkEnemyTelegraphRelay>();
+
+        if (_telegraphedAttacker != null)
+            _telegraphedAttacker.EnsureTelegraphWiring();
     }
 
     private IEnumerator SyncHealthAfterConfigsRoutine()

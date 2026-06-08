@@ -1,8 +1,12 @@
 # Prefabs: Variantes de Rato
 
-Última revisão: 2026-05-22
+Última revisão: 2026-06-08
 
 Variantes compartilham a mesma hierarquia base (`Enemy` / ranged): `NetworkObject`, `NetworkEnemyController`, `EnemyMovement`, `EnemyAttack_Ranged` (ou melee em tipos especiais), `EnemyDropHandler`, etc.
+
+## Telegraph (MP)
+
+Cada `Rato_*` inclui `EnemyTelegraphModuleInstaller` com pattern SO em `Assets/Data/Combat/Patterns/`. Em runtime o instalador adiciona `EnemyTelegraphedAttacker`, `EnemyTelegraphZoneFactory` e `NetworkEnemyTelegraphRelay`; o `ClientRpc` de visual fica em `NetworkEnemyController` (ver [enemy-telegraph-attacks.md](../../combat/enemy-telegraph-attacks.md)).
 
 | Prefab | Caminho | EnemyStats asset |
 |--------|---------|------------------|

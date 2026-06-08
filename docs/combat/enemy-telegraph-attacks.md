@@ -1,6 +1,6 @@
 # Ataques inimigos com telegraph (estilo Hades)
 
-Última revisão: 2026-05-22
+Última revisão: 2026-06-08
 
 ## Objetivo
 
@@ -61,8 +61,10 @@ Exemplo: `EnemyTelegraphFeedbackListener` (áudio).
 ## Multiplayer
 
 - **Servidor:** zona autoritativa (`visualOnly: false`) — aplica dano e spawna projétil NGO.
-- **Clientes:** `NetworkEnemyTelegraphRelay` envia snapshot visual (sem dano).
-- Projéteis: `NetworkEnemyController` define `ProjectileSpawnDelegate` → `NetworkObject.Spawn`.
+- **Clientes:** `EnemyTelegraphedAttacker` chama `NetworkEnemyController.BroadcastTelegraphToClients` → `PlayTelegraphVisualClientRpc` (RPC registrado no prefab, não em componentes adicionados em runtime).
+- **Visual no cliente:** `EnemyTelegraphZoneFactory.SpawnClientVisual` instancia a zona localmente (sem depender de `EnemyTelegraphZoneFactory` no inimigo). Em `ProjectileToZone`, o cliente também reproduz o sprite de voo até a zona (`PlayTravelVisualOnly`).
+- `EnemyTelegraphModuleInstaller` + `NetworkEnemyController.OnNetworkSpawn` garantem factory/relay no inimigo em todos os peers.
+- Projéteis autoritativos: `NetworkEnemyController` define `ProjectileSpawnDelegate` → `NetworkObject.Spawn`.
 
 ## Padrões sugeridos
 
