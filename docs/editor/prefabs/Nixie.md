@@ -1,6 +1,6 @@
 # Prefab: Nixie
 
-Última revisão: 2026-06-07  
+Última revisão: 2026-06-08  
 **Caminho:** `Assets/Prefabs/Characters/Nixie.prefab`  
 **GUID:** `7b87bef79bcba89408883a628d686c78`
 
@@ -34,7 +34,7 @@ Nixie
 | `PlayerInputHandler` | Fire = ataque melee |
 | `PlayerMovement` | |
 | `PlayerAim` | Direção do trapézio |
-| `PlayerAbilityHandler` | `abilitySet` → NixAbilitySet |
+| `PlayerAbilityHandler` | `abilitySet` → NixAbilitySet; `unlockAllAbilitySlotsOnStart: false` (bloqueio por wave) |
 | `NixPushAbilityExecutor` | Habilidade Q |
 | `NixChargeAbilityExecutor` | Habilidade R |
 | `PlayerPassiveHandler` | Kill streak / cleave |

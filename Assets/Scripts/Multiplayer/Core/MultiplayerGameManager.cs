@@ -150,6 +150,29 @@ public class MultiplayerGameManager : NetworkBehaviour
     {
         Time.timeScale = paused ? 0f : 1f;
         GameEvents.InvokePauseChanged(paused);
+
+        GameFlowOrchestrator.Instance?.NotifyPauseChanged(paused);
+
+        GameManager2 localGameManager = FindFirstObjectByType<GameManager2>();
+        if (localGameManager != null)
+        {
+            if (paused)
+                localGameManager.ShowPauseOverlay();
+            else
+                localGameManager.HidePauseOverlay();
+        }
+        else
+        {
+            SceneOverlayController overlay = FindFirstObjectByType<SceneOverlayController>();
+            if (overlay != null)
+            {
+                if (paused)
+                    overlay.OpenOverlay("pause");
+                else
+                    overlay.CloseOverlay("pause");
+            }
+        }
+
         Debug.Log($"[MultiplayerGameManager] Jogo {(paused ? "pausado" : "retomado")} em todos os clientes.");
     }
 
@@ -228,11 +251,12 @@ public class MultiplayerGameManager : NetworkBehaviour
             save.SaveActive();
         }
 
-        GameSessionContext.PendingRouteId = string.Empty;
-        if (GameFlowOrchestrator.Instance != null)
-            GameFlowOrchestrator.Instance.TryRequestRoute(SceneFlowRouteIds.GameplayToPreparation);
+        GameSessionContext.ResetContractRound();
+
+        if (endState == GameState.Victory)
+            ScreenFlowStateMachine.ShowVictoryScreen();
         else
-            ScreenFlowController.Instance?.RequestRoute(SceneFlowRouteIds.GameplayToPreparation);
+            ScreenFlowStateMachine.ShowDefeatScreen();
     }
 }
 

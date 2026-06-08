@@ -1,9 +1,10 @@
 using TMPro;
+using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// Tela de personagens: upgrades por magículas e seleção (quando permitido).
+/// Tela de personagens: consulta (menu/lobby) ou seleção + upgrades (preparação).
 /// </summary>
 [DisallowMultipleComponent]
 public class CharactersScreenController : MonoBehaviour
@@ -13,19 +14,33 @@ public class CharactersScreenController : MonoBehaviour
     [SerializeField] private int upgradeCostPerTier = 2;
 
     [SerializeField] private TMP_Text magiculasText;
-    [SerializeField] private Button nixPanelButton;
-    [SerializeField] private Button coraPanelButton;
-    [SerializeField] private Button skill1Button;
-    [SerializeField] private Button skill2Button;
-    [SerializeField] private Button skill3Button;
-    [SerializeField] private TMP_Text skillDetailText;
-    [SerializeField] private Button upgradeButton;
+    [SerializeField] private Button nixSelectButton;
+    [SerializeField] private Button coraSelectButton;
+    [SerializeField] private Button nixSkill1Button;
+    [SerializeField] private Button nixSkill2Button;
+    [SerializeField] private Button nixSkill3Button;
+    [SerializeField] private Button coraSkill1Button;
+    [SerializeField] private Button coraSkill2Button;
+    [SerializeField] private Button coraSkill3Button;
+    [SerializeField] private GameObject skillPopup;
+    [SerializeField] private TMP_Text skillPopupTitle;
+    [SerializeField] private TMP_Text skillPopupDescription;
+    [SerializeField] private TMP_Text skillPopupLevel;
+    [SerializeField] private Button skillPopupUpgradeButton;
     [SerializeField] private Button backButton;
+    [SerializeField] private TMP_Text feedbackText;
 
     [SerializeField] private bool buildPlaceholderIfMissing = true;
 
-    private LobbyCharacterType _focusedCharacter = LobbyCharacterType.CharacterA;
-    private AbilitySlot _focusedSlot = AbilitySlot.Ability1;
+    private LobbyCharacterType _popupCharacter = LobbyCharacterType.CharacterA;
+    private AbilitySlot _popupSlot = AbilitySlot.Ability1;
+
+    private bool IsBrowseMode =>
+        GameSessionContext.CharactersMode == GameSessionContext.CharactersScreenMode.UpgradesOnly;
+
+    private bool AllowSelection =>
+        GameSessionContext.CharactersMode == GameSessionContext.CharactersScreenMode.SelectionAllowed
+        && GameSessionContext.CharactersOrigin == GameSessionContext.CharactersScreenOrigin.Preparation;
 
     private void Awake()
     {
@@ -34,6 +49,7 @@ public class CharactersScreenController : MonoBehaviour
 
         ResolveAbilitySets();
         WireButtons();
+        HidePopup();
     }
 
     private void ResolveAbilitySets()
@@ -62,6 +78,13 @@ public class CharactersScreenController : MonoBehaviour
         if (save != null)
             save.OnProfileChanged += RefreshView;
 
+        CharactersSessionManager session = CharactersSessionManager.Instance;
+        if (session != null)
+        {
+            session.OnCharactersStateChanged += RefreshView;
+            session.OnCharactersFeedback += ShowFeedback;
+        }
+
         RefreshView();
         ScreenFlowPlaceholderFactory.ApplyMenuCursor();
     }
@@ -71,61 +94,95 @@ public class CharactersScreenController : MonoBehaviour
         SaveProfileStore save = SaveProfileStore.Instance;
         if (save != null)
             save.OnProfileChanged -= RefreshView;
+
+        CharactersSessionManager session = CharactersSessionManager.Instance;
+        if (session != null)
+        {
+            session.OnCharactersStateChanged -= RefreshView;
+            session.OnCharactersFeedback -= ShowFeedback;
+        }
     }
 
     private void WireButtons()
     {
-        if (nixPanelButton != null) nixPanelButton.onClick.AddListener(() => OnCharacterPanelClicked(LobbyCharacterType.CharacterA));
-        if (coraPanelButton != null) coraPanelButton.onClick.AddListener(() => OnCharacterPanelClicked(LobbyCharacterType.CharacterB));
-        if (skill1Button != null) skill1Button.onClick.AddListener(() => FocusSkill(AbilitySlot.Ability1));
-        if (skill2Button != null) skill2Button.onClick.AddListener(() => FocusSkill(AbilitySlot.Ability2));
-        if (skill3Button != null) skill3Button.onClick.AddListener(() => FocusSkill(AbilitySlot.PrimaryAttack));
-        if (upgradeButton != null) upgradeButton.onClick.AddListener(TryUpgrade);
+        if (nixSelectButton != null) nixSelectButton.onClick.AddListener(() => OnCharacterSelect(LobbyCharacterType.CharacterA));
+        if (coraSelectButton != null) coraSelectButton.onClick.AddListener(() => OnCharacterSelect(LobbyCharacterType.CharacterB));
+        if (nixSkill1Button != null) nixSkill1Button.onClick.AddListener(() => OpenSkillPopup(LobbyCharacterType.CharacterA, AbilitySlot.Ability1));
+        if (nixSkill2Button != null) nixSkill2Button.onClick.AddListener(() => OpenSkillPopup(LobbyCharacterType.CharacterA, AbilitySlot.Ability2));
+        if (nixSkill3Button != null) nixSkill3Button.onClick.AddListener(() => OpenSkillPopup(LobbyCharacterType.CharacterA, AbilitySlot.PrimaryAttack));
+        if (coraSkill1Button != null) coraSkill1Button.onClick.AddListener(() => OpenSkillPopup(LobbyCharacterType.CharacterB, AbilitySlot.Ability1));
+        if (coraSkill2Button != null) coraSkill2Button.onClick.AddListener(() => OpenSkillPopup(LobbyCharacterType.CharacterB, AbilitySlot.Ability2));
+        if (coraSkill3Button != null) coraSkill3Button.onClick.AddListener(() => OpenSkillPopup(LobbyCharacterType.CharacterB, AbilitySlot.PrimaryAttack));
+        if (skillPopupUpgradeButton != null) skillPopupUpgradeButton.onClick.AddListener(TryUpgradeFromPopup);
         if (backButton != null) backButton.onClick.AddListener(GoBack);
     }
 
-    private void OnCharacterPanelClicked(LobbyCharacterType type)
+    private void OnCharacterSelect(LobbyCharacterType type)
     {
-        _focusedCharacter = type;
+        if (!AllowSelection)
+            return;
 
-        if (GameSessionContext.CharactersMode == GameSessionContext.CharactersScreenMode.SelectionAllowed)
+        if (GameSessionContext.IsSinglePlayer)
         {
             SaveProfileStore save = SaveProfileStore.Instance;
             save?.SetSelectedCharacter(type);
-            LobbySessionManager lobby = LobbySessionManager.Instance;
-            lobby?.RequestSetCharacterRpc((byte)type);
+            LobbySelectionStore.CaptureSinglePlayer(type);
+            RefreshView();
+            return;
         }
 
+        CharactersSessionManager session = CharactersSessionManager.Instance;
+        session?.RequestSetCharacterRpc((byte)type);
         RefreshView();
     }
 
-    private void FocusSkill(AbilitySlot slot)
+    private void OpenSkillPopup(LobbyCharacterType character, AbilitySlot slot)
     {
-        _focusedSlot = slot;
-        RefreshSkillDetail();
+        _popupCharacter = character;
+        _popupSlot = slot;
+
+        if (skillPopup != null)
+            skillPopup.SetActive(true);
+
+        RefreshPopupContent();
     }
 
-    private void TryUpgrade()
+    private void HidePopup()
     {
+        if (skillPopup != null)
+            skillPopup.SetActive(false);
+    }
+
+    private void TryUpgradeFromPopup()
+    {
+        if (IsBrowseMode)
+            return;
+
         SaveProfileStore save = SaveProfileStore.Instance;
         if (save == null)
             return;
 
-        CharacterSaveData data = save.Active.GetCharacterData(_focusedCharacter);
-        int currentTier = data.GetTierForSlot(_focusedSlot);
+        CharacterSaveData data = save.Active.GetCharacterData(_popupCharacter);
+        int currentTier = data.GetTierForSlot(_popupSlot);
         if (currentTier >= 3)
             return;
 
         if (!save.TrySpendMagiculas(upgradeCostPerTier))
+        {
+            ShowFeedback("Magículas insuficientes.");
             return;
+        }
 
-        data.SetTierForSlot(_focusedSlot, currentTier + 1);
+        data.SetTierForSlot(_popupSlot, currentTier + 1);
         save.SaveActive();
+        RefreshPopupContent();
         RefreshView();
     }
 
     private void GoBack()
     {
+        HidePopup();
+
         string route = string.IsNullOrEmpty(GameSessionContext.ReturnRouteId)
             ? SceneFlowRouteIds.ReturnToMenu
             : GameSessionContext.ReturnRouteId;
@@ -136,50 +193,138 @@ public class CharactersScreenController : MonoBehaviour
             ScreenFlowController.Instance?.RequestRoute(route);
     }
 
+    private void ShowFeedback(string message)
+    {
+        if (feedbackText != null)
+            feedbackText.text = message;
+    }
+
     private void RefreshView()
     {
-        SaveProfileStore save = SaveProfileStore.Instance;
+        bool browse = IsBrowseMode;
+
         if (magiculasText != null)
-            magiculasText.text = $"Magículas: {save?.Active?.magiculas ?? 0}";
+            magiculasText.gameObject.SetActive(!browse);
 
-        HighlightCharacterPanels();
-        RefreshSkillDetail();
+        if (!browse)
+        {
+            SaveProfileStore save = SaveProfileStore.Instance;
+            if (magiculasText != null)
+                magiculasText.text = $"{save?.Active?.magiculas ?? 0}";
+        }
+
+        RefreshCharacterButtons();
+        UpdateSkillButtonLabels();
     }
 
-    private void HighlightCharacterPanels()
+    private void RefreshCharacterButtons()
     {
-        SetPanelHighlight(nixPanelButton, _focusedCharacter == LobbyCharacterType.CharacterA);
-        SetPanelHighlight(coraPanelButton, _focusedCharacter == LobbyCharacterType.CharacterB);
+        LobbyCharacterType local = ResolveLocalSelection();
+        bool allowSelect = AllowSelection;
+
+        if (nixSelectButton != null)
+        {
+            nixSelectButton.interactable = allowSelect && !IsCharacterBlocked(LobbyCharacterType.CharacterA);
+            SetPanelHighlight(nixSelectButton, local == LobbyCharacterType.CharacterA);
+        }
+
+        if (coraSelectButton != null)
+        {
+            coraSelectButton.interactable = allowSelect && !IsCharacterBlocked(LobbyCharacterType.CharacterB);
+            SetPanelHighlight(coraSelectButton, local == LobbyCharacterType.CharacterB);
+        }
     }
 
-    private static void SetPanelHighlight(Button button, bool selected)
+    private bool IsCharacterBlocked(LobbyCharacterType type)
+    {
+        if (!AllowSelection || GameSessionContext.IsSinglePlayer)
+            return false;
+
+        CharactersSessionManager session = CharactersSessionManager.Instance;
+        if (session == null)
+            return false;
+
+        ulong localId = NetworkManager.Singleton != null ? NetworkManager.Singleton.LocalClientId : 0;
+        return session.IsCharacterTakenByOther(localId, type);
+    }
+
+    private LobbyCharacterType ResolveLocalSelection()
+    {
+        if (GameSessionContext.IsSinglePlayer)
+        {
+            if (LobbySelectionStore.TryGetCharacter(0, out LobbyCharacterType selected))
+                return selected;
+            return LobbyCharacterType.Default;
+        }
+
+        CharactersSessionManager session = CharactersSessionManager.Instance;
+        if (session != null)
+            return session.GetLocalCharacterType();
+
+        PreparationSessionManager prep = PreparationSessionManager.Instance;
+        return prep != null ? prep.GetLocalCharacterType() : LobbyCharacterType.Default;
+    }
+
+    private void UpdateSkillButtonLabels()
+    {
+        SetSkillLabel(nixSkill1Button, LobbyCharacterType.CharacterA, AbilitySlot.Ability1);
+        SetSkillLabel(nixSkill2Button, LobbyCharacterType.CharacterA, AbilitySlot.Ability2);
+        SetSkillLabel(nixSkill3Button, LobbyCharacterType.CharacterA, AbilitySlot.PrimaryAttack);
+        SetSkillLabel(coraSkill1Button, LobbyCharacterType.CharacterB, AbilitySlot.Ability1);
+        SetSkillLabel(coraSkill2Button, LobbyCharacterType.CharacterB, AbilitySlot.Ability2);
+        SetSkillLabel(coraSkill3Button, LobbyCharacterType.CharacterB, AbilitySlot.PrimaryAttack);
+    }
+
+    private void SetSkillLabel(Button button, LobbyCharacterType character, AbilitySlot slot)
     {
         if (button == null)
             return;
 
-        Image image = button.GetComponent<Image>();
-        if (image != null)
-            image.color = selected ? new Color(0.75f, 0.15f, 0.15f, 0.95f) : new Color(0.18f, 0.18f, 0.22f, 0.95f);
-    }
-
-    private void RefreshSkillDetail()
-    {
-        if (skillDetailText == null)
+        TMP_Text label = button.GetComponentInChildren<TMP_Text>();
+        if (label == null)
             return;
 
+        CharacterAbilitySet set = character == LobbyCharacterType.CharacterB ? coraAbilitySet : nixAbilitySet;
+        string name = ResolveSkillName(set, slot);
+
+        if (IsBrowseMode)
+        {
+            label.text = name;
+            return;
+        }
+
         SaveProfileStore save = SaveProfileStore.Instance;
-        CharacterSaveData data = save?.Active?.GetCharacterData(_focusedCharacter) ?? new CharacterSaveData();
-        int tier = data.GetTierForSlot(_focusedSlot);
+        int tier = save?.Active?.GetCharacterData(character).GetTierForSlot(slot) ?? 0;
+        label.text = $"{name} (Nv.{tier})";
+    }
 
-        CharacterAbilitySet set = _focusedCharacter == LobbyCharacterType.CharacterB ? coraAbilitySet : nixAbilitySet;
-        string skillName = ResolveSkillName(set, _focusedSlot);
-        string description = ResolveSkillDescription(set, _focusedSlot);
+    private void RefreshPopupContent()
+    {
+        CharacterAbilitySet set = _popupCharacter == LobbyCharacterType.CharacterB ? coraAbilitySet : nixAbilitySet;
+        string skillName = ResolveSkillName(set, _popupSlot);
+        string description = ResolveSkillDescription(set, _popupSlot);
 
-        skillDetailText.text =
-            $"{skillName}\nNível: {tier}/3\n\n{description}\n\nUpgrade ({upgradeCostPerTier} magículas)";
+        if (skillPopupTitle != null)
+            skillPopupTitle.text = skillName;
 
-        if (upgradeButton != null)
-            upgradeButton.interactable = tier < 3 && (save?.Active?.magiculas ?? 0) >= upgradeCostPerTier;
+        if (skillPopupDescription != null)
+            skillPopupDescription.text = description;
+
+        bool browse = IsBrowseMode;
+        SaveProfileStore save = SaveProfileStore.Instance;
+        int tier = browse ? 0 : save?.Active?.GetCharacterData(_popupCharacter).GetTierForSlot(_popupSlot) ?? 0;
+
+        if (skillPopupLevel != null)
+            skillPopupLevel.text = browse ? "Modo consulta" : $"Nível: {tier}/3";
+
+        if (skillPopupUpgradeButton != null)
+        {
+            skillPopupUpgradeButton.gameObject.SetActive(!browse);
+            skillPopupUpgradeButton.interactable = !browse && tier < 3 && (save?.Active?.magiculas ?? 0) >= upgradeCostPerTier;
+            TMP_Text upgradeLabel = skillPopupUpgradeButton.GetComponentInChildren<TMP_Text>();
+            if (upgradeLabel != null)
+                upgradeLabel.text = $"Upgrade ({upgradeCostPerTier} magículas)";
+        }
     }
 
     private static string ResolveSkillName(CharacterAbilitySet set, AbilitySlot slot)
@@ -214,33 +359,69 @@ public class CharactersScreenController : MonoBehaviour
         return $"Alcance: {tier.range:0.##} | CD: {tier.cooldown:0.##}s";
     }
 
+    private static void SetPanelHighlight(Button button, bool selected)
+    {
+        if (button == null)
+            return;
+
+        Image image = button.GetComponent<Image>();
+        if (image != null)
+            image.color = selected ? new Color(0.75f, 0.15f, 0.15f, 0.95f) : new Color(0.18f, 0.18f, 0.22f, 0.95f);
+    }
+
     private void BuildPlaceholderUI()
     {
         Canvas canvas = ScreenFlowPlaceholderFactory.EnsureCanvas(transform);
         GameObject panel = ScreenFlowPlaceholderFactory.CreatePanel(canvas.transform, "CharactersPanel", new Color(0.05f, 0.05f, 0.08f, 0.96f));
 
-        magiculasText = ScreenFlowPlaceholderFactory.CreateText(panel.transform, "Magículas: 0", 28,
+        magiculasText = ScreenFlowPlaceholderFactory.CreateText(panel.transform, "0", 32,
             TextAlignmentOptions.TopRight, Color.white,
-            new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-360f, -80f), new Vector2(-40f, -20f));
+            new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-28f, -20f), new Vector2(-8f, -8f));
 
-        nixPanelButton = ScreenFlowPlaceholderFactory.CreateButton(panel.transform, "Nix",
-            new Vector2(0.2f, 0.65f), new Vector2(0.2f, 0.65f), new Vector2(-160f, -120f), new Vector2(160f, 120f));
-        coraPanelButton = ScreenFlowPlaceholderFactory.CreateButton(panel.transform, "Cora",
-            new Vector2(0.8f, 0.65f), new Vector2(0.8f, 0.65f), new Vector2(-160f, -120f), new Vector2(160f, 120f));
+        nixSelectButton = ScreenFlowPlaceholderFactory.CreateButton(panel.transform, "Nixie",
+            new Vector2(0.2f, 0.72f), new Vector2(0.2f, 0.72f), new Vector2(-160f, -50f), new Vector2(160f, 50f));
+        coraSelectButton = ScreenFlowPlaceholderFactory.CreateButton(panel.transform, "Cora",
+            new Vector2(0.8f, 0.72f), new Vector2(0.8f, 0.72f), new Vector2(-160f, -50f), new Vector2(160f, 50f));
 
-        skill1Button = ScreenFlowPlaceholderFactory.CreateButton(panel.transform, "Skill 1",
-            new Vector2(0.2f, 0.35f), new Vector2(0.2f, 0.35f), new Vector2(-120f, -30f), new Vector2(120f, 30f));
-        skill2Button = ScreenFlowPlaceholderFactory.CreateButton(panel.transform, "Skill 2",
-            new Vector2(0.2f, 0.22f), new Vector2(0.2f, 0.22f), new Vector2(-120f, -30f), new Vector2(120f, 30f));
-        skill3Button = ScreenFlowPlaceholderFactory.CreateButton(panel.transform, "Skill 3",
-            new Vector2(0.2f, 0.09f), new Vector2(0.2f, 0.09f), new Vector2(-120f, -30f), new Vector2(120f, 30f));
+        nixSkill1Button = ScreenFlowPlaceholderFactory.CreateButton(panel.transform, "Nix S1",
+            new Vector2(0.2f, 0.52f), new Vector2(0.2f, 0.52f), new Vector2(-130f, -28f), new Vector2(130f, 28f));
+        nixSkill2Button = ScreenFlowPlaceholderFactory.CreateButton(panel.transform, "Nix S2",
+            new Vector2(0.2f, 0.4f), new Vector2(0.2f, 0.4f), new Vector2(-130f, -28f), new Vector2(130f, 28f));
+        nixSkill3Button = ScreenFlowPlaceholderFactory.CreateButton(panel.transform, "Nix S3",
+            new Vector2(0.2f, 0.28f), new Vector2(0.2f, 0.28f), new Vector2(-130f, -28f), new Vector2(130f, 28f));
 
-        skillDetailText = ScreenFlowPlaceholderFactory.CreateText(panel.transform, "Selecione uma skill.", 22,
+        coraSkill1Button = ScreenFlowPlaceholderFactory.CreateButton(panel.transform, "Cora S1",
+            new Vector2(0.8f, 0.52f), new Vector2(0.8f, 0.52f), new Vector2(-130f, -28f), new Vector2(130f, 28f));
+        coraSkill2Button = ScreenFlowPlaceholderFactory.CreateButton(panel.transform, "Cora S2",
+            new Vector2(0.8f, 0.4f), new Vector2(0.8f, 0.4f), new Vector2(-130f, -28f), new Vector2(130f, 28f));
+        coraSkill3Button = ScreenFlowPlaceholderFactory.CreateButton(panel.transform, "Cora S3",
+            new Vector2(0.8f, 0.28f), new Vector2(0.8f, 0.28f), new Vector2(-130f, -28f), new Vector2(130f, 28f));
+
+        skillPopup = new GameObject("SkillPopup", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+        skillPopup.transform.SetParent(panel.transform, false);
+        RectTransform popupRt = skillPopup.GetComponent<RectTransform>();
+        popupRt.anchorMin = new Vector2(0.5f, 0.5f);
+        popupRt.anchorMax = new Vector2(0.5f, 0.5f);
+        popupRt.offsetMin = new Vector2(-280f, -200f);
+        popupRt.offsetMax = new Vector2(280f, 200f);
+        skillPopup.GetComponent<Image>().color = new Color(0.1f, 0.1f, 0.14f, 0.98f);
+
+        skillPopupTitle = ScreenFlowPlaceholderFactory.CreateText(skillPopup.transform, "Skill", 32,
+            TextAlignmentOptions.Top, Color.white,
+            new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(20f, -70f), new Vector2(-20f, -10f));
+        skillPopupDescription = ScreenFlowPlaceholderFactory.CreateText(skillPopup.transform, "Descrição", 22,
             TextAlignmentOptions.TopLeft, Color.white,
-            new Vector2(0.55f, 0.15f), new Vector2(0.95f, 0.85f), Vector2.zero, Vector2.zero);
+            new Vector2(0f, 0.35f), new Vector2(1f, 0.85f), new Vector2(20f, 0f), new Vector2(-20f, 0f));
+        skillPopupLevel = ScreenFlowPlaceholderFactory.CreateText(skillPopup.transform, "Nível", 22,
+            TextAlignmentOptions.BottomLeft, Color.white,
+            new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(20f, 60f), new Vector2(-20f, 100f));
+        skillPopupUpgradeButton = ScreenFlowPlaceholderFactory.CreateButton(skillPopup.transform, "Upgrade",
+            new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(-140f, 20f), new Vector2(140f, 70f));
 
-        upgradeButton = ScreenFlowPlaceholderFactory.CreateButton(panel.transform, "Upgrade",
-            new Vector2(0.75f, 0.08f), new Vector2(0.75f, 0.08f), new Vector2(-140f, -35f), new Vector2(140f, 35f));
+        feedbackText = ScreenFlowPlaceholderFactory.CreateText(panel.transform, "", 22,
+            TextAlignmentOptions.Bottom, new Color(0.9f, 0.75f, 0.75f),
+            new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(-300f, 110f), new Vector2(300f, 150f));
+
         backButton = ScreenFlowPlaceholderFactory.CreateButton(panel.transform, "Voltar",
             new Vector2(0.08f, 0.08f), new Vector2(0.08f, 0.08f), new Vector2(-100f, -35f), new Vector2(100f, 35f));
     }

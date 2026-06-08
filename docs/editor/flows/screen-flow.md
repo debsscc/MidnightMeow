@@ -1,10 +1,26 @@
 # Fluxo de telas unificado
 
-Última revisão: 2026-06-07
+Última revisão: 2026-06-08
 
-> Requisitos completos: [screen-flow.md](../screen-flow.md)
+> Requisitos completos: [screen-flow.md](../screen-flow.md)  
+> Diagrama visual: [screen-flow-diagram.md](./screen-flow-diagram.md)  
+> Referências visuais: [docs/reference_imgs/](../../reference_imgs/)
 
-## Visão geral
+## Cenas e responsabilidades
+
+| Cena | Responsabilidade |
+|------|------------------|
+| **Menu2** | Novo jogo, continuar (saves de host), opções, sair |
+| **Lobby** | Hostear, entrar, jogar solo, consultar personagens |
+| **Loading1** | Progresso de carregamento (Lobby → Preparação) |
+| **Preparation** | Contrato + personagem + pronto (sem ordem obrigatória) |
+| **Characters** | Skills/upgrades (em save) ou consulta (menu/lobby) |
+| **Loading2** | Progresso de carregamento (Preparação → Gameplay) |
+| **Fase-1** | Gameplay principal |
+| **VictoryScene** | Vitória — continuar ou sair |
+| **GameOver** | Derrota — continuar ou sair |
+
+## Visão geral (arquitetura)
 
 | Responsabilidade | Componente / asset |
 |------------------|-------------------|
@@ -13,24 +29,31 @@
 | Persistência (magículas, tiers, host) | `SaveProfileStore` + `GameSaveData` |
 | Contexto volátil da sessão | `GameSessionContext` |
 | **Overlay** (pause) | `SceneOverlayController` + `PauseMenuActions` |
-| Bootstrap por cena | `ScreenFlowSceneBootstrap` (auto via `RuntimeInitializeOnLoadMethod`) |
+| Bootstrap por cena | `ScreenFlowSceneBootstrap` |
 | UI placeholder 1920×1080 | `ScreenFlowPlaceholderFactory` |
 
-## Fluxo completo (implementado)
+## Fluxo completo
 
 ```
-BootstrapScene → Menu2 (MainMenuController)
-  ├─ Novo Jogo → Lobby (LobbyFlowController: mode_select)
-  │    ├─ Hostear → host_waiting → [2 jogadores] → Loading1
-  │    ├─ Entrar → client_join → [conectou] → (host carrega) Loading1
-  │    └─ Personagens → Characters (upgrades only) → return_lobby
-  └─ Continuar (host + save) → Lobby (auto-host) → host_waiting → ...
+BootstrapScene → Menu2
+  ├─ Novo Jogo → Lobby
+  ├─ Continuar (se host) → Painel Saves → Lobby (auto-host)
+  ├─ Opções → Painel Opções (na mesma cena)
+  └─ Personagens (via Lobby) → Characters (somente consulta)
 
-Loading1 → Preparation (PreparationScreenController + PreparationSessionManager)
-  ├─ Escolher Personagem → Characters (selection) → preparation_hub
-  └─ [2× Pronto] → Loading2 → Fase-1 (gameplay)
+Lobby
+  ├─ Hostear / Entrar → sincronização (2 jogadores) → Loading1 → Preparation
+  ├─ Jogar Solo → Loading1 → Preparation
+  └─ Personagens → Characters (consulta) → Voltar ao Lobby
 
-Fase-1 → [vitória/derrota] → Preparation (loop)
+Preparation
+  ├─ Escolher Personagem → Characters (seleção + upgrades) → Voltar
+  ├─ Contrato 1 (ativo) / 2 e 3 (bloqueados)
+  └─ [contrato + personagem + todos prontos] → Loading2 → Fase-1
+
+Fase-1 → [vitória/derrota] → VictoryScene / GameOver
+  ├─ Continuar → Preparation (mantém sincronização MP)
+  └─ Sair → Menu2 (desconecta rede)
 ```
 
 ## Rotas (`Assets/Data/UI/ScreenFlow/`)
@@ -39,38 +62,60 @@ Fase-1 → [vitória/derrota] → Preparation (loop)
 |----|------|------|
 | `bootstrap_menu` | Menu2 | Single |
 | `menu_lobby` | Lobby | Single + loading |
-| `lobby_loading1` | Loading1 | **NetcodeHost** |
-| `loading1_preparation` | Preparation | **NetcodeHost** |
+| `lobby_loading1` | Loading1 | NetcodeHost / Single |
+| `loading1_preparation` | Preparation | NetcodeHost / Single |
 | `lobby_characters` | Characters | Single |
+| `preparation_characters` | Characters | NetcodeHost / Single |
 | `return_lobby` | Lobby | Single |
-| `preparation_characters` | Characters | Single |
-| `preparation_hub` | Preparation | Single |
-| `preparation_loading2` | Loading2 | **NetcodeHost** |
-| `loading2_gameplay` | Fase-1 | **NetcodeHost** |
-| `gameplay_preparation` | Preparation | **NetcodeHost** |
+| `preparation_loading2` | Loading2 | NetcodeHost / Single |
+| `loading2_gameplay` | Fase-1 | NetcodeHost / Single |
+| `gameplay_victory` | VictoryScene | NetcodeHost / Single |
+| `gameplay_defeat` | GameOver | NetcodeHost / Single |
+| `victory_preparation` | Preparation | NetcodeHost / Single |
+| `defeat_preparation` | Preparation | NetcodeHost / Single |
 | `return_menu` | Menu2 | Single |
+
+## Regras de negócio
+
+### Menu
+- **Continuar** visível apenas se existir save onde `wasHost == true`.
+- **Continuar** abre painel de saves (partidas como host), não vai direto ao lobby.
+- Botões no canto inferior esquerdo (ref. `menu.png`).
+
+### Lobby
+- **Personagens**: consulta de skills, sem níveis nem compras.
+- **Multiplayer**: ao conectar o 2º jogador, transição automática para Loading1.
+- **Solo**: botão dedicado, sem exigir sincronização.
+
+### Preparação
+- Sem ordem obrigatória entre contrato, personagem e pronto.
+- Mensagens de erro ao apertar pronto sem requisitos (ex.: personagem, contrato, outro jogador).
+- Hover no contrato exibe tooltip (ref. `hover_contract.png`).
+
+### Personagens
+- **Menu/Lobby**: somente descrição das skills (modo `UpgradesOnly`).
+- **Preparação**: seleção sincronizada (Nix/Cora exclusivos) + upgrades com magículas.
+- 6 botões de skill (3 Nix + 3 Cora); popup de upgrade (ref. `levelupskill.png`).
+
+### Vitória / Derrota
+- Botão **Continuar** → Preparation (reset de rodada, mantém MP).
+- Botão **Sair** → Menu2 + desconexão.
 
 ## Persistência
 
-- Arquivo: `{persistentDataPath}/MidnightMeow/saves/save_slot_0.json`
-- **Continuar** habilitado só se `wasHost == true` no save
-- Magículas e tiers por personagem (Nix/Cora) via `CharacterSaveData`
+- Arquivo: `{persistentDataPath}/MidnightMeow/saves/save_slot_{N}.json` (N = 0..2)
+- Magículas e tiers por personagem via `CharacterSaveData`
 
 ## Contratos
 
-SOs em `Assets/Data/Contracts/Contract_1..3.asset` (`ContractDefinition`).
-
-## Pause
-
-- Single-player / fase: `GameManager2` + `GameFlowOrchestrator.RequestPause/Resume`
-- Multiplayer: `MultiplayerGameManager.RequestPauseRpc/RequestResumeRpc`
-- Prefab `PauseMenu` → `PauseMenuActions` (substitui classe `Buttons` removida)
+| Asset | Status | Missão |
+|-------|--------|--------|
+| `Contract_1.asset` | Ativo | Sobreviva 3 ondas → `Fase-1` |
+| Contrato 2 | Bloqueado | — |
+| Contrato 3 | Bloqueado | — |
 
 ## Para artistas
 
-Placeholders usam:
 - Canvas Scaler **1920×1080**, `matchWidthOrHeight = 0.5`
-- Retângulos coloridos para Nix (azul) e Cora (vermelho) na loading
-- `CursorManager` sprites existentes via `ScreenFlowPlaceholderFactory.ApplyMenuCursor()`
-
-Substituir placeholders mantendo **ancoragens** dos botões gerados pelos controllers.
+- Placeholders em `ScreenFlowPlaceholderFactory`; substituir mantendo **ancoragens**
+- Refs: `menu.png`, `hostear_lobby.png`, `entrar_lobby.png`, `prep_screen.png`, `contract.png`, `select_char.png`, `char_from_lobby.png`

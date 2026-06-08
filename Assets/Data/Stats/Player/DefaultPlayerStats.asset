@@ -28,6 +28,6 @@ MonoBehaviour:
   damageUpgradeLevel: 0
   fireRateUpgradeLevel: 0
   healthUpgradeLevel: 0
-  dashDuration: 0.5
-  dashSpeed: 20
+  dashDuration: 0.35
+  dashSpeed: 18
   dashCooldown: 1

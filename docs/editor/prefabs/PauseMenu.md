@@ -1,6 +1,6 @@
 # Prefab: PauseMenu
 
-Última revisão: 2026-06-07  
+Última revisão: 2026-06-08  
 **Caminho:** `Assets/Prefabs/UI/PauseMenu.prefab`  
 **GUID:** `2542914e2b637bb4b871cad284433d66`
 
@@ -31,6 +31,7 @@ Menu de pausa (UI). Usado como **nested prefab** em `Lobby.prefab` e em cenas de
 | Botão Replay | OnClick → `PauseMenuActions.ReloadCurrentScene` | |
 | Botão Quit | OnClick → `PauseMenuActions.QuitGame` | |
 | Referências em cena | `SceneOverlayController` overlay `"pause"` | |
+| MP pause UI | `MultiplayerGameManager.ApplyPauseClientRpc` → `GameManager2.ShowPauseOverlay` | |
 
 ## Referenciado por
 

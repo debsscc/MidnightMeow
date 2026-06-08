@@ -131,8 +131,6 @@ public class GameFlowOrchestrator : MonoBehaviour
             if (mp != null)
             {
                 mp.RequestPauseRpc();
-                IsPauseActive = true;
-                OnPauseOrchestrated?.Invoke(true);
                 return;
             }
         }
@@ -166,8 +164,6 @@ public class GameFlowOrchestrator : MonoBehaviour
             if (mp != null)
             {
                 mp.RequestResumeRpc();
-                IsPauseActive = false;
-                OnPauseOrchestrated?.Invoke(false);
                 return;
             }
         }

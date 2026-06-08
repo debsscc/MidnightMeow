@@ -319,18 +319,53 @@ public class PlayerSpawnManager : NetworkBehaviour
             selectedType = playerState.CharacterType;
         }
 
-        if (characterPrefabs != null)
-        {
-            for (int i = 0; i < characterPrefabs.Length; i++)
-            {
-                if (characterPrefabs[i].characterType == selectedType && characterPrefabs[i].prefab != null)
-                {
-                    return characterPrefabs[i].prefab;
-                }
-            }
-        }
+        GameObject resolved = ResolveCharacterPrefab(selectedType);
+        if (resolved != null)
+            return resolved;
 
         return playerNetworkPrefab;
+    }
+
+    private GameObject ResolveCharacterPrefab(LobbyCharacterType selectedType)
+    {
+        if (selectedType == LobbyCharacterType.Default || characterPrefabs == null)
+            return null;
+
+        GameObject mappedPrefab = null;
+        for (int i = 0; i < characterPrefabs.Length; i++)
+        {
+            if (characterPrefabs[i].characterType == selectedType)
+                mappedPrefab = characterPrefabs[i].prefab;
+        }
+
+        if (mappedPrefab != null && PrefabMatchesCharacterType(mappedPrefab, selectedType))
+            return mappedPrefab;
+
+        for (int i = 0; i < characterPrefabs.Length; i++)
+        {
+            GameObject candidate = characterPrefabs[i].prefab;
+            if (candidate != null && PrefabMatchesCharacterType(candidate, selectedType))
+                return candidate;
+        }
+
+        return mappedPrefab;
+    }
+
+    private static bool PrefabMatchesCharacterType(GameObject prefab, LobbyCharacterType type)
+    {
+        if (prefab == null)
+            return false;
+
+        string name = prefab.name.ToLowerInvariant();
+        bool isNix = name.Contains("nix");
+        bool isCora = name.Contains("cora");
+
+        return type switch
+        {
+            LobbyCharacterType.CharacterA => isNix && !isCora,
+            LobbyCharacterType.CharacterB => isCora && !isNix,
+            _ => false
+        };
     }
 
     // ── API Pública ────────────────────────────────────────────────────────────

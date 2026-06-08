@@ -7,6 +7,8 @@ public class MeleeCombatStats : ScriptableObject
     public float damage = 2f;
     public float attackCooldown = 0.45f;
     public float attackRange = 1.8f;
+    [Tooltip("Desloca a origem do ataque à frente do personagem, na direção do mouse.")]
+    public float attackOriginForwardOffset = 0.55f;
     public float windupDelay = 0.08f;
 
     [Header("Trapézio (base perto do jogador → base longe)")]

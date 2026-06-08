@@ -71,6 +71,41 @@ public class ConnectionManager : MonoBehaviour
     // ── Host ───────────────────────────────────────────────────────────────────
 
     /// <summary>
+    /// Host local sem Relay — usado no modo solo (1 jogador) antes de entrar em Fase-1.
+    /// </summary>
+    public bool TryStartLocalSoloHost()
+    {
+        if (NetworkManager.Singleton == null)
+        {
+            Debug.LogError("[ConnectionManager] TryStartLocalSoloHost: NetworkManager ausente.");
+            return false;
+        }
+
+        if (NetworkManager.Singleton.IsServer)
+            return true;
+
+        if (NetworkManager.Singleton.IsListening)
+        {
+            Debug.Log("[ConnectionManager] TryStartLocalSoloHost: encerrando sessão anterior...");
+            NetworkManager.Singleton.Shutdown();
+            UnsubscribeNetworkManagerEvents();
+        }
+
+        SubscribeNetworkManagerEvents();
+        bool started = NetworkManager.Singleton.StartHost();
+        if (!started)
+        {
+            UnsubscribeNetworkManagerEvents();
+            Debug.LogError("[ConnectionManager] TryStartLocalSoloHost: StartHost() falhou.");
+            return false;
+        }
+
+        Debug.Log("[ConnectionManager] Host local (solo) iniciado.");
+        OnHostStarted?.Invoke();
+        return true;
+    }
+
+    /// <summary>
     /// Inicia uma sessão como host. Cria alocação Relay, configura o transporte e
     /// inicia o NetworkManager como host.
     /// </summary>

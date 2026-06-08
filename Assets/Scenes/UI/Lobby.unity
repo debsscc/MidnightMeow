@@ -256,6 +256,17 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 57295070}
   m_CullTransparentMesh: 1
+--- !u!114 &187053599 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 8488530722324404796, guid: 24e00425b52f50342a9d45ab5cc1b682, type: 3}
+  m_PrefabInstance: {fileID: 366994434}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TextMeshProUGUI
 --- !u!1001 &215497816
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -511,15 +522,15 @@ RectTransform:
   m_PrefabAsset: {fileID: 0}
 --- !u!114 &366994436 stripped
 MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 5963882004212376461, guid: 24e00425b52f50342a9d45ab5cc1b682, type: 3}
+  m_CorrespondingSourceObject: {fileID: 7304005194890408479, guid: 24e00425b52f50342a9d45ab5cc1b682, type: 3}
   m_PrefabInstance: {fileID: 366994434}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TextMeshProUGUI
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Button
 --- !u!114 &366994437 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 1029120192823193972, guid: 24e00425b52f50342a9d45ab5cc1b682, type: 3}
@@ -701,7 +712,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &375403294
 RectTransform:
   m_ObjectHideFlags: 0
@@ -869,6 +880,52 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 92c941a1c37412f4c89d5695ec49f2aa, type: 3}
+--- !u!1 &866924031
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 866924033}
+  - component: {fileID: 866924032}
+  m_Layer: 0
+  m_Name: ---- ScreenFlow ----
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &866924032
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 866924031}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73f77cb97fb10564dba4b65951147cf2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ScreenFlowSceneBootstrap
+  ensureEventSystem: 1
+  ensurePersistenceServices: 1
+--- !u!4 &866924033
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 866924031}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &909709460
 GameObject:
   m_ObjectHideFlags: 0
@@ -1026,7 +1083,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &953509572
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1237,7 +1294,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1041532671
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1670,8 +1727,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LobbySessionManager
   ShowTopMostFoldoutHeaderGroup: 1
-  gameplaySceneName: Fase-1
-  minimumPlayersToStart: 1
+  minimumPlayersToStart: 2
 --- !u!114 &1623835280
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1686,16 +1742,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::LobbySceneUIController
   hostButton: {fileID: 366994444}
   joinButton: {fileID: 366994443}
+  soloButton: {fileID: 0}
+  charactersButton: {fileID: 366994436}
   joinCodeInput: {fileID: 366994442}
   joinCodeText: {fileID: 366994438}
-  statusText: {fileID: 366994436}
+  statusText: {fileID: 187053599}
   playersText: {fileID: 366994437}
   copyCodeButton: {fileID: 366994441}
   disconnectButton: {fileID: 366994440}
   startGameButton: {fileID: 366994439}
-  selectCharacterAButton: {fileID: 375403295}
-  selectCharacterBButton: {fileID: 953509573}
-  readyToggle: {fileID: 1041532672}
+  requiredPlayersForLoading: 2
+  autoResolveMissingRefs: 1
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -1707,3 +1764,4 @@ SceneRoots:
   - {fileID: 1623835277}
   - {fileID: 366994434}
   - {fileID: 1457562994}
+  - {fileID: 866924033}

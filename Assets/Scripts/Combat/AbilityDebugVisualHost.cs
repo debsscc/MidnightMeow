@@ -116,11 +116,11 @@ public class AbilityDebugVisualHost : MonoBehaviour
         if (snapshot.isCircle)
         {
             float diameter = snapshot.range * 2f;
-            Vector2 center = snapshot.abilityType is CharacterAbilityType.CoraBarrier or CharacterAbilityType.CoraPool
+            Vector2 circleCenter = snapshot.abilityType is CharacterAbilityType.CoraBarrier or CharacterAbilityType.CoraPool
                 ? snapshot.placement
                 : snapshot.origin;
 
-            zoneTransform.position = new Vector3(center.x, center.y, zoneTransform.position.z);
+            zoneTransform.position = new Vector3(circleCenter.x, circleCenter.y, zoneTransform.position.z);
             zoneTransform.rotation = Quaternion.identity;
             zoneTransform.localScale = new Vector3(diameter, diameter, 1f);
             return;
@@ -129,8 +129,9 @@ public class AbilityDebugVisualHost : MonoBehaviour
         float depth = snapshot.range;
         float width = Mathf.Max(0.2f, snapshot.areaWidth);
         float angle = Mathf.Atan2(forward.y, forward.x) * Mathf.Rad2Deg - 90f;
+        Vector2 center = snapshot.origin + forward * (depth * 0.5f);
 
-        zoneTransform.position = new Vector3(snapshot.origin.x, snapshot.origin.y, zoneTransform.position.z);
+        zoneTransform.position = new Vector3(center.x, center.y, zoneTransform.position.z);
         zoneTransform.rotation = Quaternion.Euler(0f, 0f, angle);
         zoneTransform.localScale = new Vector3(width, depth, 1f);
     }

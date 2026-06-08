@@ -1,6 +1,6 @@
 # Implementação — Habilidades de Personagem
 
-Última revisão: 2026-06-07
+Última revisão: 2026-06-08
 
 ## Arquitetura
 
@@ -53,7 +53,10 @@
 - Shader `MidnightMeow/AbilityZoneFill` em `Assets/Art/Shaders/AbilityZoneFill.shader`
 - `AbilityDebugVisualHost` instalado via `PlayerGameplayModuleInstaller` nos prefabs Nixie/Cora
 - Gizmos ligados por padrão (`drawDebugGizmos = true`) em dash, executores e melee debug
-- Sandbox: `unlockAllAbilitySlotsOnStart = true` no `PlayerAbilityHandler` até existir UI de progressão
+- Wave: `unlockAllAbilitySlotsOnStart = false` no prefab; `GameEvents.OnWaveStatusChanged` sincroniza fase via `AbilityProgressionState`
+- Investida (R): `NixChargeAbilityExecutor` avança o jogador e aplica dano no corredor à frente
+- Empurrão (Q): knockback em `NixPushAbility.asset` (tiers 3.5 / 4.5 / 5.5 de distância)
+- Dash: `DefaultPlayerStats` — `dashSpeed: 11`, `dashDuration: 0.35`; gizmo/shader deslocado para frente (não centrado no jogador)
 
 ### Animator (ainda manual)
 

@@ -15,7 +15,7 @@ MonoBehaviour:
   abilityType: 2
   displayName: Investida
   tier1:
-    range: 3
+    range: 5
     damage: 4
     slowMultiplier: 1
     slowDuration: 0
@@ -27,7 +27,7 @@ MonoBehaviour:
     areaWidth: 2
     damagePerSecond: 0
   tier2:
-    range: 4
+    range: 6.5
     damage: 6
     slowMultiplier: 1
     slowDuration: 0
@@ -39,7 +39,7 @@ MonoBehaviour:
     areaWidth: 2.5
     damagePerSecond: 0
   tier3:
-    range: 5.5
+    range: 8
     damage: 9
     slowMultiplier: 1
     slowDuration: 0

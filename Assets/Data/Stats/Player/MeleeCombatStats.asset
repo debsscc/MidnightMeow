@@ -15,6 +15,7 @@ MonoBehaviour:
   damage: 1
   attackCooldown: 0.45
   attackRange: 6
+  attackOriginForwardOffset: 1.15
   windupDelay: 0.08
   nearHalfWidth: 4
   farHalfWidth: 6

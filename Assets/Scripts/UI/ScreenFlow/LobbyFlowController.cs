@@ -6,7 +6,7 @@ using UnityEngine.UI;
 
 /// <summary>
 /// Orquestra os painéis do lobby: seleção de modo, host aguardando e client inserindo código.
-/// Dispara transição automática para Loading 1 quando 2 jogadores conectam (host).
+/// A transição para Characters ocorre apenas quando o host clica em Start Game.
 /// </summary>
 [DisallowMultipleComponent]
 public class LobbyFlowController : MonoBehaviour
@@ -19,6 +19,7 @@ public class LobbyFlowController : MonoBehaviour
     [SerializeField] private ScreenPanelNavigator navigator;
 
     [Header("Modo — Seleção")]
+    [SerializeField] private Button soloButton;
     [SerializeField] private Button hostButton;
     [SerializeField] private Button joinButton;
     [SerializeField] private Button charactersButton;
@@ -37,7 +38,7 @@ public class LobbyFlowController : MonoBehaviour
     [SerializeField] private int requiredPlayersForLoading = 2;
     [SerializeField] private bool buildPlaceholderIfMissing = true;
 
-    private bool _autoTransitionTriggered;
+    private bool _matchTransitionStarted;
 
     private void Awake()
     {
@@ -73,10 +74,31 @@ public class LobbyFlowController : MonoBehaviour
 
     private void WireButtons()
     {
+        if (soloButton != null) soloButton.onClick.AddListener(OnSoloClicked);
         if (hostButton != null) hostButton.onClick.AddListener(OnHostClicked);
         if (joinButton != null) joinButton.onClick.AddListener(() => navigator?.ShowPanel(PanelClientJoin));
         if (charactersButton != null) charactersButton.onClick.AddListener(OnCharactersClicked);
         if (clientConfirmButton != null) clientConfirmButton.onClick.AddListener(OnClientConfirm);
+    }
+
+    private void OnSoloClicked()
+    {
+        GameSessionContext.BeginSinglePlayer();
+        TryBeginPreparation();
+    }
+
+    private void OnCharactersClicked()
+    {
+        ScreenFlowStateMachine.OpenCharactersFromLobby();
+    }
+
+    private void TryBeginPreparation()
+    {
+        if (_matchTransitionStarted)
+            return;
+
+        _matchTransitionStarted = true;
+        LobbyMatchFlow.TryBeginMatchFromLobby();
     }
 
     private IEnumerator AutoContinueRoutine()
@@ -142,6 +164,7 @@ public class LobbyFlowController : MonoBehaviour
         if (ConnectionManager.Instance == null)
             return;
 
+        GameSessionContext.BeginMultiplayer();
         navigator?.ShowPanel(PanelHostWaiting);
         SetHostFeedback("Inicializando host...");
         await ConnectionManager.Instance.StartHostAsync();
@@ -161,17 +184,6 @@ public class LobbyFlowController : MonoBehaviour
 
         SetClientStatus("Conectando...");
         await ConnectionManager.Instance.StartClientAsync(code);
-    }
-
-    private void OnCharactersClicked()
-    {
-        GameSessionContext.CharactersMode = GameSessionContext.CharactersScreenMode.UpgradesOnly;
-        GameSessionContext.ReturnRouteId = SceneFlowRouteIds.ReturnToLobby;
-
-        if (GameFlowOrchestrator.Instance != null)
-            GameFlowOrchestrator.Instance.TryRequestRoute(SceneFlowRouteIds.LobbyToCharacters);
-        else
-            ScreenFlowController.Instance?.RequestRoute(SceneFlowRouteIds.LobbyToCharacters);
     }
 
     private void HandleJoinCode(string code)
@@ -195,14 +207,29 @@ public class LobbyFlowController : MonoBehaviour
         if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsHost)
             return;
 
-        SetClientStatus("Conectado! Aguardando host...");
-        TryAutoTransitionToLoading();
+        SetClientStatus("Conectado! Aguardando o host iniciar a partida...");
     }
 
     private void HandleClientJoined(ulong _)
     {
         UpdatePlayerCount();
-        TryAutoTransitionToLoading();
+        TryAutoStartWhenReady();
+    }
+
+    private void TryAutoStartWhenReady()
+    {
+        if (_matchTransitionStarted || GameSessionContext.IsSinglePlayer)
+            return;
+
+        if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsHost)
+            return;
+
+        int count = NetworkManager.Singleton.ConnectedClientsIds.Count;
+        if (count < requiredPlayersForLoading)
+            return;
+
+        SetHostFeedback("Jogadores conectados! Carregando preparação...");
+        TryBeginPreparation();
     }
 
     private void HandleConnectionFailed(string message)
@@ -222,27 +249,6 @@ public class LobbyFlowController : MonoBehaviour
 
         if (hostFeedbackText != null && count < requiredPlayersForLoading)
             hostFeedbackText.text = "Aguardando segundo jogador...";
-    }
-
-    private void TryAutoTransitionToLoading()
-    {
-        if (_autoTransitionTriggered)
-            return;
-
-        if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsServer)
-            return;
-
-        int count = NetworkManager.Singleton.ConnectedClientsIds.Count;
-        if (count < requiredPlayersForLoading)
-            return;
-
-        _autoTransitionTriggered = true;
-        GameSessionContext.PendingRouteId = SceneFlowRouteIds.Loading1ToPreparation;
-
-        if (GameFlowOrchestrator.Instance != null)
-            GameFlowOrchestrator.Instance.TryRequestRoute(SceneFlowRouteIds.LobbyToLoading1);
-        else
-            ScreenFlowController.Instance?.RequestRoute(SceneFlowRouteIds.LobbyToLoading1);
     }
 
     private void SetHostFeedback(string message)
@@ -278,12 +284,14 @@ public class LobbyFlowController : MonoBehaviour
         ScreenFlowPlaceholderFactory.CreateText(panel.transform, "Lobby — Seleção de Modo", 48, TextAlignmentOptions.Top, Color.white,
             new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(-500f, -100f), new Vector2(500f, -10f));
 
+        soloButton = ScreenFlowPlaceholderFactory.CreateButton(panel.transform, "Jogar Solo",
+            new Vector2(0.5f, 0.65f), new Vector2(0.5f, 0.65f), new Vector2(-240f, -40f), new Vector2(240f, 40f));
         hostButton = ScreenFlowPlaceholderFactory.CreateButton(panel.transform, "Hostear",
-            new Vector2(0.5f, 0.55f), new Vector2(0.5f, 0.55f), new Vector2(-240f, -40f), new Vector2(240f, 40f));
+            new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(-240f, -40f), new Vector2(240f, 40f));
         joinButton = ScreenFlowPlaceholderFactory.CreateButton(panel.transform, "Entrar",
-            new Vector2(0.5f, 0.4f), new Vector2(0.5f, 0.4f), new Vector2(-240f, -40f), new Vector2(240f, 40f));
+            new Vector2(0.5f, 0.35f), new Vector2(0.5f, 0.35f), new Vector2(-240f, -40f), new Vector2(240f, 40f));
         charactersButton = ScreenFlowPlaceholderFactory.CreateButton(panel.transform, "Personagens",
-            new Vector2(0.5f, 0.25f), new Vector2(0.5f, 0.25f), new Vector2(-240f, -40f), new Vector2(240f, 40f));
+            new Vector2(0.5f, 0.2f), new Vector2(0.5f, 0.2f), new Vector2(-240f, -40f), new Vector2(240f, 40f));
         return panel;
     }
 

@@ -22,6 +22,9 @@ public class PlayerDash : MonoBehaviour
     [Header("Collision Bypass")]
     [SerializeField] private LayerMask passThroughLayer;
 
+    [Header("Distance")]
+    [SerializeField] private float dashDistanceMultiplier = 1f;
+
     [Header("Failsafe")]
     [SerializeField] private float dashFailsafeExtraSeconds = 0.35f;
 
@@ -42,6 +45,18 @@ public class PlayerDash : MonoBehaviour
     private int _playerLayer;
 
     public bool IsDashing => _isDashing;
+
+    public float GetCooldownDuration() =>
+        _currentDashCooldown > 0f ? _currentDashCooldown : stats != null ? stats.dashCooldown : 1f;
+
+    public float GetCooldownRemaining()
+    {
+        if (stats == null)
+            return 0f;
+
+        float cooldown = GetCooldownDuration();
+        return Mathf.Max(0f, _lastDashEndTime + cooldown - Time.time);
+    }
 
     private void Awake()
     {
@@ -122,7 +137,8 @@ public class PlayerDash : MonoBehaviour
             return false;
         }
 
-        float duration = _currentDashDuration > 0f ? _currentDashDuration : stats.dashDuration;
+        float duration = (_currentDashDuration > 0f ? _currentDashDuration : stats.dashDuration)
+                         * Mathf.Max(1f, dashDistanceMultiplier);
         float speed = _currentDashSpeed > 0f ? _currentDashSpeed : stats.dashSpeed;
         if (duration <= 0f || speed <= 0f)
         {

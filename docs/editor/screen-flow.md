@@ -36,6 +36,8 @@ Ao clicar em [Entrar]: Transita para Lobby (Client Inserindo Código).
 
 Ao clicar em [Personagens]: Transita para a tela Personagens.
 
+2.1.1 Botão [Jogar Solo]: inicia partida single player → Loading1 → Preparação.
+
 2.2 Tela: Lobby (Host Aguardando)
 Elementos na Tela:
 
@@ -47,7 +49,7 @@ Texto [Feedback]: "Aguardando segundo jogador...".
 
 Transições:
 
-Quando o segundo jogador conectar: Transita automaticamente para a Tela de Carregamento 1.
+Quando o segundo jogador conectar: transição automática para Loading1 (sem botão Start Game manual).
 
 2.3 Tela: Lobby (Client Inserindo Código)
 Elementos na Tela:
@@ -123,4 +125,8 @@ Transição: Ao terminar de carregar -> Transita para a Gameplay.
 4.2 Gameplay
 Estado do Jogo: Ação em andamento (mecânicas de vida, reviver, combate detalhadas no documento anterior).
 
-Transição: Ao finalizar a gameplay (vitória ou derrota) -> Transita de volta para a Tela de Preparação (Passo 3.2), reiniciando o ciclo de contratos e upgrades.
+Transição: Ao finalizar (vitória ou derrota) → VictoryScene ou GameOver.
+
+4.3 Telas de Vitória / Derrota
+- Botão [Continuar]: volta à Preparação (mantém sincronização MP).
+- Botão [Sair]: desconecta e retorna ao Menu principal.

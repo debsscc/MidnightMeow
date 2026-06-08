@@ -14,6 +14,7 @@ public class LoadingScreenController : MonoBehaviour
     [SerializeField] private TMP_Text statusText;
     [SerializeField] private Image nixPlaceholder;
     [SerializeField] private Image coraPlaceholder;
+    [SerializeField] private Image progressFill;
     [SerializeField] private bool buildPlaceholderIfMissing = true;
 
     private void Awake()
@@ -24,10 +25,13 @@ public class LoadingScreenController : MonoBehaviour
 
         if (buildPlaceholderIfMissing && statusText == null)
             BuildPlaceholderUI();
+
+        EnsureProgressUi();
     }
 
     private void Start()
     {
+        HideLegacyLoadingContent();
         StartCoroutine(RunLoadingRoutine());
     }
 
@@ -44,12 +48,24 @@ public class LoadingScreenController : MonoBehaviour
         while (timer < minimumDisplaySeconds)
         {
             timer += Time.unscaledDeltaTime;
-            if (statusText != null)
-                statusText.text = $"Carregando... {Mathf.Clamp01(timer / minimumDisplaySeconds):P0}";
+            float progress = Mathf.Clamp01(timer / minimumDisplaySeconds);
+            UpdateProgressUi(progress, $"Carregando... {progress:P0}");
             yield return null;
         }
 
+        UpdateProgressUi(1f, "Carregando... 100%");
+
         GameSessionContext.PendingRouteId = string.Empty;
+
+        if (nextRoute == SceneFlowRouteIds.Loading2ToGameplay)
+        {
+            if (statusText != null)
+                statusText.text = "Iniciando partida...";
+
+            yield return GameplaySessionStarter.EnsureReadyForGameplay();
+            ScreenFlowStateMachine.EnterGameplay();
+            yield break;
+        }
 
         if (ShouldWaitForHostSceneSync(nextRoute))
         {
@@ -78,9 +94,74 @@ public class LoadingScreenController : MonoBehaviour
                && !Unity.Netcode.NetworkManager.Singleton.IsServer;
     }
 
+    private void HideLegacyLoadingContent()
+    {
+        Canvas ownedCanvas = GetComponentInChildren<Canvas>(true);
+        Canvas[] canvases = FindObjectsByType<Canvas>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        for (int i = 0; i < canvases.Length; i++)
+        {
+            Canvas canvas = canvases[i];
+            if (canvas.gameObject.name == "FadeManager")
+                continue;
+
+            if (ownedCanvas != null && canvas == ownedCanvas)
+                continue;
+
+            canvas.gameObject.SetActive(false);
+        }
+    }
+
+    private void EnsureProgressUi()
+    {
+        if (progressFill != null)
+            return;
+
+        Canvas canvas = GetComponentInChildren<Canvas>(true);
+        if (canvas == null)
+            return;
+
+        Transform panel = canvas.transform.childCount > 0 ? canvas.transform.GetChild(0) : canvas.transform;
+        progressFill = CreateProgressBar(panel);
+    }
+
+    private void UpdateProgressUi(float progress, string label)
+    {
+        if (statusText != null)
+            statusText.text = label;
+
+        if (progressFill != null)
+            progressFill.fillAmount = progress;
+    }
+
+    private static Image CreateProgressBar(Transform parent)
+    {
+        GameObject trackGo = new GameObject("ProgressTrack", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+        trackGo.transform.SetParent(parent, false);
+        RectTransform trackRt = trackGo.GetComponent<RectTransform>();
+        trackRt.anchorMin = new Vector2(0.5f, 0f);
+        trackRt.anchorMax = new Vector2(0.5f, 0f);
+        trackRt.pivot = new Vector2(0.5f, 0f);
+        trackRt.anchoredPosition = new Vector2(0f, 80f);
+        trackRt.sizeDelta = new Vector2(640f, 18f);
+        trackGo.GetComponent<Image>().color = new Color(0.12f, 0.12f, 0.16f, 0.95f);
+
+        GameObject fillGo = new GameObject("ProgressFill", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+        fillGo.transform.SetParent(trackGo.transform, false);
+        RectTransform fillRt = fillGo.GetComponent<RectTransform>();
+        ScreenFlowPlaceholderFactory.StretchFull(fillRt);
+        Image fill = fillGo.GetComponent<Image>();
+        fill.color = new Color(0.85f, 0.2f, 0.2f, 1f);
+        fill.type = Image.Type.Filled;
+        fill.fillMethod = Image.FillMethod.Horizontal;
+        fill.fillOrigin = (int)Image.OriginHorizontal.Left;
+        fill.fillAmount = 0f;
+        return fill;
+    }
+
     private void BuildPlaceholderUI()
     {
         Canvas canvas = ScreenFlowPlaceholderFactory.EnsureCanvas(transform);
+        canvas.sortingOrder = 300;
         GameObject panel = ScreenFlowPlaceholderFactory.CreatePanel(canvas.transform, "LoadingPanel", new Color(0.04f, 0.04f, 0.06f, 1f));
 
         nixPlaceholder = CreateArtPlaceholder(panel.transform, "NixPlaceholder", new Color(0.3f, 0.55f, 0.95f, 0.85f),
@@ -89,7 +170,9 @@ public class LoadingScreenController : MonoBehaviour
             new Vector2(0.75f, 0.5f), new Vector2(0.75f, 0.5f), new Vector2(-180f, -220f), new Vector2(180f, 220f));
 
         statusText = ScreenFlowPlaceholderFactory.CreateText(panel.transform, "Carregando...", 32, TextAlignmentOptions.Bottom, Color.white,
-            new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(-400f, 40f), new Vector2(400f, 120f));
+            new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(-400f, 110f), new Vector2(400f, 190f));
+
+        progressFill = CreateProgressBar(panel.transform);
     }
 
     private static Image CreateArtPlaceholder(Transform parent, string name, Color color, Vector2 anchorMin, Vector2 anchorMax, Vector2 offsetMin, Vector2 offsetMax)

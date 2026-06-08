@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 /// <summary>
 /// Bootstrap por cena: garante EventSystem, serviços persistentes e controller adequado ao fluxo de telas.
@@ -12,6 +13,9 @@ public class ScreenFlowSceneBootstrap : MonoBehaviour
 
     private void Awake()
     {
+        ScreenFlowLegacySceneCleanup.ApplyForActiveScene();
+        SuppressLegacyMenuButton();
+
         if (ensureEventSystem)
             EnsureEventSystem();
 
@@ -19,6 +23,17 @@ public class ScreenFlowSceneBootstrap : MonoBehaviour
             EnsurePersistenceServices();
 
         EnsureSceneController();
+    }
+
+    private static void SuppressLegacyMenuButton()
+    {
+        string scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+        if (scene is not ("Loading1" or "Loading2" or "Preparation" or "Characters"))
+            return;
+
+        Button legacyMenu = ScreenFlowUiLookup.FindButton("Button_Menu");
+        if (legacyMenu != null)
+            legacyMenu.gameObject.SetActive(false);
     }
 
     private static void EnsureEventSystem()
@@ -61,7 +76,8 @@ public class ScreenFlowSceneBootstrap : MonoBehaviour
                 break;
 
             case "Lobby":
-                if (FindFirstObjectByType<LobbyFlowController>() == null)
+                if (FindFirstObjectByType<LobbySceneUIController>() == null
+                    && FindFirstObjectByType<LobbyFlowController>() == null)
                 {
                     GameObject go = new GameObject("LobbyFlowController");
                     go.AddComponent<LobbyFlowController>();
@@ -91,10 +107,20 @@ public class ScreenFlowSceneBootstrap : MonoBehaviour
                 break;
 
             case "Characters":
+                EnsureCharactersNetwork();
                 if (FindFirstObjectByType<CharactersScreenController>() == null)
                 {
                     GameObject go = new GameObject("CharactersScreenController");
                     go.AddComponent<CharactersScreenController>();
+                }
+                break;
+
+            case "VictoryScene":
+            case "GameOver":
+                if (FindFirstObjectByType<EndGameScreenController>() == null)
+                {
+                    GameObject go = new GameObject("EndGameScreenController");
+                    go.AddComponent<EndGameScreenController>();
                 }
                 break;
         }
@@ -114,12 +140,28 @@ public class ScreenFlowSceneBootstrap : MonoBehaviour
         go.GetComponent<Unity.Netcode.NetworkObject>().Spawn();
     }
 
+    private static void EnsureCharactersNetwork()
+    {
+        if (CharactersSessionManager.Instance != null)
+            return;
+
+        if (Unity.Netcode.NetworkManager.Singleton == null || !Unity.Netcode.NetworkManager.Singleton.IsServer)
+            return;
+
+        GameObject go = new GameObject("CharactersSessionManager");
+        go.AddComponent<Unity.Netcode.NetworkObject>();
+        go.AddComponent<CharactersSessionManager>();
+        go.GetComponent<Unity.Netcode.NetworkObject>().Spawn();
+    }
+
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     private static void AutoBootstrapAfterSceneLoad()
     {
         string scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
-        if (scene is not ("Menu2" or "Lobby" or "Loading1" or "Loading2" or "Preparation" or "Characters"))
+        if (scene is not ("Menu2" or "Lobby" or "Loading1" or "Loading2" or "Preparation" or "Characters" or "VictoryScene" or "GameOver"))
             return;
+
+        ScreenFlowLegacySceneCleanup.ApplyForActiveScene();
 
         if (FindFirstObjectByType<ScreenFlowSceneBootstrap>() != null)
             return;

@@ -55,8 +55,24 @@ public class MultiplayerLobbyUI : MonoBehaviour
     {
         MultiplayerGameManager.OnGameStateChanged += HandleGameStateChanged;
         ShowLobbyPanel();
-        SetStatus("Pronto. Hospede ou entre em uma partida.");
+        SetStatus("Pronto. Jogue solo, hospede ou entre em uma partida.");
+        RefreshSoloStartButton();
         StartCoroutine(SubscribeToConnectionManagerRoutine());
+    }
+
+    private void RefreshSoloStartButton()
+    {
+        bool connected = NetworkManager.Singleton != null
+                         && (NetworkManager.Singleton.IsClient || NetworkManager.Singleton.IsHost);
+
+        if (startGameButton == null)
+            return;
+
+        if (!connected)
+        {
+            startGameButton.gameObject.SetActive(true);
+            startGameButton.interactable = true;
+        }
     }
 
     private void OnDestroy()
@@ -131,6 +147,7 @@ public class MultiplayerLobbyUI : MonoBehaviour
             return;
         }
 
+        GameSessionContext.BeginMultiplayer();
         SetButtonsInteractable(false);
         SetStatus("Inicializando Unity Services...");
         HideError();
@@ -177,20 +194,37 @@ public class MultiplayerLobbyUI : MonoBehaviour
 
     private void OnStartGameClicked()
     {
-        if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsHost)
+        bool connected = NetworkManager.Singleton != null
+                         && (NetworkManager.Singleton.IsClient || NetworkManager.Singleton.IsHost);
+
+        if (connected && NetworkManager.Singleton.IsClient && !NetworkManager.Singleton.IsHost)
         {
             SetError("Apenas o host pode iniciar o jogo.");
             return;
         }
 
-        if (MultiplayerGameManager.Instance == null)
+        if (connected && NetworkManager.Singleton.IsHost)
         {
-            SetError("MultiplayerGameManager não encontrado. Verifique se o NetworkObject está na cena.");
+            GameSessionContext.BeginMultiplayer();
+            if (LobbySessionManager.Instance != null)
+            {
+                LobbySessionManager.Instance.RequestStartGameRpc();
+                SetStatus("Carregando seleção de personagens...");
+                return;
+            }
+        }
+        else
+        {
+            GameSessionContext.BeginSinglePlayer();
+        }
+
+        if (LobbyMatchFlow.TryBeginMatchFromLobby())
+        {
+            SetStatus("Carregando seleção de personagens...");
             return;
         }
 
-        MultiplayerGameManager.Instance.RequestStartGameRpc();
-        SetStatus("Iniciando partida...");
+        SetError("Fluxo de telas indisponível. Inicie pelo BootstrapScene.");
     }
 
     // --- Handlers de Eventos do ConnectionManager ---

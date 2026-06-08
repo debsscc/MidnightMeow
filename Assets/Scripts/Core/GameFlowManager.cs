@@ -46,8 +46,7 @@ public class GameFlowManager : MonoBehaviour
 
     public void LoadLobby() => RequestRouteOrFallback(SceneFlowRouteIds.MenuToLobby, lobbySceneName);
 
-    public void LoadDefaultGameplay() =>
-        RequestRouteOrFallback(SceneFlowRouteIds.LobbyToGameplay, defaultGameplaySceneName);
+    public void LoadDefaultGameplay() => LobbyMatchFlow.TryBeginMatchFromLobby();
 
     public void LoadPhase(string phaseName)
     {

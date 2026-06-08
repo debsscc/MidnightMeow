@@ -15,4 +15,5 @@ MonoBehaviour:
   killsRequired: 5
   passiveDuration: 5
   cleaveMaxTargets: 3
+  cleaveAreaMultiplier: 1.35
   bonusBounces: 0

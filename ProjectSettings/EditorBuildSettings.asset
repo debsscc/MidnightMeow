@@ -12,9 +12,6 @@ EditorBuildSettings:
     path: Assets/Scenes/UI/Menu2.unity
     guid: 9ba11ab8492f3c54383ee5e871b06102
   - enabled: 1
-    path: Assets/Scenes/Fases/Fase-1.unity
-    guid: b03ed8d147c204945978b0d73ea589ed
-  - enabled: 1
     path: Assets/Scenes/UI/Lobby.unity
     guid: 61dca724510c5184aa0edfcff454ace2
   - enabled: 1
@@ -30,18 +27,21 @@ EditorBuildSettings:
     path: Assets/Scenes/UI/Characters.unity
     guid: f1a2b3c4d5e6478890a1b2c3d4e5f704
   - enabled: 1
-    path: Assets/Scenes/Fases/Fase-2.unity
-    guid: e255d86a6007fb44ba098001dbe41462
-  - enabled: 1
-    path: Assets/Scenes/UI/GameOver.unity
-    guid: 01b7bafbea2d8814fab40575a612666c
+    path: Assets/Scenes/Fases/Fase-1.unity
+    guid: b03ed8d147c204945978b0d73ea589ed
   - enabled: 1
     path: Assets/Scenes/UI/VictoryScene.unity
     guid: 95f67d37a819c9c4caf36b8a126b6e23
+  - enabled: 1
+    path: Assets/Scenes/UI/GameOver.unity
+    guid: 01b7bafbea2d8814fab40575a612666c
+  - enabled: 0
+    path: Assets/Scenes/Fases/Fase-2.unity
+    guid: e255d86a6007fb44ba098001dbe41462
   - enabled: 0
     path: Assets/_Sandbox/SampleScene.unity
     guid: 8c9cfa26abfee488c85f1582747f6a02
-  - enabled: 1
+  - enabled: 0
     path: Assets/_Sandbox/Teste_MultiplayerFase-1.unity
     guid: 2a6a69c1569de3b4ca82606021a601f5
   m_configObjects:

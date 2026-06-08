@@ -2402,6 +2402,53 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 185104959}
   m_CullTransparentMesh: 1
+--- !u!1 &187053599
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 187053601}
+  - component: {fileID: 187053600}
+  m_Layer: 0
+  m_Name: ---- ScreenFlow ----
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &187053600
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 187053599}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73f77cb97fb10564dba4b65951147cf2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ScreenFlowSceneBootstrap
+  ensureEventSystem: 1
+  ensurePersistenceServices: 1
+--- !u!4 &187053601
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 187053599}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 866924032}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &216305956
 GameObject:
   m_ObjectHideFlags: 0
@@ -3435,7 +3482,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -223.99994, y: 0}
+  m_AnchoredPosition: {x: -224, y: 0}
   m_SizeDelta: {x: -448, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &306328735
@@ -12546,6 +12593,63 @@ MonoBehaviour:
   - {x: 0.5, y: -0.5, z: 0}
   - {x: 0.5, y: 0.5, z: 0}
   - {x: -0.5, y: 0.5, z: 0}
+--- !u!1 &866924031
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 866924032}
+  - component: {fileID: 866924033}
+  m_Layer: 0
+  m_Name: MainMenuController
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &866924032
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 866924031}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 187053601}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &866924033
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 866924031}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b2a61f1ba76e67428b58e1dc42f1006, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MainMenuController
+  navigator: {fileID: 0}
+  mainMenuPanel: {fileID: 0}
+  legacyHubPanel: {fileID: 0}
+  newGameButton: {fileID: 0}
+  continueButton: {fileID: 0}
+  optionsButton: {fileID: 0}
+  quitButton: {fileID: 0}
+  savesListText: {fileID: 0}
+  savesBackButton: {fileID: 0}
+  saveSlotButtons: []
+  optionsBackButton: {fileID: 0}
+  optionsInfoText: {fileID: 0}
+  buildPlaceholderIfMissing: 1
 --- !u!1 &881157100
 GameObject:
   m_ObjectHideFlags: 0
@@ -13136,6 +13240,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::UIActionBridge
   pauseMenuObject: {fileID: 2277025816660959201, guid: 2542914e2b637bb4b871cad284433d66, type: 3}
   cursorManager: {fileID: 0}
+  lobbyRouteId: menu_lobby
+  menuRouteId: return_menu
+  overlayController: {fileID: 0}
+  pauseOverlayId: pause
 --- !u!114 &920484129
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -13170,7 +13278,6 @@ MonoBehaviour:
   routeAsset: {fileID: 0}
   routeId: menu_lobby
   modeOverride: 0
-  delaySeconds: 0
   flowEvents:
     onBefore:
       m_PersistentCalls:
@@ -13181,6 +13288,7 @@ MonoBehaviour:
     clipOnBefore: {fileID: 0}
     clipOnAfter: {fileID: 0}
     audioSourceOverride: {fileID: 0}
+  delaySeconds: 0
 --- !u!1 &929364237
 GameObject:
   m_ObjectHideFlags: 0
@@ -23744,3 +23852,4 @@ SceneRoots:
   - {fileID: 1520145639}
   - {fileID: 845555864}
   - {fileID: 162878452}
+  - {fileID: 187053601}

@@ -24,6 +24,18 @@ public class PlayerPassiveHandler : MonoBehaviour
     public int BonusProjectileBounces =>
         IsPassiveActive && abilitySet?.passive != null ? abilitySet.passive.bonusBounces : 0;
 
+    public float CleaveAreaMultiplier =>
+        IsPassiveActive && abilitySet?.passive != null ? abilitySet.passive.cleaveAreaMultiplier : 1f;
+
+    public int PassiveKillProgress => _killCounter;
+
+    public int PassiveKillsRequired => abilitySet?.passive != null ? abilitySet.passive.killsRequired : 0;
+
+    public float PassiveDuration => abilitySet?.passive != null ? abilitySet.passive.passiveDuration : 0f;
+
+    public float PassiveTimeRemaining =>
+        IsPassiveActive ? Mathf.Max(0f, _passiveEndTime - Time.time) : 0f;
+
     private void Awake()
     {
         _networkObject = GetComponent<NetworkObject>();

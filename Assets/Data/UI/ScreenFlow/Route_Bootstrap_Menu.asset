@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SceneFlowRouteDefinition
   routeId: bootstrap_menu
   sceneName: Menu2
-  transitionMode: 1
+  transitionMode: 2
   loadKind: 0
-  fadeTime: 0.5
+  fadeTime: 1
   minLoadingTime: 0

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 
@@ -59,12 +60,32 @@ public class SaveProfileStore : MonoBehaviour
     /// </summary>
     public bool CanContinue(int slot = 0)
     {
-        if (!HasSave(slot))
-            return false;
-
         GameSaveData data = LoadFromDisk(slot);
         return data != null && data.wasHost;
     }
+
+    public bool HasAnyHostSave()
+    {
+        for (int i = 0; i < GameSaveData.MaxSlots; i++)
+        {
+            if (CanContinue(i))
+                return true;
+        }
+
+        return false;
+    }
+
+    public void GetHostSaveSlots(List<int> results)
+    {
+        results.Clear();
+        for (int i = 0; i < GameSaveData.MaxSlots; i++)
+        {
+            if (CanContinue(i))
+                results.Add(i);
+        }
+    }
+
+    public GameSaveData PeekSlot(int slot) => LoadFromDisk(slot);
 
     public void LoadOrCreate(int slot = 0)
     {

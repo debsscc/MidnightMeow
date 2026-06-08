@@ -58,6 +58,7 @@ public class GameManager2 : MonoBehaviour
         GameEvents.OnNightEnded += HandleNightEnded;
         GameEvents.OnPlayerDefeated += HandlePlayerDefeated;
         GameEvents.OnCienciaCollected += HandleCienciaCollected;
+        GameEvents.OnPauseChanged += HandleExternalPauseChanged;
     }
 
     private void OnDisable()
@@ -65,6 +66,7 @@ public class GameManager2 : MonoBehaviour
         GameEvents.OnNightEnded -= HandleNightEnded;
         GameEvents.OnPlayerDefeated -= HandlePlayerDefeated;
         GameEvents.OnCienciaCollected -= HandleCienciaCollected;
+        GameEvents.OnPauseChanged -= HandleExternalPauseChanged;
     }
 
     private void InitializePhase()
@@ -107,25 +109,21 @@ public class GameManager2 : MonoBehaviour
 
     private void TogglePause()
     {
-        if (currentState == GameStates.Playing) 
+        if (currentState == GameStates.Playing)
         {
             if (GameFlowOrchestrator.Instance != null)
             {
                 GameFlowOrchestrator.Instance.RequestPause();
-                currentState = GameStates.Paused;
-                OnGameStateChanged?.Invoke(currentState);
                 return;
             }
 
             PauseGame();
         }
-        else if (currentState == GameStates.Paused) 
+        else if (currentState == GameStates.Paused)
         {
             if (GameFlowOrchestrator.Instance != null)
             {
                 GameFlowOrchestrator.Instance.RequestResume();
-                currentState = GameStates.Playing;
-                OnGameStateChanged?.Invoke(currentState);
                 return;
             }
 
@@ -140,19 +138,8 @@ public class GameManager2 : MonoBehaviour
         currentState = GameStates.Paused;
         Time.timeScale = 0f;
         OnGameStateChanged?.Invoke(currentState);
-        // Inform listeners that the game entered pause state
         GameEvents.InvokePauseChanged(true);
-        
-        if (ServiceLocator.HasService<CursorManager>())
-            ServiceLocator.GetService<CursorManager>().ResetToDefault();
-        
-        if (sceneOverlayController == null)
-            sceneOverlayController = FindFirstObjectByType<SceneOverlayController>();
-
-        if (sceneOverlayController != null)
-            sceneOverlayController.OpenOverlay(pauseOverlayId);
-        else if (pauseMenuObject != null)
-            pauseMenuObject.SetActive(true);
+        ShowPauseOverlay();
     }
 
     public void ResumeGame()
@@ -162,9 +149,28 @@ public class GameManager2 : MonoBehaviour
         currentState = GameStates.Playing;
         Time.timeScale = 1f;
         OnGameStateChanged?.Invoke(currentState);
-        // Inform listeners that the game left pause state
         GameEvents.InvokePauseChanged(false);
+        HidePauseOverlay();
+    }
 
+    /// <summary>Abre o canvas de pause sem alterar timeScale (multiplayer).</summary>
+    public void ShowPauseOverlay()
+    {
+        if (ServiceLocator.HasService<CursorManager>())
+            ServiceLocator.GetService<CursorManager>().ResetToDefault();
+
+        if (sceneOverlayController == null)
+            sceneOverlayController = FindFirstObjectByType<SceneOverlayController>();
+
+        if (sceneOverlayController != null)
+            sceneOverlayController.OpenOverlay(pauseOverlayId);
+        else if (pauseMenuObject != null)
+            pauseMenuObject.SetActive(true);
+    }
+
+    /// <summary>Fecha o canvas de pause sem alterar timeScale (multiplayer).</summary>
+    public void HidePauseOverlay()
+    {
         if (ServiceLocator.HasService<CursorManager>())
             ServiceLocator.GetService<CursorManager>().SetGameplayCursor();
 
@@ -175,6 +181,27 @@ public class GameManager2 : MonoBehaviour
             sceneOverlayController.CloseOverlay(pauseOverlayId);
         else if (pauseMenuObject != null)
             pauseMenuObject.SetActive(false);
+    }
+
+    private void HandleExternalPauseChanged(bool paused)
+    {
+        if (paused)
+        {
+            if (currentState != GameStates.Playing)
+                return;
+
+            currentState = GameStates.Paused;
+            OnGameStateChanged?.Invoke(currentState);
+            ShowPauseOverlay();
+            return;
+        }
+
+        if (currentState != GameStates.Paused)
+            return;
+
+        currentState = GameStates.Playing;
+        OnGameStateChanged?.Invoke(currentState);
+        HidePauseOverlay();
     }
 
     public void RestartCurrentScene()
@@ -220,43 +247,42 @@ public class GameManager2 : MonoBehaviour
 
         yield return new WaitForSecondsRealtime(delay);
 
-        if (progressionData != null && _tempCollectedScience > 0)
+        if (_tempCollectedScience > 0)
         {
-            progressionData.AddScience(_tempCollectedScience);
+            if (progressionData != null)
+                progressionData.AddScience(_tempCollectedScience);
+
+            SaveProfileStore save = SaveProfileStore.Instance;
+            save?.AddMagiculas(_tempCollectedScience);
             _tempCollectedScience = 0;
         }
 
-        if (!string.IsNullOrEmpty(sceneToLoad))
+        GameSessionContext.ResetContractRound();
+
+        if (isVictory ? ScreenFlowStateMachine.ShowVictoryScreen() : ScreenFlowStateMachine.ShowDefeatScreen())
         {
-            string routeId = SceneFlowRouteIds.GameplayToPreparation;
-            if (GameFlowOrchestrator.Instance != null && GameFlowOrchestrator.Instance.TryRequestRoute(routeId))
-            {
-                Debug.Log($"GameManager2: Retornando à Preparação após {(isVictory ? "vitória" : "derrota")}.");
-            }
-            else if (ScreenFlowController.Instance != null && ScreenFlowController.Instance.RequestRoute(routeId))
-            {
-                Debug.Log($"GameManager2: Retornando à Preparação após {(isVictory ? "vitória" : "derrota")}.");
-            }
-            else if (ScreenFlowController.Instance != null)
-            {
-                Debug.Log($"GameManager2: Carregando cena '{sceneToLoad}' após {(isVictory ? "vitória" : "derrota")}.");
-                ScreenFlowController.Instance.TryBeginTransition(sceneToLoad);
-            }
-            else if (ServiceLocator.HasService<GameFlowManager>())
-            {
-                var flowManager = ServiceLocator.GetService<GameFlowManager>();
-                flowManager.LoadPhase(sceneToLoad);
-                Debug.Log($"GameManager2: Carregando cena '{sceneToLoad}' após {(isVictory ? "vitória" : "derrota")}.");
-            }
-            else
-            {
-                Debug.LogError("GameManager2: ScreenFlowController e GameFlowManager não encontrados. Impossível trocar de cena.");
-            }
+            Debug.Log($"GameManager2: Indo para tela de {(isVictory ? "vitória" : "derrota")}.");
+            yield break;
         }
-        else
+
+        string fallbackScene = string.IsNullOrEmpty(sceneToLoad)
+            ? (isVictory ? "VictoryScene" : "GameOver")
+            : sceneToLoad;
+        if (ScreenFlowController.Instance != null)
         {
-            Debug.LogWarning("GameManager2: Nome da cena de destino vazio no GameConfig.");
+            Debug.Log($"GameManager2: Fallback para '{fallbackScene}' após {(isVictory ? "vitória" : "derrota")}.");
+            ScreenFlowController.Instance.TryBeginTransition(fallbackScene);
+            yield break;
         }
+
+        if (ServiceLocator.HasService<GameFlowManager>())
+        {
+            ServiceLocator.GetService<GameFlowManager>().LoadPhase(fallbackScene);
+            yield break;
+        }
+
+        Debug.LogWarning($"GameManager2: carregando '{fallbackScene}' diretamente (sem ScreenFlowController).");
+        SceneManager.LoadScene(fallbackScene);
     }
 
     private void HandleCienciaCollected(int amount)

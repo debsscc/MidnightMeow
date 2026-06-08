@@ -5450,7 +5450,7 @@ MonoBehaviour:
   firePoint: {fileID: 874212205570085287}
   aim: {fileID: 5631259045198985370}
   dash: {fileID: 6300129357974945871}
-  unlockAllAbilitySlotsOnStart: 1
+  unlockAllAbilitySlotsOnStart: 0
   _progression:
     phaseIndex: 1
     ability1Unlocked: 0
@@ -5654,7 +5654,8 @@ MonoBehaviour:
   dashGizmoWidth: 0.6
   passThroughLayer:
     serializedVersion: 2
-    m_Bits: 2048
+    m_Bits: 4096
+  dashDistanceMultiplier: 1.3
   dashFailsafeExtraSeconds: 0.35
 --- !u!223 &6101838958175283613
 Canvas:

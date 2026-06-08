@@ -17,4 +17,4 @@ MonoBehaviour:
   transitionMode: 3
   loadKind: 1
   fadeTime: 1
-  minLoadingTime: 3
+  minLoadingTime: 2

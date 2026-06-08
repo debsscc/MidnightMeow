@@ -19,6 +19,10 @@ public class PassiveAbilityConfig : ScriptableObject
     [Min(1)]
     public int cleaveMaxTargets = 3;
 
+    [Tooltip("Multiplicador de alcance e largura do ataque corpo a corpo com passiva ativa.")]
+    [Min(1f)]
+    public float cleaveAreaMultiplier = 1.35f;
+
     [Header("Cora — Ricochete")]
     [Tooltip("Bounces extras nos projéteis do ataque normal com passiva ativa.")]
     [Min(0)]

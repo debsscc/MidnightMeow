@@ -24,8 +24,8 @@ public class PlayerAbilityHandler : MonoBehaviour
     [SerializeField] private PlayerDash dash;
 
     [Header("Sandbox")]
-    [Tooltip("Desbloqueia Q/R desde o início até a UI de progressão existir.")]
-    [SerializeField] private bool unlockAllAbilitySlotsOnStart = true;
+    [Tooltip("Desbloqueia Q/R desde o início (apenas sandbox/debug).")]
+    [SerializeField] private bool unlockAllAbilitySlotsOnStart;
 
     private PlayerInputHandler _input;
     private NetworkObject _networkObject;
@@ -34,6 +34,7 @@ public class PlayerAbilityHandler : MonoBehaviour
     private AbilityDebugVisualHost _debugHost;
     private readonly Dictionary<CharacterAbilityType, IAbilityExecutor> _executors = new();
     private readonly Dictionary<AbilitySlot, float> _cooldownTimers = new();
+    private readonly Dictionary<AbilitySlot, float> _cooldownTotals = new();
     [SerializeField] private AbilityProgressionState _progression = new();
 
     private AbilitySlot? _activeSlot;
@@ -107,8 +108,29 @@ public class PlayerAbilityHandler : MonoBehaviour
     private void CacheExecutors()
     {
         _executors.Clear();
+        var validTypes = CollectAbilityTypesFromSet();
         foreach (var executor in GetComponents<IAbilityExecutor>())
-            _executors[executor.AbilityType] = executor;
+        {
+            if (validTypes.Count == 0 || validTypes.Contains(executor.AbilityType))
+                _executors[executor.AbilityType] = executor;
+        }
+    }
+
+    private HashSet<CharacterAbilityType> CollectAbilityTypesFromSet()
+    {
+        var types = new HashSet<CharacterAbilityType>();
+        if (abilitySet?.ability1 != null)
+            types.Add(abilitySet.ability1.abilityType);
+        if (abilitySet?.ability2 != null)
+            types.Add(abilitySet.ability2.abilityType);
+        return types;
+    }
+
+    private bool IsAbilityInCurrentSet(CharacterAbilityType abilityType)
+    {
+        if (abilitySet == null) return false;
+        return (abilitySet.ability1 != null && abilitySet.ability1.abilityType == abilityType)
+               || (abilitySet.ability2 != null && abilitySet.ability2.abilityType == abilityType);
     }
 
     public bool CanExecute(AbilitySlot slot)
@@ -161,7 +183,7 @@ public class PlayerAbilityHandler : MonoBehaviour
         if (!CanExecute(slot)) return;
 
         CharacterAbilityDefinition definition = GetDefinitionForSlot(slot);
-        if (definition == null) return;
+        if (definition == null || !IsAbilityInCurrentSet(definition.abilityType)) return;
 
         int tier = _progression.GetTierForSlot(slot);
         AbilityTierData tierData = definition.GetTierData(tier);
@@ -181,7 +203,10 @@ public class PlayerAbilityHandler : MonoBehaviour
 
         float cooldown = tierData.cooldown > 0f ? tierData.cooldown : definition.GetTierData(1).cooldown;
         if (cooldown > 0f)
+        {
             _cooldownTimers[slot] = cooldown;
+            _cooldownTotals[slot] = cooldown;
+        }
 
         _debugHost?.ShowAbility(definition.abilityType, origin, aimDirection, placement, tierData);
         OnAbilityActivated?.Invoke(definition.abilityType);
@@ -232,9 +257,42 @@ public class PlayerAbilityHandler : MonoBehaviour
         }
     }
 
-    private float GetCooldownRemaining(AbilitySlot slot)
+    public float GetCooldownRemaining(AbilitySlot slot)
     {
         return _cooldownTimers.TryGetValue(slot, out float remaining) ? remaining : 0f;
+    }
+
+    public float GetCooldownTotal(AbilitySlot slot)
+    {
+        if (_cooldownTotals.TryGetValue(slot, out float total) && total > 0f)
+            return total;
+
+        return GetConfiguredCooldown(slot);
+    }
+
+    public bool IsSlotUnlocked(AbilitySlot slot) => _progression.IsSlotUnlocked(slot);
+
+    public string GetSlotDisplayName(AbilitySlot slot)
+    {
+        CharacterAbilityDefinition definition = GetDefinitionForSlot(slot);
+        return definition != null ? definition.displayName : string.Empty;
+    }
+
+    private float GetConfiguredCooldown(AbilitySlot slot)
+    {
+        if (slot == AbilitySlot.Dash && dash != null)
+            return dash.GetCooldownDuration();
+
+        CharacterAbilityDefinition definition = GetDefinitionForSlot(slot);
+        if (definition == null)
+            return 0f;
+
+        int tier = _progression.GetTierForSlot(slot);
+        AbilityTierData tierData = definition.GetTierData(tier);
+        if (tierData.cooldown > 0f)
+            return tierData.cooldown;
+
+        return definition.GetTierData(1).cooldown;
     }
 
     private CharacterAbilityDefinition GetDefinitionForSlot(AbilitySlot slot)
@@ -287,6 +345,7 @@ public class PlayerAbilityHandler : MonoBehaviour
     public void ConfigureAbilitySet(CharacterAbilitySet set)
     {
         abilitySet = set;
+        CacheExecutors();
         if (_passiveHandler != null)
             _passiveHandler.Configure(set);
     }

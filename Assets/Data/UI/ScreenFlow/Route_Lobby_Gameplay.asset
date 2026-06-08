@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Route_Lobby_Gameplay
   m_EditorClassIdentifier: Assembly-CSharp::SceneFlowRouteDefinition
   routeId: lobby_gameplay
-  sceneName: Fase-1
+  sceneName: Characters
   transitionMode: 2
   loadKind: 1
   fadeTime: 1

@@ -138,9 +138,13 @@ public class NetworkProjectileSpawner : NetworkBehaviour
         int bonusBounces = 0;
 
         var adrenaline = GetComponent<PlayerAdrenaline>();
+        var passive = GetComponent<PlayerPassiveHandler>();
         var shooting = GetComponent<PlayerShooting>();
         if (shooting != null) damageMultiplier = shooting.DamageMultiplier;
-        if (adrenaline != null && adrenaline.IsFrenzyActive) bonusBounces = adrenaline.GetBonusBounces();
+        if (adrenaline != null && adrenaline.IsFrenzyActive)
+            bonusBounces = adrenaline.GetBonusBounces();
+        if (passive != null)
+            bonusBounces += passive.BonusProjectileBounces;
 
         OnOwnerShotPrepared?.Invoke(new OwnerShotSnapshot(shotPosition, direction, rotation, damageMultiplier, bonusBounces));
 

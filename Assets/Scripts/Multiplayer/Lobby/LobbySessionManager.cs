@@ -15,8 +15,7 @@ public class LobbySessionManager : NetworkBehaviour
     public static LobbySessionManager Instance { get; private set; }
 
     [Header("Fluxo de cenas")]
-    [SerializeField] private string gameplaySceneName = "Fase-1";
-    [SerializeField] private int minimumPlayersToStart = 1;
+    [SerializeField] private int minimumPlayersToStart = 2;
 
     private readonly NetworkList<LobbyPlayerState> _players = new NetworkList<LobbyPlayerState>();
     private readonly NetworkVariable<FixedString32Bytes> _joinCode = new NetworkVariable<FixedString32Bytes>(
@@ -30,7 +29,10 @@ public class LobbySessionManager : NetworkBehaviour
 
     public NetworkList<LobbyPlayerState> Players => _players;
     public string CurrentJoinCode => _joinCode.Value.ToString();
-    public bool CanStartMatch => IsServer && _players.Count >= minimumPlayersToStart && AreAllPlayersReady();
+    public bool CanStartMatch =>
+        IsServer
+        && NetworkManager != null
+        && _players.Count >= minimumPlayersToStart;
 
     private void Awake()
     {
@@ -115,19 +117,14 @@ public class LobbySessionManager : NetworkBehaviour
 
         if (!CanStartMatch)
         {
-            OnLobbyError?.Invoke("Nem todos os jogadores estao prontos.");
+            OnLobbyError?.Invoke($"Aguardando {minimumPlayersToStart} jogadores conectados.");
             return;
         }
 
-        LobbySelectionStore.Capture(_players);
-
-        if (ScreenFlowController.Instance != null
-            && ScreenFlowController.Instance.RequestRoute(SceneFlowRouteIds.LobbyToGameplay))
+        if (!LobbyMatchFlow.TryBeginMatchFromLobby())
         {
-            return;
+            OnLobbyError?.Invoke("Não foi possível iniciar o fluxo de preparação. Inicie pelo BootstrapScene.");
         }
-
-        NetworkManager.SceneManager.LoadScene(gameplaySceneName, LoadSceneMode.Single);
     }
 
     public bool TryGetPlayerState(ulong clientId, out LobbyPlayerState state)

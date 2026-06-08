@@ -1,8 +1,10 @@
+using System.Collections;
 using System.Collections.Generic;
+using Unity.Netcode;
 using UnityEngine;
 
 /// <summary>
-/// Habilidade R da Nix — Investida: zona retangular de dano à frente.
+/// Habilidade R da Nix — Investida: avança à frente e causa dano aos inimigos no trajeto.
 /// </summary>
 [DisallowMultipleComponent]
 public class NixChargeAbilityExecutor : MonoBehaviour, IAbilityExecutor
@@ -10,6 +12,7 @@ public class NixChargeAbilityExecutor : MonoBehaviour, IAbilityExecutor
     [Header("Combat")]
     [SerializeField] private LayerMask enemyLayers;
     [SerializeField] private Transform attackOrigin;
+    [SerializeField] private float chargeSpeed = 14f;
 
     [Header("Debug")]
     [SerializeField] private bool drawDebugGizmos = true;
@@ -17,10 +20,14 @@ public class NixChargeAbilityExecutor : MonoBehaviour, IAbilityExecutor
     public CharacterAbilityType AbilityType => CharacterAbilityType.NixCharge;
 
     private PlayerAbilityHandler _abilityHandler;
+    private Rigidbody2D _rb;
+    private NetworkObject _networkObject;
 
     private void Awake()
     {
         _abilityHandler = GetComponent<PlayerAbilityHandler>();
+        _rb = GetComponent<Rigidbody2D>();
+        _networkObject = GetComponent<NetworkObject>();
         if (attackOrigin == null)
             attackOrigin = transform;
 
@@ -34,21 +41,69 @@ public class NixChargeAbilityExecutor : MonoBehaviour, IAbilityExecutor
 
     public float Execute(AbilityTierData tierData, AbilityExecutionContext context)
     {
-        Vector2 origin = attackOrigin != null ? (Vector2)attackOrigin.position : (Vector2)context.User.transform.position;
-        Vector2 direction = context.AimDirection.sqrMagnitude > 0.0001f ? context.AimDirection.normalized : Vector2.up;
+        if (_networkObject != null && _networkObject.IsSpawned && !_networkObject.IsOwner)
+            return 0.25f;
 
-        float depth = tierData.range;
+        StartCoroutine(ChargeRoutine(tierData, context));
+        float duration = tierData.range / Mathf.Max(1f, chargeSpeed);
+        return Mathf.Max(0.25f, duration);
+    }
+
+    private IEnumerator ChargeRoutine(AbilityTierData tierData, AbilityExecutionContext context)
+    {
+        if (_rb == null)
+            yield break;
+
+        Vector2 direction = context.AimDirection.sqrMagnitude > 0.0001f
+            ? context.AimDirection.normalized
+            : Vector2.up;
+
+        float distance = tierData.range;
         float halfWidth = tierData.areaWidth * 0.5f;
-        float searchRadius = depth + halfWidth + 0.5f;
+        float speed = Mathf.Max(1f, chargeSpeed);
+        float traveled = 0f;
+        Vector2 chargeOrigin = attackOrigin != null
+            ? (Vector2)attackOrigin.position
+            : (Vector2)context.User.transform.position;
 
-        var hits = Physics2D.OverlapCircleAll(origin, searchRadius, enemyLayers);
-        var processed = new HashSet<int>();
+        var damaged = new HashSet<int>();
+
+        while (traveled < distance)
+        {
+            float step = speed * Time.fixedDeltaTime;
+            if (traveled + step > distance)
+                step = distance - traveled;
+
+            traveled += step;
+            Vector2 nextPos = _rb.position + direction * step;
+            _rb.MovePosition(nextPos);
+
+            DamageEnemiesInChargeCorridor(chargeOrigin, direction, traveled, halfWidth, tierData, context, damaged);
+
+            yield return new WaitForFixedUpdate();
+        }
+
+        if (_rb != null)
+            _rb.linearVelocity = Vector2.zero;
+    }
+
+    private void DamageEnemiesInChargeCorridor(
+        Vector2 origin,
+        Vector2 direction,
+        float depth,
+        float halfWidth,
+        AbilityTierData tierData,
+        AbilityExecutionContext context,
+        HashSet<int> damaged)
+    {
+        float searchRadius = depth + halfWidth + 0.5f;
+        var hits = Physics2D.OverlapCircleAll(_rb.position, searchRadius, enemyLayers);
 
         foreach (var hit in hits)
         {
             if (hit == null) continue;
             int id = hit.GetInstanceID();
-            if (!processed.Add(id)) continue;
+            if (!damaged.Add(id)) continue;
 
             var damageable = hit.GetComponentInParent<HealthComponent>();
             if (damageable == null || !damageable.IsAlive) continue;
@@ -63,8 +118,6 @@ public class NixChargeAbilityExecutor : MonoBehaviour, IAbilityExecutor
                 context.OwnerClientId,
                 context.User);
         }
-
-        return 0.25f;
     }
 
     private void OnDrawGizmosSelected()
@@ -88,3 +141,4 @@ public class NixChargeAbilityExecutor : MonoBehaviour, IAbilityExecutor
                 new Color(1f, 0.45f, 0.1f, 0.25f), new Color(1f, 0.75f, 0.2f, 0.9f));
     }
 }
+

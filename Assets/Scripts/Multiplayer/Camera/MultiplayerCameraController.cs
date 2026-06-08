@@ -53,6 +53,10 @@ public class MultiplayerCameraController : MonoBehaviour
     [Tooltip("Intervalo em segundos entre tentativas de achar o jogador local.")]
     [SerializeField] private float findPlayerRetryInterval = 0.5f;
 
+    [Header("Limites da câmera")]
+    [Tooltip("Liga automaticamente um CameraBoundsVolume da cena ao Cinemachine Confiner.")]
+    [SerializeField] private bool autoBindSceneBounds = true;
+
     [Header("Diagnostico")]
     [SerializeField] private GameplayDiagnosticConfig diagnosticConfig;
     [SerializeField] private bool useConfigAsset = true;
@@ -89,6 +93,7 @@ public class MultiplayerCameraController : MonoBehaviour
     private void Start()
     {
         AutoResolveVirtualCameraIfNeeded();
+        TryBindCameraBounds();
         _mainCam = ResolveMainCamera();
         DisableLegacyCameraFollowIfPresent();
         ApplyConfigToCamera();
@@ -259,6 +264,23 @@ public class MultiplayerCameraController : MonoBehaviour
         }
 
         Debug.Log($"[MultiplayerCameraController] Config aplicada. OrthographicSize={config.defaultOrthographicSize}");
+    }
+
+    private void TryBindCameraBounds()
+    {
+        if (!autoBindSceneBounds || virtualCamera == null)
+            return;
+
+        CinemachineConfiner2D confiner = virtualCamera.GetComponent<CinemachineConfiner2D>();
+        if (confiner == null)
+            confiner = virtualCamera.gameObject.AddComponent<CinemachineConfiner2D>();
+
+        CameraBoundsVolume volume = FindFirstObjectByType<CameraBoundsVolume>();
+        if (volume == null || volume.BoundsCollider == null)
+            return;
+
+        confiner.BoundingShape2D = volume.BoundsCollider;
+        Debug.Log($"[MultiplayerCameraController] Limites da câmera ligados a '{volume.name}'.");
     }
 
     private void AutoResolveVirtualCameraIfNeeded()

@@ -112,12 +112,16 @@ public class PlayerMeleeCombat : MonoBehaviour
     {
         if (CombatStats == null) return;
 
-        Vector2 origin = AttackOriginPosition;
         direction = direction.sqrMagnitude > 0.0001f ? direction.normalized : Vector2.up;
+        Vector2 origin = GetSwingOrigin(direction);
+        float areaMultiplier = _passiveHandler != null ? _passiveHandler.CleaveAreaMultiplier : 1f;
+        float attackRange = CombatStats.attackRange * areaMultiplier;
+        float nearHalfWidth = CombatStats.nearHalfWidth * areaMultiplier;
+        float farHalfWidth = CombatStats.farHalfWidth * areaMultiplier;
 
         OnAttackPerformed?.Invoke(origin, direction, CombatStats);
 
-        float searchRadius = CombatStats.attackRange + CombatStats.farHalfWidth + 0.5f;
+        float searchRadius = attackRange + farHalfWidth + 0.5f;
         var hits = Physics2D.OverlapCircleAll(origin, searchRadius, enemyLayers);
         var processed = new HashSet<int>();
         int maxTargets = _passiveHandler != null ? _passiveHandler.CleaveMaxTargets : 1;
@@ -137,14 +141,14 @@ public class PlayerMeleeCombat : MonoBehaviour
             if (!MeleeHitUtility.IsInsideTrapezoid(
                     origin,
                     direction,
-                    CombatStats.attackRange,
-                    CombatStats.nearHalfWidth,
-                    CombatStats.farHalfWidth,
+                    attackRange,
+                    nearHalfWidth,
+                    farHalfWidth,
                     targetPoint))
                 continue;
 
             var targetRoot = damageable.gameObject;
-            ApplyHitToTarget(targetRoot, direction, targetPoint);
+            ApplyHitToTarget(targetRoot, direction, origin, targetPoint);
             hitCount++;
             if (hitCount >= maxTargets) break;
 
@@ -167,10 +171,19 @@ public class PlayerMeleeCombat : MonoBehaviour
             $"swing origin={origin} dir={direction}"));
     }
 
-    private void ApplyHitToTarget(GameObject target, Vector2 attackDirection, Vector2 hitPoint)
+    private Vector2 GetSwingOrigin(Vector2 direction)
+    {
+        Vector2 origin = AttackOriginPosition;
+        float offset = CombatStats != null ? CombatStats.attackOriginForwardOffset : 0f;
+        if (offset > 0f)
+            origin += direction * offset;
+        return origin;
+    }
+
+    private void ApplyHitToTarget(GameObject target, Vector2 attackDirection, Vector2 swingOrigin, Vector2 hitPoint)
     {
         float damage = CombatStats.damage;
-        Vector2 knockDir = ((Vector2)target.transform.position - AttackOriginPosition).normalized;
+        Vector2 knockDir = ((Vector2)target.transform.position - swingOrigin).normalized;
         if (knockDir.sqrMagnitude < 0.0001f)
             knockDir = attackDirection;
 
