@@ -34,6 +34,8 @@ public class CharactersScreenController : MonoBehaviour
 
     private LobbyCharacterType _popupCharacter = LobbyCharacterType.CharacterA;
     private AbilitySlot _popupSlot = AbilitySlot.Ability1;
+    private CharactersSessionManager _subscribedCharactersSession;
+    private PreparationSessionManager _subscribedPreparationSession;
 
     private bool IsBrowseMode =>
         GameSessionContext.CharactersMode == GameSessionContext.CharactersScreenMode.UpgradesOnly;
@@ -78,20 +80,9 @@ public class CharactersScreenController : MonoBehaviour
         if (save != null)
             save.OnProfileChanged += RefreshView;
 
-        CharactersSessionManager session = CharactersSessionManager.Instance;
-        if (session != null)
-        {
-            session.OnCharactersStateChanged += RefreshView;
-            session.OnCharactersFeedback += ShowFeedback;
-        }
-
-        PreparationSessionManager prep = PreparationSessionManager.Instance;
-        if (prep != null)
-        {
-            prep.OnPreparationStateChanged += RefreshView;
-            prep.OnPreparationFeedback += ShowFeedback;
-        }
-
+        CharactersSessionManager.OnInstanceAvailable += TrySubscribeSessions;
+        PreparationSessionManager.OnInstanceAvailable += TrySubscribeSessions;
+        TrySubscribeSessions();
         RefreshView();
         ScreenFlowPlaceholderFactory.ApplyMenuCursor();
     }
@@ -102,18 +93,58 @@ public class CharactersScreenController : MonoBehaviour
         if (save != null)
             save.OnProfileChanged -= RefreshView;
 
+        CharactersSessionManager.OnInstanceAvailable -= TrySubscribeSessions;
+        PreparationSessionManager.OnInstanceAvailable -= TrySubscribeSessions;
+        UnsubscribeSessions();
+    }
+
+    private void TrySubscribeSessions()
+    {
         CharactersSessionManager session = CharactersSessionManager.Instance;
-        if (session != null)
+        if (session != null && session != _subscribedCharactersSession)
         {
-            session.OnCharactersStateChanged -= RefreshView;
-            session.OnCharactersFeedback -= ShowFeedback;
+            if (_subscribedCharactersSession != null)
+            {
+                _subscribedCharactersSession.OnCharactersStateChanged -= RefreshView;
+                _subscribedCharactersSession.OnCharactersFeedback -= ShowFeedback;
+            }
+
+            session.OnCharactersStateChanged += RefreshView;
+            session.OnCharactersFeedback += ShowFeedback;
+            _subscribedCharactersSession = session;
+            RefreshView();
         }
 
         PreparationSessionManager prep = PreparationSessionManager.Instance;
-        if (prep != null)
+        if (prep != null && prep != _subscribedPreparationSession)
         {
-            prep.OnPreparationStateChanged -= RefreshView;
-            prep.OnPreparationFeedback -= ShowFeedback;
+            if (_subscribedPreparationSession != null)
+            {
+                _subscribedPreparationSession.OnPreparationStateChanged -= RefreshView;
+                _subscribedPreparationSession.OnPreparationFeedback -= ShowFeedback;
+            }
+
+            prep.OnPreparationStateChanged += RefreshView;
+            prep.OnPreparationFeedback += ShowFeedback;
+            _subscribedPreparationSession = prep;
+            RefreshView();
+        }
+    }
+
+    private void UnsubscribeSessions()
+    {
+        if (_subscribedCharactersSession != null)
+        {
+            _subscribedCharactersSession.OnCharactersStateChanged -= RefreshView;
+            _subscribedCharactersSession.OnCharactersFeedback -= ShowFeedback;
+            _subscribedCharactersSession = null;
+        }
+
+        if (_subscribedPreparationSession != null)
+        {
+            _subscribedPreparationSession.OnPreparationStateChanged -= RefreshView;
+            _subscribedPreparationSession.OnPreparationFeedback -= ShowFeedback;
+            _subscribedPreparationSession = null;
         }
     }
 

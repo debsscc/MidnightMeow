@@ -99,7 +99,7 @@ Fase-1 → [vitória/derrota] → VictoryScene / GameOver
 ### Personagens
 - **Menu/Lobby**: somente descrição das skills (modo `UpgradesOnly`).
 - **Preparação**: seleção sincronizada (Nix/Cora exclusivos) + upgrades com magículas.
-- **Multiplayer:** ambos escolhem personagem; escolha replicada via `PreparationSessionManager` + `CharactersSessionManager` (DDOL no servidor).
+- **Multiplayer:** ambos escolhem personagem; escolha replicada via `PreparationSessionManager` + `CharactersSessionManager` (prefabs em `Resources/Multiplayer/`, registrados em `DefaultNetworkPrefabs`, spawn DDOL no servidor em Loading1).
 - Personagem já escolhido por outro jogador fica **bloqueado** e exibe rótulo `Jogador N`.
 - 6 botões de skill (3 Nix + 3 Cora); popup de upgrade (ref. `levelupskill.png`).
 

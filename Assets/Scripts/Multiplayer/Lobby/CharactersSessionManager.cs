@@ -22,6 +22,8 @@ public class CharactersSessionManager : NetworkBehaviour
 
     public static CharactersSessionManager Instance { get; private set; }
 
+    public static event Action OnInstanceAvailable;
+
 
 
     private readonly NetworkList<CharactersPlayerState> _players = new NetworkList<CharactersPlayerState>();
@@ -55,6 +57,7 @@ public class CharactersSessionManager : NetworkBehaviour
 
 
         Instance = this;
+        OnInstanceAvailable?.Invoke();
 
     }
 
@@ -158,7 +161,7 @@ public class CharactersSessionManager : NetworkBehaviour
 
 
 
-        int index = FindPlayerIndex(caller);
+        int index = EnsurePlayerIndex(caller);
 
         if (index < 0)
 
@@ -392,7 +395,28 @@ public class CharactersSessionManager : NetworkBehaviour
 
     }
 
+    private int EnsurePlayerIndex(ulong clientId)
+    {
+        int index = FindPlayerIndex(clientId);
+        if (index >= 0 || !IsServer)
+            return index;
 
+        _players.Add(CreateDefault(clientId));
+        return FindPlayerIndex(clientId);
+    }
+
+
+
+    public void EnsurePlayerEntry(ulong clientId)
+    {
+        if (!IsServer)
+            return;
+
+        if (FindPlayerIndex(clientId) >= 0)
+            return;
+
+        _players.Add(CreateDefault(clientId));
+    }
 
     public void SyncPlayerCharacter(ulong clientId, LobbyCharacterType type)
     {

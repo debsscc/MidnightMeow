@@ -10,6 +10,7 @@ using UnityEngine;
 public class PreparationSessionManager : NetworkBehaviour
 {
     public static PreparationSessionManager Instance { get; private set; }
+    public static event Action OnInstanceAvailable;
 
     [SerializeField] private ContractDefinition[] contracts;
     [SerializeField] private int minimumPlayersToProceed = 2;
@@ -38,6 +39,7 @@ public class PreparationSessionManager : NetworkBehaviour
 
         Instance = this;
         ResolveContracts();
+        OnInstanceAvailable?.Invoke();
     }
 
     public override void OnNetworkSpawn()
@@ -92,7 +94,7 @@ public class PreparationSessionManager : NetworkBehaviour
     public void RequestSetReadyRpc(bool isReady, RpcParams rpcParams = default)
     {
         ulong caller = rpcParams.Receive.SenderClientId;
-        int index = FindPlayerIndex(caller);
+        int index = EnsurePlayerIndex(caller);
         if (index < 0)
             return;
 
@@ -136,7 +138,7 @@ public class PreparationSessionManager : NetworkBehaviour
             return false;
         }
 
-        int index = FindPlayerIndex(clientId);
+        int index = EnsurePlayerIndex(clientId);
         if (index < 0)
             return false;
 
@@ -354,6 +356,17 @@ public class PreparationSessionManager : NetworkBehaviour
         }
 
         return -1;
+    }
+
+    private int EnsurePlayerIndex(ulong clientId)
+    {
+        int index = FindPlayerIndex(clientId);
+        if (index >= 0 || !IsServer || NetworkManager == null)
+            return index;
+
+        _players.Add(CreateDefault(clientId));
+        CharactersSessionManager.Instance?.EnsurePlayerEntry(clientId);
+        return FindPlayerIndex(clientId);
     }
 
     private void HandleContractChanged(int _, int __) => OnPreparationStateChanged?.Invoke();

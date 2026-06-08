@@ -25,6 +25,7 @@ public class PreparationScreenController : MonoBehaviour
     private bool _localReady;
     private LobbyCharacterType _soloCharacter = LobbyCharacterType.Default;
     private bool _buttonsWired;
+    private PreparationSessionManager _subscribedSession;
 
     private void Awake()
     {
@@ -76,13 +77,8 @@ public class PreparationScreenController : MonoBehaviour
 
     private void OnEnable()
     {
-        PreparationSessionManager session = PreparationSessionManager.Instance;
-        if (session != null)
-        {
-            session.OnPreparationStateChanged += RefreshView;
-            session.OnPreparationFeedback += ShowFeedback;
-        }
-
+        PreparationSessionManager.OnInstanceAvailable += TrySubscribeSession;
+        TrySubscribeSession();
         RefreshCharacterLabel();
         RefreshView();
         ScreenFlowPlaceholderFactory.ApplyMenuCursor();
@@ -90,12 +86,31 @@ public class PreparationScreenController : MonoBehaviour
 
     private void OnDisable()
     {
+        PreparationSessionManager.OnInstanceAvailable -= TrySubscribeSession;
+        UnsubscribeSession();
+    }
+
+    private void TrySubscribeSession()
+    {
         PreparationSessionManager session = PreparationSessionManager.Instance;
-        if (session != null)
-        {
-            session.OnPreparationStateChanged -= RefreshView;
-            session.OnPreparationFeedback -= ShowFeedback;
-        }
+        if (session == null || session == _subscribedSession)
+            return;
+
+        UnsubscribeSession();
+        session.OnPreparationStateChanged += RefreshView;
+        session.OnPreparationFeedback += ShowFeedback;
+        _subscribedSession = session;
+        RefreshView();
+    }
+
+    private void UnsubscribeSession()
+    {
+        if (_subscribedSession == null)
+            return;
+
+        _subscribedSession.OnPreparationStateChanged -= RefreshView;
+        _subscribedSession.OnPreparationFeedback -= ShowFeedback;
+        _subscribedSession = null;
     }
 
     private void WireButtons()

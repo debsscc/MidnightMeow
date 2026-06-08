@@ -85,6 +85,8 @@ public class ScreenFlowSceneBootstrap : MonoBehaviour
                 break;
 
             case "Loading1":
+                HubSessionNetworkSpawner.EnsureSpawned();
+                goto case "Loading2";
             case "Loading2":
                 if (FindFirstObjectByType<LoadingScreenController>() == null)
                 {
@@ -126,30 +128,9 @@ public class ScreenFlowSceneBootstrap : MonoBehaviour
         }
     }
 
-    private static void EnsurePreparationNetwork() => EnsureHubSessionManagers();
+    private static void EnsurePreparationNetwork() => HubSessionNetworkSpawner.EnsureSpawned();
 
-    private static void EnsureCharactersNetwork() => EnsureHubSessionManagers();
-
-    private static void EnsureHubSessionManagers()
-    {
-        if (Unity.Netcode.NetworkManager.Singleton == null || !Unity.Netcode.NetworkManager.Singleton.IsServer)
-            return;
-
-        EnsureHubManager<PreparationSessionManager>("PreparationSessionManager");
-        EnsureHubManager<CharactersSessionManager>("CharactersSessionManager");
-    }
-
-    private static void EnsureHubManager<T>(string objectName) where T : Unity.Netcode.NetworkBehaviour
-    {
-        if (UnityEngine.Object.FindFirstObjectByType<T>() != null)
-            return;
-
-        GameObject go = new GameObject(objectName);
-        UnityEngine.Object.DontDestroyOnLoad(go);
-        go.AddComponent<Unity.Netcode.NetworkObject>();
-        go.AddComponent<T>();
-        go.GetComponent<Unity.Netcode.NetworkObject>().Spawn();
-    }
+    private static void EnsureCharactersNetwork() => HubSessionNetworkSpawner.EnsureSpawned();
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     private static void AutoBootstrapAfterSceneLoad()
