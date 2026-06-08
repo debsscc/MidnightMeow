@@ -1,4 +1,5 @@
 using Unity.Netcode;
+using UnityEngine;
 
 /// <summary>
 /// Leitura unificada do estado do hub Preparation/Characters em multiplayer.
