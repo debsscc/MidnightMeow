@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Netcode;
 using UnityEngine;
 
 /// <summary>Executa um strike: preenchimento visual + resolução (dano em área ou visual até a zona).</summary>
@@ -12,6 +13,9 @@ public class EnemyTelegraphZoneInstance : MonoBehaviour
     private EnemyTelegraphVisualStyle _style;
     private GameObject _instigator;
     private Transform _attackOrigin;
+    private Vector2 _travelSpawnPosition;
+    private float _travelSpeedOverride = -1f;
+    private bool _forceTravelVisual;
     private EnemyTelegraphZoneView _view;
     private bool _visualOnly;
     private bool _resolved;
@@ -27,12 +31,18 @@ public class EnemyTelegraphZoneInstance : MonoBehaviour
         GameObject instigator,
         Transform attackOrigin,
         bool visualOnly,
-        Func<GameObject, Vector3, Quaternion, GameObject> projectileSpawnDelegate = null)
+        Func<GameObject, Vector3, Quaternion, GameObject> projectileSpawnDelegate = null,
+        Vector2 travelSpawnPosition = default,
+        bool forceTravelVisual = false,
+        float travelSpeedOverride = -1f)
     {
         _strike = strike;
         _style = style;
         _instigator = instigator;
         _attackOrigin = attackOrigin;
+        _travelSpawnPosition = travelSpawnPosition;
+        _forceTravelVisual = forceTravelVisual;
+        _travelSpeedOverride = travelSpeedOverride;
         _visualOnly = visualOnly;
         _projectileSpawnDelegate = projectileSpawnDelegate;
         _resolved = false;
@@ -74,7 +84,8 @@ public class EnemyTelegraphZoneInstance : MonoBehaviour
 
         if (_visualOnly)
         {
-            if (_strike.resolution == EnemyTelegraphResolution.ProjectileToZone)
+            if (_strike.resolution == EnemyTelegraphResolution.ProjectileToZone
+                && (_forceTravelVisual || GetTravelVisualPrefab() != null))
             {
                 yield return PlayTravelVisualOnly(worldPosition, rotationDegrees);
                 usedTravelVisual = true;
@@ -100,7 +111,7 @@ public class EnemyTelegraphZoneInstance : MonoBehaviour
         _resolved = true;
         OnResolved?.Invoke(this);
 
-        Destroy(gameObject, 0.15f);
+        ScheduleDestroy(0.15f);
     }
 
     private int ResolveAreaDamage(Vector2 worldPosition, float rotationDegrees)
@@ -115,7 +126,7 @@ public class EnemyTelegraphZoneInstance : MonoBehaviour
         if (travelPrefab == null)
             yield break;
 
-        Vector2 spawnPos = _attackOrigin != null ? (Vector2)_attackOrigin.position : (Vector2)_instigator.transform.position;
+        Vector2 spawnPos = ResolveTravelSpawnPosition();
         Vector2 dir = worldPosition - spawnPos;
         var rotation = ProjectileAimUtility.RotationFromDirection(
             dir,
@@ -135,16 +146,12 @@ public class EnemyTelegraphZoneInstance : MonoBehaviour
         if (traveler == null)
             traveler = travelerGo.AddComponent<TelegraphZoneTraveler>();
 
-        float speed = _strike.travelSpeed > 0f
-            ? _strike.travelSpeed
-            : (_strike.projectileSpeedOverride > 0f ? _strike.projectileSpeedOverride : 12f);
-
-        traveler.Launch(worldPosition, speed);
+        traveler.Launch(worldPosition, ResolveTravelSpeed());
 
         while (!traveler.HasArrived)
             yield return null;
 
-        Destroy(travelerGo, 0.5f);
+        DestroyTraveler(travelerGo, 0.5f);
     }
 
     private IEnumerator ResolveProjectileToZone(Vector2 worldPosition, float rotationDegrees, Action<int> onComplete)
@@ -156,17 +163,14 @@ public class EnemyTelegraphZoneInstance : MonoBehaviour
             yield break;
         }
 
-        Vector2 spawnPos = _attackOrigin != null ? (Vector2)_attackOrigin.position : (Vector2)_instigator.transform.position;
+        Vector2 spawnPos = ResolveTravelSpawnPosition();
         Vector2 dir = worldPosition - spawnPos;
         var rotation = ProjectileAimUtility.RotationFromDirection(
             dir,
             ProjectileAimUtility.EnemyRatProjectileForwardOffsetDegrees);
 
-        GameObject travelerGo;
-        if (_projectileSpawnDelegate != null)
-            travelerGo = _projectileSpawnDelegate(travelPrefab, spawnPos, rotation);
-        else
-            travelerGo = Instantiate(travelPrefab, spawnPos, rotation);
+        // Visual de voo é local no servidor; clientes reproduzem via ClientRpc (sem NGO preso).
+        GameObject travelerGo = Instantiate(travelPrefab, spawnPos, rotation);
 
         if (travelerGo == null)
         {
@@ -184,23 +188,55 @@ public class EnemyTelegraphZoneInstance : MonoBehaviour
         if (traveler == null)
             traveler = travelerGo.AddComponent<TelegraphZoneTraveler>();
 
-        float speed = _strike.travelSpeed > 0f
-            ? _strike.travelSpeed
-            : (_strike.projectileSpeedOverride > 0f ? _strike.projectileSpeedOverride : 12f);
-
-        traveler.Launch(worldPosition, speed);
+        traveler.Launch(worldPosition, ResolveTravelSpeed());
 
         while (!traveler.HasArrived)
             yield return null;
 
-        Destroy(travelerGo, 0.5f);
+        DestroyTraveler(travelerGo, 0.5f);
         onComplete(ApplyAreaDamage(worldPosition, rotationDegrees));
+    }
+
+    private Vector2 ResolveTravelSpawnPosition()
+    {
+        if (_forceTravelVisual)
+            return _travelSpawnPosition;
+
+        if (_attackOrigin != null)
+            return _attackOrigin.position;
+
+        return _instigator != null ? (Vector2)_instigator.transform.position : Vector2.zero;
+    }
+
+    private float ResolveTravelSpeed()
+    {
+        if (_travelSpeedOverride > 0f)
+            return _travelSpeedOverride;
+
+        if (_strike.travelSpeed > 0f)
+            return _strike.travelSpeed;
+
+        if (_strike.projectileSpeedOverride > 0f)
+            return _strike.projectileSpeedOverride;
+
+        return 12f;
     }
 
     private static void DisableTravelProjectilePhysics(GameObject travelerGo)
     {
         if (travelerGo.TryGetComponent<EnemyProjectile>(out var projectile))
             projectile.enabled = false;
+
+        if (travelerGo.TryGetComponent<NetworkEnemyProjectileController>(out var networkProjectile))
+            networkProjectile.enabled = false;
+
+        if (travelerGo.TryGetComponent<NetworkObject>(out var networkObject)
+            && networkObject.IsSpawned
+            && NetworkManager.Singleton != null
+            && NetworkManager.Singleton.IsServer)
+        {
+            networkObject.Despawn(true);
+        }
 
         if (travelerGo.TryGetComponent<Rigidbody2D>(out var rb))
         {
@@ -217,7 +253,11 @@ public class EnemyTelegraphZoneInstance : MonoBehaviour
     {
         if (_strike.travelVisualPrefab != null)
             return _strike.travelVisualPrefab;
-        return _strike.projectilePrefab;
+
+        if (_strike.projectilePrefab != null)
+            return _strike.projectilePrefab;
+
+        return GameplayPrefabCatalog.LoadCached()?.enemyTelegraphTravelPrefab;
     }
 
     private void SpawnZoneEffect(Vector2 worldPosition, float rotationDegrees)
@@ -247,11 +287,8 @@ public class EnemyTelegraphZoneInstance : MonoBehaviour
             if (col == null || hits.Contains(col)) continue;
             hits.Add(col);
 
-            if (col.TryGetComponent<IDamageable>(out var damageable))
-            {
-                damageable.TakeDamage(_strike.damage, _instigator);
+            if (PlayerCombatUtility.TryApplyDamage(col, _strike.damage, _instigator))
                 count++;
-            }
         }
 
         return count;
@@ -266,5 +303,29 @@ public class EnemyTelegraphZoneInstance : MonoBehaviour
             _strike.shape,
             _strike.size,
             _strike.resolution);
+    }
+
+    private void ScheduleDestroy(float delay)
+    {
+        if (delay <= 0f)
+            Destroy(gameObject);
+        else
+            Destroy(gameObject, delay);
+    }
+
+    private static void DestroyTraveler(GameObject travelerGo, float delay)
+    {
+        if (travelerGo == null) return;
+
+        if (travelerGo.TryGetComponent<NetworkObject>(out var networkObject)
+            && networkObject.IsSpawned
+            && NetworkManager.Singleton != null
+            && NetworkManager.Singleton.IsServer)
+        {
+            networkObject.Despawn(true);
+            return;
+        }
+
+        Destroy(travelerGo, delay);
     }
 }

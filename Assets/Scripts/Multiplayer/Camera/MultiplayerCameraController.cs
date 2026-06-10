@@ -32,6 +32,7 @@ using System.Collections.Generic;
 using Unity.Cinemachine;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class MultiplayerCameraController : MonoBehaviour
 {
@@ -57,12 +58,17 @@ public class MultiplayerCameraController : MonoBehaviour
     [Tooltip("Liga automaticamente um CameraBoundsVolume da cena ao Cinemachine Confiner.")]
     [SerializeField] private bool autoBindSceneBounds = true;
 
+    [Header("Multiplayer")]
+    [Tooltip("Follow direto na MainCamera (2D). Mais confiável que CinemachineBrain em clientes NGO.")]
+    [SerializeField] private bool useDirectCameraFollow = true;
+
     [Header("Diagnostico")]
     [SerializeField] private GameplayDiagnosticConfig diagnosticConfig;
     [SerializeField] private bool useConfigAsset = true;
     [Tooltip("Usado só se Use Config Asset estiver desmarcado ou Config for nulo.")]
-    [SerializeField] private bool enableDiagnosticsLogs = false;
+    [SerializeField] private bool enableDiagnosticsLogs = true;
     [SerializeField] private float diagnosticsIntervalSeconds = 2f;
+    [SerializeField] private float findPlayerTimeoutSeconds = 45f;
 
     private Transform _currentTarget;
     private float _targetOrthographicSize;
@@ -71,9 +77,16 @@ public class MultiplayerCameraController : MonoBehaviour
     private Camera _mainCam;
     private bool _useFallbackFollow = false;
     private Coroutine _diagnosticsCoroutine;
+    private Unity.Cinemachine.CinemachineBrain _cinemachineBrain;
+    private bool _brainDisabledForDirectFollow;
 
     public Transform CurrentTarget => _currentTarget;
     public bool HasTarget => _currentTarget != null;
+
+    public bool IsFollowingTarget =>
+        _currentTarget != null
+        && virtualCamera != null
+        && virtualCamera.Follow == _currentTarget;
     public Camera MainCamera
     {
         get
@@ -84,10 +97,83 @@ public class MultiplayerCameraController : MonoBehaviour
         }
     }
 
+    /// <summary>Resolve o controlador ativo (singleton ou busca na cena de gameplay).</summary>
+    public static MultiplayerCameraController Resolve()
+    {
+        Scene active = SceneManager.GetActiveScene();
+        if (Instance != null && IsControllerInActiveGameplayScene(Instance, active))
+            return Instance;
+
+        if (Instance != null)
+            Instance = null;
+
+        MultiplayerCameraController found =
+            Object.FindFirstObjectByType<MultiplayerCameraController>(FindObjectsInactive.Include);
+        if (found != null && !found.gameObject.activeSelf)
+            found.gameObject.SetActive(true);
+
+        return Instance ?? found;
+    }
+
+    private static bool IsControllerInActiveGameplayScene(MultiplayerCameraController controller, Scene active)
+    {
+        return controller != null
+               && controller.gameObject.scene == active
+               && GameplaySceneBootstrap.IsGameplayScene(active.name);
+    }
+
     private void Awake()
     {
-        if (Instance != null && Instance != this) { Destroy(gameObject); return; }
+        if (Instance != null && Instance != this)
+        {
+            bool replaceInstance = ShouldReplaceInstance(Instance, this);
+            if (replaceInstance)
+            {
+                Destroy(Instance.gameObject);
+                Instance = this;
+                return;
+            }
+
+            Destroy(gameObject);
+            return;
+        }
+
         Instance = this;
+    }
+
+    private static bool ShouldReplaceInstance(MultiplayerCameraController current, MultiplayerCameraController candidate)
+    {
+        if (current == null || candidate == null)
+            return candidate != null;
+
+        bool currentIsClone = IsRuntimeClone(current);
+        bool candidateIsClone = IsRuntimeClone(candidate);
+        if (currentIsClone && !candidateIsClone)
+            return true;
+
+        if (!currentIsClone && candidateIsClone)
+            return false;
+
+        return BelongsToActiveScene(candidate) && !BelongsToActiveScene(current);
+    }
+
+    private static bool IsRuntimeClone(MultiplayerCameraController controller) =>
+        controller != null && controller.gameObject.name.Contains("(Clone)");
+
+    private void OnDestroy()
+    {
+        if (Instance == this)
+            Instance = null;
+    }
+
+    private static bool BelongsToActiveScene(MultiplayerCameraController controller)
+    {
+        if (controller == null)
+            return false;
+
+        Scene active = SceneManager.GetActiveScene();
+        return controller.gameObject.scene == active
+               && GameplaySceneBootstrap.IsGameplayScene(active.name);
     }
 
     private void Start()
@@ -131,6 +217,16 @@ public class MultiplayerCameraController : MonoBehaviour
     {
         NetworkPlayerController.OnLocalPlayerSpawned += HandleLocalPlayerSpawned;
         NetworkPlayerController.OnLocalPlayerDespawned += HandleLocalPlayerDespawned;
+        EnsureInitialized();
+        TryFindLocalPlayer();
+    }
+
+    /// <summary>Garante referências resolvidas antes de Start (bind no spawn NGO).</summary>
+    public void EnsureInitialized()
+    {
+        AutoResolveVirtualCameraIfNeeded();
+        if (_mainCam == null || !_mainCam.isActiveAndEnabled)
+            _mainCam = ResolveMainCamera();
     }
 
     private void OnDisable()
@@ -146,17 +242,17 @@ public class MultiplayerCameraController : MonoBehaviour
 
     private Camera ResolveMainCamera()
     {
+        Camera childCamera = GetComponentInChildren<Camera>(true);
+        if (childCamera != null)
+            return childCamera;
+
         Camera taggedCamera = Camera.main;
         if (taggedCamera != null && taggedCamera.isActiveAndEnabled)
             return taggedCamera;
 
-        Camera childCamera = GetComponentInChildren<Camera>(true);
-        if (childCamera != null && childCamera.isActiveAndEnabled)
-            return childCamera;
-
         Camera anyCamera = FindFirstObjectByType<Camera>(FindObjectsInactive.Exclude);
         if (anyCamera != null)
-            Debug.LogWarning($"[MultiplayerCameraController] Camera.main não encontrada; usando fallback '{anyCamera.name}'. Configure a tag MainCamera no objeto correto.");
+            Debug.LogWarning($"[MultiplayerCameraController] Câmera do rig não encontrada; usando fallback '{anyCamera.name}'.");
 
         return anyCamera;
     }
@@ -183,8 +279,16 @@ public class MultiplayerCameraController : MonoBehaviour
         bool sameTarget = virtualCamera != null && virtualCamera.Follow == _currentTarget;
         string position = _mainCam != null ? _mainCam.transform.position.ToString("F2") : "N/A";
 
+        string role = NetworkManager.Singleton == null
+            ? "offline"
+            : NetworkManager.Singleton.IsServer && NetworkManager.Singleton.IsClient
+                ? "host"
+                : NetworkManager.Singleton.IsClient
+                    ? "client"
+                    : "server";
+
         Debug.Log(
-            $"[CAM-DIAG][{source}] mainCam={camName} active={camActive} pos={position} | " +
+            $"[CAM-DIAG][{source}][{role}] mainCam={camName} active={camActive} pos={position} | " +
             $"vCam={vcName} active={vcActive} follow={followName} | target={targetName} sameRef={sameTarget} | " +
             $"fallbackFollow={_useFallbackFollow}");
     }
@@ -212,13 +316,34 @@ public class MultiplayerCameraController : MonoBehaviour
 
     private void LateUpdate()
     {
-        // Fallback: se o CinemachineCamera não tiver Body configurado, move a câmera diretamente
-        if (_useFallbackFollow && _currentTarget != null && _mainCam != null)
-        {
-            Vector3 offset = config != null ? config.followOffset : new Vector3(0, 0, -10f);
-            Vector3 targetPos = new Vector3(_currentTarget.position.x, _currentTarget.position.y, _mainCam.transform.position.z);
-            _mainCam.transform.position = Vector3.Lerp(_mainCam.transform.position, targetPos, Time.deltaTime * 10f);
-        }
+        if (_currentTarget == null)
+            return;
+
+        if (_mainCam == null || !_mainCam.isActiveAndEnabled)
+            _mainCam = ResolveMainCamera();
+
+        if (_mainCam == null)
+            return;
+
+        if (!useDirectCameraFollow && !_useFallbackFollow)
+            return;
+
+        Vector3 desired = new Vector3(_currentTarget.position.x, _currentTarget.position.y, GetGameplayCameraZ());
+        _mainCam.transform.position = Vector3.Lerp(
+            _mainCam.transform.position,
+            desired,
+            Time.deltaTime * 15f);
+    }
+
+    private float GetGameplayCameraZ()
+    {
+        if (_mainCam != null && !Mathf.Approximately(_mainCam.transform.position.z, 0f))
+            return _mainCam.transform.position.z;
+
+        if (config != null && !Mathf.Approximately(config.followOffset.z, 0f))
+            return config.followOffset.z;
+
+        return -10f;
     }
 
     // ── Inicialização ──────────────────────────────────────────────────────────
@@ -320,9 +445,23 @@ public class MultiplayerCameraController : MonoBehaviour
     private IEnumerator FindLocalPlayerRoutine()
     {
         Debug.Log("[MultiplayerCameraController] Aguardando spawn do jogador local...");
+        float elapsed = 0f;
         while (_currentTarget == null)
         {
             TryFindLocalPlayer();
+            if (_currentTarget != null)
+                break;
+
+            elapsed += findPlayerRetryInterval;
+            if (elapsed >= findPlayerTimeoutSeconds)
+            {
+                Debug.LogWarning(
+                    $"[MultiplayerCameraController] Timeout ({findPlayerTimeoutSeconds}s) aguardando jogador local. " +
+                    $"cena='{SceneManager.GetActiveScene().name}' " +
+                    $"playerObject={(NetworkManager.Singleton?.LocalClient?.PlayerObject != null ? NetworkManager.Singleton.LocalClient.PlayerObject.name : "NULL")}");
+                elapsed = 0f;
+            }
+
             yield return new WaitForSeconds(findPlayerRetryInterval);
         }
         _findPlayerCoroutine = null;
@@ -340,9 +479,13 @@ public class MultiplayerCameraController : MonoBehaviour
             && NetworkManager.Singleton.LocalClient.PlayerObject != null)
         {
             Transform playerObjectTransform = NetworkManager.Singleton.LocalClient.PlayerObject.transform;
+            NetworkPlayerController playerController = playerObjectTransform.GetComponent<NetworkPlayerController>();
+            Transform followTarget = playerController != null
+                ? playerController.GetCameraFollowTransform()
+                : playerObjectTransform;
             if (DiagnosticsEnabled)
-                Debug.Log($"[CAM-DIAG][TryFindLocalPlayer] usando LocalClient.PlayerObject: {playerObjectTransform.name}");
-            SetTarget(playerObjectTransform);
+                Debug.Log($"[CAM-DIAG][TryFindLocalPlayer] usando LocalClient.PlayerObject: {followTarget.name}");
+            SetTarget(followTarget);
             return;
         }
 
@@ -356,7 +499,7 @@ public class MultiplayerCameraController : MonoBehaviour
             {
                 if (DiagnosticsEnabled)
                     Debug.Log($"[CAM-DIAG][TryFindLocalPlayer] owner encontrado: {player.name} clientId={player.OwnerClientId}");
-                SetTarget(player.transform);
+                SetTarget(player.GetCameraFollowTransform());
                 return;
             }
         }
@@ -368,7 +511,7 @@ public class MultiplayerCameraController : MonoBehaviour
     private void HandleLocalPlayerSpawned(NetworkPlayerController localPlayer)
     {
         if (localPlayer == null) return;
-        SetTarget(localPlayer.transform);
+        SetTarget(localPlayer.GetCameraFollowTransform());
     }
 
     private void HandleLocalPlayerDespawned(ulong _)
@@ -384,51 +527,97 @@ public class MultiplayerCameraController : MonoBehaviour
     /// </summary>
     public void SetTarget(Transform target)
     {
-        _currentTarget = target;
         LogDiagnosticSnapshot("SetTarget-before");
+        EnsureInitialized();
 
         if (target == null)
         {
+            ClearTarget();
             Debug.LogWarning("[MultiplayerCameraController] SetTarget chamado com target=null. Câmera ficará parada.");
-            if (virtualCamera != null) virtualCamera.Follow = null;
             return;
         }
-
-        Debug.Log($"[MultiplayerCameraController] SetTarget → '{target.name}' em {target.position}. virtualCamera={virtualCamera?.name ?? "NULL"}");
 
         if (virtualCamera == null)
         {
             Debug.LogError("[MultiplayerCameraController] SetTarget: virtualCamera é NULL! " +
-                           "Verifique se o campo 'Virtual Camera' está preenchido no Inspector. " +
-                           "A câmera NÃO seguirá o jogador.");
+                           "Verifique MultiplayerCameraRig → PlayerVirtualCamera no Inspector.");
             return;
         }
 
-        virtualCamera.Follow = target;
-
-        // Teleporta a câmera principal imediatamente para evitar lerp inicial longo
-        // Nota: virtualCamera é CinemachineCamera, não tem componente Camera.
-        // Usamos Camera.main (o CinemachineBrain) para o teleporte direto.
         if (_mainCam == null || !_mainCam.isActiveAndEnabled)
             _mainCam = ResolveMainCamera();
-        PlayerAim aim = target.GetComponent<PlayerAim>();
+
+        CameraTarget camTarget = virtualCamera.Target;
+        camTarget.TrackingTarget = target;
+        camTarget.CustomLookAtTarget = false;
+        virtualCamera.Target = camTarget;
+        virtualCamera.Follow = target;
+        EnsureVirtualCameraLive();
+
+        Vector3 cameraPosition = new Vector3(target.position.x, target.position.y, GetGameplayCameraZ());
+        if (_mainCam != null)
+        {
+            _mainCam.transform.position = cameraPosition;
+            if (!_mainCam.isActiveAndEnabled)
+                _mainCam.enabled = true;
+        }
+
+        virtualCamera.ForceCameraPosition(cameraPosition, Quaternion.identity);
+
+        PlayerAim aim = target.GetComponentInParent<PlayerAim>();
         if (aim != null)
             aim.SetAimCamera(_mainCam);
 
-        if (_mainCam != null)
-        {
-            float zOffset = _mainCam.transform.position.z;
-            _mainCam.transform.position = new Vector3(target.position.x, target.position.y, zOffset);
-            Debug.Log($"[MultiplayerCameraController] Câmera teleportada para {_mainCam.transform.position}");
-        }
-        else
-        {
-            Debug.LogWarning("[MultiplayerCameraController] Camera.main não encontrada para teleporte. " +
-                             "Certifique-se que o MainCamera tem tag 'MainCamera'.");
-        }
+        _currentTarget = target;
 
-        Debug.Log($"[MultiplayerCameraController] virtualCamera.Follow definido para '{target.name}'.");
+        ConfigureDirectFollowRendering();
+
+        Debug.Log($"[MultiplayerCameraController] SetTarget → '{target.name}' em {target.position}. " +
+                  $"mainCam={_mainCam?.name ?? "NULL"} follow={virtualCamera.Follow?.name ?? "NULL"} " +
+                  $"role={(NetworkManager.Singleton != null && NetworkManager.Singleton.IsServer ? "host" : "client")}");
+
+        TransitionCameraKeeper.Refresh();
         LogDiagnosticSnapshot("SetTarget-after");
+    }
+
+    private void ConfigureDirectFollowRendering()
+    {
+        if (_mainCam == null)
+            return;
+
+        GameplayCameraSceneUtility.TakeOverGameplayRendering(_mainCam);
+
+        if (!useDirectCameraFollow || _brainDisabledForDirectFollow)
+            return;
+
+        if (_cinemachineBrain == null)
+            _cinemachineBrain = _mainCam.GetComponent<Unity.Cinemachine.CinemachineBrain>();
+
+        if (_cinemachineBrain != null && _cinemachineBrain.enabled)
+        {
+            _cinemachineBrain.enabled = false;
+            _brainDisabledForDirectFollow = true;
+        }
+    }
+
+    private void EnsureVirtualCameraLive()
+    {
+        if (virtualCamera == null)
+            return;
+
+        if (!virtualCamera.gameObject.activeSelf)
+            virtualCamera.gameObject.SetActive(true);
+
+        if (!virtualCamera.enabled)
+            virtualCamera.enabled = true;
+
+        PrioritySettings priority = virtualCamera.Priority;
+        if (!priority.Enabled || priority.Value <= 0)
+        {
+            priority.Enabled = true;
+            priority.Value = 10;
+            virtualCamera.Priority = priority;
+        }
     }
 
     /// <summary>Remove o alvo atual. A câmera para de se mover.</summary>

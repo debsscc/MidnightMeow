@@ -26,6 +26,7 @@ public class EnemyAnimationHandler : MonoBehaviour
 
     private float _lastMoveSpeed = 0f;
     private const float SpeedEpsilon = 0.01f;
+    private NetworkEnemyController _networkEnemyController;
 
     // Hashes
     private readonly int _hashMoveSpeed = Animator.StringToHash("MoveSpeed");
@@ -46,6 +47,7 @@ public class EnemyAnimationHandler : MonoBehaviour
         else
             _attackRanged = GetComponent<EnemyAttack_Ranged>();
         healthComponent = GetComponent<HealthComponent>();
+        _networkEnemyController = GetComponent<NetworkEnemyController>();
 
         if (debugLogs)
         {
@@ -92,6 +94,8 @@ public class EnemyAnimationHandler : MonoBehaviour
     private void Update()
     {
         if (_animator == null) return;
+        if (_networkEnemyController != null && _networkEnemyController.DrivesAnimatorOnClient)
+            return;
 
         float speed = enemyMovement != null ? enemyMovement.GetCurrentSpeed() : 0f;
         _animator.SetFloat(_hashMoveSpeed, speed);

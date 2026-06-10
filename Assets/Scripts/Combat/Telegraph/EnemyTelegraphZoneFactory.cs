@@ -22,7 +22,16 @@ public class EnemyTelegraphZoneFactory : MonoBehaviour
             ? Instantiate(zonePrefab)
             : CreateRuntimeZoneObject();
 
-        return InitializeZone(go, strike, style, worldPosition, rotationDegrees, instigator, attackOrigin, visualOnly, projectileSpawnDelegate);
+        return InitializeZone(
+            go,
+            strike,
+            style,
+            worldPosition,
+            rotationDegrees,
+            instigator,
+            attackOrigin,
+            visualOnly,
+            projectileSpawnDelegate);
     }
 
     /// <summary>
@@ -34,7 +43,9 @@ public class EnemyTelegraphZoneFactory : MonoBehaviour
         Vector2 worldPosition,
         float rotationDegrees,
         GameObject instigator,
-        Transform attackOrigin)
+        Vector2 travelSpawnPosition,
+        bool forceTravelVisual,
+        float travelSpeed)
     {
         GameObject go = new GameObject("EnemyTelegraphZone_Client");
         var sr = go.AddComponent<SpriteRenderer>();
@@ -42,7 +53,19 @@ public class EnemyTelegraphZoneFactory : MonoBehaviour
         sr.drawMode = SpriteDrawMode.Simple;
         go.AddComponent<EnemyTelegraphZoneView>();
 
-        return InitializeZone(go, strike, style, worldPosition, rotationDegrees, instigator, attackOrigin, visualOnly: true);
+        return InitializeZone(
+            go,
+            strike,
+            style,
+            worldPosition,
+            rotationDegrees,
+            instigator,
+            instigator != null ? instigator.transform : null,
+            visualOnly: true,
+            projectileSpawnDelegate: null,
+            travelSpawnPosition,
+            forceTravelVisual,
+            travelSpeed);
     }
 
     private static EnemyTelegraphZoneInstance InitializeZone(
@@ -54,13 +77,27 @@ public class EnemyTelegraphZoneFactory : MonoBehaviour
         GameObject instigator,
         Transform attackOrigin,
         bool visualOnly,
-        System.Func<GameObject, Vector3, Quaternion, GameObject> projectileSpawnDelegate = null)
+        System.Func<GameObject, Vector3, Quaternion, GameObject> projectileSpawnDelegate = null,
+        Vector2 travelSpawnPosition = default,
+        bool forceTravelVisual = false,
+        float travelSpeedOverride = -1f)
     {
         var instance = go.GetComponent<EnemyTelegraphZoneInstance>();
         if (instance == null)
             instance = go.AddComponent<EnemyTelegraphZoneInstance>();
 
-        instance.Initialize(strike, style, worldPosition, rotationDegrees, instigator, attackOrigin, visualOnly, projectileSpawnDelegate);
+        instance.Initialize(
+            strike,
+            style,
+            worldPosition,
+            rotationDegrees,
+            instigator,
+            attackOrigin,
+            visualOnly,
+            projectileSpawnDelegate,
+            travelSpawnPosition,
+            forceTravelVisual,
+            travelSpeedOverride);
         return instance;
     }
 

@@ -17,12 +17,14 @@ public class NetworkEnemyTelegraphRelay : MonoBehaviour
         TelegraphStrikeDefinition strike,
         EnemyTelegraphVisualStyle style,
         Vector2 worldPosition,
-        float rotationDegrees)
+        float rotationDegrees,
+        Vector2 travelSpawnPosition)
     {
         if (_controller == null)
             _controller = GetComponent<NetworkEnemyController>();
 
-        _controller?.BroadcastTelegraphToClients(strike, style, worldPosition, rotationDegrees);
+        _controller?.BroadcastTelegraphToClients(
+            strike, style, worldPosition, rotationDegrees, travelSpawnPosition);
     }
 }
 
@@ -35,6 +37,9 @@ public struct TelegraphClientSnapshot : INetworkSerializable
     public float RotationDegrees;
     public Vector2 Size;
     public float FillDuration;
+    public Vector2 TravelSpawnPosition;
+    public float TravelSpeed;
+    public byte HasTravelVisual;
     public Color BackgroundColor;
     public Color FillColor;
     public Color OutlineColor;
@@ -45,8 +50,17 @@ public struct TelegraphClientSnapshot : INetworkSerializable
         TelegraphStrikeDefinition strike,
         EnemyTelegraphVisualStyle style,
         Vector2 worldPosition,
-        float rotationDegrees)
+        float rotationDegrees,
+        Vector2 travelSpawnPosition)
     {
+        bool hasTravel = strike.resolution == EnemyTelegraphResolution.ProjectileToZone
+                         && (strike.travelVisualPrefab != null || strike.projectilePrefab != null
+                             || GameplayPrefabCatalog.LoadCached()?.enemyTelegraphTravelPrefab != null);
+
+        float travelSpeed = strike.travelSpeed > 0f
+            ? strike.travelSpeed
+            : (strike.projectileSpeedOverride > 0f ? strike.projectileSpeedOverride : 12f);
+
         var snap = new TelegraphClientSnapshot
         {
             Shape = (byte)strike.shape,
@@ -55,7 +69,10 @@ public struct TelegraphClientSnapshot : INetworkSerializable
             WorldPosition = worldPosition,
             RotationDegrees = rotationDegrees,
             Size = strike.size,
-            FillDuration = strike.fillDuration
+            FillDuration = strike.fillDuration,
+            TravelSpawnPosition = travelSpawnPosition,
+            TravelSpeed = travelSpeed,
+            HasTravelVisual = hasTravel ? (byte)1 : (byte)0
         };
 
         if (style != null)
@@ -111,6 +128,9 @@ public struct TelegraphClientSnapshot : INetworkSerializable
         serializer.SerializeValue(ref RotationDegrees);
         serializer.SerializeValue(ref Size);
         serializer.SerializeValue(ref FillDuration);
+        serializer.SerializeValue(ref TravelSpawnPosition);
+        serializer.SerializeValue(ref TravelSpeed);
+        serializer.SerializeValue(ref HasTravelVisual);
         serializer.SerializeValue(ref BackgroundColor);
         serializer.SerializeValue(ref FillColor);
         serializer.SerializeValue(ref OutlineColor);

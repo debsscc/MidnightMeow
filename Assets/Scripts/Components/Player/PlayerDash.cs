@@ -65,7 +65,24 @@ public class PlayerDash : MonoBehaviour
         _debugHost = GetComponent<AbilityDebugVisualHost>();
         if (inputHandler == null) inputHandler = GetComponent<PlayerInputHandler>();
         _playerLayer = gameObject.layer;
+        passThroughLayer = BuildDefaultPassThroughMask(passThroughLayer);
         RefreshDashStats();
+    }
+
+    private static LayerMask BuildDefaultPassThroughMask(LayerMask configured)
+    {
+        int mask = configured.value;
+        mask |= LayerMaskToBit("DashableWall");
+        mask |= LayerMaskToBit("Enemy");
+        mask |= LayerMaskToBit("Player");
+        mask |= LayerMaskToBit("ProjectileEnemy");
+        return mask;
+    }
+
+    private static int LayerMaskToBit(string layerName)
+    {
+        int layer = LayerMask.NameToLayer(layerName);
+        return layer >= 0 ? 1 << layer : 0;
     }
 
     private void OnEnable()

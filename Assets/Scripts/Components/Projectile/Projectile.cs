@@ -70,6 +70,10 @@ public class Projectile : MonoBehaviour
 
         Physics2D.IgnoreLayerCollision(projectileLayer, projectileLayer, true);
 
+        int playerLayer = LayerMask.NameToLayer("Player");
+        if (playerLayer >= 0)
+            Physics2D.IgnoreLayerCollision(projectileLayer, playerLayer, true);
+
         int enemyLayer = LayerMask.NameToLayer("Enemy");
         if (enemyLayer >= 0)
             Physics2D.IgnoreLayerCollision(projectileLayer, enemyLayer, false);

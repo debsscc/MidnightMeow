@@ -42,6 +42,8 @@ public class PlayerAnimationHandler : MonoBehaviour
 
     private float _lastAttackTriggerTime = float.NegativeInfinity;
     private bool _loggedOnce;
+    private bool _useNetworkMoveSpeed;
+    private float _networkMoveSpeed;
 
     private void Awake()
     {
@@ -89,9 +91,16 @@ public class PlayerAnimationHandler : MonoBehaviour
         }
     }
 
+    public void SetUseNetworkMoveSpeed(bool enabled) => _useNetworkMoveSpeed = enabled;
+
+    public void ApplyNetworkMoveSpeed(float speed) => _networkMoveSpeed = speed;
+
+    public void PlayRemoteAttackAnimation() => TriggerAttackAnimation();
+
     private void Update()
     {
-        _animator.SetFloat(_hashMoveSpeed, _rb.linearVelocity.magnitude);
+        float moveSpeed = _useNetworkMoveSpeed ? _networkMoveSpeed : _rb.linearVelocity.magnitude;
+        _animator.SetFloat(_hashMoveSpeed, moveSpeed);
 
         float attackSpeedMult = 1f;
         if (playerShooting != null && playerShooting.BaseFireRate > 0f)

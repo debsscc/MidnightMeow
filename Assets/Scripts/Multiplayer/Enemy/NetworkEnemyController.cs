@@ -38,6 +38,30 @@ public class NetworkEnemyController : NetworkBehaviour
         NetworkVariableReadPermission.Everyone,
         NetworkVariableWritePermission.Server);
 
+    private readonly NetworkVariable<float> _animMoveSpeed = new NetworkVariable<float>(
+        0f,
+        NetworkVariableReadPermission.Everyone,
+        NetworkVariableWritePermission.Server);
+
+    private readonly NetworkVariable<bool> _animFacingFlipX = new NetworkVariable<bool>(
+        false,
+        NetworkVariableReadPermission.Everyone,
+        NetworkVariableWritePermission.Server);
+
+    private readonly NetworkVariable<byte> _animAttackSequence = new NetworkVariable<byte>(
+        0,
+        NetworkVariableReadPermission.Everyone,
+        NetworkVariableWritePermission.Server);
+
+    private static readonly int HashMoveSpeed = Animator.StringToHash("MoveSpeed");
+    private static readonly int HashOnAttack = Animator.StringToHash("OnAttack");
+
+    private Animator _animator;
+    private SpriteRenderer _spriteRenderer;
+    private byte _lastClientAttackSequence;
+
+    public bool DrivesAnimatorOnClient => IsSpawned && !IsServer;
+
     private float _lastSyncedHealth = -1f;
     private ulong _lastInstigatorClientId;
     private bool _deathFinalized;
@@ -59,6 +83,8 @@ public class NetworkEnemyController : NetworkBehaviour
         _hitStun = GetComponent<EnemyHitStun>();
         _health = GetComponent<HealthComponent>();
         _agent = GetComponent<NavMeshAgent>();
+        _animator = GetComponent<Animator>();
+        _spriteRenderer = GetComponent<SpriteRenderer>();
 
         _health.SetAllowDestroyOnDeath(false);
         _health.OnDied.AddListener(HandleDied);
@@ -83,10 +109,15 @@ public class NetworkEnemyController : NetworkBehaviour
 
         EnsureTelegraphClientComponents();
 
+        _animMoveSpeed.OnValueChanged += HandleAnimMoveSpeedChanged;
+        _animFacingFlipX.OnValueChanged += HandleAnimFacingChanged;
+        _animAttackSequence.OnValueChanged += HandleAnimAttackSequenceChanged;
+
         if (IsServer)
         {
             SetAIComponentsActive(true);
             WireTelegraphedAttackerProjectileSpawn();
+            WireAnimationPublishers();
 
             _health.OnHealthChanged.RemoveListener(HandleHealthChangedOnServer);
             _health.OnHealthChanged.AddListener(HandleHealthChangedOnServer);
@@ -95,6 +126,7 @@ public class NetworkEnemyController : NetworkBehaviour
         else
         {
             SetAIComponentsActive(false);
+            ApplyClientAnimationState(_animMoveSpeed.Value, _animFacingFlipX.Value, _animAttackSequence.Value, false);
         }
 
         _networkHealth.OnValueChanged += HandleNetworkHealthChanged;
@@ -111,8 +143,22 @@ public class NetworkEnemyController : NetworkBehaviour
 
         _networkHealth.OnValueChanged -= HandleNetworkHealthChanged;
         _networkIsDead.OnValueChanged -= HandleNetworkDeathChanged;
+        _animMoveSpeed.OnValueChanged -= HandleAnimMoveSpeedChanged;
+        _animFacingFlipX.OnValueChanged -= HandleAnimFacingChanged;
+        _animAttackSequence.OnValueChanged -= HandleAnimAttackSequenceChanged;
 
+        UnwireAnimationPublishers();
         CancelDeathDespawnRoutine();
+    }
+
+    private void Update()
+    {
+        if (!IsServer || !IsSpawned || _movement == null)
+            return;
+
+        float speed = _movement.GetCurrentSpeed();
+        if (!Mathf.Approximately(_animMoveSpeed.Value, speed))
+            _animMoveSpeed.Value = speed;
     }
 
     public void NotifyHealthInitialized()
@@ -447,12 +493,14 @@ public class NetworkEnemyController : NetworkBehaviour
         TelegraphStrikeDefinition strike,
         EnemyTelegraphVisualStyle style,
         Vector2 worldPosition,
-        float rotationDegrees)
+        float rotationDegrees,
+        Vector2 travelSpawnPosition)
     {
         if (!IsServer || !IsSpawned)
             return;
 
-        TelegraphClientSnapshot snapshot = TelegraphClientSnapshot.From(strike, style, worldPosition, rotationDegrees);
+        TelegraphClientSnapshot snapshot = TelegraphClientSnapshot.From(
+            strike, style, worldPosition, rotationDegrees, travelSpawnPosition);
         PlayTelegraphVisualClientRpc(snapshot);
     }
 
@@ -471,7 +519,9 @@ public class NetworkEnemyController : NetworkBehaviour
             snapshot.WorldPosition,
             snapshot.RotationDegrees,
             gameObject,
-            transform);
+            snapshot.TravelSpawnPosition,
+            snapshot.HasTravelVisual == 1,
+            snapshot.TravelSpeed);
     }
 
     private void EnsureTelegraphClientComponents()
@@ -484,6 +534,63 @@ public class NetworkEnemyController : NetworkBehaviour
 
         if (_telegraphedAttacker != null)
             _telegraphedAttacker.EnsureTelegraphWiring();
+    }
+
+    private void WireAnimationPublishers()
+    {
+        if (_movement != null)
+            _movement.OnFlipSprite += HandleServerAnimFlip;
+
+        if (_telegraphedAttacker != null)
+            _telegraphedAttacker.OnAttackWindup += HandleServerAnimAttack;
+        if (_meleAttack != null)
+            _meleAttack.OnAttack += HandleServerAnimAttack;
+        if (_rangedAttack != null)
+            _rangedAttack.OnAttack += HandleServerAnimAttack;
+    }
+
+    private void UnwireAnimationPublishers()
+    {
+        if (_movement != null)
+            _movement.OnFlipSprite -= HandleServerAnimFlip;
+
+        if (_telegraphedAttacker != null)
+            _telegraphedAttacker.OnAttackWindup -= HandleServerAnimAttack;
+        if (_meleAttack != null)
+            _meleAttack.OnAttack -= HandleServerAnimAttack;
+        if (_rangedAttack != null)
+            _rangedAttack.OnAttack -= HandleServerAnimAttack;
+    }
+
+    private void HandleServerAnimFlip(bool facingRight) => _animFacingFlipX.Value = facingRight;
+
+    private void HandleServerAnimAttack() => _animAttackSequence.Value++;
+
+    private void HandleAnimMoveSpeedChanged(float _, float current) =>
+        ApplyClientAnimationState(current, _animFacingFlipX.Value, _animAttackSequence.Value, false);
+
+    private void HandleAnimFacingChanged(bool _, bool current) =>
+        ApplyClientAnimationState(_animMoveSpeed.Value, current, _animAttackSequence.Value, false);
+
+    private void HandleAnimAttackSequenceChanged(byte _, byte current) =>
+        ApplyClientAnimationState(_animMoveSpeed.Value, _animFacingFlipX.Value, current, true);
+
+    private void ApplyClientAnimationState(float moveSpeed, bool facingFlipX, byte attackSequence, bool triggerAttack)
+    {
+        if (!IsSpawned || IsServer)
+            return;
+
+        if (_animator != null)
+            _animator.SetFloat(HashMoveSpeed, moveSpeed);
+
+        if (_spriteRenderer != null)
+            _spriteRenderer.flipX = facingFlipX;
+
+        if (triggerAttack && attackSequence != _lastClientAttackSequence)
+        {
+            _lastClientAttackSequence = attackSequence;
+            _animator?.SetTrigger(HashOnAttack);
+        }
     }
 
     private IEnumerator SyncHealthAfterConfigsRoutine()

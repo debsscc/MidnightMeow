@@ -21,6 +21,12 @@ public static class NetworkSceneSyncUtility
         if (SceneManager.GetActiveScene().name == sceneName)
         {
             ScreenFlowController.Instance?.ClearTransitionOverlay();
+            if (GameplaySceneBootstrap.IsGameplayScene(sceneName))
+            {
+                GameplaySceneBootstrap.RebindLocalPlayerCamera();
+                GameplayCameraRebindUtility.ScheduleAfterGameplaySceneReady();
+            }
+
             yield break;
         }
 
@@ -59,6 +65,13 @@ public static class NetworkSceneSyncUtility
         {
             Debug.LogWarning(
                 $"[NetworkSceneSyncUtility] Timeout aguardando cena '{sceneName}' via rede (ativa: '{SceneManager.GetActiveScene().name}').");
+            yield break;
+        }
+
+        if (GameplaySceneBootstrap.IsGameplayScene(sceneName))
+        {
+            GameplaySceneBootstrap.RebindLocalPlayerCamera();
+            GameplayCameraRebindUtility.ScheduleAfterGameplaySceneReady();
         }
     }
 }

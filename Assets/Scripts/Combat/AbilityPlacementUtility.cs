@@ -60,4 +60,13 @@ public static class AbilityPlacementUtility
 
         return new PlacementResult(true, worldPos, direction);
     }
+
+    public static Quaternion RotationFromDirection(Vector2 direction)
+    {
+        if (direction.sqrMagnitude <= 0.0001f)
+            return Quaternion.identity;
+
+        float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg - 90f;
+        return Quaternion.Euler(0f, 0f, angle);
+    }
 }

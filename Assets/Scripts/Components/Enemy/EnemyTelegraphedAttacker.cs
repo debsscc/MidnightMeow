@@ -144,7 +144,10 @@ public class EnemyTelegraphedAttacker : MonoBehaviour
                     out var worldPos,
                     out var rotation);
 
-                BroadcastTelegraphVisualToClients(strike, style, worldPos, rotation);
+                Vector2 travelSpawn = attackOrigin != null
+                    ? (Vector2)attackOrigin.position
+                    : (Vector2)transform.position;
+                BroadcastTelegraphVisualToClients(strike, style, worldPos, rotation, travelSpawn);
 
                 if (telegraphFactory == null)
                     continue;
@@ -177,17 +180,19 @@ public class EnemyTelegraphedAttacker : MonoBehaviour
         TelegraphStrikeDefinition strike,
         EnemyTelegraphVisualStyle style,
         Vector2 worldPos,
-        float rotation)
+        float rotation,
+        Vector2 travelSpawnPosition)
     {
         EnsureTelegraphWiring();
 
         if (_networkEnemy != null)
         {
-            _networkEnemy.BroadcastTelegraphToClients(strike, style, worldPos, rotation);
+            _networkEnemy.BroadcastTelegraphToClients(
+                strike, style, worldPos, rotation, travelSpawnPosition);
             return;
         }
 
-        _relay?.BroadcastTelegraph(strike, style, worldPos, rotation);
+        _relay?.BroadcastTelegraph(strike, style, worldPos, rotation, travelSpawnPosition);
     }
 
     /// <summary>Dispara um padrão arbitrário (útil para scripts de boss).</summary>

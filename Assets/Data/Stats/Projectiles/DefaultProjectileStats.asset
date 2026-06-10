@@ -17,4 +17,4 @@ MonoBehaviour:
   infinityBounces: 0
   collectable: 0
   damage: 1
-  maxDistance: 7
+  maxDistance: 80

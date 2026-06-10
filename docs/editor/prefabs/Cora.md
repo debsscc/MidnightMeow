@@ -1,6 +1,6 @@
 # Prefab: Cora
 
-Última revisão: 2026-06-07  
+Última revisão: 2026-06-10  
 **Caminho:** `Assets/Prefabs/Characters/Cora.prefab`  
 **GUID:** `b18ed4e45e4d20a4dbdac339b666e689`
 
@@ -37,7 +37,7 @@ Cora
 | `PlayerShooting` | `projectilePrefab` → Projectile.prefab |
 | `PlayerAim` | `firePoint` |
 | `PlayerAbilityHandler` | `abilitySet` → CoraAbilitySet; prefabs barreira/poça |
-| `CoraBarrierAbilityExecutor` | Habilidade Q |
+| `CoraBarrierAbilityExecutor` | Habilidade Q — posição do mouse + rotação pela mira (`AbilityPlacementUtility.RotationFromDirection`) |
 | `CoraPoolAbilityExecutor` | Habilidade R |
 | `PlayerPassiveHandler` | Kill streak / ricochete |
 | `PlayerAbilityStatScaler` | Tiers do ataque normal |
@@ -49,7 +49,7 @@ Cora
 | `SpriteBlink` | |
 | `PlayerInitializer` | Progressão + upgrades |
 | `PlayerAudioController` | |
-| `PlayerDash` | `passThroughLayer` = DashableWall (2048) |
+| `PlayerDash` | `passThroughLayer` = DashableWall + Enemy + Player + ProjectileEnemy (`m_Bits: 5384`) |
 | `KnockbackReceiver` | |
 | `OwnerNetworkTransform` | |
 | `NetworkPlayerController` | Refs wired (shooting, ammo, etc.) |
@@ -72,7 +72,7 @@ Cora
 |-------|--------|
 | `stats` / `baseStats` | `Assets/Data/Stats/Player/DefaultPlayerStats.asset` |
 | `PlayerAbilityHandler.abilitySet` | `Assets/Data/Abilities/CoraAbilitySet.asset` |
-| `barrierPrefab` | `Assets/Prefabs/Combat/CoraBarrier.prefab` |
+| `barrierPrefab` | `CoraBarrier.prefab` — `NetworkCoraBarrier`, `BoxCollider2D` sólido, `NavMeshObstacle.carveOnlyStationary: 0`, rotação Z via `NetworkTransform` |
 | `poolPrefab` | `Assets/Prefabs/Combat/CoraDamagePool.prefab` |
 | `progressionData` | Instância no prefab (GUID `b87f7c79296088641991071b4e517b5c`) |
 | `NetworkPlayerHealth` / revive | `MultiplayerConfig`, `DownedPlayerConfig` |

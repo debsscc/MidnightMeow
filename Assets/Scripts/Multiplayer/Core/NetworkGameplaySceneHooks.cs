@@ -49,10 +49,9 @@ public static class NetworkGameplaySceneHooks
 
     private static void OnGameplaySceneReady(string sceneName)
     {
-        GameplaySceneBootstrap.EnsureCameraRig();
-        GameplaySceneBootstrap.EnableGameplayCameras();
+        GameplaySceneBootstrap.RebindLocalPlayerCamera();
         ScreenFlowController.Instance?.ClearTransitionOverlay();
-        NetworkPlayerController.RebindLocalPlayerCameras();
+        GameplayCameraRebindUtility.ScheduleAfterGameplaySceneReady();
     }
 
     private static bool IsGameplayScene(string sceneName) =>

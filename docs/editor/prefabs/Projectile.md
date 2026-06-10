@@ -1,6 +1,6 @@
 # Prefab: Projectile
 
-Última revisão: 2026-05-22  
+Última revisão: 2026-06-10  
 **Caminho:** `Assets/Prefabs/Combat/Projectile.prefab`  
 **GUID:** `eadee2043abe1c540b4356dff9dbd9a7`
 
@@ -31,7 +31,7 @@ Projétil do **jogador** (Cora): física local + sincronização NGO no mesmo pr
 
 | Campo | Asset |
 |-------|--------|
-| `stats` | `Assets/Data/Stats/Projectiles/DefaultProjectileStats.asset` |
+| `stats` | `DefaultProjectileStats.asset` — `maxDistance: 80` (fallback); destrói em parede/inimigo |
 
 ## Campos (YAML)
 
@@ -39,6 +39,11 @@ Projétil do **jogador** (Cora): física local + sincronização NGO no mesmo pr
 |-------|--------|
 | `_hitAnimDuration` | 0.3 |
 | `_playHitOnExpire` | false |
+
+## Colisões (código)
+
+- Layer `Projectile` ignora `Player` (projétil da Cora não acerta Nixie/aliado).
+- Dano em inimigos: servidor via `NetworkProjectileController.ServerApplyEnemyHit`.
 
 ## Referenciado por
 

@@ -19,4 +19,4 @@ MonoBehaviour:
   enemyNetwork: 0
   playerDash: 1
   meleeCombat: 1
-  cameraDiagnostics: 0
+  cameraDiagnostics: 1

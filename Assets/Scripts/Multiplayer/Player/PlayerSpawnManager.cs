@@ -53,9 +53,10 @@ public class PlayerSpawnManager : NetworkBehaviour
     private int _nextSpawnIndex = 0;
     private Coroutine _spawnRecoveryCoroutine;
     private Coroutine _forceRespawnCoroutine;
-    private Coroutine _gameplaySpawnRoutine;
     private bool _spawnedForCurrentGameplayRound;
-    [SerializeField] private float gameplaySpawnDelaySeconds = 2.5f;
+    [SerializeField] private float gameplaySpawnDelaySeconds = 0.35f;
+    [Tooltip("Distância entre jogadores que compartilham o mesmo spawn point.")]
+    [SerializeField] private float coSpawnSeparation = 1.35f;
 
     private void Awake()
     {
@@ -120,41 +121,22 @@ public class PlayerSpawnManager : NetworkBehaviour
 
         if (sceneEvent.SceneEventType == SceneEventType.SynchronizeComplete)
         {
-            ScheduleGameplaySpawn(waitSeconds: 0f);
+            ScheduleGameplaySpawnForClient(sceneEvent.ClientId, waitSeconds: 0f, forceRespawn: true);
             return;
         }
 
-        if (sceneEvent.SceneEventType == SceneEventType.LoadEventCompleted
-            && sceneEvent.ClientId == NetworkManager.ServerClientId)
+        if (sceneEvent.SceneEventType == SceneEventType.LoadEventCompleted)
         {
-            ScheduleGameplaySpawnFallback();
+            ScheduleGameplaySpawnForClient(
+                sceneEvent.ClientId,
+                waitSeconds: gameplaySpawnDelaySeconds,
+                forceRespawn: true);
         }
     }
 
-    private void ScheduleGameplaySpawn(float waitSeconds)
+    private void ScheduleGameplaySpawnForClient(ulong clientId, float waitSeconds, bool forceRespawn)
     {
-        if (_gameplaySpawnRoutine != null)
-            StopCoroutine(_gameplaySpawnRoutine);
-
-        _gameplaySpawnRoutine = StartCoroutine(DelayedReconcileAfterSceneLoad(waitSeconds));
-    }
-
-    private void ScheduleGameplaySpawnFallback()
-    {
-        StartCoroutine(GameplaySpawnFallbackRoutine());
-    }
-
-    private System.Collections.IEnumerator GameplaySpawnFallbackRoutine()
-    {
-        yield return new WaitForSeconds(gameplaySpawnDelaySeconds);
-
-        if (_spawnedForCurrentGameplayRound || !IsGameplaySceneLoaded())
-            yield break;
-
-        if (enableDiagnosticsLogs)
-            Debug.Log("[PlayerSpawnManager][DIAG] Fallback de spawn após LoadEventCompleted (SynchronizeComplete não disparou).");
-
-        yield return DelayedReconcileAfterSceneLoad(0f);
+        StartCoroutine(DelayedReconcileClientAfterSceneLoad(clientId, waitSeconds, forceRespawn));
     }
 
     private static bool ShouldReconcilePlayersForScene(string sceneName)
@@ -166,7 +148,10 @@ public class PlayerSpawnManager : NetworkBehaviour
                || sceneName is "Game" or "Gameplay";
     }
 
-    private System.Collections.IEnumerator DelayedReconcileAfterSceneLoad(float waitSeconds)
+    private System.Collections.IEnumerator DelayedReconcileClientAfterSceneLoad(
+        ulong clientId,
+        float waitSeconds,
+        bool forceRespawn)
     {
         if (waitSeconds > 0f)
             yield return new WaitForSeconds(waitSeconds);
@@ -174,17 +159,20 @@ public class PlayerSpawnManager : NetworkBehaviour
         yield return null;
         yield return null;
 
-        if (!IsGameplaySceneLoaded())
-        {
-            _gameplaySpawnRoutine = null;
+        if (!IsServer || NetworkManager == null || !IsGameplaySceneLoaded())
             yield break;
+
+        if (!NetworkManager.ConnectedClients.ContainsKey(clientId))
+            yield break;
+
+        if (enableDiagnosticsLogs)
+        {
+            Debug.Log($"[PlayerSpawnManager][DIAG] Reconcile pós-cena para ClientId={clientId} " +
+                      $"(forceRespawn={forceRespawn}, cena='{SceneManager.GetActiveScene().name}').");
         }
 
-        foreach (ulong clientId in NetworkManager.ConnectedClientsIds)
-            ReconcilePlayerAfterSceneLoad(clientId, forceRespawn: true);
-
+        ReconcilePlayerAfterSceneLoad(clientId, forceRespawn);
         _spawnedForCurrentGameplayRound = true;
-        _gameplaySpawnRoutine = null;
     }
 
     private void DespawnAllPlayers()
@@ -251,20 +239,56 @@ public class PlayerSpawnManager : NetworkBehaviour
         if (NetworkManager.ConnectedClients.TryGetValue(clientId, out var clientData))
         {
             NetworkObject existing = clientData.PlayerObject;
-            if (forceRespawn && existing != null && existing.IsSpawned)
+            if (existing != null && existing.IsSpawned)
             {
-                if (enableDiagnosticsLogs)
-                    Debug.Log($"[PlayerSpawnManager][DIAG] Force respawn pós-sync para ClientId={clientId}.");
-                existing.Despawn(true);
-                _spawnedPlayers.Remove(clientId);
-            }
-            else if (!forceRespawn && existing != null && existing.IsSpawned)
-            {
-                return;
+                bool staleScene = !IsPlayerInActiveGameplayScene(existing);
+                if (forceRespawn || staleScene)
+                {
+                    if (enableDiagnosticsLogs || staleScene)
+                    {
+                        Debug.Log($"[PlayerSpawnManager][DIAG] Force respawn ClientId={clientId} " +
+                                  $"(force={forceRespawn}, staleScene={staleScene}, objScene='{existing.gameObject.scene.name}').");
+                    }
+
+                    existing.Despawn(true);
+                    _spawnedPlayers.Remove(clientId);
+                }
+                else
+                {
+                    ApplySpawnTransformToPlayer(existing, clientId);
+                    _spawnedPlayers[clientId] = existing;
+                    return;
+                }
             }
         }
 
         SpawnPlayerForClient(clientId);
+    }
+
+    private static bool IsPlayerInActiveGameplayScene(NetworkObject player)
+    {
+        if (player == null)
+            return false;
+
+        string activeScene = SceneManager.GetActiveScene().name;
+        return player.gameObject.scene.name == activeScene
+               && ShouldReconcilePlayersForScene(activeScene);
+    }
+
+    private void ApplySpawnTransformToPlayer(NetworkObject player, ulong clientId)
+    {
+        int spawnIndex = GetSpawnIndexForClient(clientId);
+        Vector3 spawnPosition = GetSpawnPosition(spawnIndex, clientId);
+        Quaternion spawnRotation = GetSpawnRotation(spawnIndex);
+
+        player.transform.SetPositionAndRotation(spawnPosition, spawnRotation);
+
+        if (player.TryGetComponent<Rigidbody2D>(out var rb))
+        {
+            rb.linearVelocity = Vector2.zero;
+            rb.angularVelocity = 0f;
+            rb.position = spawnPosition;
+        }
     }
 
     /// <summary>
@@ -300,7 +324,7 @@ public class PlayerSpawnManager : NetworkBehaviour
         }
 
         int spawnIndex = GetSpawnIndexForClient(clientId);
-        Vector3 spawnPosition = GetSpawnPosition(spawnIndex);
+        Vector3 spawnPosition = GetSpawnPosition(spawnIndex, clientId);
         Quaternion spawnRotation = GetSpawnRotation(spawnIndex);
 
         Debug.Log($"[PlayerSpawnManager] Spawnando jogador para ClientId={clientId} no SpawnPoint[{spawnIndex}] em {spawnPosition}");
@@ -316,8 +340,8 @@ public class PlayerSpawnManager : NetworkBehaviour
             return;
         }
 
-        // SpawnAsPlayerObject vincula o objeto ao cliente e atribui ownership
-        networkObject.SpawnAsPlayerObject(clientId, destroyWithScene: true);
+        // destroyWithScene=false evita perder o jogador quando NGO sincroniza cena antes do cliente terminar Loading2.
+        networkObject.SpawnAsPlayerObject(clientId, destroyWithScene: false);
         _spawnedPlayers[clientId] = networkObject;
 
         Debug.Log($"[PlayerSpawnManager] Jogador spawnado com sucesso. ClientId={clientId}, NetworkObjectId={networkObject.NetworkObjectId}");
@@ -395,11 +419,36 @@ public class PlayerSpawnManager : NetworkBehaviour
         return index;
     }
 
-    private Vector3 GetSpawnPosition(int spawnIndex)
+    private Vector3 GetSpawnPosition(int spawnIndex, ulong clientId)
     {
-        if (spawnPoints == null || spawnPoints.Length == 0 || spawnPoints[spawnIndex] == null)
-            return Vector3.zero;
-        return spawnPoints[spawnIndex].position;
+        Vector3 basePosition = Vector3.zero;
+        if (spawnPoints != null && spawnPoints.Length > 0 && spawnPoints[spawnIndex] != null)
+            basePosition = spawnPoints[spawnIndex].position;
+
+        int coSpawnOffsetIndex = CountClientsSharingSpawnIndex(spawnIndex, clientId);
+        if (coSpawnOffsetIndex <= 0 || coSpawnSeparation <= 0f)
+            return basePosition;
+
+        float angle = coSpawnOffsetIndex * Mathf.PI;
+        return basePosition + new Vector3(
+            Mathf.Cos(angle) * coSpawnSeparation,
+            Mathf.Sin(angle) * coSpawnSeparation,
+            0f);
+    }
+
+    private int CountClientsSharingSpawnIndex(int spawnIndex, ulong clientId)
+    {
+        int count = 0;
+        foreach (var kvp in _clientSpawnIndex)
+        {
+            if (kvp.Value != spawnIndex)
+                continue;
+
+            if (kvp.Key < clientId)
+                count++;
+        }
+
+        return count;
     }
 
     private Quaternion GetSpawnRotation(int spawnIndex)

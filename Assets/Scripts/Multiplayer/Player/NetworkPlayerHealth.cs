@@ -377,11 +377,11 @@ public class NetworkPlayerHealth : NetworkBehaviour
 
 
     private void HandleNetworkHealthChanged(float oldValue, float newValue)
-
     {
+        if (!IsServer && _healthComponent != null && !_networkIsUnconscious.Value)
+            _healthComponent.ApplyNetworkMirror(newValue, _networkMaxHealth.Value, false);
 
         NotifyHealthChanged(newValue, _networkMaxHealth.Value);
-
     }
 
 
@@ -482,25 +482,44 @@ public class NetworkPlayerHealth : NetworkBehaviour
 
 
 
-    [Rpc(SendTo.Server)]
-
-    public void TakeDamageRpc(float amount, ulong instigatorClientId)
-
+    /// <summary>Dano autoritativo no servidor (telegraph/projétil inimigo). Replica vida e feedback visual.</summary>
+    public bool ServerApplyExternalDamage(float amount, GameObject instigator)
     {
-
-        if (!IsServer || !CanFight || amount <= 0f) return;
+        if (!IsServer || !CanFight || amount <= 0f)
+            return false;
 
         float before = _healthComponent.CurrentHealth;
-        _healthComponent.TakeDamage(amount, gameObject);
+        _healthComponent.TakeDamage(amount, instigator != null ? instigator : gameObject);
         float dealt = Mathf.Max(0f, before - _healthComponent.CurrentHealth);
-        if (dealt > 0f)
-            ShowDamageNumberClientRpc(dealt);
+        if (dealt <= 0f)
+            return false;
+
+        ShowDamageNumberClientRpc(dealt);
+        PlayTakeDamageVisualClientRpc();
+        return true;
+    }
+
+    [Rpc(SendTo.Server)]
+    public void TakeDamageRpc(float amount, ulong instigatorClientId)
+    {
+        if (!IsServer || !CanFight || amount <= 0f) return;
+        ServerApplyExternalDamage(amount, gameObject);
     }
 
     [ClientRpc]
     private void ShowDamageNumberClientRpc(float amount)
     {
         GameEvents.InvokeDamageShown(amount, transform.position + Vector3.up * 0.5f);
+    }
+
+    [ClientRpc]
+    private void PlayTakeDamageVisualClientRpc()
+    {
+        if (TryGetComponent<SpriteBlink>(out var blink))
+            blink.Blink();
+
+        if (TryGetComponent<Animator>(out var animator))
+            animator.SetTrigger(Animator.StringToHash("OnDamage"));
     }
 
 

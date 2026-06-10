@@ -7,7 +7,7 @@ using UnityEngine;
 [RequireComponent(typeof(NetworkObject))]
 public class NetworkAbilityObjectSpawner : NetworkBehaviour
 {
-    public void SpawnBarrier(GameObject prefab, Vector2 position, AbilityTierData tierData)
+    public void SpawnBarrier(GameObject prefab, Vector2 position, Vector2 direction, AbilityTierData tierData)
     {
         if (prefab == null) return;
 
@@ -15,10 +15,10 @@ public class NetworkAbilityObjectSpawner : NetworkBehaviour
             SpawnAbilityObjectServerRpc(
                 CharacterAbilityType.CoraBarrier,
                 position,
-                Vector2.zero,
+                direction,
                 PackTier(tierData));
         else if (!IsSpawned)
-            SpawnLocal(prefab, position, tierData, CharacterAbilityType.CoraBarrier);
+            SpawnLocal(prefab, position, direction, tierData, CharacterAbilityType.CoraBarrier);
     }
 
     public void SpawnPool(GameObject prefab, Vector2 position, AbilityTierData tierData)
@@ -32,12 +32,20 @@ public class NetworkAbilityObjectSpawner : NetworkBehaviour
                 Vector2.zero,
                 PackTier(tierData));
         else if (!IsSpawned)
-            SpawnLocal(prefab, position, tierData, CharacterAbilityType.CoraPool);
+            SpawnLocal(prefab, position, Vector2.zero, tierData, CharacterAbilityType.CoraPool);
     }
 
-    private void SpawnLocal(GameObject prefab, Vector2 position, AbilityTierData tierData, CharacterAbilityType type)
+    private void SpawnLocal(
+        GameObject prefab,
+        Vector2 position,
+        Vector2 direction,
+        AbilityTierData tierData,
+        CharacterAbilityType type)
     {
-        var instance = Instantiate(prefab, position, Quaternion.identity);
+        var rotation = type == CharacterAbilityType.CoraBarrier
+            ? AbilityPlacementUtility.RotationFromDirection(direction)
+            : Quaternion.identity;
+        var instance = Instantiate(prefab, position, rotation);
         ulong ownerId = NetworkManager.Singleton != null ? NetworkManager.Singleton.LocalClientId : 0;
 
         if (type == CharacterAbilityType.CoraBarrier && instance.TryGetComponent<CoraBarrier>(out var barrier))
@@ -59,14 +67,22 @@ public class NetworkAbilityObjectSpawner : NetworkBehaviour
         GameObject prefab = handler.GetSpawnPrefab(abilityType);
         if (prefab == null) return;
 
-        var instance = Instantiate(prefab, position, Quaternion.identity);
+        var rotation = abilityType == CharacterAbilityType.CoraBarrier
+            ? AbilityPlacementUtility.RotationFromDirection(direction)
+            : Quaternion.identity;
+        var instance = Instantiate(prefab, position, rotation);
         var netObj = instance.GetComponent<NetworkObject>();
         if (netObj != null)
             netObj.Spawn();
 
         var tierData = UnpackTier(payload);
-        if (abilityType == CharacterAbilityType.CoraBarrier && instance.TryGetComponent<CoraBarrier>(out var barrier))
-            barrier.Initialize(tierData, OwnerClientId);
+        if (abilityType == CharacterAbilityType.CoraBarrier)
+        {
+            if (instance.TryGetComponent<NetworkCoraBarrier>(out var networkBarrier))
+                networkBarrier.ServerPublishInitialize(tierData, OwnerClientId);
+            else if (instance.TryGetComponent<CoraBarrier>(out var barrier))
+                barrier.Initialize(tierData, OwnerClientId);
+        }
         else if (abilityType == CharacterAbilityType.CoraPool && instance.TryGetComponent<CoraDamagePool>(out var pool))
             pool.Initialize(tierData, OwnerClientId);
     }

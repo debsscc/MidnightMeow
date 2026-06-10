@@ -13,3 +13,4 @@ MonoBehaviour:
   m_Name: GameplayPrefabCatalog
   m_EditorClassIdentifier: Assembly-CSharp::GameplayPrefabCatalog
   multiplayerCameraRigPrefab: {fileID: 1560384257741752752, guid: 31f81a6ad1a476642bb4e150755f21a5, type: 3}
+  enemyTelegraphTravelPrefab: {fileID: 3344960684203597567, guid: 6ededdb4f3eb7e143ae0a036319f5fd3, type: 3}

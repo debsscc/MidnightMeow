@@ -4,6 +4,7 @@
 // DESCRIÇÃO: Componente que controla o projétil inimigo.
 // ---------------------------------------------------------------- */
 
+using Unity.Netcode;
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody2D))]
@@ -74,16 +75,13 @@ public class EnemyProjectile : MonoBehaviour
     {
         if (other.gameObject.layer == LayerMask.NameToLayer("Player"))
         {
-            if (other.TryGetComponent<IDamageable>(out IDamageable target))
-            {
-                target.TakeDamage(stats.damage, this.gameObject);
-            }
+            PlayerCombatUtility.TryApplyDamage(other, stats.damage, gameObject);
             TriggerHitAndDestroy();
         }
     }
 
     // Para o projétil, toca a animação de Hit e agenda a destruição
-    private void TriggerHitAndDestroy()
+    public void TriggerHitAndDestroy()
     {
         if (_hasHit) return;
         _hasHit = true;
@@ -101,6 +99,15 @@ public class EnemyProjectile : MonoBehaviour
 
         if (_projectileAnimator != null)
             _projectileAnimator.SetTrigger(_hashOnHit);
+
+        if (TryGetComponent<NetworkEnemyProjectileController>(out var networkProjectile)
+            && networkProjectile.IsSpawned
+            && NetworkManager.Singleton != null
+            && NetworkManager.Singleton.IsServer)
+        {
+            networkProjectile.DespawnAfterHit(_hitAnimDuration);
+            return;
+        }
 
         Destroy(gameObject, _hitAnimDuration);
     }

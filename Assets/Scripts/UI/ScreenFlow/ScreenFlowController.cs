@@ -239,7 +239,10 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
                 yield return FadeOut(fade, fadeTime);
 
             if (useLoading)
+            {
+                TransitionCameraKeeper.EnsureActive();
                 SetLoadingScreenActive(true);
+            }
 
             if (loadKind == SceneLoadKind.NetcodeHost)
             {

@@ -1,6 +1,6 @@
 # Prefab: MultiplayerCameraRig
 
-Última revisão: 2026-05-22  
+Última revisão: 2026-06-10  
 **Caminho:** `Assets/Prefabs/Multiplayer/MultiplayerCameraRig.prefab`
 
 ## Resumo
@@ -41,4 +41,26 @@ Para **silenciar** os logs da câmera: no SO, desmarque **Camera Diagnostics** (
 
 ## Ligação com Player
 
-`NetworkPlayerController` tenta bind de `playerCamera` em runtime — confirmar que este rig está na cena MP.
+- `NetworkPlayerController.TryBindCameraNow()` chama `MultiplayerCameraController.SetTarget` no jogador local (`IsOwner`).
+- O campo `playerCamera` no prefab do personagem deve ficar **vazio** (câmera no prefab causa tela azul).
+- `GameplayCameraRebindUtility` repete o bind em 0 / 0,35 / 0,75 / 1,5 s após `Fase-*` carregar (cliente NGO spawna o jogador depois do `SynchronizeComplete`).
+
+## Display Error / tela azul no cliente
+
+| Sintoma | Causa usual |
+|---------|-------------|
+| Tela azul + HUD ok | `MainCamera` ativa sem `Follow` no Cinemachine (câmera parada no rig, clear color azul) |
+| Display 1 sem câmera | Nenhuma câmera habilitada durante transição |
+
+Fluxo:
+
+1. `GameplaySceneBootstrap.EnsureCameraRig()` — usa o rig da cena (`Fase-1` já tem instância na raiz) ou instancia via `GameplayPrefabCatalog`.
+2. `EnsureActiveGameplayCamera()` — habilita `MainCamera` na cena de gameplay.
+3. `TransitionCameraKeeper` (DDOL) — fallback preto só durante transições (sem câmera de gameplay ativa).
+4. `TryBindCameraNow` usa `EnsureCameraRigPresent()` (sem rebind recursivo) e só retorna sucesso com `IsFollowingTarget`.
+5. Rig da cena tem prioridade sobre `MultiplayerCameraRig(Clone)`; spawn via catalog é último recurso.
+6. `MainCamera` em Z = -10; follow direto em `LateUpdate` (`useDirectCameraFollow`) com CinemachineBrain desligado após bind.
+7. `GameplayCameraSceneUtility.TakeOverGameplayRendering()` desativa outras câmeras (menus/DDOL) e garante tag `MainCamera` só no rig da fase.
+4. `MultiplayerCameraController.Resolve()` — singleton robusto (limpa `Instance` no `OnDestroy`, prefere rig da cena ativa sobre duplicatas).
+
+**Prioridade Cinemachine:** `PlayerVirtualCamera` com `Priority.Enabled = 1`, valor `10`.

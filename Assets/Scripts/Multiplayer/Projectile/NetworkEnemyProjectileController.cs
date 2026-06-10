@@ -50,4 +50,10 @@ public class NetworkEnemyProjectileController : NetworkBehaviour
         if (NetworkObject != null && NetworkObject.IsSpawned)
             NetworkObject.Despawn(true);
     }
+
+    public void DespawnAfterHit(float delay)
+    {
+        if (!IsServer) return;
+        Invoke(nameof(DespawnProjectile), Mathf.Max(0f, delay));
+    }
 }

@@ -1,6 +1,6 @@
 # Prefab: Nixie
 
-Última revisão: 2026-06-08  
+Última revisão: 2026-06-10  
 **Caminho:** `Assets/Prefabs/Characters/Nixie.prefab`  
 **GUID:** `7b87bef79bcba89408883a628d686c78`
 
@@ -36,7 +36,7 @@ Nixie
 | `PlayerAim` | Direção do trapézio |
 | `PlayerAbilityHandler` | `abilitySet` → NixAbilitySet; `unlockAllAbilitySlotsOnStart: false` (bloqueio por wave) |
 | `NixPushAbilityExecutor` | Habilidade Q |
-| `NixChargeAbilityExecutor` | Habilidade R |
+| `NixChargeAbilityExecutor` | Habilidade R — dano no corredor desde `Rigidbody2D.position` no início |
 | `PlayerPassiveHandler` | Kill streak / cleave |
 | `PlayerAbilityStatScaler` | Tiers do ataque normal |
 | `NetworkPlayerAbilityRelay` | Sync animações MP |
@@ -46,7 +46,7 @@ Nixie
 | `PlayerAdrenaline` | |
 | `PlayerInitializer` | `playerShooting` vazio |
 | `PlayerAudioController` | |
-| `PlayerDash` | `dashFailsafeExtraSeconds: 0.35` |
+| `PlayerDash` | `passThroughLayer` = DashableWall + Enemy + Player + ProjectileEnemy (`m_Bits: 5384`); `dashFailsafeExtraSeconds: 0.35` |
 | `KnockbackReceiver` | |
 | `PlayerMeleeCombat` | `combatStats` → MeleeCombatStats |
 | `OwnerNetworkTransform` | |

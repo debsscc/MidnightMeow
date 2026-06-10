@@ -1,6 +1,6 @@
 # Ataques inimigos com telegraph (estilo Hades)
 
-Última revisão: 2026-06-08
+Última revisão: 2026-06-10
 
 ## Objetivo
 
@@ -60,11 +60,12 @@ Exemplo: `EnemyTelegraphFeedbackListener` (áudio).
 
 ## Multiplayer
 
-- **Servidor:** zona autoritativa (`visualOnly: false`) — aplica dano e spawna projétil NGO.
-- **Clientes:** `EnemyTelegraphedAttacker` chama `NetworkEnemyController.BroadcastTelegraphToClients` → `PlayTelegraphVisualClientRpc` (RPC registrado no prefab, não em componentes adicionados em runtime).
-- **Visual no cliente:** `EnemyTelegraphZoneFactory.SpawnClientVisual` instancia a zona localmente (sem depender de `EnemyTelegraphZoneFactory` no inimigo). Em `ProjectileToZone`, o cliente também reproduz o sprite de voo até a zona (`PlayTravelVisualOnly`).
+- **Servidor:** zona autoritativa (`visualOnly: false`) — aplica dano em área; visual de voo é **local** (`Instantiate` + `TelegraphZoneTraveler`, sem NGO preso no cliente).
+- **Clientes:** `EnemyTelegraphedAttacker` → `BroadcastTelegraphToClients` → `PlayTelegraphVisualClientRpc` com `TelegraphClientSnapshot` (`INetworkSerializable`: forma, fill, posição de spawn do voo, velocidade).
+- **Visual no cliente:** `EnemyTelegraphZoneFactory.SpawnClientVisual` instancia zona + voo até o impacto. Prefab de voo: pattern (`travelVisualPrefab`) ou fallback `GameplayPrefabCatalog.enemyTelegraphTravelPrefab`.
+- **Dano ao jogador:** servidor usa `PlayerCombatUtility` → `NetworkPlayerHealth.ServerApplyExternalDamage` (vida via `NetworkVariable` + número de dano / blink via `ClientRpc`).
 - `EnemyTelegraphModuleInstaller` + `NetworkEnemyController.OnNetworkSpawn` garantem factory/relay no inimigo em todos os peers.
-- Projéteis autoritativos: `NetworkEnemyController` define `ProjectileSpawnDelegate` → `NetworkObject.Spawn`.
+- Projéteis inimigos **autônomos** (não telegraph): `NetworkEnemyProjectileController.DespawnAfterHit` no servidor após colisão.
 
 ## Padrões sugeridos
 

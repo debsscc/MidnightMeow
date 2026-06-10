@@ -4,6 +4,8 @@ using UnityEngine;
 public class GameplayPrefabCatalog : ScriptableObject
 {
     public GameObject multiplayerCameraRigPrefab;
+    [Tooltip("Visual de voo dos ataques inimigos ProjectileToZone (clientes MP).")]
+    public GameObject enemyTelegraphTravelPrefab;
 
     private static GameplayPrefabCatalog _cached;
 

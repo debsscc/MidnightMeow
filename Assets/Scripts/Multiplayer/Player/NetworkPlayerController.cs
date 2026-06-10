@@ -107,6 +107,16 @@ public class NetworkPlayerController : NetworkBehaviour
         }
     }
 
+    /// <summary>Transform estável para follow da câmera (evita jitter do Rigidbody2D).</summary>
+    public Transform GetCameraFollowTransform()
+    {
+        Transform anchor = transform.Find("CameraFollow");
+        if (anchor != null)
+            return anchor;
+
+        return transform;
+    }
+
     private void HandleSceneLoaded(Scene scene, LoadSceneMode mode)
     {
         if (!IsOwner || !IsSpawned)
@@ -222,19 +232,26 @@ public class NetworkPlayerController : NetworkBehaviour
 
     private bool TryBindCameraNow()
     {
-        GameplaySceneBootstrap.EnsureCameraRig();
+        GameplaySceneBootstrap.EnsureCameraRigPresent();
 
-        if (MultiplayerCameraController.Instance == null)
+        MultiplayerCameraController cameraController = MultiplayerCameraController.Resolve();
+        if (cameraController == null)
             return false;
 
-        MultiplayerCameraController.Instance.SetTarget(transform);
+        Transform followTarget = GetCameraFollowTransform();
+        cameraController.SetTarget(followTarget);
         if (aim != null)
-            aim.SetAimCamera(MultiplayerCameraController.Instance.MainCamera);
+            aim.SetAimCamera(cameraController.MainCamera);
 
+        bool bound = cameraController.IsFollowingTarget;
         if (enableDiagnosticsLogs)
-            Debug.Log($"[NetworkPlayerController] Câmera vinculada ao jogador local ClientId={OwnerClientId}");
+        {
+            Debug.Log(bound
+                ? $"[NetworkPlayerController] Câmera vinculada ao jogador local ClientId={OwnerClientId} alvo={followTarget.name}"
+                : $"[NetworkPlayerController] Falha ao vincular câmera ClientId={OwnerClientId} (controller sem follow).");
+        }
 
-        return true;
+        return bound;
     }
 
     private System.Collections.IEnumerator WaitAndBindCameraRoutine()

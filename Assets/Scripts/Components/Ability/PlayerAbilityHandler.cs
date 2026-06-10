@@ -193,7 +193,9 @@ public class PlayerAbilityHandler : MonoBehaviour
 
         Vector2 aimDirection = ResolveAimDirection();
         Vector2 placement = ResolvePlacement(tierData.range, aimDirection);
-        Vector2 origin = ResolveAbilityOrigin();
+        Vector2 origin = definition.abilityType == CharacterAbilityType.NixCharge
+            ? (Vector2)transform.position
+            : ResolveAbilityOrigin();
 
         ulong ownerId = NetworkManager.Singleton != null ? NetworkManager.Singleton.LocalClientId : 0;
         var context = new AbilityExecutionContext(gameObject, aimDirection, placement, tier, ownerId);

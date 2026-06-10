@@ -5677,7 +5677,7 @@ MonoBehaviour:
   stats: {fileID: 11400000, guid: 7f4fa052e88f8494f918e2f5d5b9cdd1, type: 2}
   passThroughLayer:
     serializedVersion: 2
-    m_Bits: 2048
+    m_Bits: 5384
 --- !u!223 &6101838958175283613
 Canvas:
   m_ObjectHideFlags: 0
