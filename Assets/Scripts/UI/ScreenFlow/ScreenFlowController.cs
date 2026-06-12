@@ -29,15 +29,21 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
     public event Action<string> OnTransitionCompleted;
 
     public bool IsTransitioning { get; private set; }
+    public bool IsLoadingScreenVisible { get; private set; }
+    public float LoadingProgress { get; private set; }
     public string TargetSceneName { get; private set; }
     public AsyncOperation CurrentAsyncLoad { get; private set; }
+
+    public event Action<bool> OnLoadingScreenVisibilityChanged;
 
     private string _activeSceneName;
     private Coroutine _transitionRoutine;
 
     private Image _fadeImage;
+    private Image _loadingProgressFill;
     private GameObject _loadingScreen;
     private Image _builtInFadeImage;
+    private Image _builtInProgressFill;
     private GameObject _builtInLoadingScreen;
     private float _fadeTime = 1f;
     private float _minLoadingTime = 2f;
@@ -72,6 +78,7 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
         // Refs da cena anterior deixam de ser válidas; o overlay persistente segue no controller.
         _fadeImage = null;
         _loadingScreen = null;
+        _loadingProgressFill = null;
         SetLoadingScreenActive(false);
 
         if (scene.name.StartsWith("Fase-", System.StringComparison.Ordinal) || scene.name is "Game" or "Gameplay")
@@ -86,7 +93,10 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
         if (fadeImage != null)
             _fadeImage = fadeImage;
         if (loadingScreen != null)
+        {
             _loadingScreen = loadingScreen;
+            _loadingProgressFill = ResolveLoadingProgressFill(loadingScreen);
+        }
         if (fadeTime > 0f)
             _fadeTime = fadeTime;
         if (minLoadingTime > 0f)
@@ -255,6 +265,9 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
 
                 if (!net.IsServer)
                 {
+                    if (useLoading)
+                        yield return WaitForLoadingProgress(minLoadingTime);
+
                     yield return NetworkSceneSyncUtility.WaitForActiveScene(sceneName);
                     loadSucceeded = SceneManager.GetActiveScene().name == sceneName;
                 }
@@ -263,8 +276,25 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
                     net.SceneManager.LoadScene(sceneName, LoadSceneMode.Single);
                     CurrentAsyncLoad = null;
 
-                    while (SceneManager.GetActiveScene().name != sceneName)
-                        yield return null;
+                    if (useLoading)
+                    {
+                        float loadTimer = 0f;
+                        while (SceneManager.GetActiveScene().name != sceneName || loadTimer < minLoadingTime)
+                        {
+                            loadTimer += Time.unscaledDeltaTime;
+                            float timeProgress = minLoadingTime > 0f ? Mathf.Clamp01(loadTimer / minLoadingTime) : 1f;
+                            float sceneProgress = SceneManager.GetActiveScene().name == sceneName ? 1f : 0.5f;
+                            SetLoadingProgress(Mathf.Max(timeProgress, sceneProgress));
+                            yield return null;
+                        }
+
+                        SetLoadingProgress(1f);
+                    }
+                    else
+                    {
+                        while (SceneManager.GetActiveScene().name != sceneName)
+                            yield return null;
+                    }
 
                     loadSucceeded = true;
                 }
@@ -290,13 +320,7 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
                 if (useLoading)
                 {
                     asyncLoad.allowSceneActivation = false;
-                    float loadTimer = 0f;
-                    while (asyncLoad.progress < 0.9f || loadTimer < minLoadingTime)
-                    {
-                        loadTimer += Time.unscaledDeltaTime;
-                        yield return null;
-                    }
-
+                    yield return WaitForLoadingProgress(minLoadingTime, asyncLoad);
                     SetLoadingScreenActive(false);
                     asyncLoad.allowSceneActivation = true;
                 }
@@ -369,6 +393,7 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
             48, TextAlignmentOptions.Center, Color.white,
             new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
             new Vector2(-300f, -40f), new Vector2(300f, 40f));
+        _builtInProgressFill = CreateLoadingProgressBar(_builtInLoadingScreen.transform);
         _builtInLoadingScreen.SetActive(false);
     }
 
@@ -376,10 +401,125 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
 
     private void SetLoadingScreenActive(bool active)
     {
+        if (active)
+            ResetLoadingProgress();
+
         if (_loadingScreen != null)
             _loadingScreen.SetActive(active);
         else if (_builtInLoadingScreen != null)
             _builtInLoadingScreen.SetActive(active);
+
+        if (IsLoadingScreenVisible != active)
+        {
+            IsLoadingScreenVisible = active;
+            OnLoadingScreenVisibilityChanged?.Invoke(active);
+        }
+    }
+
+    public void ReportTransitionLoadingProgress(float progress)
+    {
+        if (!IsLoadingScreenVisible)
+            return;
+
+        SetLoadingProgress(progress);
+    }
+
+    private void ResetLoadingProgress()
+    {
+        SetLoadingProgress(0f);
+    }
+
+    private void SetLoadingProgress(float progress)
+    {
+        LoadingProgress = Mathf.Clamp01(progress);
+
+        Image fill = _loadingProgressFill != null ? _loadingProgressFill : _builtInProgressFill;
+        if (fill != null)
+            fill.fillAmount = LoadingProgress;
+    }
+
+    private static Image ResolveLoadingProgressFill(GameObject loadingScreen)
+    {
+        if (loadingScreen == null)
+            return null;
+
+        Image[] images = loadingScreen.GetComponentsInChildren<Image>(true);
+        Image filledCandidate = null;
+
+        for (int i = 0; i < images.Length; i++)
+        {
+            Image image = images[i];
+            if (image == null || image.gameObject == loadingScreen)
+                continue;
+
+            if (image.type == Image.Type.Filled)
+            {
+                ConfigureFilledImage(image);
+                return image;
+            }
+
+            if (filledCandidate == null && image.gameObject.name.Contains("Fill", System.StringComparison.OrdinalIgnoreCase))
+                filledCandidate = image;
+        }
+
+        if (filledCandidate != null)
+        {
+            ConfigureFilledImage(filledCandidate);
+            return filledCandidate;
+        }
+
+        Transform parent = loadingScreen.transform;
+        return CreateLoadingProgressBar(parent);
+    }
+
+    private static Image CreateLoadingProgressBar(Transform parent)
+    {
+        GameObject trackGo = new GameObject("ProgressTrack", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+        trackGo.transform.SetParent(parent, false);
+        RectTransform trackRt = trackGo.GetComponent<RectTransform>();
+        trackRt.anchorMin = new Vector2(0.5f, 0.5f);
+        trackRt.anchorMax = new Vector2(0.5f, 0.5f);
+        trackRt.pivot = new Vector2(0.5f, 0.5f);
+        trackRt.anchoredPosition = new Vector2(0f, -120f);
+        trackRt.sizeDelta = new Vector2(640f, 18f);
+        trackGo.GetComponent<Image>().color = new Color(0.12f, 0.12f, 0.16f, 0.95f);
+
+        GameObject fillGo = new GameObject("ProgressFill", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+        fillGo.transform.SetParent(trackGo.transform, false);
+        ScreenFlowPlaceholderFactory.StretchFull(fillGo.GetComponent<RectTransform>());
+        Image fill = fillGo.GetComponent<Image>();
+        fill.color = new Color(0.85f, 0.2f, 0.2f, 1f);
+        ConfigureFilledImage(fill);
+        fill.fillAmount = 0f;
+        return fill;
+    }
+
+    private static void ConfigureFilledImage(Image image)
+    {
+        image.type = Image.Type.Filled;
+        image.fillMethod = Image.FillMethod.Horizontal;
+        image.fillOrigin = (int)Image.OriginHorizontal.Left;
+    }
+
+    private IEnumerator WaitForLoadingProgress(float minLoadingTime, AsyncOperation asyncLoad = null)
+    {
+        float loadTimer = 0f;
+        while (true)
+        {
+            loadTimer += Time.unscaledDeltaTime;
+            float timeProgress = minLoadingTime > 0f ? Mathf.Clamp01(loadTimer / minLoadingTime) : 1f;
+            float loadProgress = asyncLoad != null ? Mathf.Clamp01(asyncLoad.progress / 0.9f) : timeProgress;
+            SetLoadingProgress(Mathf.Max(timeProgress, loadProgress));
+
+            bool loadReady = asyncLoad == null || asyncLoad.progress >= 0.9f;
+            bool timeReady = loadTimer >= minLoadingTime;
+            if (loadReady && timeReady)
+                break;
+
+            yield return null;
+        }
+
+        SetLoadingProgress(1f);
     }
 
     private void ResetBuiltInFade()

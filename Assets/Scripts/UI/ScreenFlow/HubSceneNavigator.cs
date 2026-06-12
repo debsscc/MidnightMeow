@@ -130,14 +130,7 @@ public static class HubSceneNavigator
             if (useLoading)
             {
                 load.allowSceneActivation = false;
-                float timer = 0f;
-                while (load.progress < 0.9f || timer < minLoadingTime)
-                {
-                    timer += Time.unscaledDeltaTime;
-                    yield return null;
-                }
-
-                load.allowSceneActivation = true;
+                yield return ReportLoadingProgress(minLoadingTime, load);
             }
 
             while (!load.isDone)
@@ -147,14 +140,7 @@ public static class HubSceneNavigator
             EventSystemGlobalBootstrap.Reconcile();
         }
         else if (useLoading)
-        {
-            float timer = 0f;
-            while (timer < minLoadingTime)
-            {
-                timer += Time.unscaledDeltaTime;
-                yield return null;
-            }
-        }
+            yield return ReportLoadingProgress(minLoadingTime);
 
         ApplyHubView(showOverlay: true);
     }
@@ -168,14 +154,7 @@ public static class HubSceneNavigator
         }
 
         if (useLoading)
-        {
-            float timer = 0f;
-            while (timer < minLoadingTime)
-            {
-                timer += Time.unscaledDeltaTime;
-                yield return null;
-            }
-        }
+            yield return ReportLoadingProgress(minLoadingTime);
 
         ApplyHubView(showOverlay: false);
         yield return null;
@@ -222,6 +201,30 @@ public static class HubSceneNavigator
 
     private static bool ShouldToggleHubUiRoot(string rootName) =>
         rootName is "Menu" or "UIManager" or "Main Camera" or "---- ScreenFlow ----";
+
+    private static IEnumerator ReportLoadingProgress(float minLoadingTime, AsyncOperation asyncLoad = null)
+    {
+        float timer = 0f;
+        while (true)
+        {
+            timer += Time.unscaledDeltaTime;
+            float timeProgress = minLoadingTime > 0f ? Mathf.Clamp01(timer / minLoadingTime) : 1f;
+            float loadProgress = asyncLoad != null ? Mathf.Clamp01(asyncLoad.progress / 0.9f) : timeProgress;
+            ScreenFlowController.Instance?.ReportTransitionLoadingProgress(Mathf.Max(timeProgress, loadProgress));
+
+            bool loadReady = asyncLoad == null || asyncLoad.progress >= 0.9f;
+            bool timeReady = timer >= minLoadingTime;
+            if (loadReady && timeReady)
+                break;
+
+            yield return null;
+        }
+
+        ScreenFlowController.Instance?.ReportTransitionLoadingProgress(1f);
+
+        if (asyncLoad != null)
+            asyncLoad.allowSceneActivation = true;
+    }
 
     private static void NotifyPreparationVisible()
     {
