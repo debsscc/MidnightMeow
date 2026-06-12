@@ -41,8 +41,8 @@ public class LoadingScreenController : MonoBehaviour
             ? fallbackNextRouteId
             : GameSessionContext.PendingRouteId;
 
-        if (statusText != null)
-            statusText.text = "Carregando...";
+        ResetProgressUi();
+        yield return null;
 
         float timer = 0f;
         while (timer < minimumDisplaySeconds)
@@ -138,13 +138,31 @@ public class LoadingScreenController : MonoBehaviour
         progressFill = CreateProgressBar(panel);
     }
 
+    private void ResetProgressUi()
+    {
+        if (progressFill != null)
+        {
+            ConfigureFilledImage(progressFill);
+            progressFill.fillAmount = 0f;
+        }
+
+        UpdateProgressUi(0f, "Carregando... 0%");
+    }
+
     private void UpdateProgressUi(float progress, string label)
     {
         if (statusText != null)
             statusText.text = label;
 
         if (progressFill != null)
-            progressFill.fillAmount = progress;
+            progressFill.fillAmount = Mathf.Clamp01(progress);
+    }
+
+    private static void ConfigureFilledImage(Image image)
+    {
+        image.type = Image.Type.Filled;
+        image.fillMethod = Image.FillMethod.Horizontal;
+        image.fillOrigin = (int)Image.OriginHorizontal.Left;
     }
 
     private static Image CreateProgressBar(Transform parent)
@@ -165,9 +183,7 @@ public class LoadingScreenController : MonoBehaviour
         ScreenFlowPlaceholderFactory.StretchFull(fillRt);
         Image fill = fillGo.GetComponent<Image>();
         fill.color = new Color(0.85f, 0.2f, 0.2f, 1f);
-        fill.type = Image.Type.Filled;
-        fill.fillMethod = Image.FillMethod.Horizontal;
-        fill.fillOrigin = (int)Image.OriginHorizontal.Left;
+        ConfigureFilledImage(fill);
         fill.fillAmount = 0f;
         return fill;
     }
