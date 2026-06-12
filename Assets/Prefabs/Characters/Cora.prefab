@@ -5195,8 +5195,8 @@ RectTransform:
   m_GameObject: {fileID: 3845447005448380479}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1.5, y: 1.5, z: 1.5}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 3792582112880836218}
   - {fileID: 874212205570085287}
@@ -5286,7 +5286,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 1
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 629948968941374174, guid: 06631e41cf3dd794b9f3a49dbffe7f1b, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 1e6de6e7c652cf24e945abe9f8b55922, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -5330,8 +5330,8 @@ CapsuleCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0.025054932, y: -0.8063965}
-  m_Size: {x: 0.7369995, y: 0.7369995}
+  m_Offset: {x: 0.42401123, y: -1.3685913}
+  m_Size: {x: 3.56604, y: 3.56604}
   m_Direction: 0
 --- !u!114 &7019984299171805636
 MonoBehaviour:
@@ -5779,7 +5779,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
-  GlobalObjectIdHash: 1626128580
+  GlobalObjectIdHash: 3197444296
   InScenePlacedSourceGlobalObjectIdHash: 1626128580
   DeferredDespawnTick: 0
   Ownership: 1
@@ -6169,7 +6169,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1ac43c1feaecfbe449a41254279c21c4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Shadow
-  Sombra: {fileID: 0}
+  Sombra: {fileID: 4084784925386163396}
   SombraList: []
   speed: 30
   _color: {r: 0.15849599, g: 0.06863999, b: 0.312, a: 0.69803923}
@@ -6319,14 +6319,14 @@ RectTransform:
   m_GameObject: {fileID: 4084784925386163396}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 6.48, y: 3.23, z: 1}
+  m_LocalScale: {x: 15.37, y: 6.5, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1670168118647358667}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0.013, y: -1}
+  m_AnchoredPosition: {x: 0.35, y: -2.69}
   m_SizeDelta: {x: 7.98, y: 0.44}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &5429929203945972508

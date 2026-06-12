@@ -79,6 +79,7 @@ public class MultiplayerCameraController : MonoBehaviour
     private Coroutine _diagnosticsCoroutine;
     private Unity.Cinemachine.CinemachineBrain _cinemachineBrain;
     private bool _brainDisabledForDirectFollow;
+    private Collider2D _sceneBoundsCollider;
 
     public Transform CurrentTarget => _currentTarget;
     public bool HasTarget => _currentTarget != null;
@@ -227,6 +228,9 @@ public class MultiplayerCameraController : MonoBehaviour
         AutoResolveVirtualCameraIfNeeded();
         if (_mainCam == null || !_mainCam.isActiveAndEnabled)
             _mainCam = ResolveMainCamera();
+
+        if (_sceneBoundsCollider == null)
+            TryBindCameraBounds();
     }
 
     private void OnDisable()
@@ -329,10 +333,12 @@ public class MultiplayerCameraController : MonoBehaviour
             return;
 
         Vector3 desired = new Vector3(_currentTarget.position.x, _currentTarget.position.y, GetGameplayCameraZ());
-        _mainCam.transform.position = Vector3.Lerp(
+        desired = ClampCameraPosition(desired);
+        Vector3 next = Vector3.Lerp(
             _mainCam.transform.position,
             desired,
             Time.deltaTime * 15f);
+        _mainCam.transform.position = ClampCameraPosition(next);
     }
 
     private float GetGameplayCameraZ()
@@ -405,7 +411,41 @@ public class MultiplayerCameraController : MonoBehaviour
             return;
 
         confiner.BoundingShape2D = volume.BoundsCollider;
+        _sceneBoundsCollider = volume.BoundsCollider;
         Debug.Log($"[MultiplayerCameraController] Limites da câmera ligados a '{volume.name}'.");
+    }
+
+    private Vector3 ClampCameraPosition(Vector3 position)
+    {
+        if (_sceneBoundsCollider == null)
+            return position;
+
+        return CameraBoundsClampUtility.ClampOrthographicPosition(
+            position,
+            _sceneBoundsCollider,
+            GetActiveOrthographicSize(),
+            GetActiveAspect());
+    }
+
+    private float GetActiveOrthographicSize()
+    {
+        if (_mainCam != null && _mainCam.orthographic)
+            return _mainCam.orthographicSize;
+
+        if (virtualCamera != null)
+            return virtualCamera.Lens.OrthographicSize;
+
+        return config != null ? config.defaultOrthographicSize : 8f;
+    }
+
+    private float GetActiveAspect()
+    {
+        if (_mainCam != null)
+            return _mainCam.aspect;
+
+        return Screen.width > 0 && Screen.height > 0
+            ? (float)Screen.width / Screen.height
+            : 16f / 9f;
     }
 
     private void AutoResolveVirtualCameraIfNeeded()
@@ -554,7 +594,8 @@ public class MultiplayerCameraController : MonoBehaviour
         virtualCamera.Follow = target;
         EnsureVirtualCameraLive();
 
-        Vector3 cameraPosition = new Vector3(target.position.x, target.position.y, GetGameplayCameraZ());
+        Vector3 cameraPosition = ClampCameraPosition(
+            new Vector3(target.position.x, target.position.y, GetGameplayCameraZ()));
         if (_mainCam != null)
         {
             _mainCam.transform.position = cameraPosition;
