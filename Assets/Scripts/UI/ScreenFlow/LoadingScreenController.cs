@@ -33,6 +33,8 @@ public class LoadingScreenController : MonoBehaviour
     {
         EnsureCanvasOnTop();
         HideLegacyLoadingContent();
+        ScreenFlowSceneReadiness.MarkReadyIfPending(
+            UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
         StartCoroutine(RunLoadingRoutine());
     }
 
@@ -171,12 +173,7 @@ public class LoadingScreenController : MonoBehaviour
 
     private static Image CreateProgressBar(Transform parent)
     {
-        return LoadingProgressUtility.CreateProgressBar(
-            parent,
-            new Vector2(0f, 80f),
-            new Vector2(640f, 24f),
-            LoadingProgressUtility.DefaultTrackColor,
-            LoadingProgressUtility.DefaultFillColor);
+        return LoadingProgressUtility.CreateBottomProgressBar(parent);
     }
 
     private void BuildPlaceholderUI()
@@ -191,8 +188,10 @@ public class LoadingScreenController : MonoBehaviour
         coraPlaceholder = CreateArtPlaceholder(panel.transform, "CoraPlaceholder", new Color(0.95f, 0.35f, 0.45f, 0.85f),
             new Vector2(0.75f, 0.5f), new Vector2(0.75f, 0.5f), new Vector2(-180f, -220f), new Vector2(180f, 220f));
 
-        statusText = ScreenFlowPlaceholderFactory.CreateText(panel.transform, "Carregando...", 32, TextAlignmentOptions.Bottom, Color.white,
-            new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(-400f, 110f), new Vector2(400f, 190f));
+        statusText = ScreenFlowPlaceholderFactory.CreateText(panel.transform, "Carregando...", 32, TextAlignmentOptions.Center, Color.white,
+            new Vector2(0.5f, 0f), new Vector2(0.5f, 0f),
+            new Vector2(-400f, LoadingProgressUtility.BottomStatusTextMinY),
+            new Vector2(400f, LoadingProgressUtility.BottomStatusTextMaxY));
 
         progressFill = CreateProgressBar(panel.transform);
     }

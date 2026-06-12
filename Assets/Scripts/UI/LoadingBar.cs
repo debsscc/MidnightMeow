@@ -12,6 +12,11 @@ public class LoadingBar : MonoBehaviour
     [SerializeField] private Image loadingBar;
     [SerializeField] private float fillSpeed = 2.5f;
 
+    /// <summary>Avanço mínimo por segundo enquanto o loading está visível e o alvo ainda é baixo.</summary>
+    [SerializeField] private float idleCreepPerSecond = 0.07f;
+
+    [SerializeField] private float maxIdleCreep = 0.88f;
+
     private Coroutine _routine;
     private float _smoothedProgress;
 
@@ -74,10 +79,15 @@ public class LoadingBar : MonoBehaviour
             if (flow != null && flow.IsLoadingScreenVisible && loadingBar != null)
             {
                 float target = flow.LoadingProgress;
-                _smoothedProgress = Mathf.MoveTowards(
-                    _smoothedProgress,
-                    target,
-                    fillSpeed * Time.unscaledDeltaTime);
+                float step = Mathf.Max(fillSpeed, 0.75f) * Time.unscaledDeltaTime;
+
+                if (target > _smoothedProgress + 0.001f)
+                    _smoothedProgress = Mathf.MoveTowards(_smoothedProgress, target, step);
+                else if (_smoothedProgress < maxIdleCreep)
+                    _smoothedProgress += idleCreepPerSecond * Time.unscaledDeltaTime;
+
+                float cap = target > 0.05f ? 1f : maxIdleCreep;
+                _smoothedProgress = Mathf.Clamp(_smoothedProgress, 0f, cap);
                 LoadingProgressUtility.SetProgress(loadingBar, _smoothedProgress);
             }
 
@@ -93,6 +103,14 @@ public static class LoadingProgressUtility
 {
     public static readonly Color DefaultTrackColor = new Color(0.75f, 0.12f, 0.12f, 1f);
     public static readonly Color DefaultFillColor = Color.white;
+    public static readonly Vector2 DefaultBarSize = new Vector2(640f, 24f);
+
+    /// <summary>Faixa do texto de status ancorada na base (ref. 1920×1080).</summary>
+    public const float BottomStatusTextMinY = 56f;
+    public const float BottomStatusTextMaxY = 120f;
+
+    /// <summary>Centro vertical da barra; fica acima do texto com folga de 20 px.</summary>
+    public const float BottomBarCenterY = 152f;
 
     private static Sprite _solidSprite;
 
@@ -141,6 +159,36 @@ public static class LoadingProgressUtility
         ResetProgress(fill);
 
         return fill;
+    }
+
+    public static Image CreateBottomProgressBar(
+        Transform parent,
+        float centerYFromBottom = BottomBarCenterY,
+        Vector2? size = null,
+        Color? trackColor = null,
+        Color? fillColor = null)
+    {
+        Vector2 barSize = size ?? DefaultBarSize;
+        Image fill = CreateProgressBar(
+            parent,
+            Vector2.zero,
+            barSize,
+            trackColor ?? DefaultTrackColor,
+            fillColor ?? DefaultFillColor);
+
+        ApplyBottomCenterAnchor(fill.transform.parent as RectTransform, centerYFromBottom);
+        return fill;
+    }
+
+    public static void ApplyBottomCenterAnchor(RectTransform rectTransform, float centerYFromBottom)
+    {
+        if (rectTransform == null)
+            return;
+
+        rectTransform.anchorMin = new Vector2(0.5f, 0f);
+        rectTransform.anchorMax = new Vector2(0.5f, 0f);
+        rectTransform.pivot = new Vector2(0.5f, 0.5f);
+        rectTransform.anchoredPosition = new Vector2(0f, centerYFromBottom);
     }
 
     public static Image EnsureFillFromLegacyImage(Image legacyBar, Color trackColor, Color fillColor)

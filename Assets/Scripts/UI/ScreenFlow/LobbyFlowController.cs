@@ -64,6 +64,7 @@ public class LobbyFlowController : MonoBehaviour
             navigator?.ShowPanel(PanelModeSelect);
 
         ScreenFlowPlaceholderFactory.ApplyMenuCursor();
+        ScreenFlowSceneReadiness.MarkReadyIfPending("Lobby");
     }
 
     private void OnDisable()

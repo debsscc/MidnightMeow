@@ -41,6 +41,7 @@ public class PreparationScreenController : MonoBehaviour
         if (!_buttonsWired)
             WireButtons();
         RefreshView();
+        ScreenFlowSceneReadiness.MarkReadyIfPending("Preparation");
     }
 
     private void EnsureUi()

@@ -10,6 +10,7 @@ using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 
 [DisallowMultipleComponent]
+[DefaultExecutionOrder(-250)]
 public class SceneTransition : MonoBehaviour
 {
     public float fadeTime = 1f;
@@ -17,9 +18,20 @@ public class SceneTransition : MonoBehaviour
     public Image fadeImage;
     public GameObject loadingScreen;
 
-    private void Start()
+    private void Awake()
     {
         ScreenFlowController.EnsureExists();
+        RegisterWithScreenFlow();
+    }
+
+    private void OnEnable()
+    {
+        if (ScreenFlowController.Instance != null)
+            RegisterWithScreenFlow();
+    }
+
+    private void RegisterWithScreenFlow()
+    {
         ScreenFlowController.Instance?.RegisterSceneVisuals(fadeImage, loadingScreen, fadeTime, minLoadingTime);
     }
 

@@ -59,14 +59,20 @@ public class MainMenuController : MonoBehaviour
 
     private void OnEnable()
     {
-        if (ScreenFlowController.Instance != null)
-            ScreenFlowController.Instance.OnTransitionStarted += HandleTransitionStarted;
+        ScreenFlowController flow = ScreenFlowController.Instance;
+        if (flow == null)
+            return;
+
+        flow.OnLoadingScreenVisibilityChanged += HandleLoadingScreenVisibilityChanged;
     }
 
     private void OnDisable()
     {
-        if (ScreenFlowController.Instance != null)
-            ScreenFlowController.Instance.OnTransitionStarted -= HandleTransitionStarted;
+        ScreenFlowController flow = ScreenFlowController.Instance;
+        if (flow == null)
+            return;
+
+        flow.OnLoadingScreenVisibilityChanged -= HandleLoadingScreenVisibilityChanged;
     }
 
     private void OnDestroy()
@@ -76,7 +82,15 @@ public class MainMenuController : MonoBehaviour
             save.OnProfileChanged -= RefreshContinueState;
     }
 
-    private void HandleTransitionStarted(string _)
+    private void HandleLoadingScreenVisibilityChanged(bool visible)
+    {
+        if (!visible)
+            return;
+
+        HideMenuVisuals();
+    }
+
+    private void HideMenuVisuals()
     {
         if (mainMenuPanel != null)
             mainMenuPanel.SetActive(false);
@@ -92,6 +106,7 @@ public class MainMenuController : MonoBehaviour
     private void Start()
     {
         ShowMainMenu();
+        ScreenFlowSceneReadiness.MarkReadyIfPending("Menu2");
     }
 
     private void WireButtons()

@@ -3,16 +3,6 @@
 /// Orquestra o ciclo de vida completo de uma sessão multiplayer.
 /// Coordena RelayManager + NetworkManager para hospedar ou entrar em partidas.
 /// Expõe eventos para que a UI e outros sistemas reajam a mudanças de conexão
-/// sem acoplamento direto.
-///
-/// MELHORIAS:
-///   - Logging detalhado em cada etapa da conexão para diagnóstico
-///   - Timeout de conexão configurável via MultiplayerConfig
-///   - Monitoramento de falha de transporte (OnTransportFailure)
-///   - Coroutine de progresso de conexão no cliente
-///   - Proteção contra NPE em NetworkManager.Singleton durante callbacks
-///
-/// SRP: apenas gerencia o ciclo de conexão, não lógica de jogo ou UI.
 /// </summary>
 
 using System;
@@ -21,6 +11,7 @@ using System.Threading.Tasks;
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 [DefaultExecutionOrder(-100)]
 public class ConnectionManager : MonoBehaviour
@@ -47,6 +38,7 @@ public class ConnectionManager : MonoBehaviour
 
     // ── Estado Interno ─────────────────────────────────────────────────────────
     private bool _networkEventsSubscribed = false;
+    private bool _lobbyRecoveryScheduled;
     private Coroutine _connectionTimeoutCoroutine;
 
     private void Awake()
@@ -337,13 +329,74 @@ public class ConnectionManager : MonoBehaviour
 
     private void HandleTransportFailure()
     {
-        string err = "Falha no transporte de rede. Verifique sua conexão e tente novamente.";
+        string err = "Conexão perdida (Relay). Voltando ao lobby...";
         Debug.LogError($"[ConnectionManager] OnTransportFailure disparado! {err}");
 
         StopConnectionTimeout();
-        UnsubscribeNetworkManagerEvents();
         CurrentJoinCode = string.Empty;
-        OnConnectionFailed?.Invoke(err);
+        UnsubscribeNetworkManagerEvents();
+
+        if (!_lobbyRecoveryScheduled)
+            BeginLobbyRecoveryAfterNetworkFailure(err);
+    }
+
+    /// <summary>
+    /// Volta ao Lobby após falha de Relay/transporte ou carga NetcodeHost impossível.
+    /// </summary>
+    public void BeginLobbyRecoveryAfterNetworkFailure(string userMessage)
+    {
+        if (_lobbyRecoveryScheduled)
+            return;
+
+        StartCoroutine(RecoverToLobbyAfterNetworkFailureRoutine(userMessage));
+    }
+
+    private IEnumerator RecoverToLobbyAfterNetworkFailureRoutine(string userMessage)
+    {
+        _lobbyRecoveryScheduled = true;
+
+        yield return null;
+
+        NetworkManager net = NetworkManager.Singleton;
+        if (net != null && net.IsListening)
+        {
+            net.Shutdown();
+            yield return null;
+        }
+
+        UnsubscribeNetworkManagerEvents();
+        OnConnectionFailed?.Invoke(userMessage);
+
+        if (ShouldReturnToLobbyAfterNetworkFailure())
+        {
+            GameSessionContext.PendingRouteId = string.Empty;
+            ScreenFlowController.Instance?.ClearTransitionOverlay();
+
+            float timeout = 5f;
+            while (timeout > 0f && !TryRequestReturnToLobby())
+            {
+                timeout -= Time.unscaledDeltaTime;
+                yield return null;
+            }
+        }
+
+        _lobbyRecoveryScheduled = false;
+    }
+
+    private static bool ShouldReturnToLobbyAfterNetworkFailure()
+    {
+        string scene = SceneManager.GetActiveScene().name;
+        return scene is not ("Lobby" or "Menu2" or "BootstrapScene");
+    }
+
+    private static bool TryRequestReturnToLobby()
+    {
+        GameFlowOrchestrator orchestrator = GameFlowOrchestrator.Instance;
+        if (orchestrator != null && orchestrator.TryRequestRoute(SceneFlowRouteIds.ReturnToLobby))
+            return true;
+
+        ScreenFlowController flow = ScreenFlowController.Instance;
+        return flow != null && flow.RequestRoute(SceneFlowRouteIds.ReturnToLobby);
     }
 
     // ── Helpers ────────────────────────────────────────────────────────────────

@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -25,6 +26,19 @@ public class ScreenFlowSceneBootstrap : MonoBehaviour
             EnsurePersistenceServices();
 
         EnsureSceneController();
+    }
+
+    private void Start()
+    {
+        StartCoroutine(ReleaseReadinessFallbackRoutine());
+    }
+
+    private static IEnumerator ReleaseReadinessFallbackRoutine()
+    {
+        yield return null;
+        yield return null;
+        ScreenFlowSceneReadiness.MarkReadyIfPending(
+            UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
     }
 
     private static void SuppressLegacyMenuButton()
