@@ -31,7 +31,7 @@ Layout: botões canto inferior esquerdo com offset (ref. `docs/reference_imgs/me
 - Arte Nix + Cora (placeholders coloridos)
 - Rota pendente: `loading1_preparation`
 - Tempo mínimo configurável em `LoadingScreenController`
-- Barra de progresso reinicia em 0% a cada transição (`ScreenFlowController.LoadingProgress` nas rotas com overlay; `LoadingScreenController` em Loading1/Loading2)
+- Barra de progresso usa `LoadingProgressUtility` (sprite UI builtin + `fillAmount`) e reinicia em 0% a cada transição
 
 ## Catálogo
 

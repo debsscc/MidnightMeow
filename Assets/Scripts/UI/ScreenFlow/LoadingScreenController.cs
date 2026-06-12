@@ -141,10 +141,7 @@ public class LoadingScreenController : MonoBehaviour
     private void ResetProgressUi()
     {
         if (progressFill != null)
-        {
-            ConfigureFilledImage(progressFill);
-            progressFill.fillAmount = 0f;
-        }
+            LoadingProgressUtility.ResetProgress(progressFill);
 
         UpdateProgressUi(0f, "Carregando... 0%");
     }
@@ -155,14 +152,7 @@ public class LoadingScreenController : MonoBehaviour
             statusText.text = label;
 
         if (progressFill != null)
-            progressFill.fillAmount = Mathf.Clamp01(progress);
-    }
-
-    private static void ConfigureFilledImage(Image image)
-    {
-        image.type = Image.Type.Filled;
-        image.fillMethod = Image.FillMethod.Horizontal;
-        image.fillOrigin = (int)Image.OriginHorizontal.Left;
+            LoadingProgressUtility.SetProgress(progressFill, progress);
     }
 
     private static Image CreateProgressBar(Transform parent)
@@ -183,8 +173,7 @@ public class LoadingScreenController : MonoBehaviour
         ScreenFlowPlaceholderFactory.StretchFull(fillRt);
         Image fill = fillGo.GetComponent<Image>();
         fill.color = new Color(0.85f, 0.2f, 0.2f, 1f);
-        ConfigureFilledImage(fill);
-        fill.fillAmount = 0f;
+        LoadingProgressUtility.ResetProgress(fill);
         return fill;
     }
 

@@ -56,8 +56,7 @@ public class LoadingBar : MonoBehaviour
         if (loadingBar == null)
             return;
 
-        ConfigureFilledImage(loadingBar);
-        loadingBar.fillAmount = 0f;
+        LoadingProgressUtility.ResetProgress(loadingBar);
     }
 
     private IEnumerator SyncWithScreenFlow()
@@ -68,20 +67,13 @@ public class LoadingBar : MonoBehaviour
             if (flow != null && flow.IsLoadingScreenVisible && loadingBar != null)
             {
                 float target = flow.LoadingProgress;
-                loadingBar.fillAmount = Mathf.MoveTowards(
-                    loadingBar.fillAmount,
-                    target,
-                    fillSpeed * Time.unscaledDeltaTime);
+                float current = loadingBar.fillAmount;
+                float next = Mathf.MoveTowards(current, target, fillSpeed * Time.unscaledDeltaTime);
+                LoadingProgressUtility.SetProgress(loadingBar, next);
             }
 
             yield return null;
         }
     }
 
-    private static void ConfigureFilledImage(Image image)
-    {
-        image.type = Image.Type.Filled;
-        image.fillMethod = Image.FillMethod.Horizontal;
-        image.fillOrigin = (int)Image.OriginHorizontal.Left;
-    }
 }

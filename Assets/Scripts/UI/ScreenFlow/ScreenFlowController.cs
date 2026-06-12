@@ -41,9 +41,11 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
 
     private Image _fadeImage;
     private Image _loadingProgressFill;
+    private TMP_Text _loadingStatusText;
     private GameObject _loadingScreen;
     private Image _builtInFadeImage;
     private Image _builtInProgressFill;
+    private TMP_Text _builtInLoadingStatusText;
     private GameObject _builtInLoadingScreen;
     private float _fadeTime = 1f;
     private float _minLoadingTime = 2f;
@@ -79,6 +81,7 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
         _fadeImage = null;
         _loadingScreen = null;
         _loadingProgressFill = null;
+        _loadingStatusText = null;
         SetLoadingScreenActive(false);
 
         if (scene.name.StartsWith("Fase-", System.StringComparison.Ordinal) || scene.name is "Game" or "Gameplay")
@@ -96,6 +99,7 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
         {
             _loadingScreen = loadingScreen;
             _loadingProgressFill = ResolveLoadingProgressFill(loadingScreen);
+            _loadingStatusText = ResolveLoadingStatusText(loadingScreen);
         }
         if (fadeTime > 0f)
             _fadeTime = fadeTime;
@@ -389,7 +393,7 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
 
         _builtInLoadingScreen = ScreenFlowPlaceholderFactory.CreatePanel(
             canvas.transform, "BuiltInLoading", new Color(0.04f, 0.05f, 0.1f, 0.98f));
-        ScreenFlowPlaceholderFactory.CreateText(_builtInLoadingScreen.transform, "Carregando...",
+        _builtInLoadingStatusText = ScreenFlowPlaceholderFactory.CreateText(_builtInLoadingScreen.transform, "Carregando... 0%",
             48, TextAlignmentOptions.Center, Color.white,
             new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
             new Vector2(-300f, -40f), new Vector2(300f, 40f));
@@ -435,7 +439,19 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
 
         Image fill = _loadingProgressFill != null ? _loadingProgressFill : _builtInProgressFill;
         if (fill != null)
-            fill.fillAmount = LoadingProgress;
+            LoadingProgressUtility.SetProgress(fill, LoadingProgress);
+
+        TMP_Text status = _loadingStatusText != null ? _loadingStatusText : _builtInLoadingStatusText;
+        if (status != null)
+            status.text = $"Carregando... {LoadingProgress:P0}";
+    }
+
+    private static TMP_Text ResolveLoadingStatusText(GameObject loadingScreen)
+    {
+        if (loadingScreen == null)
+            return null;
+
+        return loadingScreen.GetComponentInChildren<TMP_Text>(true);
     }
 
     private static Image ResolveLoadingProgressFill(GameObject loadingScreen)
@@ -452,19 +468,16 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
             if (image == null || image.gameObject == loadingScreen)
                 continue;
 
-            if (image.type == Image.Type.Filled)
-            {
-                ConfigureFilledImage(image);
-                return image;
-            }
-
             if (filledCandidate == null && image.gameObject.name.Contains("Fill", System.StringComparison.OrdinalIgnoreCase))
+                filledCandidate = image;
+
+            if (image.type == Image.Type.Filled && filledCandidate == null)
                 filledCandidate = image;
         }
 
         if (filledCandidate != null)
         {
-            ConfigureFilledImage(filledCandidate);
+            LoadingProgressUtility.ConfigureFillImage(filledCandidate);
             return filledCandidate;
         }
 
@@ -489,16 +502,8 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
         ScreenFlowPlaceholderFactory.StretchFull(fillGo.GetComponent<RectTransform>());
         Image fill = fillGo.GetComponent<Image>();
         fill.color = new Color(0.85f, 0.2f, 0.2f, 1f);
-        ConfigureFilledImage(fill);
-        fill.fillAmount = 0f;
+        LoadingProgressUtility.ResetProgress(fill);
         return fill;
-    }
-
-    private static void ConfigureFilledImage(Image image)
-    {
-        image.type = Image.Type.Filled;
-        image.fillMethod = Image.FillMethod.Horizontal;
-        image.fillOrigin = (int)Image.OriginHorizontal.Left;
     }
 
     private IEnumerator WaitForLoadingProgress(float minLoadingTime, AsyncOperation asyncLoad = null)
