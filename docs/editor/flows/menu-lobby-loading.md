@@ -1,6 +1,6 @@
 # Fluxo Menu → Lobby → Loading
 
-Última revisão: 2026-06-08
+Última revisão: 2026-06-11
 
 > Documentação completa: [screen-flow.md](./screen-flow.md)
 
@@ -31,6 +31,7 @@ Layout: botões canto inferior esquerdo com offset (ref. `docs/reference_imgs/me
 - Arte Nix + Cora (placeholders coloridos)
 - Rota pendente: `loading1_preparation`
 - Tempo mínimo configurável em `LoadingScreenController`
+- Barra de progresso reinicia em 0% a cada transição (`ScreenFlowController.LoadingProgress` nas rotas com overlay; `LoadingScreenController` em Loading1/Loading2)
 
 ## Catálogo
 
