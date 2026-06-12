@@ -154,8 +154,8 @@ public static class LoadingProgressUtility
         if (legacyBar.gameObject.name == "ProgressTrack")
         {
             Transform existing = legacyBar.transform.Find("ProgressFill");
-            if (existing != null && existing.TryGetComponent(out Image existingFill))
-                return existingFill;
+            if (existing != null && existing.TryGetComponent(out Image trackFill))
+                return trackFill;
         }
 
         Transform parent = legacyBar.transform.parent;
@@ -168,8 +168,8 @@ public static class LoadingProgressUtility
         ApplySolidSprite(legacyBar);
         legacyBar.type = Image.Type.Simple;
 
-        Transform existingFill = trackRt.Find("ProgressFill");
-        if (existingFill != null && existingFill.TryGetComponent(out Image existingFillImage))
+        Transform fillChild = trackRt.Find("ProgressFill");
+        if (fillChild != null && fillChild.TryGetComponent(out Image existingFillImage))
             return existingFillImage;
 
         GameObject fillGo = new GameObject("ProgressFill", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
