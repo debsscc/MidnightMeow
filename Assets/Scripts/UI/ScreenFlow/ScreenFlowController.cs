@@ -46,10 +46,14 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
         TransitionFadeOverlay.EnsureExists();
 
         if (Instance != null)
+        {
+            Instance.EnsureCatalogLoaded();
             return;
+        }
 
         var go = new GameObject(nameof(ScreenFlowController));
-        go.AddComponent<ScreenFlowController>();
+        var controller = go.AddComponent<ScreenFlowController>();
+        controller.EnsureCatalogLoaded();
     }
 
     protected override void Awake()
@@ -57,6 +61,7 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
         _activeSceneName = SceneManager.GetActiveScene().name;
         base.Awake();
         TransitionFadeOverlay.EnsureExists();
+        EnsureCatalogLoaded();
         BindOverlayEvents();
         SceneManager.sceneLoaded += HandleSceneLoaded;
 
@@ -120,8 +125,18 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
 
     public void SetCatalog(SceneFlowCatalog flowCatalog) => catalog = flowCatalog;
 
+    public void EnsureCatalogLoaded()
+    {
+        if (catalog != null)
+            return;
+
+        catalog = Resources.Load<SceneFlowCatalog>("ScreenFlowCatalog");
+    }
+
     public bool RequestRoute(string routeId, ScreenTransitionMode modeOverride = ScreenTransitionMode.UseRouteDefault)
     {
+        EnsureCatalogLoaded();
+
         if (catalog == null || !catalog.TryGetRoute(routeId, out SceneFlowRouteDefinition route))
         {
             Debug.LogError($"ScreenFlowController: rota '{routeId}' não encontrada no catálogo.");
@@ -349,7 +364,10 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
         }
 
         if (!loadSucceeded)
+        {
+            overlay.ResetOverlay();
             yield break;
+        }
 
         if (useLoading)
             overlay.HideLoading();
@@ -439,9 +457,19 @@ public class TransitionFadeOverlay : Singleton<TransitionFadeOverlay>
     private Image _progressFill;
     private TMP_Text _statusText;
 
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+    private static void BootstrapBeforeSceneLoad()
+    {
+        EnsureExists();
+    }
+
     public static void EnsureExists()
     {
         if (Instance != null)
+            return;
+
+        TransitionFadeOverlay existing = FindFirstObjectByType<TransitionFadeOverlay>(FindObjectsInactive.Include);
+        if (existing != null)
             return;
 
         var go = new GameObject(nameof(TransitionFadeOverlay));
