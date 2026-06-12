@@ -2,69 +2,169 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// Configura e atualiza barras de progresso de loading.
-/// Imagens Filled precisam de sprite; sem isso o fillAmount não aparece na tela.
+/// Barras de loading: trilho (vermelho) + fill filho (branco) com largura via âncoras.
+/// Não usa fillAmount — funciona sem depender de sprites do editor.
 /// </summary>
 public static class LoadingProgressUtility
 {
-    private static Sprite _uiSprite;
+    public static readonly Color DefaultTrackColor = new Color(0.75f, 0.12f, 0.12f, 1f);
+    public static readonly Color DefaultFillColor = Color.white;
 
-    public static Sprite GetUiSprite()
+    private static Sprite _solidSprite;
+
+    public static Sprite GetSolidSprite()
     {
-        if (_uiSprite != null)
-            return _uiSprite;
+        if (_solidSprite != null)
+            return _solidSprite;
 
-        _uiSprite = Resources.GetBuiltinResource<Sprite>("UI/Skin/UISprite.sprite");
-        if (_uiSprite == null)
-            _uiSprite = Resources.GetBuiltinResource<Sprite>("UI/Skin/Background.psd");
+        Texture2D texture = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+        texture.SetPixels(new[] { Color.white, Color.white, Color.white, Color.white });
+        texture.Apply();
+        texture.wrapMode = TextureWrapMode.Clamp;
+        texture.filterMode = FilterMode.Bilinear;
 
-        return _uiSprite;
+        _solidSprite = Sprite.Create(texture, new Rect(0f, 0f, 2f, 2f), new Vector2(0.5f, 0.5f), 100f);
+        return _solidSprite;
     }
 
-    public static void ConfigureFillImage(Image image)
+    public static Image CreateProgressBar(
+        Transform parent,
+        Vector2 anchoredPosition,
+        Vector2 size,
+        Color trackColor,
+        Color fillColor)
+    {
+        GameObject trackGo = new GameObject("ProgressTrack", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+        trackGo.transform.SetParent(parent, false);
+
+        RectTransform trackRt = trackGo.GetComponent<RectTransform>();
+        trackRt.anchorMin = new Vector2(0.5f, 0.5f);
+        trackRt.anchorMax = new Vector2(0.5f, 0.5f);
+        trackRt.pivot = new Vector2(0.5f, 0.5f);
+        trackRt.anchoredPosition = anchoredPosition;
+        trackRt.sizeDelta = size;
+
+        Image track = trackGo.GetComponent<Image>();
+        track.color = trackColor;
+        ApplySolidSprite(track);
+
+        GameObject fillGo = new GameObject("ProgressFill", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+        fillGo.transform.SetParent(trackRt, false);
+
+        Image fill = fillGo.GetComponent<Image>();
+        fill.color = fillColor;
+        ApplySolidSprite(fill);
+        ResetProgress(fill);
+
+        return fill;
+    }
+
+    /// <summary>
+    /// Converte uma Image legada (barra única) em trilho + fill filho.
+    /// </summary>
+    public static Image EnsureFillFromLegacyImage(Image legacyBar, Color trackColor, Color fillColor)
+    {
+        if (legacyBar == null)
+            return null;
+
+        if (legacyBar.gameObject.name == "ProgressFill")
+            return legacyBar;
+
+        if (legacyBar.gameObject.name == "ProgressTrack")
+        {
+            Transform existing = legacyBar.transform.Find("ProgressFill");
+            if (existing != null && existing.TryGetComponent(out Image existingFill))
+                return existingFill;
+        }
+
+        Transform parent = legacyBar.transform.parent;
+        if (parent != null && parent.name == "ProgressTrack")
+            return legacyBar;
+
+        RectTransform trackRt = legacyBar.rectTransform;
+        legacyBar.gameObject.name = "ProgressTrack";
+        legacyBar.color = trackColor;
+        ApplySolidSprite(legacyBar);
+        legacyBar.type = Image.Type.Simple;
+
+        Transform existingFill = trackRt.Find("ProgressFill");
+        if (existingFill != null && existingFill.TryGetComponent(out Image existingFillImage))
+            return existingFillImage;
+
+        GameObject fillGo = new GameObject("ProgressFill", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+        fillGo.transform.SetParent(trackRt, false);
+
+        Image fill = fillGo.GetComponent<Image>();
+        fill.color = fillColor;
+        ApplySolidSprite(fill);
+        ResetProgress(fill);
+        return fill;
+    }
+
+    public static Image ResolveOrCreateFill(Transform parent, Image legacyCandidate = null)
+    {
+        if (parent == null)
+            return null;
+
+        Transform existingFill = parent.Find("ProgressFill");
+        if (existingFill == null)
+        {
+            for (int i = 0; i < parent.childCount; i++)
+            {
+                Transform child = parent.GetChild(i);
+                if (child.name == "ProgressFill" && child.TryGetComponent(out Image childFill))
+                    return childFill;
+            }
+        }
+        else if (existingFill.TryGetComponent(out Image fill))
+        {
+            return fill;
+        }
+
+        Transform track = parent.Find("ProgressTrack");
+        if (track != null)
+        {
+            Transform trackFill = track.Find("ProgressFill");
+            if (trackFill != null && trackFill.TryGetComponent(out Image nestedFill))
+                return nestedFill;
+        }
+
+        if (legacyCandidate != null)
+            return EnsureFillFromLegacyImage(legacyCandidate, DefaultTrackColor, DefaultFillColor);
+
+        return CreateProgressBar(parent, new Vector2(0f, -120f), new Vector2(640f, 18f), DefaultTrackColor, DefaultFillColor);
+    }
+
+    public static void ApplySolidSprite(Image image)
     {
         if (image == null)
             return;
 
-        Sprite sprite = GetUiSprite();
-        if (sprite != null)
-            image.sprite = sprite;
-
-        image.type = Image.Type.Filled;
-        image.fillMethod = Image.FillMethod.Horizontal;
-        image.fillOrigin = (int)Image.OriginHorizontal.Left;
+        image.sprite = GetSolidSprite();
+        image.type = Image.Type.Simple;
         image.preserveAspect = false;
         image.useSpriteMesh = false;
     }
 
-    public static void SetProgress(Image image, float progress)
+    public static void SetProgress(Image fill, float progress)
     {
-        if (image == null)
+        if (fill == null)
             return;
 
         progress = Mathf.Clamp01(progress);
-        ConfigureFillImage(image);
+        ApplySolidSprite(fill);
 
-        if (image.sprite != null)
-        {
-            image.fillAmount = progress;
-            return;
-        }
-
-        ApplyAnchorProgress(image.rectTransform, progress);
+        RectTransform rt = fill.rectTransform;
+        rt.anchorMin = Vector2.zero;
+        rt.anchorMax = new Vector2(progress, 1f);
+        rt.pivot = new Vector2(0f, 0.5f);
+        rt.anchoredPosition = Vector2.zero;
+        rt.offsetMin = Vector2.zero;
+        rt.offsetMax = Vector2.zero;
     }
 
-    public static void ResetProgress(Image image)
+    public static void ResetProgress(Image fill)
     {
-        SetProgress(image, 0f);
-    }
-
-    private static void ApplyAnchorProgress(RectTransform fillRect, float progress)
-    {
-        fillRect.anchorMin = new Vector2(0f, 0f);
-        fillRect.anchorMax = new Vector2(progress, 1f);
-        fillRect.pivot = new Vector2(0f, 0.5f);
-        fillRect.offsetMin = Vector2.zero;
-        fillRect.offsetMax = Vector2.zero;
+        SetProgress(fill, 0f);
     }
 }

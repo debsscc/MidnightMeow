@@ -13,11 +13,18 @@ public class LoadingBar : MonoBehaviour
     [SerializeField] private float fillSpeed = 2.5f;
 
     private Coroutine _routine;
+    private float _smoothedProgress;
 
     private void Awake()
     {
         if (loadingBar == null)
             loadingBar = GetComponentInChildren<Image>(true);
+
+        if (loadingBar != null)
+            loadingBar = LoadingProgressUtility.EnsureFillFromLegacyImage(
+                loadingBar,
+                LoadingProgressUtility.DefaultTrackColor,
+                LoadingProgressUtility.DefaultFillColor);
 
         ResetBarVisual();
     }
@@ -53,10 +60,10 @@ public class LoadingBar : MonoBehaviour
 
     private void ResetBarVisual()
     {
-        if (loadingBar == null)
-            return;
+        _smoothedProgress = 0f;
 
-        LoadingProgressUtility.ResetProgress(loadingBar);
+        if (loadingBar != null)
+            LoadingProgressUtility.ResetProgress(loadingBar);
     }
 
     private IEnumerator SyncWithScreenFlow()
@@ -67,13 +74,14 @@ public class LoadingBar : MonoBehaviour
             if (flow != null && flow.IsLoadingScreenVisible && loadingBar != null)
             {
                 float target = flow.LoadingProgress;
-                float current = loadingBar.fillAmount;
-                float next = Mathf.MoveTowards(current, target, fillSpeed * Time.unscaledDeltaTime);
-                LoadingProgressUtility.SetProgress(loadingBar, next);
+                _smoothedProgress = Mathf.MoveTowards(
+                    _smoothedProgress,
+                    target,
+                    fillSpeed * Time.unscaledDeltaTime);
+                LoadingProgressUtility.SetProgress(loadingBar, _smoothedProgress);
             }
 
             yield return null;
         }
     }
-
 }

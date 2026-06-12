@@ -13,6 +13,8 @@ public class ScreenFlowSceneBootstrap : MonoBehaviour
 
     private void Awake()
     {
+        TransitionFadeOverlay.EnsureExists();
+        ScreenFlowController.EnsureExists();
         ScreenFlowLegacySceneCleanup.ApplyForActiveScene();
         SuppressLegacyMenuButton();
 
@@ -134,6 +136,8 @@ public class ScreenFlowSceneBootstrap : MonoBehaviour
         if (scene is not ("Menu2" or "Lobby" or "Loading1" or "Loading2" or "Preparation" or "Characters" or "VictoryScene" or "GameOver"))
             return;
 
+        TransitionFadeOverlay.EnsureExists();
+        ScreenFlowController.EnsureExists();
         ScreenFlowLegacySceneCleanup.ApplyForActiveScene();
 
         if (FindFirstObjectByType<ScreenFlowSceneBootstrap>() != null)

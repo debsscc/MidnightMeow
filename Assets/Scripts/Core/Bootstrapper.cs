@@ -23,6 +23,8 @@ public class Bootstrapper : MonoBehaviour
         _instance = this;
         DontDestroyOnLoad(gameObject);
 
+        TransitionFadeOverlay.EnsureExists();
+
         if (screenFlowController == null)
             screenFlowController = GetComponent<ScreenFlowController>();
 

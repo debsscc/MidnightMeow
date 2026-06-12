@@ -1,15 +1,13 @@
 using System;
 using System.Collections;
-using TMPro;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.SceneManagement;
-using UnityEngine.UI;
 
 /// <summary>
 /// Ponto único para troca de cena (fade, loading, instantâneo, Netcode).
-/// Persiste entre cenas (Bootstrap). Designers usam <see cref="ScreenFlowRequest"/> ou rotas pelo ID.
+/// Persiste entre cenas (Bootstrap). Visuais de fade/loading ficam em <see cref="TransitionFadeOverlay"/>.
 /// </summary>
 [DisallowMultipleComponent]
 public class ScreenFlowController : Singleton<ScreenFlowController>
@@ -29,8 +27,8 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
     public event Action<string> OnTransitionCompleted;
 
     public bool IsTransitioning { get; private set; }
-    public bool IsLoadingScreenVisible { get; private set; }
-    public float LoadingProgress { get; private set; }
+    public bool IsLoadingScreenVisible => TransitionFadeOverlay.Instance != null && TransitionFadeOverlay.Instance.IsLoadingVisible;
+    public float LoadingProgress => TransitionFadeOverlay.Instance != null ? TransitionFadeOverlay.Instance.LoadingProgress : 0f;
     public string TargetSceneName { get; private set; }
     public AsyncOperation CurrentAsyncLoad { get; private set; }
 
@@ -38,23 +36,26 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
 
     private string _activeSceneName;
     private Coroutine _transitionRoutine;
-
-    private Image _fadeImage;
-    private Image _loadingProgressFill;
-    private TMP_Text _loadingStatusText;
-    private GameObject _loadingScreen;
-    private Image _builtInFadeImage;
-    private Image _builtInProgressFill;
-    private TMP_Text _builtInLoadingStatusText;
-    private GameObject _builtInLoadingScreen;
     private float _fadeTime = 1f;
     private float _minLoadingTime = 2f;
+
+    public static void EnsureExists()
+    {
+        TransitionFadeOverlay.EnsureExists();
+
+        if (Instance != null)
+            return;
+
+        var go = new GameObject(nameof(ScreenFlowController));
+        go.AddComponent<ScreenFlowController>();
+    }
 
     protected override void Awake()
     {
         _activeSceneName = SceneManager.GetActiveScene().name;
         base.Awake();
-        EnsureBuiltInTransitionVisuals();
+        TransitionFadeOverlay.EnsureExists();
+        BindOverlayEvents();
         SceneManager.sceneLoaded += HandleSceneLoaded;
 
         try
@@ -70,6 +71,29 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
     private void OnDestroy()
     {
         SceneManager.sceneLoaded -= HandleSceneLoaded;
+        UnbindOverlayEvents();
+    }
+
+    private void BindOverlayEvents()
+    {
+        if (TransitionFadeOverlay.Instance == null)
+            return;
+
+        TransitionFadeOverlay.Instance.OnLoadingVisibilityChanged -= HandleOverlayLoadingVisibilityChanged;
+        TransitionFadeOverlay.Instance.OnLoadingVisibilityChanged += HandleOverlayLoadingVisibilityChanged;
+    }
+
+    private void UnbindOverlayEvents()
+    {
+        if (TransitionFadeOverlay.Instance == null)
+            return;
+
+        TransitionFadeOverlay.Instance.OnLoadingVisibilityChanged -= HandleOverlayLoadingVisibilityChanged;
+    }
+
+    private void HandleOverlayLoadingVisibilityChanged(bool visible)
+    {
+        OnLoadingScreenVisibilityChanged?.Invoke(visible);
     }
 
     private void HandleSceneLoaded(Scene scene, LoadSceneMode mode)
@@ -77,30 +101,15 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
         _activeSceneName = scene.name;
         CurrentAsyncLoad = null;
 
-        // Refs da cena anterior deixam de ser válidas; o overlay persistente segue no controller.
-        _fadeImage = null;
-        _loadingScreen = null;
-        _loadingProgressFill = null;
-        _loadingStatusText = null;
-        SetLoadingScreenActive(false);
-
-        if (scene.name.StartsWith("Fase-", System.StringComparison.Ordinal) || scene.name is "Game" or "Gameplay")
+        if (scene.name.StartsWith("Fase-", StringComparison.Ordinal) || scene.name is "Game" or "Gameplay")
             ClearTransitionOverlay();
     }
 
     /// <summary>
-    /// Chamado por <see cref="SceneTransition"/> na cena (ex.: Menu2) para reutilizar fade/loading do Canvas.
+    /// Chamado por <see cref="SceneTransition"/> na cena (ex.: Menu2) para tempos de fade/loading.
     /// </summary>
-    public void RegisterSceneVisuals(Image fadeImage, GameObject loadingScreen, float fadeTime, float minLoadingTime)
+    public void RegisterSceneVisuals(UnityEngine.UI.Image fadeImage, GameObject loadingScreen, float fadeTime, float minLoadingTime)
     {
-        if (fadeImage != null)
-            _fadeImage = fadeImage;
-        if (loadingScreen != null)
-        {
-            _loadingScreen = loadingScreen;
-            _loadingProgressFill = ResolveLoadingProgressFill(loadingScreen);
-            _loadingStatusText = ResolveLoadingStatusText(loadingScreen);
-        }
         if (fadeTime > 0f)
             _fadeTime = fadeTime;
         if (minLoadingTime > 0f)
@@ -121,9 +130,6 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
         return RequestScene(route.sceneName, mode, ResolveEffectiveLoadKind(route.loadKind), route.fadeTime, route.minLoadingTime);
     }
 
-    /// <summary>
-    /// API legada compatível com <see cref="SceneTransition.TryBeginTransition"/>.
-    /// </summary>
     public bool TryBeginTransition(string sceneName, ScreenTransitionMode mode = ScreenTransitionMode.Fade)
     {
         if (string.IsNullOrEmpty(sceneName))
@@ -140,13 +146,13 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
         if (loadKind != SceneLoadKind.NetcodeHost)
             return loadKind;
 
-        if (Unity.Netcode.NetworkManager.Singleton != null && Unity.Netcode.NetworkManager.Singleton.IsServer)
+        if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsServer)
             return SceneLoadKind.NetcodeHost;
 
         if (GameSessionContext.IsSinglePlayer)
             return SceneLoadKind.SinglePlayer;
 
-        if (Unity.Netcode.NetworkManager.Singleton == null || !Unity.Netcode.NetworkManager.Singleton.IsListening)
+        if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening)
             return SceneLoadKind.SinglePlayer;
 
         return SceneLoadKind.NetcodeHost;
@@ -173,6 +179,8 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
 
         if (HubSceneNavigator.CanSkipTransition(sceneName))
             return false;
+
+        TransitionFadeOverlay.EnsureExists();
 
         float ft = fadeTime > 0f ? fadeTime : (_fadeTime > 0f ? _fadeTime : defaultFadeTime);
         float ml = minLoadingTime > 0f ? minLoadingTime : (_minLoadingTime > 0f ? _minLoadingTime : defaultMinLoadingTime);
@@ -244,118 +252,115 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
 
     private IEnumerator ExecuteLoad(string sceneName, SceneLoadKind loadKind, float fadeTime, float minLoadingTime, bool useFade, bool useLoading)
     {
+        TransitionFadeOverlay overlay = TransitionFadeOverlay.Instance;
+        if (overlay == null)
+        {
+            Debug.LogError("ScreenFlowController: TransitionFadeOverlay não encontrado.");
+            yield break;
+        }
+
         bool loadSucceeded = false;
 
-        try
+        if (useFade)
+            yield return overlay.FadeOut(fadeTime);
+
+        if (useLoading)
         {
-            Image fade = ResolveFadeImage();
-            if (useFade && fade != null)
-                yield return FadeOut(fade, fadeTime);
+            TransitionCameraKeeper.EnsureActive();
+            overlay.ShowLoading();
+        }
 
-            if (useLoading)
+        if (loadKind == SceneLoadKind.NetcodeHost)
+        {
+            NetworkManager net = NetworkManager.Singleton;
+            if (net == null || !net.IsListening)
             {
-                TransitionCameraKeeper.EnsureActive();
-                SetLoadingScreenActive(true);
+                Debug.LogWarning($"ScreenFlowController: NetcodeHost sem rede ativa para '{sceneName}'.");
+                yield break;
             }
 
-            if (loadKind == SceneLoadKind.NetcodeHost)
+            if (!net.IsServer)
             {
-                NetworkManager net = NetworkManager.Singleton;
-                if (net == null || !net.IsListening)
-                {
-                    Debug.LogWarning($"ScreenFlowController: NetcodeHost sem rede ativa para '{sceneName}'.");
-                    yield break;
-                }
+                if (useLoading)
+                    yield return WaitForLoadingProgress(overlay, minLoadingTime);
 
-                if (!net.IsServer)
-                {
-                    if (useLoading)
-                        yield return WaitForLoadingProgress(minLoadingTime);
-
-                    yield return NetworkSceneSyncUtility.WaitForActiveScene(sceneName);
-                    loadSucceeded = SceneManager.GetActiveScene().name == sceneName;
-                }
-                else
-                {
-                    net.SceneManager.LoadScene(sceneName, LoadSceneMode.Single);
-                    CurrentAsyncLoad = null;
-
-                    if (useLoading)
-                    {
-                        float loadTimer = 0f;
-                        while (SceneManager.GetActiveScene().name != sceneName || loadTimer < minLoadingTime)
-                        {
-                            loadTimer += Time.unscaledDeltaTime;
-                            float timeProgress = minLoadingTime > 0f ? Mathf.Clamp01(loadTimer / minLoadingTime) : 1f;
-                            float sceneProgress = SceneManager.GetActiveScene().name == sceneName ? 1f : 0.5f;
-                            SetLoadingProgress(Mathf.Max(timeProgress, sceneProgress));
-                            yield return null;
-                        }
-
-                        SetLoadingProgress(1f);
-                    }
-                    else
-                    {
-                        while (SceneManager.GetActiveScene().name != sceneName)
-                            yield return null;
-                    }
-
-                    loadSucceeded = true;
-                }
-            }
-            else if (HubSceneNavigator.ShouldUseAdditiveNavigation(sceneName, loadKind))
-            {
-                yield return HubSceneNavigator.RunAdditiveTransition(sceneName, minLoadingTime, useLoading);
-                _activeSceneName = sceneName;
-                SetLoadingScreenActive(false);
-                loadSucceeded = true;
+                yield return NetworkSceneSyncUtility.WaitForActiveScene(sceneName);
+                loadSucceeded = SceneManager.GetActiveScene().name == sceneName;
             }
             else
             {
-                AsyncOperation asyncLoad = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Single);
-                CurrentAsyncLoad = asyncLoad;
-
-                if (asyncLoad == null)
-                {
-                    Debug.LogError($"ScreenFlowController: falha ao carregar '{sceneName}'.");
-                    yield break;
-                }
+                net.SceneManager.LoadScene(sceneName, LoadSceneMode.Single);
+                CurrentAsyncLoad = null;
 
                 if (useLoading)
                 {
-                    asyncLoad.allowSceneActivation = false;
-                    yield return WaitForLoadingProgress(minLoadingTime, asyncLoad);
-                    SetLoadingScreenActive(false);
-                    asyncLoad.allowSceneActivation = true;
+                    float loadTimer = 0f;
+                    while (SceneManager.GetActiveScene().name != sceneName || loadTimer < minLoadingTime)
+                    {
+                        loadTimer += Time.unscaledDeltaTime;
+                        float timeProgress = minLoadingTime > 0f ? Mathf.Clamp01(loadTimer / minLoadingTime) : 1f;
+                        float sceneProgress = SceneManager.GetActiveScene().name == sceneName ? 1f : 0.5f;
+                        overlay.SetLoadingProgress(Mathf.Max(timeProgress, sceneProgress));
+                        yield return null;
+                    }
+
+                    overlay.SetLoadingProgress(1f);
+                }
+                else
+                {
+                    while (SceneManager.GetActiveScene().name != sceneName)
+                        yield return null;
                 }
 
-                while (!asyncLoad.isDone)
-                    yield return null;
-
-                CurrentAsyncLoad = null;
                 loadSucceeded = true;
             }
-
-            fade = ResolveFadeImage();
-            if (loadSucceeded && useFade && fade != null)
-                yield return FadeIn(fade, fadeTime);
         }
-        finally
+        else if (HubSceneNavigator.ShouldUseAdditiveNavigation(sceneName, loadKind))
         {
-            ClearTransitionOverlay();
+            yield return HubSceneNavigator.RunAdditiveTransition(sceneName, minLoadingTime, useLoading);
+            _activeSceneName = sceneName;
+            loadSucceeded = true;
         }
+        else
+        {
+            AsyncOperation asyncLoad = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Single);
+            CurrentAsyncLoad = asyncLoad;
+
+            if (asyncLoad == null)
+            {
+                Debug.LogError($"ScreenFlowController: falha ao carregar '{sceneName}'.");
+                yield break;
+            }
+
+            if (useLoading)
+            {
+                asyncLoad.allowSceneActivation = false;
+                yield return WaitForLoadingProgress(overlay, minLoadingTime, asyncLoad);
+                asyncLoad.allowSceneActivation = true;
+            }
+
+            while (!asyncLoad.isDone)
+                yield return null;
+
+            CurrentAsyncLoad = null;
+            loadSucceeded = true;
+        }
+
+        if (!loadSucceeded)
+            yield break;
+
+        if (useLoading)
+            overlay.HideLoading();
+
+        if (useFade)
+            yield return overlay.FadeIn(fadeTime);
+        else
+            overlay.ResetFade();
     }
 
-    /// <summary>
-    /// Garante que fade/loading persistentes não bloqueiem a UI da cena carregada.
-    /// </summary>
     public void ClearTransitionOverlay()
     {
-        SetLoadingScreenActive(false);
-        ResetBuiltInFade();
-
-        if (_builtInFadeImage != null)
-            _builtInFadeImage.raycastTarget = false;
+        TransitionFadeOverlay.Instance?.ResetOverlay();
     }
 
     private void CompleteTransition(string sceneName)
@@ -363,61 +368,12 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
         IsTransitioning = false;
         TargetSceneName = null;
         _transitionRoutine = null;
-        ClearTransitionOverlay();
+
+        if (sceneName is not ("Loading1" or "Loading2"))
+            ClearTransitionOverlay();
+
         onAnyTransitionCompleted?.Invoke();
         OnTransitionCompleted?.Invoke(sceneName);
-    }
-
-    private void EnsureBuiltInTransitionVisuals()
-    {
-        if (_builtInFadeImage != null)
-            return;
-
-        GameObject overlayRoot = new GameObject("ScreenFlowTransitionOverlay");
-        overlayRoot.transform.SetParent(transform, false);
-
-        Canvas canvas = ScreenFlowPlaceholderFactory.EnsureCanvas(overlayRoot.transform, "TransitionOverlay");
-        canvas.sortingOrder = 500;
-
-        GameObject fadeGo = new GameObject("Fade", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
-        fadeGo.transform.SetParent(canvas.transform, false);
-        RectTransform fadeRect = fadeGo.GetComponent<RectTransform>();
-        fadeRect.anchorMin = Vector2.zero;
-        fadeRect.anchorMax = Vector2.one;
-        fadeRect.offsetMin = Vector2.zero;
-        fadeRect.offsetMax = Vector2.zero;
-
-        _builtInFadeImage = fadeGo.GetComponent<Image>();
-        _builtInFadeImage.color = new Color(0f, 0f, 0f, 0f);
-        _builtInFadeImage.raycastTarget = true;
-
-        _builtInLoadingScreen = ScreenFlowPlaceholderFactory.CreatePanel(
-            canvas.transform, "BuiltInLoading", new Color(0.04f, 0.05f, 0.1f, 0.98f));
-        _builtInLoadingStatusText = ScreenFlowPlaceholderFactory.CreateText(_builtInLoadingScreen.transform, "Carregando... 0%",
-            48, TextAlignmentOptions.Center, Color.white,
-            new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
-            new Vector2(-300f, -40f), new Vector2(300f, 40f));
-        _builtInProgressFill = CreateLoadingProgressBar(_builtInLoadingScreen.transform);
-        _builtInLoadingScreen.SetActive(false);
-    }
-
-    private Image ResolveFadeImage() => _fadeImage != null ? _fadeImage : _builtInFadeImage;
-
-    private void SetLoadingScreenActive(bool active)
-    {
-        if (active)
-            ResetLoadingProgress();
-
-        if (_loadingScreen != null)
-            _loadingScreen.SetActive(active);
-        else if (_builtInLoadingScreen != null)
-            _builtInLoadingScreen.SetActive(active);
-
-        if (IsLoadingScreenVisible != active)
-        {
-            IsLoadingScreenVisible = active;
-            OnLoadingScreenVisibilityChanged?.Invoke(active);
-        }
     }
 
     public void ReportTransitionLoadingProgress(float progress)
@@ -425,88 +381,10 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
         if (!IsLoadingScreenVisible)
             return;
 
-        SetLoadingProgress(progress);
+        TransitionFadeOverlay.Instance?.SetLoadingProgress(progress);
     }
 
-    private void ResetLoadingProgress()
-    {
-        SetLoadingProgress(0f);
-    }
-
-    private void SetLoadingProgress(float progress)
-    {
-        LoadingProgress = Mathf.Clamp01(progress);
-
-        Image fill = _loadingProgressFill != null ? _loadingProgressFill : _builtInProgressFill;
-        if (fill != null)
-            LoadingProgressUtility.SetProgress(fill, LoadingProgress);
-
-        TMP_Text status = _loadingStatusText != null ? _loadingStatusText : _builtInLoadingStatusText;
-        if (status != null)
-            status.text = $"Carregando... {LoadingProgress:P0}";
-    }
-
-    private static TMP_Text ResolveLoadingStatusText(GameObject loadingScreen)
-    {
-        if (loadingScreen == null)
-            return null;
-
-        return loadingScreen.GetComponentInChildren<TMP_Text>(true);
-    }
-
-    private static Image ResolveLoadingProgressFill(GameObject loadingScreen)
-    {
-        if (loadingScreen == null)
-            return null;
-
-        Image[] images = loadingScreen.GetComponentsInChildren<Image>(true);
-        Image filledCandidate = null;
-
-        for (int i = 0; i < images.Length; i++)
-        {
-            Image image = images[i];
-            if (image == null || image.gameObject == loadingScreen)
-                continue;
-
-            if (filledCandidate == null && image.gameObject.name.Contains("Fill", System.StringComparison.OrdinalIgnoreCase))
-                filledCandidate = image;
-
-            if (image.type == Image.Type.Filled && filledCandidate == null)
-                filledCandidate = image;
-        }
-
-        if (filledCandidate != null)
-        {
-            LoadingProgressUtility.ConfigureFillImage(filledCandidate);
-            return filledCandidate;
-        }
-
-        Transform parent = loadingScreen.transform;
-        return CreateLoadingProgressBar(parent);
-    }
-
-    private static Image CreateLoadingProgressBar(Transform parent)
-    {
-        GameObject trackGo = new GameObject("ProgressTrack", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
-        trackGo.transform.SetParent(parent, false);
-        RectTransform trackRt = trackGo.GetComponent<RectTransform>();
-        trackRt.anchorMin = new Vector2(0.5f, 0.5f);
-        trackRt.anchorMax = new Vector2(0.5f, 0.5f);
-        trackRt.pivot = new Vector2(0.5f, 0.5f);
-        trackRt.anchoredPosition = new Vector2(0f, -120f);
-        trackRt.sizeDelta = new Vector2(640f, 18f);
-        trackGo.GetComponent<Image>().color = new Color(0.12f, 0.12f, 0.16f, 0.95f);
-
-        GameObject fillGo = new GameObject("ProgressFill", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
-        fillGo.transform.SetParent(trackGo.transform, false);
-        ScreenFlowPlaceholderFactory.StretchFull(fillGo.GetComponent<RectTransform>());
-        Image fill = fillGo.GetComponent<Image>();
-        fill.color = new Color(0.85f, 0.2f, 0.2f, 1f);
-        LoadingProgressUtility.ResetProgress(fill);
-        return fill;
-    }
-
-    private IEnumerator WaitForLoadingProgress(float minLoadingTime, AsyncOperation asyncLoad = null)
+    private static IEnumerator WaitForLoadingProgress(TransitionFadeOverlay overlay, float minLoadingTime, AsyncOperation asyncLoad = null)
     {
         float loadTimer = 0f;
         while (true)
@@ -514,7 +392,7 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
             loadTimer += Time.unscaledDeltaTime;
             float timeProgress = minLoadingTime > 0f ? Mathf.Clamp01(loadTimer / minLoadingTime) : 1f;
             float loadProgress = asyncLoad != null ? Mathf.Clamp01(asyncLoad.progress / 0.9f) : timeProgress;
-            SetLoadingProgress(Mathf.Max(timeProgress, loadProgress));
+            overlay.SetLoadingProgress(Mathf.Max(timeProgress, loadProgress));
 
             bool loadReady = asyncLoad == null || asyncLoad.progress >= 0.9f;
             bool timeReady = loadTimer >= minLoadingTime;
@@ -524,49 +402,7 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
             yield return null;
         }
 
-        SetLoadingProgress(1f);
-    }
-
-    private void ResetBuiltInFade()
-    {
-        if (_builtInFadeImage == null)
-            return;
-
-        Color c = _builtInFadeImage.color;
-        c.a = 0f;
-        _builtInFadeImage.color = c;
-    }
-
-    private static IEnumerator FadeOut(Image fadeImage, float duration)
-    {
-        float t = 0f;
-        Color c = fadeImage.color;
-        while (t < duration)
-        {
-            t += Time.unscaledDeltaTime;
-            c.a = Mathf.Clamp01(t / duration);
-            fadeImage.color = c;
-            yield return null;
-        }
-
-        c.a = 1f;
-        fadeImage.color = c;
-    }
-
-    private static IEnumerator FadeIn(Image fadeImage, float duration)
-    {
-        float t = duration;
-        Color c = fadeImage.color;
-        while (t > 0f)
-        {
-            t -= Time.unscaledDeltaTime;
-            c.a = Mathf.Clamp01(t / duration);
-            fadeImage.color = c;
-            yield return null;
-        }
-
-        c.a = 0f;
-        fadeImage.color = c;
+        overlay.SetLoadingProgress(1f);
     }
 
     public bool TryGetRouteLoadKind(string routeId, out SceneLoadKind loadKind)

@@ -31,8 +31,20 @@ public class LoadingScreenController : MonoBehaviour
 
     private void Start()
     {
+        ScreenFlowController.Instance?.ClearTransitionOverlay();
+        EnsureCanvasOnTop();
         HideLegacyLoadingContent();
         StartCoroutine(RunLoadingRoutine());
+    }
+
+    private void EnsureCanvasOnTop()
+    {
+        Canvas canvas = GetComponentInChildren<Canvas>(true);
+        if (canvas == null)
+            return;
+
+        canvas.overrideSorting = true;
+        canvas.sortingOrder = 400;
     }
 
     private IEnumerator RunLoadingRoutine()
@@ -157,30 +169,19 @@ public class LoadingScreenController : MonoBehaviour
 
     private static Image CreateProgressBar(Transform parent)
     {
-        GameObject trackGo = new GameObject("ProgressTrack", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
-        trackGo.transform.SetParent(parent, false);
-        RectTransform trackRt = trackGo.GetComponent<RectTransform>();
-        trackRt.anchorMin = new Vector2(0.5f, 0f);
-        trackRt.anchorMax = new Vector2(0.5f, 0f);
-        trackRt.pivot = new Vector2(0.5f, 0f);
-        trackRt.anchoredPosition = new Vector2(0f, 80f);
-        trackRt.sizeDelta = new Vector2(640f, 18f);
-        trackGo.GetComponent<Image>().color = new Color(0.12f, 0.12f, 0.16f, 0.95f);
-
-        GameObject fillGo = new GameObject("ProgressFill", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
-        fillGo.transform.SetParent(trackGo.transform, false);
-        RectTransform fillRt = fillGo.GetComponent<RectTransform>();
-        ScreenFlowPlaceholderFactory.StretchFull(fillRt);
-        Image fill = fillGo.GetComponent<Image>();
-        fill.color = new Color(0.85f, 0.2f, 0.2f, 1f);
-        LoadingProgressUtility.ResetProgress(fill);
-        return fill;
+        return LoadingProgressUtility.CreateProgressBar(
+            parent,
+            new Vector2(0f, 80f),
+            new Vector2(640f, 24f),
+            LoadingProgressUtility.DefaultTrackColor,
+            LoadingProgressUtility.DefaultFillColor);
     }
 
     private void BuildPlaceholderUI()
     {
         Canvas canvas = ScreenFlowPlaceholderFactory.EnsureCanvas(transform);
-        canvas.sortingOrder = 300;
+        canvas.overrideSorting = true;
+        canvas.sortingOrder = 400;
         GameObject panel = ScreenFlowPlaceholderFactory.CreatePanel(canvas.transform, "LoadingPanel", new Color(0.04f, 0.04f, 0.06f, 1f));
 
         nixPlaceholder = CreateArtPlaceholder(panel.transform, "NixPlaceholder", new Color(0.3f, 0.55f, 0.95f, 0.85f),
