@@ -5,6 +5,13 @@ public class Bootstrapper : MonoBehaviour
 {
     private static Bootstrapper _instance;
 
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+    private static void EnsureScreenFlowServices()
+    {
+        TransitionFadeOverlay.EnsureExists();
+        ScreenFlowController.EnsureExists();
+    }
+
     [SerializeField] private GameFlowManager gameFlowManager;
     [SerializeField] private ScreenFlowController screenFlowController;
     [SerializeField] private SceneFlowCatalog sceneFlowCatalog;
@@ -22,6 +29,8 @@ public class Bootstrapper : MonoBehaviour
 
         _instance = this;
         DontDestroyOnLoad(gameObject);
+
+        TransitionFadeOverlay.EnsureExists();
 
         if (screenFlowController == null)
             screenFlowController = GetComponent<ScreenFlowController>();
