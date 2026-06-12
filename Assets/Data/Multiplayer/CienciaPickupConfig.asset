@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bda96ec551a639545a531fcfda9bda93, type: 3}
   m_Name: CienciaPickupConfig
   m_EditorClassIdentifier: Assembly-CSharp::CienciaPickupConfig
-  homingRadius: 4
+  homingRadius: 8
   homingSpeed: 8
   playerScanInterval: 0.15
   collectRadius: 0.55
