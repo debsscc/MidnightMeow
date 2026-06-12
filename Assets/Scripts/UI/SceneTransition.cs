@@ -17,12 +17,10 @@ public class SceneTransition : MonoBehaviour
     public Image fadeImage;
     public GameObject loadingScreen;
 
-    private void Awake()
+    private void Start()
     {
-        if (ScreenFlowController.Instance != null)
-        {
-            ScreenFlowController.Instance.RegisterSceneVisuals(fadeImage, loadingScreen, fadeTime, minLoadingTime);
-        }
+        ScreenFlowController.EnsureExists();
+        ScreenFlowController.Instance?.RegisterSceneVisuals(fadeImage, loadingScreen, fadeTime, minLoadingTime);
     }
 
     /// <summary>Compatibilidade com botões antigos. Prefira ScreenFlowRequest.</summary>

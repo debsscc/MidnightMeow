@@ -293,6 +293,7 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
             if (net == null || !net.IsListening)
             {
                 Debug.LogWarning($"ScreenFlowController: NetcodeHost sem rede ativa para '{sceneName}'.");
+                overlay.ResetOverlay();
                 yield break;
             }
 
@@ -346,6 +347,7 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
             if (asyncLoad == null)
             {
                 Debug.LogError($"ScreenFlowController: falha ao carregar '{sceneName}'.");
+                overlay.ResetOverlay();
                 yield break;
             }
 
@@ -368,6 +370,9 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
             overlay.ResetOverlay();
             yield break;
         }
+
+        TransitionCameraKeeper.EnsureActive();
+        yield return null;
 
         if (useLoading)
             overlay.HideLoading();
@@ -524,6 +529,9 @@ public class TransitionFadeOverlay : Singleton<TransitionFadeOverlay>
     public void ShowLoading()
     {
         EnsureOverlayBuilt();
+        if (_canvas != null)
+            _canvas.enabled = true;
+
         ResetLoadingProgress();
         _loadingRoot.SetActive(true);
         _loadingRoot.transform.SetAsLastSibling();
@@ -602,6 +610,9 @@ public class TransitionFadeOverlay : Singleton<TransitionFadeOverlay>
 
         _loadingRoot = ScreenFlowPlaceholderFactory.CreatePanel(
             _canvas.transform, "Loading", new Color(0.04f, 0.05f, 0.1f, 0.98f));
+        if (_loadingRoot.TryGetComponent(out Image loadingBackground))
+            LoadingProgressUtility.ApplySolidSprite(loadingBackground);
+
         _statusText = ScreenFlowPlaceholderFactory.CreateText(_loadingRoot.transform, "Carregando... 0%",
             48, TextAlignmentOptions.Center, Color.white,
             new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),

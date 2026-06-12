@@ -31,7 +31,6 @@ public class LoadingScreenController : MonoBehaviour
 
     private void Start()
     {
-        ScreenFlowController.Instance?.ClearTransitionOverlay();
         EnsureCanvasOnTop();
         HideLegacyLoadingContent();
         StartCoroutine(RunLoadingRoutine());
@@ -49,6 +48,9 @@ public class LoadingScreenController : MonoBehaviour
 
     private IEnumerator RunLoadingRoutine()
     {
+        yield return null;
+        ScreenFlowController.Instance?.ClearTransitionOverlay();
+
         string nextRoute = string.IsNullOrEmpty(GameSessionContext.PendingRouteId)
             ? fallbackNextRouteId
             : GameSessionContext.PendingRouteId;
