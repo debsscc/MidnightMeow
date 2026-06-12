@@ -879,6 +879,7 @@ MonoBehaviour:
   statusText: {fileID: 0}
   nixPlaceholder: {fileID: 0}
   coraPlaceholder: {fileID: 0}
+  progressFill: {fileID: 0}
   buildPlaceholderIfMissing: 1
 --- !u!1 &1597912045
 GameObject:
