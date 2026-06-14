@@ -22,6 +22,8 @@ public class DissolveEffect : MonoBehaviour
     private static readonly int _dissolveAmountID = Shader.PropertyToID("_DissolveAmount");
     private static readonly int _edgeColorID = Shader.PropertyToID("_EdgeColor");
 
+    public float Duration => duration;
+
     private void Awake()
     {
         if (spriteRenderer == null)

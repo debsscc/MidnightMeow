@@ -74,8 +74,8 @@ public class HealthComponent : MonoBehaviour, IDamageable
         OnTakeDamage?.Invoke();
         OnHealthChanged?.Invoke(_currentHealth, _maxHealth);
 
-        if (gameObject.CompareTag("Player"))
-            FollowCamera.Instance?.Shake();
+        if (gameObject.CompareTag("Player") && ShouldShakeCameraForPlayerDamage())
+            PlayerCameraFeedback.ShakeOnLocalPlayerDamage();
 
         //quando leva dano, faz o sprite piscar (SpriteBlink.cs)
         if (gameObject.TryGetComponent<SpriteBlink>(out var spriteBlink))
@@ -107,6 +107,17 @@ public class HealthComponent : MonoBehaviour, IDamageable
             return false;
         if (TryGetComponent<NetworkPlayerHealth>(out var player) && player.IsSpawned)
             return false;
+        return true;
+    }
+
+    /// <summary>
+    /// Dano em rede replica shake no ClientRpc do owner; offline/legado usa este caminho.
+    /// </summary>
+    private bool ShouldShakeCameraForPlayerDamage()
+    {
+        if (TryGetComponent<NetworkPlayerHealth>(out var networkHealth) && networkHealth.IsSpawned)
+            return false;
+
         return true;
     }
 

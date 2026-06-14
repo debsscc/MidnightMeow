@@ -107,6 +107,30 @@ public class NetworkPlayerController : NetworkBehaviour
         }
     }
 
+    public static bool TryGetFirstAliveTeammateFollowTarget(out Transform followTarget)
+    {
+        followTarget = null;
+
+        NetworkPlayerHealth[] players =
+            Object.FindObjectsByType<NetworkPlayerHealth>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+
+        for (int i = 0; i < players.Length; i++)
+        {
+            NetworkPlayerHealth health = players[i];
+            if (health == null || !health.IsSpawned || !health.CanFight)
+                continue;
+
+            NetworkPlayerController controller = health.GetComponent<NetworkPlayerController>();
+            if (controller == null)
+                continue;
+
+            followTarget = controller.GetCameraFollowTransform();
+            return followTarget != null;
+        }
+
+        return false;
+    }
+
     /// <summary>Transform estável para follow da câmera (evita jitter do Rigidbody2D).</summary>
     public Transform GetCameraFollowTransform()
     {

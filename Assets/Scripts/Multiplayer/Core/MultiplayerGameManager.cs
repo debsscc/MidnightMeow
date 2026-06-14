@@ -186,7 +186,30 @@ public class MultiplayerGameManager : NetworkBehaviour
     {
         if (!IsServer) return;
         if (newValue <= 0 && _networkGameState.Value == GameState.Playing)
+        {
+            StopWaveSpawningOnServer();
+            PlayDefeatAmbienceClientRpc();
             StartCoroutine(TriggerDefeatRoutine());
+        }
+    }
+
+    private static void StopWaveSpawningOnServer()
+    {
+        NetworkWaveManager waveManager = NetworkWaveManager.Instance;
+        if (waveManager != null)
+        {
+            waveManager.StopSpawning();
+            return;
+        }
+
+        StopLocalWaveSystemsIfPresent();
+    }
+
+    [ClientRpc]
+    private void PlayDefeatAmbienceClientRpc()
+    {
+        if (NetworkPlayerHealth.TryGetLastDownedFocusTarget(out Transform focus))
+            DeathHordePresentation.TryBeginFinalDefeat(this, focus);
     }
 
     private IEnumerator TriggerVictoryRoutine()
@@ -198,9 +221,42 @@ public class MultiplayerGameManager : NetworkBehaviour
 
     private IEnumerator TriggerDefeatRoutine()
     {
-        float delay = gameConfig != null ? gameConfig.defeatDelay : 2f;
-        yield return new WaitForSeconds(delay);
+        float delay = ResolveDefeatPresentationDelay();
+        if (delay > 0f)
+            yield return new WaitForSeconds(delay);
+
         _networkGameState.Value = GameState.Defeat;
+    }
+
+    private float ResolveDefeatPresentationDelay()
+    {
+        float delay = 0f;
+
+        NetworkPlayerHealth[] players =
+            Object.FindObjectsByType<NetworkPlayerHealth>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+
+        for (int i = 0; i < players.Length; i++)
+        {
+            NetworkPlayerHealth health = players[i];
+            if (health == null || !health.IsUnconscious)
+                continue;
+
+            AnimatorProfileBinder binder = health.GetComponent<AnimatorProfileBinder>();
+            DissolveEffect dissolve = health.GetComponent<DissolveEffect>();
+            float estimate = PlayerDeathPresentation.EstimatePresentationDuration(
+                binder != null ? binder.Profile : null,
+                dissolve,
+                includeDissolve: false);
+
+            delay = Mathf.Max(delay, estimate);
+        }
+
+        if (delay <= 0f)
+            delay = gameConfig != null ? gameConfig.defeatDelay : 2f;
+
+        delay = Mathf.Max(delay, DeathHordePresentation.DefaultAmbienceEndSeconds);
+
+        return delay;
     }
 
     private static void StopLocalWaveSystemsIfPresent()
@@ -234,10 +290,11 @@ public class MultiplayerGameManager : NetworkBehaviour
 
     private IEnumerator ReturnToPreparationRoutine(GameState endState)
     {
-        float delay = gameConfig != null
-            ? (endState == GameState.Victory ? gameConfig.victoryDelay : gameConfig.defeatDelay)
-            : 2f;
-        yield return new WaitForSecondsRealtime(delay);
+        float delay = endState == GameState.Victory
+            ? (gameConfig != null ? gameConfig.victoryDelay : 2f)
+            : 0f;
+        if (delay > 0f)
+            yield return new WaitForSecondsRealtime(delay);
 
         SaveProfileStore save = SaveProfileStore.Instance;
         if (save?.Active != null)

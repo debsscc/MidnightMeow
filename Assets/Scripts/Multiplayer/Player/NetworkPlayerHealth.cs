@@ -28,6 +28,8 @@ public class NetworkPlayerHealth : NetworkBehaviour
 
     private NetworkPlayerSpectator _spectator;
 
+    private PlayerDeathPresentation _deathPresentation;
+
 
 
     private NetworkVariable<float> _networkCurrentHealth = new NetworkVariable<float>(
@@ -170,6 +172,8 @@ public class NetworkPlayerHealth : NetworkBehaviour
 
         _spectator = GetComponent<NetworkPlayerSpectator>();
 
+        _deathPresentation = GetComponent<PlayerDeathPresentation>();
+
         if (downedConfig == null && multiplayerConfig != null)
 
             downedConfig = multiplayerConfig.downedPlayerConfig;
@@ -240,19 +244,7 @@ public class NetworkPlayerHealth : NetworkBehaviour
 
         if (!_networkIsUnconscious.Value || _networkIsBleedingOut.Value) return;
 
-        if (!_networkRevivePaused.Value)
-
-        {
-
-            float next = _networkUnconsciousTimeRemaining.Value - Time.deltaTime;
-
-            _networkUnconsciousTimeRemaining.Value = Mathf.Max(0f, next);
-
-            if (_networkUnconsciousTimeRemaining.Value <= 0f)
-
-                _networkIsBleedingOut.Value = true;
-
-        }
+        // Bleed-out/revive pausado até existir animação de down e gameplay de reviver.
 
     }
 
@@ -307,9 +299,6 @@ public class NetworkPlayerHealth : NetworkBehaviour
 
 
         MultiplayerGameManager.Instance?.RegisterPlayerDowned();
-
-        TriggerUnconsciousClientRpc();
-
     }
 
 
@@ -369,9 +358,6 @@ public class NetworkPlayerHealth : NetworkBehaviour
 
 
         MultiplayerGameManager.Instance?.RegisterPlayerRevived();
-
-        TriggerReviveClientRpc();
-
     }
 
 
@@ -402,42 +388,41 @@ public class NetworkPlayerHealth : NetworkBehaviour
 
 
 
-    [ClientRpc]
-
-    private void TriggerUnconsciousClientRpc() => ApplyUnconsciousLocal();
-
-
-
-    [ClientRpc]
-
-    private void TriggerReviveClientRpc() => ApplyReviveLocal();
-
-
-
     private void ApplyUnconsciousLocal()
-
     {
-
         if (IsOwner)
-
-        {
-
             DisableGameplayComponents();
-
-            if (_spectator != null)
-
-                _spectator.EnterSpectatorMode();
-
-        }
-
-
 
         OnNetworkPlayerDowned?.Invoke(OwnerClientId);
 
-        if (IsOwner)
+        bool dissolveAfterHold = ShouldDissolveAfterDeathHold();
 
-            GameEvents.InvokePlayerDefeated();
+        if (_deathPresentation != null)
+        {
+            _deathPresentation.BeginDeathPresentation(dissolveAfterHold);
+            return;
+        }
 
+        if (TryGetComponent<PlayerAnimationHandler>(out var animationHandler))
+            animationHandler.HandleDeath();
+    }
+
+    private bool ShouldDissolveAfterDeathHold()
+    {
+        NetworkPlayerHealth[] players =
+            Object.FindObjectsByType<NetworkPlayerHealth>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+
+        for (int i = 0; i < players.Length; i++)
+        {
+            NetworkPlayerHealth other = players[i];
+            if (other == null || other == this || !other.IsSpawned)
+                continue;
+
+            if (other.CanFight)
+                return true;
+        }
+
+        return false;
     }
 
 
@@ -520,6 +505,9 @@ public class NetworkPlayerHealth : NetworkBehaviour
 
         if (TryGetComponent<Animator>(out var animator))
             animator.SetTrigger(Animator.StringToHash("OnDamage"));
+
+        if (IsOwner)
+            PlayerCameraFeedback.ShakeOnLocalPlayerDamage();
     }
 
 
@@ -548,6 +536,24 @@ public class NetworkPlayerHealth : NetworkBehaviour
 
     }
 
+    public static bool TryGetLastDownedFocusTarget(out Transform focusTarget)
+    {
+        focusTarget = null;
+
+        NetworkPlayerHealth[] players = Object.FindObjectsByType<NetworkPlayerHealth>(
+            FindObjectsInactive.Exclude,
+            FindObjectsSortMode.None);
+
+        for (int i = 0; i < players.Length; i++)
+        {
+            NetworkPlayerHealth player = players[i];
+            if (player == null || !player.IsSpawned || !player.IsUnconscious)
+                continue;
+
+            focusTarget = player.transform;
+        }
+
+        return focusTarget != null;
+    }
+
 }
-
-

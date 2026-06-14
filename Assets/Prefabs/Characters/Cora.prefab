@@ -5181,6 +5181,7 @@ GameObject:
   - component: {fileID: 910002001001001006}
   - component: {fileID: 910002001001001007}
   - component: {fileID: 910002001001001008}
+  - component: {fileID: 910002001001001009}
   m_Layer: 3
   m_Name: Cora
   m_TagString: Player
@@ -5503,7 +5504,7 @@ Animator:
   m_GameObject: {fileID: 3845447005448380479}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: a6e00dd278b03d443bc782d709d04f16, type: 2}
+  m_Controller: {fileID: 9100000, guid: b183da60ffac97643a21877a95547f63, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
@@ -5532,7 +5533,9 @@ MonoBehaviour:
   playerAbilityHandler: {fileID: 5792988918660519372}
   healthComponent: {fileID: 4338388805264836550}
   playerMovement: {fileID: 584514799452680066}
+  playerDash: {fileID: 0}
   animationBinder: {fileID: 910002001001001007}
+  sortingOrderOffset: 5000
   sortingPrecision: 100
   shadowSpriteRenderer: {fileID: 0}
   _attackAnimClipLength: 0.12
@@ -5560,19 +5563,7 @@ MonoBehaviour:
       m_Calls: []
   OnDied:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 7671819681489115091}
-        m_TargetAssemblyTypeName: DissolveEffect, Assembly-CSharp
-        m_MethodName: HandleDeath
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!114 &6184364087952878765
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5782,7 +5773,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
-  GlobalObjectIdHash: 3197444296
+  GlobalObjectIdHash: 1626128580
   InScenePlacedSourceGlobalObjectIdHash: 1626128580
   DeferredDespawnTick: 0
   Ownership: 1
@@ -6322,6 +6313,25 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CharacterProfileApplier
   profile: {fileID: 11400000, guid: b4b5c6d7e8f9478990a1b2c3d4e5f014, type: 2}
+--- !u!114 &910002001001001009
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3845447005448380479}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 333732d9bd21dd84394f2c3d368465f8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerDeathPresentation
+  animationHandler: {fileID: 6008801279886521943}
+  animationBinder: {fileID: 910002001001001007}
+  animator: {fileID: 944221471755545764}
+  dissolveEffect: {fileID: 7671819681489115091}
+  healthComponent: {fileID: 4338388805264836550}
+  deathStateName: Dying
+  postDeathHoldSeconds: 5
 --- !u!1 &4084784925386163396
 GameObject:
   m_ObjectHideFlags: 0

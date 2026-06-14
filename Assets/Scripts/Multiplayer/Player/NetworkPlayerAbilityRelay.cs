@@ -18,20 +18,29 @@ public class NetworkPlayerAbilityRelay : NetworkBehaviour
         NetworkVariableReadPermission.Everyone,
         NetworkVariableWritePermission.Owner);
 
+    private readonly NetworkVariable<bool> _networkIsDashing = new NetworkVariable<bool>(
+        false,
+        NetworkVariableReadPermission.Everyone,
+        NetworkVariableWritePermission.Owner);
+
     [SerializeField] private LayerMask chargeEnemyLayers;
 
     private Rigidbody2D _rb;
     private PlayerShooting _shooting;
     private PlayerMeleeCombat _melee;
+    private PlayerDash _dash;
     private PlayerAnimationHandler _animationHandler;
     private byte _lastRemoteAttackSequence;
     private readonly HashSet<ulong> _chargeDamagedEnemyIds = new HashSet<ulong>();
+
+    public bool NetworkIsDashing => _networkIsDashing.Value;
 
     private void Awake()
     {
         _rb = GetComponent<Rigidbody2D>();
         _shooting = GetComponent<PlayerShooting>();
         _melee = GetComponent<PlayerMeleeCombat>();
+        _dash = GetComponent<PlayerDash>();
         _animationHandler = GetComponent<PlayerAnimationHandler>();
 
         if (chargeEnemyLayers.value == 0)
@@ -87,6 +96,9 @@ public class NetworkPlayerAbilityRelay : NetworkBehaviour
         float speed = _rb.linearVelocity.magnitude;
         if (!Mathf.Approximately(_moveSpeed.Value, speed))
             _moveSpeed.Value = speed;
+
+        if (_dash != null && _networkIsDashing.Value != _dash.IsDashing)
+            _networkIsDashing.Value = _dash.IsDashing;
     }
 
     public void ReportAbilityActivated(CharacterAbilityType abilityType, Vector2 position, Vector2 direction)
@@ -199,7 +211,25 @@ public class NetworkPlayerAbilityRelay : NetworkBehaviour
 
     private void HandleOwnerAttack() => _attackSequence.Value++;
 
-    private void HandleOwnerMeleeAttack(Vector2 _, Vector2 __, MeleeCombatStats ___) => _attackSequence.Value++;
+    private void HandleOwnerMeleeAttack(Vector2 _, Vector2 __, MeleeCombatStats ___)
+    {
+        if (_dash != null && _dash.IsDashing)
+        {
+            PlayDashAttackVisualClientRpc();
+            return;
+        }
+
+        _attackSequence.Value++;
+    }
+
+    [ClientRpc]
+    private void PlayDashAttackVisualClientRpc()
+    {
+        if (IsOwner || _animationHandler == null)
+            return;
+
+        _animationHandler.PlayRemoteDashAttackAnimation();
+    }
 
     private void HandleMoveSpeedChanged(float _, float current)
     {

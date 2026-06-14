@@ -1,8 +1,17 @@
 # Prefabs: Variantes de Rato
 
-Última revisão: 2026-06-08
+Última revisão: 2026-06-12
 
 Variantes compartilham a mesma hierarquia base (`Enemy` / ranged): `NetworkObject`, `NetworkEnemyController`, `EnemyMovement`, `EnemyAttack_Ranged` (ou melee em tipos especiais), `EnemyDropHandler`, etc.
+
+## Animação (horde)
+
+Controllers em `Assets/Data/Animacoes/Enemy_AC/` (`AC_Enemy`, `AC_Enemy_Acid`, `AC_Enemy_Helmet`):
+
+- **Default state:** `Running` (não `Idle`)
+- **`IsAttacking` (bool):** telegraph/pattern ativo (`EnemyTelegraphedAttacker.IsExecuting`)
+- **`Attacking` → locomotion:** só quando `IsAttacking == false`
+- Profile: `EnemyDefaultAnimationProfile.asset` → `isAttackingParameter: IsAttacking`
 
 ## Telegraph (MP)
 

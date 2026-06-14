@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9267ac74f46cd854b8a8bb249f38128f, type: 3}
   m_Name: PlayerCoreStats
   m_EditorClassIdentifier: Assembly-CSharp::PlayerStats
-  maxHealth: 9999999
+  maxHealth: 10
   moveSpeed: 10
   maxAmmo: 5
   infinityAmmo: 1
@@ -28,6 +28,6 @@ MonoBehaviour:
   damageUpgradeLevel: 0
   fireRateUpgradeLevel: 0
   healthUpgradeLevel: 0
-  dashDuration: 0.35
+  dashDuration: 0.3
   dashSpeed: 18
   dashCooldown: 1

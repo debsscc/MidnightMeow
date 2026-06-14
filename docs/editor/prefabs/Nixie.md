@@ -42,7 +42,8 @@ Nixie
 | `NetworkPlayerAbilityRelay` | Sync animações MP |
 | `NetworkAbilityObjectSpawner` | — (Nix não usa spawn) |
 | `PlayerAnimationHandler` | |
-| `HealthComponent` | `_maxHealth: 100` |
+| `PlayerDeathPresentation` | Morte: anim `Dying` + hold 5s; dissolve só se aliado vivo (MP) |
+| `HealthComponent` | `_maxHealth: 100`; `OnDied` sem dissolve (VFX via presentation) |
 | `PlayerAdrenaline` | |
 | `PlayerInitializer` | `playerShooting` vazio |
 | `PlayerAudioController` | |
@@ -82,10 +83,14 @@ Nixie
 
 - [x] `NetworkObject` + `OwnerNetworkTransform`
 - Atribuir `meleeCombat` em `NetworkPlayerController` no prefab
+- **Morte:** `NetworkPlayerHealth` → `PlayerDeathPresentation` (anim completa + 5s). Com aliado vivo: dissolve + câmera no parceiro. Game over só quando todos caíram (`MultiplayerGameManager` espera duração da apresentação).
+- **Ratos na derrota (combo):** para spawn + slow-mo ~2s + fade dos ratos (3–8s) + vinheta/zoom no corpo (`DeathHordePresentation`). MP com aliado vivo: só slow-mo + foco no corpo até o dissolve.
 
 ## Histórico
 
 | Data | Alteração |
 |------|-----------|
+| 2026-06-14 | Combo derrota: `DeathHordePresentation` (spawn off, slow-mo, fade ratos, vinheta/zoom) |
+| 2026-06-12 | Fluxo de morte B: presentation + dissolve MP; bleed-out pausado |
 | 2026-06-14 | `CharacterProfileApplier` + `AnimatorProfileBinder`; SOs em `Assets/Data/Characters/` |
 | 2026-05-22 | Doc completa a partir do YAML |

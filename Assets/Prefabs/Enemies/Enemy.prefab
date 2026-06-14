@@ -26,14 +26,14 @@ RectTransform:
   m_GameObject: {fileID: 1501139185410559247}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 7, y: 1.1313195, z: 0.9427557}
+  m_LocalScale: {x: 13.241175, y: 2.14, z: 1.7833134}
   m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 6396371665158594734}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: -1.027}
+  m_AnchoredPosition: {x: -0.311, y: -1.65}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!212 &6875491737160429849
@@ -357,7 +357,7 @@ SpriteRenderer:
   m_SortingOrder: 2
   m_MaskInteraction: 0
   m_Sprite: {fileID: 21300000, guid: cab058e9c59dad645a1044e123c56d4b, type: 3}
-  m_Color: {r: 0.39507648, g: 1, b: 0.2971698, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -513,6 +513,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyAnimationHandler
   enemyMovement: {fileID: 8492623029768286588}
+  animationBinder: {fileID: 0}
   sortingPrecision: 100
   isMelee: 0
   debugLogs: 0
@@ -696,6 +697,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NetworkEnemyController
   ShowTopMostFoldoutHeaderGroup: 1
+  deathDespawnDelay: 0.4
 --- !u!114 &8559975122429534487
 MonoBehaviour:
   m_ObjectHideFlags: 0

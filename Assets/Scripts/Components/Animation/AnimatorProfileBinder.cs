@@ -43,6 +43,9 @@ public class AnimatorProfileBinder : MonoBehaviour
     public int GetOnAbility1Hash() => profile != null ? profile.GetParameterHash(profile.onAbility1Trigger) : Animator.StringToHash("OnAbility1");
     public int GetOnAbility2Hash() => profile != null ? profile.GetParameterHash(profile.onAbility2Trigger) : Animator.StringToHash("OnAbility2");
     public int GetOnDashHash() => profile != null ? profile.GetParameterHash(profile.onDashTrigger) : Animator.StringToHash("OnDash");
+    public int GetOnDashAttackHash() => profile != null ? profile.GetParameterHash(profile.onDashAttackTrigger) : Animator.StringToHash("OnDashAttack");
+    public int GetIsDashingHash() => profile != null ? profile.GetParameterHash(profile.isDashingParameter) : Animator.StringToHash("IsDashing");
+    public int GetIsAttackingHash() => profile != null ? profile.GetParameterHash(profile.isAttackingParameter) : Animator.StringToHash("IsAttacking");
     public int GetOnTakeDamageHash() => profile != null ? profile.GetParameterHash(profile.onTakeDamageTrigger) : Animator.StringToHash("OnDamage");
     public int GetOnDieHash() => profile != null ? profile.GetParameterHash(profile.onDieTrigger) : Animator.StringToHash("OnDie");
 

@@ -13,6 +13,7 @@ public class PlayerAnimationHandler : MonoBehaviour
     [SerializeField] private PlayerAbilityHandler playerAbilityHandler;
     [SerializeField] private HealthComponent healthComponent;
     [SerializeField] private PlayerMovement playerMovement;
+    [SerializeField] private PlayerDash playerDash;
     [SerializeField] private AnimatorProfileBinder animationBinder;
     [SerializeField] private int sortingOrderOffset = 5000;
     [SerializeField] private int sortingPrecision = 100;
@@ -38,6 +39,10 @@ public class PlayerAnimationHandler : MonoBehaviour
     private int _hashOnAbility1;
     private int _hashOnAbility2;
     private int _hashOnDash;
+    private int _hashOnDashAttack;
+    private int _hashIsDashing;
+
+    private NetworkPlayerAbilityRelay _abilityRelay;
 
     private float _lastAttackTriggerTime = float.NegativeInfinity;
     private bool _loggedOnce;
@@ -54,7 +59,9 @@ public class PlayerAnimationHandler : MonoBehaviour
         if (playerShooting == null) playerShooting = GetComponent<PlayerShooting>();
         if (playerMeleeCombat == null) playerMeleeCombat = GetComponent<PlayerMeleeCombat>();
         if (playerAbilityHandler == null) playerAbilityHandler = GetComponent<PlayerAbilityHandler>();
+        if (playerDash == null) playerDash = GetComponent<PlayerDash>();
         if (animationBinder == null) animationBinder = GetComponent<AnimatorProfileBinder>();
+        _abilityRelay = GetComponent<NetworkPlayerAbilityRelay>();
 
         ResolveAnimationHashes();
     }
@@ -71,6 +78,8 @@ public class PlayerAnimationHandler : MonoBehaviour
             _hashOnAbility1 = animationBinder.GetOnAbility1Hash();
             _hashOnAbility2 = animationBinder.GetOnAbility2Hash();
             _hashOnDash = animationBinder.GetOnDashHash();
+            _hashOnDashAttack = animationBinder.GetOnDashAttackHash();
+            _hashIsDashing = animationBinder.GetIsDashingHash();
             _attackAnimClipLength = animationBinder.AttackAnimClipLength;
             _deathDestroyDelay = animationBinder.DeathDestroyDelay;
 
@@ -91,6 +100,8 @@ public class PlayerAnimationHandler : MonoBehaviour
         _hashOnAbility1 = Animator.StringToHash("OnAbility1");
         _hashOnAbility2 = Animator.StringToHash("OnAbility2");
         _hashOnDash = Animator.StringToHash("OnDash");
+        _hashOnDashAttack = Animator.StringToHash("OnDashAttack");
+        _hashIsDashing = Animator.StringToHash("IsDashing");
     }
 
     private void OnEnable()
@@ -105,7 +116,6 @@ public class PlayerAnimationHandler : MonoBehaviour
             playerMovement.OnFlipSprite += HandleFlipSprite;
         if (healthComponent != null)
         {
-            healthComponent.OnDied.AddListener(HandleDeath);
             healthComponent.OnTakeDamage.AddListener(HandleHit);
         }
     }
@@ -122,7 +132,6 @@ public class PlayerAnimationHandler : MonoBehaviour
             playerMovement.OnFlipSprite -= HandleFlipSprite;
         if (healthComponent != null)
         {
-            healthComponent.OnDied.RemoveListener(HandleDeath);
             healthComponent.OnTakeDamage.RemoveListener(HandleHit);
         }
     }
@@ -133,10 +142,18 @@ public class PlayerAnimationHandler : MonoBehaviour
 
     public void PlayRemoteAttackAnimation() => TriggerAttackAnimation();
 
+    public void PlayRemoteDashAttackAnimation() => TriggerDashAttackAnimation();
+
     private void Update()
     {
         float moveSpeed = _useNetworkMoveSpeed ? _networkMoveSpeed : _rb.linearVelocity.magnitude;
         _animator.SetFloat(_hashMoveSpeed, moveSpeed);
+
+        if (_hashIsDashing != 0 && HasAnimatorBool(_hashIsDashing))
+        {
+            bool isDashing = ResolveIsDashingForAnimator();
+            _animator.SetBool(_hashIsDashing, isDashing);
+        }
 
         float attackSpeedMult = 1f;
         if (playerShooting != null && playerShooting.BaseFireRate > 0f)
@@ -167,12 +184,28 @@ public class PlayerAnimationHandler : MonoBehaviour
         }
     }
 
-    private void TrySetTrigger(int hash)
+    private bool TrySetTrigger(int hash)
     {
         if (!HasAnimatorTrigger(hash))
-            return;
+            return false;
 
         _animator.SetTrigger(hash);
+        return true;
+    }
+
+    private bool HasAnimatorBool(int hash)
+    {
+        if (_animator == null || _animator.runtimeAnimatorController == null)
+            return false;
+
+        AnimatorControllerParameter[] parameters = _animator.parameters;
+        for (int i = 0; i < parameters.Length; i++)
+        {
+            if (parameters[i].type == AnimatorControllerParameterType.Bool && parameters[i].nameHash == hash)
+                return true;
+        }
+
+        return false;
     }
 
     private bool HasAnimatorTrigger(int hash)
@@ -193,9 +226,45 @@ public class PlayerAnimationHandler : MonoBehaviour
     private void HandleShoot() => TriggerAttackAnimation();
 
     private void HandleMeleeAttack(Vector2 origin, Vector2 direction, MeleeCombatStats stats)
-        => TriggerAttackAnimation();
+    {
+        if (playerDash != null && playerDash.IsDashing)
+            TriggerDashAttackAnimation();
+        else
+            TriggerAttackAnimation();
+    }
 
     private void TriggerAttackAnimation()
+    {
+        if (!CanFireAttackTrigger())
+            return;
+
+        TrySetTrigger(_hashOnShoot);
+        _lastAttackTriggerTime = Time.time;
+    }
+
+    private void TriggerDashAttackAnimation()
+    {
+        if (!CanFireAttackTrigger())
+            return;
+
+        if (!TrySetTrigger(_hashOnDashAttack))
+            TrySetTrigger(_hashOnShoot);
+
+        _lastAttackTriggerTime = Time.time;
+    }
+
+    private bool ResolveIsDashingForAnimator()
+    {
+        if (playerDash != null && playerDash.IsDashing)
+            return true;
+
+        if (_abilityRelay != null && _abilityRelay.IsSpawned && !_abilityRelay.IsOwner)
+            return _abilityRelay.NetworkIsDashing;
+
+        return false;
+    }
+
+    private bool CanFireAttackTrigger()
     {
         float attackInterval = 0.2f;
         if (playerShooting != null && playerShooting.CurrentFireRate > 0f)
@@ -203,12 +272,7 @@ public class PlayerAnimationHandler : MonoBehaviour
         else if (playerMeleeCombat?.CombatStats != null)
             attackInterval = playerMeleeCombat.CombatStats.attackCooldown;
 
-        if (Time.time - _lastAttackTriggerTime >= attackInterval - 0.016f)
-        {
-            _animator.ResetTrigger(_hashOnShoot);
-            _animator.SetTrigger(_hashOnShoot);
-            _lastAttackTriggerTime = Time.time;
-        }
+        return Time.time - _lastAttackTriggerTime >= attackInterval - 0.016f;
     }
 
     private void HandleFlipSprite(bool facingRight) => ApplyFacingToRenderers(facingRight);

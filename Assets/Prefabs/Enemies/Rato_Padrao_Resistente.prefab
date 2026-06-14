@@ -57,14 +57,14 @@ RectTransform:
   m_GameObject: {fileID: 6035384567781805069}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 7, y: 1.1313195, z: 0.9427557}
+  m_LocalScale: {x: 14.354939, y: 2.32, z: 1.9333135}
   m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 6396371665158594734}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: -1.027}
+  m_AnchoredPosition: {x: -0.36, y: -1.66}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!212 &4149308233459731649
@@ -358,12 +358,12 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 2
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 21300000, guid: cab058e9c59dad645a1044e123c56d4b, type: 3}
-  m_Color: {r: 1, g: 0.96657693, b: 0, a: 1}
+  m_Sprite: {fileID: 21300000, guid: 00c07fbcac8a1ef49bb963a5a5186786, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
-  m_Size: {x: 1, y: 2}
+  m_Size: {x: 8, y: 4.36}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
@@ -429,8 +429,8 @@ CapsuleCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0.030588828, y: -0.41460857}
-  m_Size: {x: 2.7763124, y: 1.4569777}
+  m_Offset: {x: -0.0708559, y: -0.24826032}
+  m_Size: {x: 3.8313634, y: 1.7896771}
   m_Direction: 1
 --- !u!195 &1903391186630837853
 NavMeshAgent:
@@ -464,7 +464,7 @@ Animator:
   m_GameObject: {fileID: 8336658271261246405}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: 5cb0d4f660b0eb74f94d4d446fcb1ffe, type: 2}
+  m_Controller: {fileID: 9100000, guid: 901ce2192fd08bb40907c2c9ca45c7ba, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
@@ -515,6 +515,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyAnimationHandler
   enemyMovement: {fileID: 8492623029768286588}
+  animationBinder: {fileID: 0}
   sortingPrecision: 100
   isMelee: 0
   debugLogs: 0
@@ -639,7 +640,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
-  GlobalObjectIdHash: 1080892529
+  GlobalObjectIdHash: 373492627
   InScenePlacedSourceGlobalObjectIdHash: 0
   DeferredDespawnTick: 0
   Ownership: 1
@@ -665,6 +666,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NetworkEnemyController
   ShowTopMostFoldoutHeaderGroup: 1
+  deathDespawnDelay: 0.4
 --- !u!114 &7891096206824008346
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -737,5 +739,5 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyTelegraphModuleInstaller
   attackPattern: {fileID: 11400000, guid: b3030303030303030303030303030303, type: 2}
-  visualStyle: {fileID: 11400000, guid: a1b2c3d4e5f6789012345678abcdef01, type: 2}
+  visualStyle: {fileID: 0}
   attackOrigin: {fileID: 7769710525481836737}

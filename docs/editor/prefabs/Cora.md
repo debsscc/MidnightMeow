@@ -44,7 +44,8 @@ Cora
 | `NetworkPlayerAbilityRelay` | Sync animações MP |
 | `NetworkAbilityObjectSpawner` | Spawn barreira/poça em rede |
 | `PlayerAnimationHandler` | |
-| `HealthComponent` | `_maxHealth: 100`, `_destroyDelay: 4` |
+| `PlayerDeathPresentation` | Morte: anim `Dying` + hold 5s; dissolve só se aliado vivo (MP) |
+| `HealthComponent` | `_maxHealth: 100`, `_destroyDelay: 4`; `OnDied` sem dissolve |
 | `PlayerAdrenaline` | |
 | `SpriteBlink` | |
 | `PlayerInitializer` | Progressão + upgrades |
@@ -91,10 +92,13 @@ Cora
 
 - [x] `NetworkObject` + `OwnerNetworkTransform`
 - Dono: movimento, mira, tiro; servidor valida projéteis via `NetworkProjectileSpawner`
+- **Morte:** mesmo fluxo que Nixie (`PlayerDeathPresentation` + game over quando todos caíram)
+- **Ratos na derrota:** combo via `DeathHordePresentation` (ver Nixie.md)
 
 ## Histórico
 
 | Data | Alteração |
 |------|-----------|
+| 2026-06-12 | Fluxo de morte B: presentation + dissolve MP |
 | 2026-06-14 | `CharacterProfileApplier` + `AnimatorProfileBinder`; SOs em `Assets/Data/Characters/` |
 | 2026-05-22 | Doc criada a partir do YAML (substitui Player.prefab legado) |

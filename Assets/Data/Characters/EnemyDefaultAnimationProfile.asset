@@ -22,6 +22,7 @@ MonoBehaviour:
   onDashTrigger: OnDash
   onTakeDamageTrigger: OnTakeDamage
   onDieTrigger: OnDie
+  isAttackingParameter: IsAttacking
   attackAnimClipLength: 0.333
   deathDestroyDelay: 4
   sortingOrderOffset: 5000

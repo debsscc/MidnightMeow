@@ -34,6 +34,9 @@ public class EnemyAnimationHandler : MonoBehaviour
     private int _hashOnAttack;
     private int _hashOnTakeDamage;
     private int _hashOnDie;
+    private int _hashIsAttacking;
+
+    private float _attackAnimEndTime = -1f;
 
     private void Awake()
     {
@@ -68,6 +71,7 @@ public class EnemyAnimationHandler : MonoBehaviour
             _hashOnAttack = animationBinder.GetOnShootHash();
             _hashOnTakeDamage = animationBinder.GetOnTakeDamageHash();
             _hashOnDie = animationBinder.GetOnDieHash();
+            _hashIsAttacking = animationBinder.GetIsAttackingHash();
 
             if (animationBinder.Profile != null)
             {
@@ -82,7 +86,10 @@ public class EnemyAnimationHandler : MonoBehaviour
         _hashOnAttack = Animator.StringToHash("OnAttack");
         _hashOnTakeDamage = Animator.StringToHash("OnTakeDamage");
         _hashOnDie = Animator.StringToHash("OnDie");
+        _hashIsAttacking = Animator.StringToHash("IsAttacking");
     }
+
+    public bool IsAttackingForAnimator => ResolveIsAttacking();
 
     private void OnEnable()
     {
@@ -129,6 +136,9 @@ public class EnemyAnimationHandler : MonoBehaviour
         float speed = enemyMovement != null ? enemyMovement.GetCurrentSpeed() : 0f;
         _animator.SetFloat(_hashMoveSpeed, speed);
 
+        if (_hashIsAttacking != 0 && HasAnimatorBool(_hashIsAttacking))
+            _animator.SetBool(_hashIsAttacking, ResolveIsAttacking());
+
         if (debugLogs && Mathf.Abs(speed - _lastMoveSpeed) > SpeedEpsilon)
         {
             Debug.Log($"EnemyAnimationHandler.Update - {gameObject.name}: MoveSpeed changed {_lastMoveSpeed} -> {speed}");
@@ -152,6 +162,35 @@ public class EnemyAnimationHandler : MonoBehaviour
         if (_animator == null) return;
         if (debugLogs) Debug.Log($"EnemyAnimationHandler.HandleAttack - {gameObject.name}");
         _animator.SetTrigger(_hashOnAttack);
+
+        float clipLength = animationBinder != null ? animationBinder.AttackAnimClipLength : 0.333f;
+        _attackAnimEndTime = Time.time + clipLength;
+    }
+
+    private bool ResolveIsAttacking()
+    {
+        if (_telegraphedAttacker != null && _telegraphedAttacker.IsExecuting)
+            return true;
+
+        if (enemyMovement != null && enemyMovement.IsAttackPaused)
+            return true;
+
+        return Time.time < _attackAnimEndTime;
+    }
+
+    private bool HasAnimatorBool(int hash)
+    {
+        if (_animator == null || _animator.runtimeAnimatorController == null)
+            return false;
+
+        AnimatorControllerParameter[] parameters = _animator.parameters;
+        for (int i = 0; i < parameters.Length; i++)
+        {
+            if (parameters[i].type == AnimatorControllerParameterType.Bool && parameters[i].nameHash == hash)
+                return true;
+        }
+
+        return false;
     }
 
     private void HandleTakeDamage()

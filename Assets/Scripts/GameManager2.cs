@@ -240,8 +240,12 @@ public class GameManager2 : MonoBehaviour
 
         if (gameConfig != null)
         {
-            delay = isVictory ? gameConfig.victoryDelay : gameConfig.defeatDelay;
+            delay = isVictory ? gameConfig.victoryDelay : 0f;
             sceneToLoad = isVictory ? gameConfig.victorySceneName : gameConfig.defeatSceneName;
+        }
+        else if (isVictory)
+        {
+            delay = 2f;
         }
 
         yield return new WaitForSecondsRealtime(delay);

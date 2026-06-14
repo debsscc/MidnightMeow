@@ -53,8 +53,14 @@ public class NetworkEnemyController : NetworkBehaviour
         NetworkVariableReadPermission.Everyone,
         NetworkVariableWritePermission.Server);
 
+    private readonly NetworkVariable<bool> _animIsAttacking = new NetworkVariable<bool>(
+        false,
+        NetworkVariableReadPermission.Everyone,
+        NetworkVariableWritePermission.Server);
+
     private static readonly int HashMoveSpeed = Animator.StringToHash("MoveSpeed");
     private static readonly int HashOnAttack = Animator.StringToHash("OnAttack");
+    private static readonly int HashIsAttacking = Animator.StringToHash("IsAttacking");
 
     private Animator _animator;
     private SpriteRenderer _spriteRenderer;
@@ -112,6 +118,7 @@ public class NetworkEnemyController : NetworkBehaviour
         _animMoveSpeed.OnValueChanged += HandleAnimMoveSpeedChanged;
         _animFacingFlipX.OnValueChanged += HandleAnimFacingChanged;
         _animAttackSequence.OnValueChanged += HandleAnimAttackSequenceChanged;
+        _animIsAttacking.OnValueChanged += HandleAnimIsAttackingChanged;
 
         if (IsServer)
         {
@@ -126,7 +133,12 @@ public class NetworkEnemyController : NetworkBehaviour
         else
         {
             SetAIComponentsActive(false);
-            ApplyClientAnimationState(_animMoveSpeed.Value, _animFacingFlipX.Value, _animAttackSequence.Value, false);
+            ApplyClientAnimationState(
+                _animMoveSpeed.Value,
+                _animFacingFlipX.Value,
+                _animAttackSequence.Value,
+                _animIsAttacking.Value,
+                false);
         }
 
         _networkHealth.OnValueChanged += HandleNetworkHealthChanged;
@@ -146,6 +158,7 @@ public class NetworkEnemyController : NetworkBehaviour
         _animMoveSpeed.OnValueChanged -= HandleAnimMoveSpeedChanged;
         _animFacingFlipX.OnValueChanged -= HandleAnimFacingChanged;
         _animAttackSequence.OnValueChanged -= HandleAnimAttackSequenceChanged;
+        _animIsAttacking.OnValueChanged -= HandleAnimIsAttackingChanged;
 
         UnwireAnimationPublishers();
         CancelDeathDespawnRoutine();
@@ -159,6 +172,13 @@ public class NetworkEnemyController : NetworkBehaviour
         float speed = _movement.GetCurrentSpeed();
         if (!Mathf.Approximately(_animMoveSpeed.Value, speed))
             _animMoveSpeed.Value = speed;
+
+        if (_animationHandler != null)
+        {
+            bool isAttacking = _animationHandler.IsAttackingForAnimator;
+            if (_animIsAttacking.Value != isAttacking)
+                _animIsAttacking.Value = isAttacking;
+        }
     }
 
     public void NotifyHealthInitialized()
@@ -567,21 +587,32 @@ public class NetworkEnemyController : NetworkBehaviour
     private void HandleServerAnimAttack() => _animAttackSequence.Value++;
 
     private void HandleAnimMoveSpeedChanged(float _, float current) =>
-        ApplyClientAnimationState(current, _animFacingFlipX.Value, _animAttackSequence.Value, false);
+        ApplyClientAnimationState(current, _animFacingFlipX.Value, _animAttackSequence.Value, _animIsAttacking.Value, false);
 
     private void HandleAnimFacingChanged(bool _, bool current) =>
-        ApplyClientAnimationState(_animMoveSpeed.Value, current, _animAttackSequence.Value, false);
+        ApplyClientAnimationState(_animMoveSpeed.Value, current, _animAttackSequence.Value, _animIsAttacking.Value, false);
 
     private void HandleAnimAttackSequenceChanged(byte _, byte current) =>
-        ApplyClientAnimationState(_animMoveSpeed.Value, _animFacingFlipX.Value, current, true);
+        ApplyClientAnimationState(_animMoveSpeed.Value, _animFacingFlipX.Value, current, _animIsAttacking.Value, true);
 
-    private void ApplyClientAnimationState(float moveSpeed, bool facingFlipX, byte attackSequence, bool triggerAttack)
+    private void HandleAnimIsAttackingChanged(bool _, bool current) =>
+        ApplyClientAnimationState(_animMoveSpeed.Value, _animFacingFlipX.Value, _animAttackSequence.Value, current, false);
+
+    private void ApplyClientAnimationState(
+        float moveSpeed,
+        bool facingFlipX,
+        byte attackSequence,
+        bool isAttacking,
+        bool triggerAttack)
     {
         if (!IsSpawned || IsServer)
             return;
 
         if (_animator != null)
+        {
             _animator.SetFloat(HashMoveSpeed, moveSpeed);
+            _animator.SetBool(HashIsAttacking, isAttacking);
+        }
 
         if (_spriteRenderer != null)
             _spriteRenderer.flipX = facingFlipX;

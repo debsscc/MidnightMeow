@@ -35,6 +35,9 @@ public class CharacterAnimationProfile : ScriptableObject
     public string onAbility1Trigger = "OnAbility1";
     public string onAbility2Trigger = "OnAbility2";
     public string onDashTrigger = "OnDash";
+    public string onDashAttackTrigger = "OnDashAttack";
+    public string isDashingParameter = "IsDashing";
+    public string isAttackingParameter = "IsAttacking";
     public string onTakeDamageTrigger = "OnDamage";
     public string onDieTrigger = "OnDie";
 
@@ -44,6 +47,16 @@ public class CharacterAnimationProfile : ScriptableObject
 
     [Tooltip("Delay antes de destruir o objeto após morte.")]
     public float deathDestroyDelay = 4f;
+
+    [Header("Morte — apresentação")]
+    [Tooltip("Nome do estado no Animator base (ex.: Dying).")]
+    public string deathAnimatorStateName = "Dying";
+
+    [Tooltip("Espera mínima após a animação de morte antes de dissolve/game over.")]
+    public float postDeathHoldSeconds = 5f;
+
+    [Tooltip("Fallback se o clip de morte ainda não estiver no override.")]
+    public float deathClipLengthFallback = 1.5f;
 
     [Tooltip("Offset de sorting base para sprites.")]
     public int sortingOrderOffset = 5000;

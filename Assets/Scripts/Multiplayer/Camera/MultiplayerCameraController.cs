@@ -80,6 +80,8 @@ public class MultiplayerCameraController : MonoBehaviour
     private Unity.Cinemachine.CinemachineBrain _cinemachineBrain;
     private bool _brainDisabledForDirectFollow;
     private Collider2D _sceneBoundsCollider;
+    private bool _deathFocusActive;
+    private float _savedOrthographicSize;
 
     public Transform CurrentTarget => _currentTarget;
     public bool HasTarget => _currentTarget != null;
@@ -427,7 +429,7 @@ public class MultiplayerCameraController : MonoBehaviour
             GetActiveAspect());
     }
 
-    private float GetActiveOrthographicSize()
+    public float GetActiveOrthographicSize()
     {
         if (_mainCam != null && _mainCam.orthographic)
             return _mainCam.orthographicSize;
@@ -702,18 +704,37 @@ public class MultiplayerCameraController : MonoBehaviour
 
     private void AnimateZoom()
     {
-        if (virtualCamera == null) return;
+        if (virtualCamera == null && _mainCam == null)
+            return;
 
         float speed = config != null ? config.zoomLerpSpeed : 5f;
-        var lens = virtualCamera.Lens;
-        lens.OrthographicSize = Mathf.Lerp(lens.OrthographicSize, _targetOrthographicSize, speed * Time.deltaTime);
-        virtualCamera.Lens = lens;
+        float delta = speed * Time.deltaTime;
 
-        if (Mathf.Abs(lens.OrthographicSize - _targetOrthographicSize) < 0.01f)
+        if (virtualCamera != null)
         {
-            lens.OrthographicSize = _targetOrthographicSize;
+            var lens = virtualCamera.Lens;
+            lens.OrthographicSize = Mathf.Lerp(lens.OrthographicSize, _targetOrthographicSize, delta);
             virtualCamera.Lens = lens;
-            _isZooming = false;
+        }
+
+        if (_mainCam != null && (useDirectCameraFollow || _deathFocusActive))
+            _mainCam.orthographicSize = Mathf.Lerp(_mainCam.orthographicSize, _targetOrthographicSize, delta);
+
+        float currentSize = GetActiveOrthographicSize();
+        if (Mathf.Abs(currentSize - _targetOrthographicSize) < 0.01f)
+        {
+            if (virtualCamera != null)
+            {
+                var lens = virtualCamera.Lens;
+                lens.OrthographicSize = _targetOrthographicSize;
+                virtualCamera.Lens = lens;
+            }
+
+            if (_mainCam != null && (useDirectCameraFollow || _deathFocusActive))
+                _mainCam.orthographicSize = _targetOrthographicSize;
+
+            if (!_deathFocusActive)
+                _isZooming = false;
         }
     }
 
@@ -764,6 +785,45 @@ public class MultiplayerCameraController : MonoBehaviour
     public void CancelCutscene()
     {
         cutsceneController?.CancelCutscene();
+    }
+
+    /// <summary>Foco dramático no corpo morto: zoom + follow (ignora clamp min/max do config).</summary>
+    public void BeginDeathFocus(float targetOrthographicSize, Transform focusBody)
+    {
+        if (focusBody != null)
+            SetTarget(focusBody);
+
+        _deathFocusActive = true;
+
+        if (_savedOrthographicSize <= 0f)
+            _savedOrthographicSize = GetActiveOrthographicSize();
+
+        _targetOrthographicSize = targetOrthographicSize;
+        _isZooming = true;
+    }
+
+    public void UpdateDeathFocusZoom(float orthographicSize)
+    {
+        _targetOrthographicSize = orthographicSize;
+        _isZooming = true;
+    }
+
+    public void EndDeathFocus()
+    {
+        _deathFocusActive = false;
+        GameplayVignetteController.ClearIfActive();
+
+        if (_savedOrthographicSize > 0f)
+        {
+            _targetOrthographicSize = _savedOrthographicSize;
+            _isZooming = true;
+        }
+        else if (config != null)
+        {
+            ResetZoom();
+        }
+
+        _savedOrthographicSize = 0f;
     }
 
     // ── API Pública — Shader / Pós-processamento (stubs para expansão futura) ──

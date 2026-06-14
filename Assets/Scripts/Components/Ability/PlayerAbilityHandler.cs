@@ -154,7 +154,27 @@ public class PlayerAbilityHandler : MonoBehaviour
 
     public bool TryRequestPrimaryAttack()
     {
+        if (dash != null && dash.IsDashing)
+            return CanExecuteDashAttack();
+
         return CanExecute(AbilitySlot.PrimaryAttack);
+    }
+
+    private bool CanExecuteDashAttack()
+    {
+        if (TryGetComponent<NetworkPlayerRevive>(out var revive) && revive.IsReviving)
+            return false;
+
+        if (_networkObject != null && _networkObject.IsSpawned && !_networkObject.IsOwner)
+            return false;
+
+        if (!_progression.IsSlotUnlocked(AbilitySlot.PrimaryAttack))
+            return false;
+
+        if (TryGetComponent<PlayerMeleeCombat>(out var melee) && melee.IsAttacking)
+            return false;
+
+        return true;
     }
 
     private void HandleAbility1Input() => TryActivateSlot(AbilitySlot.Ability1);

@@ -47,6 +47,16 @@ public class PlayerHealthConfig : MonoBehaviour
 
     private void _OnDied()
     {
+        if (TryGetComponent<PlayerDeathPresentation>(out var presentation))
+        {
+            presentation.BeginDeathPresentation(dissolveAfterHold: false, onComplete: () =>
+            {
+                Debug.Log("PlayerHealthConfig: invocando GameEvents.InvokePlayerDefeated após apresentação de morte.");
+                GameEvents.InvokePlayerDefeated();
+            });
+            return;
+        }
+
         Debug.Log("PlayerHealthConfig: player died, aguardando animação de morte...");
         StartCoroutine(DefeatedAfterDelay(_deathDestroyDelay));
     }

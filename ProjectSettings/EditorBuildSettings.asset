@@ -45,5 +45,7 @@ EditorBuildSettings:
     path: Assets/_Sandbox/Teste_MultiplayerFase-1.unity
     guid: 2a6a69c1569de3b4ca82606021a601f5
   m_configObjects:
+    com.unity.addressableassets: {fileID: 11400000, guid: 6b2097241c1c6484e9a03d63bff55a4c, type: 2}
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: d757f3a72ed88d6418f497744000d395, type: 3}
+    com.unity.localization.settings: {fileID: 11400000, guid: bb6887714e646fb4883dd82063eab68c, type: 2}
   m_UseUCBPForAssetBundles: 0

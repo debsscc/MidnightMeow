@@ -43,6 +43,7 @@ Assets de NavMesh baked por cena em subpastas (`NavMesh-*.asset`). Prefabs: `Nav
 - **Ondas:** apenas **`NetworkWaveManager`** (com `NetworkObject` no mesmo GameObject). Não usar **NightManager** / **WaveGenerator** na mesma cena MP — inimigos precisam de `NetworkObject.Spawn()`.
 - **Bootstrap:** `MultiplayerBootstrapper` valida `NetworkWaveManager` na cena de gameplay.
 - **Câmera:** `MultiplayerCameraRig` na raiz da Fase-1 (posição ~1.7, 8.58). Clientes aguardam spawn via `GameplayCameraRebindUtility` após `NetworkSceneSyncUtility.WaitForActiveScene`. Logs `[CAM-DIAG]` em `GameplayDiagnosticConfig.cameraDiagnostics` (ver [diagnostics.md](diagnostics.md)).
+- **Shake ao tomar dano:** `PlayerCameraFeedback` → `CameraShakeController` (preset Medium em `CameraConfig`); rede dispara no `PlayTakeDamageVisualClientRpc` só para `IsOwner`; cenas offline/legado usam `HealthComponent`.
 - **Limites da câmera:** adicione um GameObject com `CameraBoundsVolume` + `PolygonCollider2D` na Fase-1; o `MultiplayerCameraController` liga ao `CinemachineConfiner2D` e aplica clamp manual via `CameraBoundsClampUtility` quando `useDirectCameraFollow` está ativo (Brain desligado).
 - **HUD habilidades:** `PlayerAbilityHud` é criado automaticamente no Canvas ao entrar em Fase-1/2 (cooldowns Dash/Q/R + barra da passiva, canto inferior direito).
 - **Magículas na fase:** `ScienceIndicator` deve ficar filho de `Indicator` (canto superior direito da caixa de pontuação).

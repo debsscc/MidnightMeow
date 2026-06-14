@@ -5178,6 +5178,7 @@ GameObject:
   - component: {fileID: 910001001001001006}
   - component: {fileID: 910001001001001007}
   - component: {fileID: 910001001001001008}
+  - component: {fileID: 910001001001001009}
   m_Layer: 3
   m_Name: Nixie
   m_TagString: Player
@@ -5194,7 +5195,7 @@ RectTransform:
   m_GameObject: {fileID: 3845447005448380479}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 3792582112880836218}
@@ -5290,7 +5291,7 @@ SpriteRenderer:
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
-  m_Size: {x: 1.91, y: 2.34}
+  m_Size: {x: 11.79, y: 9.08}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
@@ -5499,7 +5500,9 @@ MonoBehaviour:
   playerAbilityHandler: {fileID: 5792988918660519372}
   healthComponent: {fileID: 4338388805264836550}
   playerMovement: {fileID: 584514799452680066}
+  playerDash: {fileID: 0}
   animationBinder: {fileID: 910001001001001007}
+  sortingOrderOffset: 5000
   sortingPrecision: 100
   shadowSpriteRenderer: {fileID: 0}
   _attackAnimClipLength: 0.12
@@ -5527,19 +5530,7 @@ MonoBehaviour:
       m_Calls: []
   OnDied:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 7671819681489115091}
-        m_TargetAssemblyTypeName: DissolveEffect, Assembly-CSharp
-        m_MethodName: HandleDeath
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!114 &6184364087952878765
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5749,7 +5740,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
-  GlobalObjectIdHash: 4217278500
+  GlobalObjectIdHash: 1259787695
   InScenePlacedSourceGlobalObjectIdHash: 1626128580
   DeferredDespawnTick: 0
   Ownership: 1
@@ -6279,6 +6270,25 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CharacterProfileApplier
   profile: {fileID: 11400000, guid: b5b6c7d8e9fa478990a1b2c3d4e5f015, type: 2}
+--- !u!114 &910001001001001009
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3845447005448380479}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 333732d9bd21dd84394f2c3d368465f8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerDeathPresentation
+  animationHandler: {fileID: 6008801279886521943}
+  animationBinder: {fileID: 910001001001001007}
+  animator: {fileID: 944221471755545764}
+  dissolveEffect: {fileID: 7671819681489115091}
+  healthComponent: {fileID: 4338388805264836550}
+  deathStateName: Dying
+  postDeathHoldSeconds: 5
 --- !u!1 &4084784925386163396
 GameObject:
   m_ObjectHideFlags: 0

@@ -249,4 +249,21 @@ public class NetworkWaveManager : NetworkBehaviour
     {
         Debug.Log("[NetworkWaveManager] ClientRpc: todas as ondas eliminadas.");
     }
+
+    /// <summary>Para spawn de novas ondas (ex.: apresentação de derrota).</summary>
+    public void StopSpawning()
+    {
+        if (!IsServer)
+            return;
+
+        StopAllCoroutines();
+        _isSpawning = false;
+        Debug.Log("[NetworkWaveManager] Spawn de ondas interrompido.");
+    }
+
+    [Rpc(SendTo.Server)]
+    public void RequestStopSpawningRpc()
+    {
+        StopSpawning();
+    }
 }
