@@ -8,8 +8,6 @@ public class ScienceIndicator : MonoBehaviour
     [SerializeField] private Vector2 topRightPadding = new Vector2(-12f, -12f);
     [SerializeField] private Vector2 scoreSize = new Vector2(96f, 40f);
 
-    private int currentScience;
-
     private void Awake()
     {
         EnsureScoreLayout();
@@ -17,12 +15,20 @@ public class ScienceIndicator : MonoBehaviour
 
     private void OnEnable()
     {
-        GameEvents.OnCienciaCollected += UpdateScience;
+        RoundMagiculaTracker tracker = RoundMagiculaTracker.Instance;
+        if (tracker != null)
+            tracker.OnRoundTotalChanged += HandleRoundTotalChanged;
+
+        GameEvents.OnCienciaCollected += HandleCienciaCollected;
     }
 
     private void OnDisable()
     {
-        GameEvents.OnCienciaCollected -= UpdateScience;
+        RoundMagiculaTracker tracker = RoundMagiculaTracker.Instance;
+        if (tracker != null)
+            tracker.OnRoundTotalChanged -= HandleRoundTotalChanged;
+
+        GameEvents.OnCienciaCollected -= HandleCienciaCollected;
     }
 
     private void Start()
@@ -78,17 +84,21 @@ public class ScienceIndicator : MonoBehaviour
         return null;
     }
 
-    private void UpdateScience(int amount)
+    private void HandleCienciaCollected(int amount)
     {
-        currentScience += amount;
-        UpdateUI();
+        if (amount > 0)
+            UpdateUI();
     }
+
+    private void HandleRoundTotalChanged(int _) => UpdateUI();
 
     private void UpdateUI()
     {
-        if (text != null)
-        {
-            text.text = currentScience.ToString();
-        }
+        if (text == null)
+            return;
+
+        RoundMagiculaTracker tracker = RoundMagiculaTracker.Instance;
+        int roundTotal = tracker != null ? tracker.RoundTotal : 0;
+        text.text = roundTotal.ToString();
     }
 }

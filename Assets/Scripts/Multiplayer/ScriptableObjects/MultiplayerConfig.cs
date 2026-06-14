@@ -63,7 +63,7 @@ public class MultiplayerConfig : ScriptableObject
 
     [Header("Ciência (Collectibles)")]
     [Tooltip("Se verdadeiro, toda ciência coletada é compartilhada entre todos os jogadores.")]
-    public bool sharedSciencePool = true;
+    public bool sharedSciencePool = false;
 
     [Header("Persistência de Conexão (UnityTransport)")]
     [Tooltip("Intervalo em ms entre heartbeats. Mantém a conexão ativa sem tráfego de jogo. Padrão: 500ms.")]

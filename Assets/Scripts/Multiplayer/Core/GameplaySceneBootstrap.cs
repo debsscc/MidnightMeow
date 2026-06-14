@@ -18,6 +18,9 @@ public static class GameplaySceneBootstrap
         EnsureCameraRig();
         TransitionCameraKeeper.Refresh();
 
+        RoundMagiculaTracker.EnsureExists();
+        RoundMagiculaTracker.Instance?.ResetRound();
+
         Canvas hudCanvas = Object.FindFirstObjectByType<Canvas>();
         if (hudCanvas != null)
             PlayerAbilityHud.EnsureOnCanvas(hudCanvas);

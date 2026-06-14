@@ -242,8 +242,7 @@ public class MultiplayerGameManager : NetworkBehaviour
         SaveProfileStore save = SaveProfileStore.Instance;
         if (save?.Active != null)
         {
-            if (endState == GameState.Victory)
-                save.AddMagiculas(1);
+            RoundMagiculaTracker.Instance?.CommitToSave();
 
             save.Active.Touch(NetworkManager.Singleton != null && NetworkManager.Singleton.IsHost,
                 ConnectionManager.Instance != null ? ConnectionManager.Instance.CurrentJoinCode : string.Empty,

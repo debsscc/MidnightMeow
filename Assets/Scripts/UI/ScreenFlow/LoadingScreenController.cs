@@ -28,7 +28,18 @@ public class LoadingScreenController : MonoBehaviour
 
         EnsureProgressUi();
         EnsureCanvasOnTop();
+        HandoffTransitionOverlay();
         ResetProgressUi();
+    }
+
+    private void HandoffTransitionOverlay()
+    {
+        TransitionFadeOverlay overlay = TransitionFadeOverlay.Instance;
+        if (overlay == null)
+            return;
+
+        float progress = overlay.LoadingProgress;
+        overlay.HandoffToDedicatedLoadingScene(progress);
     }
 
     private void Start()
@@ -55,7 +66,6 @@ public class LoadingScreenController : MonoBehaviour
             ? fallbackNextRouteId
             : GameSessionContext.PendingRouteId;
 
-        ScreenFlowController.Instance?.ClearTransitionOverlay();
         ResetProgressUi();
 
         float timer = 0f;
@@ -124,11 +134,18 @@ public class LoadingScreenController : MonoBehaviour
 
     private void HideLegacyLoadingContent()
     {
+        TransitionFadeOverlay overlay = TransitionFadeOverlay.Instance;
+        if (overlay != null)
+            overlay.HideLoading();
+
         Canvas ownedCanvas = GetComponentInChildren<Canvas>(true);
         Canvas[] canvases = FindObjectsByType<Canvas>(FindObjectsInactive.Include, FindObjectsSortMode.None);
         for (int i = 0; i < canvases.Length; i++)
         {
             Canvas canvas = canvases[i];
+            if (canvas.GetComponentInParent<TransitionFadeOverlay>() != null)
+                continue;
+
             if (canvas.gameObject.name == "FadeManager")
                 continue;
 

@@ -26,4 +26,4 @@ MonoBehaviour:
   localPlayerCardColor: {r: 0.2, g: 0.8, b: 0.2, a: 1}
   remotePlayerCardColor: {r: 0.8, g: 0.8, b: 0.8, a: 1}
   deadPlayerCardColor: {r: 0.4, g: 0.1, b: 0.1, a: 0.6}
-  sharedSciencePool: 1
+  sharedSciencePool: 0

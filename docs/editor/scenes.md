@@ -19,7 +19,7 @@ Gameplay: `GameplayPrefabCatalog` em `Resources/` instancia `MultiplayerCameraRi
 | Menu principal    | `Assets/Scenes/UI/Menu2.unity`                      | `MainMenuController` — Novo Jogo, Continuar (Saves), Opções, Sair |
 | Lobby             | `Assets/Scenes/UI/Lobby.unity`                      | `LobbyFlowController` — host/entrar/solo/personagens |
 | Personagens       | `Assets/Scenes/UI/Characters.unity`                  | `CharactersScreenController` — consulta ou seleção + upgrades |
-| Preparação        | `Assets/Scenes/UI/Preparation.unity`                | `PreparationScreenController` — contrato + personagem + pronto |
+| Preparação        | `Assets/Scenes/UI/Preparation.unity`                | `PreparationScreenController` — contrato + personagem + pronto. Em solo, contrato persiste via `SaveProfileStore.selectedContractIndex` ao voltar de Characters |
 | Loading 1         | `Assets/Scenes/UI/Loading1.unity`                   | Transição Lobby → Preparação |
 | Loading 2         | `Assets/Scenes/UI/Loading2.unity`                   | Transição para gameplay                 |
 | Jogo (UI wrapper) | `Assets/Scenes/UI/Game.unity`                       | Fluxo de partida com UI                 |

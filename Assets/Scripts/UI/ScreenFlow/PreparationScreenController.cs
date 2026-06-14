@@ -36,6 +36,7 @@ public class PreparationScreenController : MonoBehaviour
 
     private void Start()
     {
+        RestoreSinglePlayerContractState();
         ScreenFlowController.Instance?.ClearTransitionOverlay();
         EnsureUi();
         if (!_buttonsWired)
@@ -88,13 +89,27 @@ public class PreparationScreenController : MonoBehaviour
 
     public void RefreshFromHubNavigation()
     {
+        RestoreSinglePlayerContractState();
         TrySubscribeSession();
         RefreshCharacterLabel();
         RefreshView();
     }
 
+    private void RestoreSinglePlayerContractState()
+    {
+        if (!GameSessionContext.IsSinglePlayer)
+            return;
+
+        SaveProfileStore save = SaveProfileStore.Instance;
+        if (save?.Active == null || save.Active.selectedContractIndex < 0)
+            return;
+
+        _localSelectedContract = save.Active.selectedContractIndex;
+    }
+
     private void OnEnable()
     {
+        RestoreSinglePlayerContractState();
         PreparationSessionManager.OnInstanceAvailable += TrySubscribeSession;
         TrySubscribeSession();
         RefreshCharacterLabel();

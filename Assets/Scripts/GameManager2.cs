@@ -41,8 +41,6 @@ public class GameManager2 : MonoBehaviour
     [Tooltip("Optional: reference to the global PlayerProgressionData SO. If left empty, will try ServiceLocator.")]
     [SerializeField] private PlayerProgressionData progressionData;
 
-    private int _tempCollectedScience = 0;
-
     private void Awake()
     {
         // Colisão Player x Enemy é gerida por PlayerDamageImmunity (passagem breve após dano).
@@ -57,7 +55,6 @@ public class GameManager2 : MonoBehaviour
     {
         GameEvents.OnNightEnded += HandleNightEnded;
         GameEvents.OnPlayerDefeated += HandlePlayerDefeated;
-        GameEvents.OnCienciaCollected += HandleCienciaCollected;
         GameEvents.OnPauseChanged += HandleExternalPauseChanged;
     }
 
@@ -65,7 +62,6 @@ public class GameManager2 : MonoBehaviour
     {
         GameEvents.OnNightEnded -= HandleNightEnded;
         GameEvents.OnPlayerDefeated -= HandlePlayerDefeated;
-        GameEvents.OnCienciaCollected -= HandleCienciaCollected;
         GameEvents.OnPauseChanged -= HandleExternalPauseChanged;
     }
 
@@ -97,6 +93,9 @@ public class GameManager2 : MonoBehaviour
         {
             progressionData = ServiceLocator.GetService<PlayerProgressionData>();
         }
+
+        RoundMagiculaTracker.EnsureExists();
+        RoundMagiculaTracker.Instance?.ResetRound();
     }
 
     private void Update()
@@ -207,7 +206,7 @@ public class GameManager2 : MonoBehaviour
     public void RestartCurrentScene()
     {
         Time.timeScale = 1f;
-        _tempCollectedScience = 0;
+        RoundMagiculaTracker.Instance?.ResetRound();
         
         string currentSceneName = SceneManager.GetActiveScene().name;
         
@@ -247,14 +246,13 @@ public class GameManager2 : MonoBehaviour
 
         yield return new WaitForSecondsRealtime(delay);
 
-        if (_tempCollectedScience > 0)
+        RoundMagiculaTracker tracker = RoundMagiculaTracker.Instance;
+        if (tracker != null)
         {
-            if (progressionData != null)
-                progressionData.AddScience(_tempCollectedScience);
+            if (progressionData != null && tracker.RoundTotal > 0)
+                progressionData.AddScience(tracker.RoundTotal);
 
-            SaveProfileStore save = SaveProfileStore.Instance;
-            save?.AddMagiculas(_tempCollectedScience);
-            _tempCollectedScience = 0;
+            tracker.CommitToSave();
         }
 
         GameSessionContext.ResetContractRound();
@@ -283,12 +281,5 @@ public class GameManager2 : MonoBehaviour
 
         Debug.LogWarning($"GameManager2: carregando '{fallbackScene}' diretamente (sem ScreenFlowController).");
         SceneManager.LoadScene(fallbackScene);
-    }
-
-    private void HandleCienciaCollected(int amount)
-    {
-        if (amount <= 0) return;
-        _tempCollectedScience += amount;
-        Debug.Log($"GameManager2: Ciencia collected +{amount}. Temp total: {_tempCollectedScience}");
     }
 }

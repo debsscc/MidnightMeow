@@ -205,14 +205,20 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
         float ft = fadeTime > 0f ? fadeTime : (_fadeTime > 0f ? _fadeTime : defaultFadeTime);
         float ml = minLoadingTime > 0f ? minLoadingTime : (_minLoadingTime > 0f ? _minLoadingTime : defaultMinLoadingTime);
 
+        bool dedicatedLoadingScene = ScreenFlowLoadingScenes.IsDedicatedLoadingScene(sceneName);
+        if (dedicatedLoadingScene)
+            ml = 0f;
+
         IsTransitioning = true;
         TargetSceneName = sceneName;
         onAnyTransitionStarted?.Invoke();
         OnTransitionStarted?.Invoke(sceneName);
 
         bool useLoading = ResolveUsesLoadingScreen(mode);
+        TransitionFadeOverlay overlay = TransitionFadeOverlay.Instance;
+        overlay?.SetUseLegacyLoading(!dedicatedLoadingScene);
         if (useLoading)
-            TransitionFadeOverlay.Instance?.ShowLoading();
+            overlay?.ShowLoading();
 
         _transitionRoutine = StartCoroutine(RunTransition(sceneName, mode, loadKind, ft, ml));
         return true;
@@ -341,7 +347,9 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
 
                 if (useLoading)
                 {
-                    while (SceneManager.GetActiveScene().name != sceneName || loadTimer < minLoadingTime)
+                    bool skipOverlayTimer = ScreenFlowLoadingScenes.IsDedicatedLoadingScene(sceneName);
+                    while (SceneManager.GetActiveScene().name != sceneName
+                           || (!skipOverlayTimer && loadTimer < minLoadingTime))
                     {
                         loadTimer += Time.unscaledDeltaTime;
                         float timeProgress = minLoadingTime > 0f ? Mathf.Clamp01(loadTimer / minLoadingTime) : 1f;
@@ -513,6 +521,7 @@ public class TransitionFadeOverlay : Singleton<TransitionFadeOverlay>
     private GameObject _legacyLoadingScreen;
     private Canvas _legacyCanvas;
     private string _legacySceneName;
+    private bool _useLegacyLoading = true;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     private static void BootstrapBeforeSceneLoad()
@@ -544,6 +553,8 @@ public class TransitionFadeOverlay : Singleton<TransitionFadeOverlay>
     {
         SceneManager.sceneUnloaded -= HandleSceneUnloaded;
     }
+
+    public void SetUseLegacyLoading(bool useLegacy) => _useLegacyLoading = useLegacy;
 
     public void RegisterSceneVisuals(Image fadeImage, GameObject loadingScreen)
     {
@@ -689,12 +700,14 @@ public class TransitionFadeOverlay : Singleton<TransitionFadeOverlay>
         _loadingRoot.SetActive(true);
         _loadingRoot.transform.SetAsLastSibling();
 
-        if (HasValidLegacyVisuals())
+        if (_useLegacyLoading && HasValidLegacyVisuals())
         {
             EnsureLegacyCanvasFront();
             _legacyLoadingScreen.SetActive(true);
             _legacyLoadingScreen.transform.SetAsLastSibling();
         }
+        else if (_legacyLoadingScreen != null)
+            _legacyLoadingScreen.SetActive(false);
 
         if (!IsLoadingVisible)
         {
@@ -735,10 +748,20 @@ public class TransitionFadeOverlay : Singleton<TransitionFadeOverlay>
 
     public void ResetLoadingProgress() => SetLoadingProgress(0f);
 
+    public void HandoffToDedicatedLoadingScene(float progress = -1f)
+    {
+        HideLoading();
+        SetFadeImmediate(0f);
+
+        if (progress >= 0f)
+            SetLoadingProgress(progress);
+    }
+
     public void ResetOverlay()
     {
         HideLoading();
         ResetFade();
+        _useLegacyLoading = true;
     }
 
     public void ResetFade()
