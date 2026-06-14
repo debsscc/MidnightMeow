@@ -41,11 +41,20 @@ Ambos compartilham `PlayerCoreStats.asset` para dash, movimento e adrenalina.
 ### Como trocar animações
 
 1. Duplique ou edite o `CharacterAnimationProfile` do personagem.
-2. Defina `baseController` (ex.: `AC_Player.controller` ou `AC_Enemy.controller`).
-3. Preencha `clipOverrides` mapeando **nome do clip original** no controller → `AnimationClip` desejado.
-4. Adicione `AnimatorProfileBinder` no prefab do inimigo (mesmo GO do `Animator`).
-5. Em runtime, `BuildRuntimeController()` gera um `AnimatorOverrideController`.
+2. Defina `baseController` (`AC_CORA` para Cora, `AC_NIXIE` para Nixie; inimigos usam `AC_Enemy`).
+3. Opcional: preencha `clipOverrides` mapeando **nome do clip original** no controller → `AnimationClip` desejado (só necessário se não quiser editar o controller dedicado).
+4. Adicione `AnimatorProfileBinder` no prefab do personagem (mesmo GO do `Animator`).
+5. Em runtime, `BuildRuntimeController()` usa o controller dedicado ou gera um `AnimatorOverrideController` quando há overrides.
 6. `PlayerAnimationHandler` / `EnemyAnimationHandler` leem hashes e tempos do binder.
+
+Controllers dedicados (clips já ligados nos estados):
+
+| Personagem | Controller | Pasta de clips |
+|------------|------------|----------------|
+| Cora | `Assets/Art/Sprites/Animations/Players/AC_CORA.controller` | `Assets/Art/Sprites/Animations/Cora/` |
+| Nixie | `Assets/Art/Sprites/Animations/Players/AC_NIXIE.controller` | `Assets/Art/Sprites/Animations/Nyxie/` + `NyxieRun.anim` |
+
+`AC_Player.controller` permanece como template legado; novos personagens devem ter controller próprio.
 
 Template inimigo: `Assets/Data/Characters/EnemyDefaultAnimationProfile.asset` (controller `AC_Enemy`).
 

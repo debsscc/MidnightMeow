@@ -14,6 +14,7 @@ public class Projectile : MonoBehaviour
     private float _damageMultiplier = 1f;
 
     private Rigidbody2D _rb;
+    private SpriteRenderer _spriteRenderer;
     private int _currentBounces = 0;
     private int _maxBounces;
     private bool _canBeCollected = false;
@@ -41,14 +42,19 @@ public class Projectile : MonoBehaviour
     private bool _hasTravelDirection;
     private Vector2 _spawnPosition;
 
+    private static Sprite _fallbackCircleSprite;
+    private static float _fallbackCircleDiameter = -1f;
+
     private void Awake()
     {
         _rb = GetComponent<Rigidbody2D>();
+        _spriteRenderer = GetComponent<SpriteRenderer>();
         _maxBounces = stats.maxBounces;
         EnsureProjectileLayerCollisions();
         ConfigureCombatColliders();
         if (_rb != null)
             _rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
+        EnsureVisibleSprite();
     }
 
     public void ConfigureCombatColliders()
@@ -118,6 +124,8 @@ public class Projectile : MonoBehaviour
 
     private void Update()
     {
+        if (_spriteRenderer != null && _spriteRenderer.sprite == null)
+            EnsureVisibleSprite();
         if (stats.maxDistance > 0 && _currentState != ProjectileState.Seeking &&
             Vector2.Distance(_spawnPosition, transform.position) >= stats.maxDistance)
         {
@@ -440,5 +448,73 @@ public class Projectile : MonoBehaviour
 
         float angle = Mathf.Atan2(normalizedDirection.y, normalizedDirection.x) * Mathf.Rad2Deg - 90f;
         transform.rotation = Quaternion.Euler(0, 0, angle);
+    }
+
+    private void EnsureVisibleSprite()
+    {
+        if (_spriteRenderer == null)
+            return;
+
+        if (_spriteRenderer.sprite != null)
+            return;
+
+        float diameter = ResolveVisualDiameter();
+        _spriteRenderer.sprite = GetOrCreateFallbackCircleSprite(diameter);
+    }
+
+    private float ResolveVisualDiameter()
+    {
+        if (TryGetComponent(out CircleCollider2D circle) && circle.radius > 0f)
+        {
+            Vector3 scale = transform.lossyScale;
+            float maxScale = Mathf.Max(Mathf.Abs(scale.x), Mathf.Abs(scale.y));
+            return circle.radius * 2f * maxScale;
+        }
+
+        return 0.5f;
+    }
+
+    private static Sprite GetOrCreateFallbackCircleSprite(float diameterWorldUnits)
+    {
+        diameterWorldUnits = Mathf.Max(0.05f, diameterWorldUnits);
+
+        if (_fallbackCircleSprite != null && Mathf.Approximately(_fallbackCircleDiameter, diameterWorldUnits))
+            return _fallbackCircleSprite;
+
+        const int textureSize = 64;
+        var texture = new Texture2D(textureSize, textureSize, TextureFormat.RGBA32, false)
+        {
+            filterMode = FilterMode.Bilinear,
+            wrapMode = TextureWrapMode.Clamp
+        };
+
+        float center = (textureSize - 1) * 0.5f;
+        float radius = center - 1f;
+        float radiusSq = radius * radius;
+        var pixels = new Color[textureSize * textureSize];
+
+        for (int y = 0; y < textureSize; y++)
+        {
+            for (int x = 0; x < textureSize; x++)
+            {
+                float dx = x - center;
+                float dy = y - center;
+                pixels[y * textureSize + x] = dx * dx + dy * dy <= radiusSq
+                    ? new Color(0.95f, 0.85f, 0.35f, 1f)
+                    : Color.clear;
+            }
+        }
+
+        texture.SetPixels(pixels);
+        texture.Apply();
+
+        float pixelsPerUnit = textureSize / diameterWorldUnits;
+        _fallbackCircleSprite = Sprite.Create(
+            texture,
+            new Rect(0f, 0f, textureSize, textureSize),
+            new Vector2(0.5f, 0.5f),
+            pixelsPerUnit);
+        _fallbackCircleDiameter = diameterWorldUnits;
+        return _fallbackCircleSprite;
     }
 }

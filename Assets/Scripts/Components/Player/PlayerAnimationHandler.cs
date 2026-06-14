@@ -281,10 +281,12 @@ public class PlayerAnimationHandler : MonoBehaviour
 
     private void ApplyFacingToRenderers(bool facingRight)
     {
+        // Sprites dos personagens foram desenhados olhando para a direita; flipX espelha para a esquerda.
+        bool flipX = !facingRight;
         if (_spriteRenderer != null)
-            _spriteRenderer.flipX = facingRight;
+            _spriteRenderer.flipX = flipX;
         if (shadowSpriteRenderer != null)
-            shadowSpriteRenderer.flipX = facingRight;
+            shadowSpriteRenderer.flipX = flipX;
     }
 
     private void HandleHit()

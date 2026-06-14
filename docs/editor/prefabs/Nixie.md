@@ -67,7 +67,7 @@ Nixie
 | Campo | Asset |
 |-------|--------|
 | **`CharacterProfileApplier.profile`** | `Assets/Data/Characters/NixieGameplayProfile.asset` |
-| `AnimatorProfileBinder.profile` | `Assets/Data/Characters/NixieAnimationProfile.asset` |
+| `AnimatorProfileBinder.profile` | `Assets/Data/Characters/NixieAnimationProfile.asset` → `AC_NIXIE.controller` |
 | `stats` (legado, espelhado pelo profile) | `Assets/Data/Stats/Player/PlayerCoreStats.asset` |
 | `PlayerMeleeCombat.combatStats` (via profile) | `Assets/Data/Stats/Player/NixieMeleeCombatStats.asset` |
 | `PlayerAbilityHandler.abilitySet` | `Assets/Data/Abilities/NixAbilitySet.asset` |
@@ -92,5 +92,6 @@ Nixie
 |------|-----------|
 | 2026-06-14 | Combo derrota: `DeathHordePresentation` (spawn off, slow-mo, fade ratos, vinheta/zoom) |
 | 2026-06-12 | Fluxo de morte B: presentation + dissolve MP; bleed-out pausado |
+| 2026-06-14 | Animador dedicado `AC_NIXIE.controller` + clips em `Assets/Art/Sprites/Animations/Nyxie/` via `NixieAnimationProfile` |
 | 2026-06-14 | `CharacterProfileApplier` + `AnimatorProfileBinder`; SOs em `Assets/Data/Characters/` |
 | 2026-05-22 | Doc completa a partir do YAML |

@@ -12,12 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a3b4c5d6e7f8478990a1b2c3d4e5f003, type: 3}
   m_Name: NixieAnimationProfile
   m_EditorClassIdentifier: Assembly-CSharp::CharacterAnimationProfile
-  baseController: {fileID: 9100000, guid: a6e00dd278b03d443bc782d709d04f16, type: 2}
-  clipOverrides:
-  - stateName: Dash_Nyx
-    clip: {fileID: 7400000, guid: da686f5bab8aaa74c9ab63d5dd556adc, type: 2}
-  - stateName: dash_attack_nix
-    clip: {fileID: 7400000, guid: 8defe74ef89747f47bcd77e7d0dfbd49, type: 2}
+  baseController: {fileID: 9100000, guid: e7f8a9b0c1d2436578091a2b3c4d5e6f, type: 2}
+  clipOverrides: []
   moveSpeedParameter: MoveSpeed
   attackSpeedParameter: AttackSpeed
   onShootTrigger: OnShoot

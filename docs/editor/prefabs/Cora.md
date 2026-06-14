@@ -72,7 +72,7 @@ Cora
 | Campo | Asset |
 |-------|--------|
 | **`CharacterProfileApplier.profile`** | `Assets/Data/Characters/CoraGameplayProfile.asset` |
-| `AnimatorProfileBinder.profile` | `Assets/Data/Characters/CoraAnimationProfile.asset` |
+| `AnimatorProfileBinder.profile` | `Assets/Data/Characters/CoraAnimationProfile.asset` → `AC_CORA.controller` |
 | `stats` / `baseStats` (legado, espelhado pelo profile) | `Assets/Data/Stats/Player/PlayerCoreStats.asset` |
 | `CoraRangedCombatStats` (via profile) | `Assets/Data/Characters/CoraRangedCombatStats.asset` — **attackRange**, fireRate |
 | `PlayerAbilityHandler.abilitySet` | `Assets/Data/Abilities/CoraAbilitySet.asset` |
@@ -100,5 +100,6 @@ Cora
 | Data | Alteração |
 |------|-----------|
 | 2026-06-12 | Fluxo de morte B: presentation + dissolve MP |
+| 2026-06-14 | Animador dedicado `AC_CORA.controller` + clips em `Assets/Art/Sprites/Animations/Cora/` via `CoraAnimationProfile` |
 | 2026-06-14 | `CharacterProfileApplier` + `AnimatorProfileBinder`; SOs em `Assets/Data/Characters/` |
 | 2026-05-22 | Doc criada a partir do YAML (substitui Player.prefab legado) |

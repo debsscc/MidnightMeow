@@ -31,6 +31,7 @@ public class Shadow : MonoBehaviour
                 var sr = GetComponent<SpriteRenderer>();
                 var objSr = SombraList[i].GetComponent<SpriteRenderer>();
                 objSr.sprite = sr.sprite;
+                objSr.flipX = sr.flipX;
                 objSr.sortingLayerID = sr.sortingLayerID;
                 objSr.sortingOrder = sr.sortingOrder - 1;
                 SombraList[i].GetComponent<Solid>()._color = _color;
@@ -42,6 +43,7 @@ public class Shadow : MonoBehaviour
         var sourceSr = GetComponent<SpriteRenderer>();
         var newObjSr = obj.GetComponent<SpriteRenderer>();
         newObjSr.sprite = sourceSr.sprite;
+        newObjSr.flipX = sourceSr.flipX;
         newObjSr.sortingLayerID = sourceSr.sortingLayerID;
         newObjSr.sortingOrder = sourceSr.sortingOrder - 1;
         obj.GetComponent<Solid>()._color = _color;
