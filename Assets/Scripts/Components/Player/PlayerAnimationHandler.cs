@@ -13,32 +13,31 @@ public class PlayerAnimationHandler : MonoBehaviour
     [SerializeField] private PlayerAbilityHandler playerAbilityHandler;
     [SerializeField] private HealthComponent healthComponent;
     [SerializeField] private PlayerMovement playerMovement;
-    private int sortingOrderOffset = 5000;
+    [SerializeField] private AnimatorProfileBinder animationBinder;
+    [SerializeField] private int sortingOrderOffset = 5000;
     [SerializeField] private int sortingPrecision = 100;
 
     [SerializeField] private SpriteRenderer shadowSpriteRenderer;
-
-    private Animator _animator;
-    private Rigidbody2D _rb;
-    private SpriteRenderer _spriteRenderer;
-    private Collider2D _collider2D;
-
-    private readonly int _hashMoveSpeed = Animator.StringToHash("MoveSpeed");
-    private readonly int _hashOnShoot = Animator.StringToHash("OnShoot");
-    private readonly int _hashOnPull = Animator.StringToHash("OnPull");
-    private readonly int _hashOnHit = Animator.StringToHash("OnHit");
-    private readonly int _hashOnTakeDamage = Animator.StringToHash("OnDamage");
-    private readonly int _hashOnDie = Animator.StringToHash("OnDie");
-    private readonly int _hashAttackSpeed = Animator.StringToHash("AttackSpeed");
-    private readonly int _hashOnAbility1 = Animator.StringToHash("OnAbility1");
-    private readonly int _hashOnAbility2 = Animator.StringToHash("OnAbility2");
-    private readonly int _hashOnDash = Animator.StringToHash("OnDash");
 
     [Header("Attack Animation")]
     [SerializeField] private float _attackAnimClipLength = 0.333f;
 
     [Header("Death Animation")]
     [SerializeField] private float _deathDestroyDelay = 4f;
+
+    private Animator _animator;
+    private Rigidbody2D _rb;
+    private SpriteRenderer _spriteRenderer;
+    private Collider2D _collider2D;
+
+    private int _hashMoveSpeed;
+    private int _hashOnShoot;
+    private int _hashOnTakeDamage;
+    private int _hashOnDie;
+    private int _hashAttackSpeed;
+    private int _hashOnAbility1;
+    private int _hashOnAbility2;
+    private int _hashOnDash;
 
     private float _lastAttackTriggerTime = float.NegativeInfinity;
     private bool _loggedOnce;
@@ -55,6 +54,43 @@ public class PlayerAnimationHandler : MonoBehaviour
         if (playerShooting == null) playerShooting = GetComponent<PlayerShooting>();
         if (playerMeleeCombat == null) playerMeleeCombat = GetComponent<PlayerMeleeCombat>();
         if (playerAbilityHandler == null) playerAbilityHandler = GetComponent<PlayerAbilityHandler>();
+        if (animationBinder == null) animationBinder = GetComponent<AnimatorProfileBinder>();
+
+        ResolveAnimationHashes();
+    }
+
+    private void ResolveAnimationHashes()
+    {
+        if (animationBinder != null)
+        {
+            _hashMoveSpeed = animationBinder.GetMoveSpeedHash();
+            _hashOnShoot = animationBinder.GetOnShootHash();
+            _hashOnTakeDamage = animationBinder.GetOnTakeDamageHash();
+            _hashOnDie = animationBinder.GetOnDieHash();
+            _hashAttackSpeed = animationBinder.GetAttackSpeedHash();
+            _hashOnAbility1 = animationBinder.GetOnAbility1Hash();
+            _hashOnAbility2 = animationBinder.GetOnAbility2Hash();
+            _hashOnDash = animationBinder.GetOnDashHash();
+            _attackAnimClipLength = animationBinder.AttackAnimClipLength;
+            _deathDestroyDelay = animationBinder.DeathDestroyDelay;
+
+            if (animationBinder.Profile != null)
+            {
+                sortingOrderOffset = animationBinder.Profile.sortingOrderOffset;
+                sortingPrecision = animationBinder.Profile.sortingPrecision;
+            }
+
+            return;
+        }
+
+        _hashMoveSpeed = Animator.StringToHash("MoveSpeed");
+        _hashOnShoot = Animator.StringToHash("OnShoot");
+        _hashOnTakeDamage = Animator.StringToHash("OnDamage");
+        _hashOnDie = Animator.StringToHash("OnDie");
+        _hashAttackSpeed = Animator.StringToHash("AttackSpeed");
+        _hashOnAbility1 = Animator.StringToHash("OnAbility1");
+        _hashOnAbility2 = Animator.StringToHash("OnAbility2");
+        _hashOnDash = Animator.StringToHash("OnDash");
     }
 
     private void OnEnable()
@@ -111,10 +147,7 @@ public class PlayerAnimationHandler : MonoBehaviour
         _animator.SetFloat(_hashAttackSpeed, Mathf.Max(0.1f, attackSpeedMult));
     }
 
-    private void LateUpdate()
-    {
-        UpdateSortingOrder();
-    }
+    private void LateUpdate() => UpdateSortingOrder();
 
     public void PlayAbilityAnimation(CharacterAbilityType abilityType)
     {
@@ -215,7 +248,8 @@ public class PlayerAnimationHandler : MonoBehaviour
 
     private void UpdateSortingOrder()
     {
-        if (_spriteRenderer == null) return;
+        if (_spriteRenderer == null)
+            return;
 
         float referenceY = _collider2D != null ? _collider2D.bounds.min.y : transform.position.y;
         int newOrder = sortingOrderOffset - Mathf.RoundToInt(referenceY * sortingPrecision);

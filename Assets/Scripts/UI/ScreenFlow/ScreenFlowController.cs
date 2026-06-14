@@ -210,6 +210,10 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
         onAnyTransitionStarted?.Invoke();
         OnTransitionStarted?.Invoke(sceneName);
 
+        bool useLoading = ResolveUsesLoadingScreen(mode);
+        if (useLoading)
+            TransitionFadeOverlay.Instance?.ShowLoading();
+
         _transitionRoutine = StartCoroutine(RunTransition(sceneName, mode, loadKind, ft, ml));
         return true;
     }
@@ -246,6 +250,9 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
     {
         return overrideMode == ScreenTransitionMode.UseRouteDefault ? routeDefault : overrideMode;
     }
+
+    private static bool ResolveUsesLoadingScreen(ScreenTransitionMode mode) =>
+        mode == ScreenTransitionMode.LoadingScreen;
 
     private IEnumerator RunTransition(string sceneName, ScreenTransitionMode mode, SceneLoadKind loadKind, float fadeTime, float minLoadingTime)
     {
@@ -289,7 +296,8 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
             overlay.ShowLoading();
         }
 
-        if (useFade)
+        bool instantLoadingFeedback = useLoading && ScreenFlowLoadingScenes.IsDedicatedLoadingScene(sceneName);
+        if (useFade && !instantLoadingFeedback)
         {
             yield return overlay.FadeOut(fadeTime, delta =>
             {
@@ -299,6 +307,10 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
                 loadTimer += delta;
                 UpdateTransitionLoadingProgress(overlay, loadTimer, minLoadingTime);
             });
+        }
+        else if (useFade && instantLoadingFeedback)
+        {
+            overlay.SetFadeImmediate(1f);
         }
 
         if (loadKind == SceneLoadKind.NetcodeHost)
@@ -395,12 +407,13 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
         if (useLoading)
             yield return ScreenFlowSceneReadiness.WaitUntilReady(sceneName);
 
-        if (useLoading)
+        bool handoffToDedicatedLoadingScene = useLoading && ScreenFlowLoadingScenes.IsDedicatedLoadingScene(sceneName);
+        if (useLoading && !handoffToDedicatedLoadingScene)
             overlay.HideLoading();
 
-        if (useFade)
+        if (useFade && !handoffToDedicatedLoadingScene)
             yield return overlay.FadeIn(fadeTime);
-        else
+        else if (!handoffToDedicatedLoadingScene)
             overlay.ResetFade();
     }
 
@@ -669,6 +682,10 @@ public class TransitionFadeOverlay : Singleton<TransitionFadeOverlay>
         ResetLoadingProgress();
 
         SetBuiltInOverlayVisible(true);
+
+        if (_fadeImage != null)
+            _fadeImage.transform.SetAsFirstSibling();
+
         _loadingRoot.SetActive(true);
         _loadingRoot.transform.SetAsLastSibling();
 
@@ -676,6 +693,7 @@ public class TransitionFadeOverlay : Singleton<TransitionFadeOverlay>
         {
             EnsureLegacyCanvasFront();
             _legacyLoadingScreen.SetActive(true);
+            _legacyLoadingScreen.transform.SetAsLastSibling();
         }
 
         if (!IsLoadingVisible)
@@ -729,13 +747,22 @@ public class TransitionFadeOverlay : Singleton<TransitionFadeOverlay>
         if (fadeTarget == null)
             return;
 
-        Color c = fadeTarget.color;
-        c.a = 0f;
-        fadeTarget.color = c;
-        fadeTarget.raycastTarget = false;
+        SetFadeImmediate(0f);
 
         if (_fadeImage != null && _fadeImage != fadeTarget)
             ResetFadeImage(_fadeImage);
+    }
+
+    public void SetFadeImmediate(float alpha)
+    {
+        Image fadeTarget = GetActiveFadeImage();
+        if (fadeTarget == null)
+            return;
+
+        Color c = fadeTarget.color;
+        c.a = Mathf.Clamp01(alpha);
+        fadeTarget.color = c;
+        fadeTarget.raycastTarget = c.a > 0.01f;
     }
 
     private static void ResetFadeImage(Image image)

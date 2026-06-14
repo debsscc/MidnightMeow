@@ -11,6 +11,7 @@ public class EnemyAnimationHandler : MonoBehaviour
 {
     private Animator _animator;
     [SerializeField] private EnemyMovement enemyMovement;
+    [SerializeField] private AnimatorProfileBinder animationBinder;
     private int sortingOrderOffset = 5000;
     [SerializeField] private int sortingPrecision = 100;
     private SpriteRenderer _spriteRenderer;
@@ -29,10 +30,10 @@ public class EnemyAnimationHandler : MonoBehaviour
     private NetworkEnemyController _networkEnemyController;
 
     // Hashes
-    private readonly int _hashMoveSpeed = Animator.StringToHash("MoveSpeed");
-    private readonly int _hashOnAttack = Animator.StringToHash("OnAttack");
-    private readonly int _hashOnTakeDamage = Animator.StringToHash("OnTakeDamage");
-    private readonly int _hashOnDie = Animator.StringToHash("OnDie");
+    private int _hashMoveSpeed;
+    private int _hashOnAttack;
+    private int _hashOnTakeDamage;
+    private int _hashOnDie;
 
     private void Awake()
     {
@@ -48,11 +49,39 @@ public class EnemyAnimationHandler : MonoBehaviour
             _attackRanged = GetComponent<EnemyAttack_Ranged>();
         healthComponent = GetComponent<HealthComponent>();
         _networkEnemyController = GetComponent<NetworkEnemyController>();
+        if (animationBinder == null)
+            animationBinder = GetComponent<AnimatorProfileBinder>();
+
+        ResolveAnimationHashes();
 
         if (debugLogs)
         {
             Debug.Log($"EnemyAnimationHandler.Awake - {gameObject.name}: animator={_animator!=null}, enemyMovement={enemyMovement!=null}, spriteRenderer={_spriteRenderer!=null}, healthComponent={healthComponent!=null}, isMelee={isMelee}");
         }
+    }
+
+    private void ResolveAnimationHashes()
+    {
+        if (animationBinder != null)
+        {
+            _hashMoveSpeed = animationBinder.GetMoveSpeedHash();
+            _hashOnAttack = animationBinder.GetOnShootHash();
+            _hashOnTakeDamage = animationBinder.GetOnTakeDamageHash();
+            _hashOnDie = animationBinder.GetOnDieHash();
+
+            if (animationBinder.Profile != null)
+            {
+                sortingOrderOffset = animationBinder.Profile.sortingOrderOffset;
+                sortingPrecision = animationBinder.Profile.sortingPrecision;
+            }
+
+            return;
+        }
+
+        _hashMoveSpeed = Animator.StringToHash("MoveSpeed");
+        _hashOnAttack = Animator.StringToHash("OnAttack");
+        _hashOnTakeDamage = Animator.StringToHash("OnTakeDamage");
+        _hashOnDie = Animator.StringToHash("OnDie");
     }
 
     private void OnEnable()

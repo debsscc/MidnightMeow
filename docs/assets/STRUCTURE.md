@@ -1,6 +1,6 @@
 # Estrutura de Assets
 
-Última revisão: 2026-05-22
+Última revisão: 2026-06-14
 
 ## Visão geral
 
@@ -9,6 +9,13 @@ Assets/
 ├── Art/                 # Sprites, Materials, Shaders, Fonts, Models
 ├── Audio/               # Música e SFX (consolidação gradual)
 ├── Data/                # Instâncias ScriptableObject (balanceamento)
+│   ├── Characters/      # GameplayProfile + AnimationProfile por personagem
+│   ├── Abilities/
+│   ├── Combat/
+│   ├── Contracts/
+│   ├── Multiplayer/
+│   ├── Stats/           # Player, Enemies, Game, Projectiles
+│   └── UI/ScreenFlow/
 ├── Prefabs/
 │   ├── Characters/
 │   ├── Enemies/
@@ -49,7 +56,13 @@ Assets/
 
 ## Data (`Assets/Data/`)
 
-Somente **assets** (.asset), não código. Organizar por domínio: `Stats/Player`, `Stats/Enemies`, etc.
+Somente **assets** (.asset), não código. Organizar por domínio: `Characters/`, `Stats/Player`, `Stats/Enemies`, etc.
+
+### Limpeza 2026-06
+
+Removidos órfãos legados: `PlayersSkiils/`, `Enemy_FastStats`, `AimVisualizerSettings`, `DefaultEnemyTelegraphVisual`.
+
+Renomeados para clareza: `PlayerCoreStats`, `NixieMeleeCombatStats`, `EnemyProjectileStats`, `DefaultGameConfig`, `Fase1`/`Fase2`, `Rato_Padrao_Veloz`.
 
 ## Prefabs — convenção de nomes
 

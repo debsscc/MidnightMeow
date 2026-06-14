@@ -84,6 +84,16 @@ public class PlayerShooting : MonoBehaviour
 
     public float BaseFireRate => baseFireRate;
 
+    public void ApplyRuntimeStats(RangedCombatStats rangedStats)
+    {
+        if (rangedStats == null)
+            return;
+
+        baseFireRate = rangedStats.fireRate;
+        CurrentFireRate = rangedStats.fireRate;
+        DamageMultiplier = rangedStats.damageMultiplier;
+    }
+
     /// <summary>
     /// Em multiplayer, o gasto de munição é feito no servidor ao spawnar o projétil de rede
     /// (evita gasto duplo no host e mantém validação no servidor).

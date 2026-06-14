@@ -278,6 +278,24 @@ public class PlayerDash : MonoBehaviour
 
     public void InitializeBaseStats() => RefreshDashStats();
 
+    public void ApplyRuntimeStats(PlayerStats runtimeStats)
+    {
+        stats = runtimeStats;
+        RefreshDashStats();
+    }
+
+    public void ApplyPassThroughLayers(LayerMask layers)
+    {
+        if (layers.value != 0)
+            passThroughLayer = layers;
+    }
+
+    public void ApplyFailsafeExtraSeconds(float seconds)
+    {
+        if (seconds > 0f)
+            dashFailsafeExtraSeconds = seconds;
+    }
+
     private void RefreshDashStats()
     {
         if (stats == null) return;

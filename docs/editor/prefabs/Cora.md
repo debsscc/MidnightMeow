@@ -1,6 +1,6 @@
 # Prefab: Cora
 
-Última revisão: 2026-06-10  
+Última revisão: 2026-06-14  
 **Caminho:** `Assets/Prefabs/Characters/Cora.prefab`  
 **GUID:** `b18ed4e45e4d20a4dbdac339b666e689`
 
@@ -70,7 +70,10 @@ Cora
 
 | Campo | Asset |
 |-------|--------|
-| `stats` / `baseStats` | `Assets/Data/Stats/Player/DefaultPlayerStats.asset` |
+| **`CharacterProfileApplier.profile`** | `Assets/Data/Characters/CoraGameplayProfile.asset` |
+| `AnimatorProfileBinder.profile` | `Assets/Data/Characters/CoraAnimationProfile.asset` |
+| `stats` / `baseStats` (legado, espelhado pelo profile) | `Assets/Data/Stats/Player/PlayerCoreStats.asset` |
+| `CoraRangedCombatStats` (via profile) | `Assets/Data/Characters/CoraRangedCombatStats.asset` — **attackRange**, fireRate |
 | `PlayerAbilityHandler.abilitySet` | `Assets/Data/Abilities/CoraAbilitySet.asset` |
 | `barrierPrefab` | `CoraBarrier.prefab` — `NetworkCoraBarrier`, `BoxCollider2D` sólido, `NavMeshObstacle.carveOnlyStationary: 0`, rotação Z via `NetworkTransform` |
 | `poolPrefab` | `Assets/Prefabs/Combat/CoraDamagePool.prefab` |
@@ -93,4 +96,5 @@ Cora
 
 | Data | Alteração |
 |------|-----------|
+| 2026-06-14 | `CharacterProfileApplier` + `AnimatorProfileBinder`; SOs em `Assets/Data/Characters/` |
 | 2026-05-22 | Doc criada a partir do YAML (substitui Player.prefab legado) |

@@ -40,6 +40,12 @@ public class NixChargeAbilityExecutor : MonoBehaviour, IAbilityExecutor
         }
     }
 
+    public void ApplyEnemyLayers(LayerMask layers)
+    {
+        if (layers.value != 0)
+            enemyLayers = layers;
+    }
+
     public float Execute(AbilityTierData tierData, AbilityExecutionContext context)
     {
         if (_networkObject != null && _networkObject.IsSpawned && !_networkObject.IsOwner)

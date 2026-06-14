@@ -27,11 +27,12 @@ public class LoadingScreenController : MonoBehaviour
             BuildPlaceholderUI();
 
         EnsureProgressUi();
+        EnsureCanvasOnTop();
+        ResetProgressUi();
     }
 
     private void Start()
     {
-        EnsureCanvasOnTop();
         HideLegacyLoadingContent();
         ScreenFlowSceneReadiness.MarkReadyIfPending(
             UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
@@ -50,15 +51,12 @@ public class LoadingScreenController : MonoBehaviour
 
     private IEnumerator RunLoadingRoutine()
     {
-        yield return null;
-        ScreenFlowController.Instance?.ClearTransitionOverlay();
-
         string nextRoute = string.IsNullOrEmpty(GameSessionContext.PendingRouteId)
             ? fallbackNextRouteId
             : GameSessionContext.PendingRouteId;
 
+        ScreenFlowController.Instance?.ClearTransitionOverlay();
         ResetProgressUi();
-        yield return null;
 
         float timer = 0f;
         while (timer < minimumDisplaySeconds)

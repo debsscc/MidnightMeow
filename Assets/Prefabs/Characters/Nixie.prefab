@@ -5176,6 +5176,8 @@ GameObject:
   - component: {fileID: 910001001001001004}
   - component: {fileID: 910001001001001005}
   - component: {fileID: 910001001001001006}
+  - component: {fileID: 910001001001001007}
+  - component: {fileID: 910001001001001008}
   m_Layer: 3
   m_Name: Nixie
   m_TagString: Player
@@ -5497,6 +5499,7 @@ MonoBehaviour:
   playerAbilityHandler: {fileID: 5792988918660519372}
   healthComponent: {fileID: 4338388805264836550}
   playerMovement: {fileID: 584514799452680066}
+  animationBinder: {fileID: 910001001001001007}
   sortingPrecision: 100
   shadowSpriteRenderer: {fileID: 0}
   _attackAnimClipLength: 0.12
@@ -6249,6 +6252,33 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NetworkAbilityObjectSpawner
   ShowTopMostFoldoutHeaderGroup: 1
+--- !u!114 &910001001001001007
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3845447005448380479}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a4b5c6d7e8f9478990a1b2c3d4e5f004, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AnimatorProfileBinder
+  profile: {fileID: 11400000, guid: b3b4c5d6e7f8478990a1b2c3d4e5f013, type: 2}
+  animator: {fileID: 944221471755545764}
+--- !u!114 &910001001001001008
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3845447005448380479}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a5b6c7d8e9fa478990a1b2c3d4e5f005, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CharacterProfileApplier
+  profile: {fileID: 11400000, guid: b5b6c7d8e9fa478990a1b2c3d4e5f015, type: 2}
 --- !u!1 &4084784925386163396
 GameObject:
   m_ObjectHideFlags: 0

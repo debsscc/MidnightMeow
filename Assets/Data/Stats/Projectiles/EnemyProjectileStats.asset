@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3dd47c4d17ad43440b2506d11b4ed18d, type: 3}
-  m_Name: EnemyProjectie
+  m_Name: EnemyProjectileStats
   m_EditorClassIdentifier: Assembly-CSharp::EnemyProjectileStats
   moveSpeed: 25
   damage: 2

@@ -1,6 +1,6 @@
 # Fluxo Menu → Lobby → Loading
 
-Última revisão: 2026-06-11
+Última revisão: 2026-06-14
 
 > Documentação completa: [screen-flow.md](./screen-flow.md)
 
@@ -25,6 +25,13 @@ Layout: botões canto inferior esquerdo com offset (ref. `docs/reference_imgs/me
 | Personagens | `Characters` modo consulta → `return_lobby` |
 
 **Multiplayer:** quando 2 jogadores conectam, host dispara `lobby_loading1` automaticamente.
+
+## Loading1 / Loading2 — sincronia imediata
+
+- O overlay de loading aparece **no mesmo frame** do clique (antes do fade) via `ScreenFlowController.RequestScene`.
+- Rotas para `Loading1`/`Loading2` pulam o fade gradual e exibem loading instantâneo (`SetFadeImmediate`).
+- O overlay **não é ocultado** ao chegar na cena de loading — `LoadingScreenController` assume o controle sem gap visual.
+- Clientes em rede recebem feedback imediato via `NetworkSceneLoadingFeedback` quando o host inicia carga NGO.
 
 ## Loading1
 

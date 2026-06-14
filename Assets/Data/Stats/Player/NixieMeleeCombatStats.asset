@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: efd58ad3f5eafbc439ede59f643c0624, type: 3}
-  m_Name: MeleeCombatStats
+  m_Name: NixieMeleeCombatStats
   m_EditorClassIdentifier: Assembly-CSharp::MeleeCombatStats
   damage: 1
   attackCooldown: 0.45

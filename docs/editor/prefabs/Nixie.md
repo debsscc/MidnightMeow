@@ -1,6 +1,6 @@
 # Prefab: Nixie
 
-Última revisão: 2026-06-10  
+Última revisão: 2026-06-14  
 **Caminho:** `Assets/Prefabs/Characters/Nixie.prefab`  
 **GUID:** `7b87bef79bcba89408883a628d686c78`
 
@@ -65,8 +65,10 @@ Nixie
 
 | Campo | Asset |
 |-------|--------|
-| `stats` | `Assets/Data/Stats/Player/DefaultPlayerStats.asset` |
-| `PlayerMeleeCombat.combatStats` | `Assets/Data/Stats/Player/MeleeCombatStats.asset` |
+| **`CharacterProfileApplier.profile`** | `Assets/Data/Characters/NixieGameplayProfile.asset` |
+| `AnimatorProfileBinder.profile` | `Assets/Data/Characters/NixieAnimationProfile.asset` |
+| `stats` (legado, espelhado pelo profile) | `Assets/Data/Stats/Player/PlayerCoreStats.asset` |
+| `PlayerMeleeCombat.combatStats` (via profile) | `Assets/Data/Stats/Player/NixieMeleeCombatStats.asset` |
 | `PlayerAbilityHandler.abilitySet` | `Assets/Data/Abilities/NixAbilitySet.asset` |
 | `enemyLayers` | Layer Enemy (1024) |
 
@@ -85,4 +87,5 @@ Nixie
 
 | Data | Alteração |
 |------|-----------|
+| 2026-06-14 | `CharacterProfileApplier` + `AnimatorProfileBinder`; SOs em `Assets/Data/Characters/` |
 | 2026-05-22 | Doc completa a partir do YAML |

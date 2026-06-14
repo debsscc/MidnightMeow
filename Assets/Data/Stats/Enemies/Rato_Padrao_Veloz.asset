@@ -10,20 +10,20 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 40812829843fe674189e6b68709405bb, type: 3}
-  m_Name: Enemy_FastStats
+  m_Name: Rato_Padrao_Veloz
   m_EditorClassIdentifier: Assembly-CSharp::EnemyStats
   targetPriority: 0
   targetDetectionRange: 20
-  scale: 1.7
-  maxHealth: 50
-  moveSpeed: 5
+  scale: 1.5
+  maxHealth: 3
+  moveSpeed: 10
   attackRange: 3
   attackCooldown: 0.7
-  attackDamage: 10
-  rangedAttackRange: 10
-  rangedAttackCooldown: 3
+  attackDamage: 1
+  rangedAttackRange: 0
+  rangedAttackCooldown: 0
   projectileStats: {fileID: 0}
   dropChance: 0.5
-  minCienceDrop: 10
-  maxCienceDrop: 20
-  cienciaPrefab: {fileID: 0}
+  minCienceDrop: 1
+  maxCienceDrop: 2
+  cienciaPrefab: {fileID: 5963488170890689818, guid: 41457ddb74133c14884342c60f3aa8ba, type: 3}

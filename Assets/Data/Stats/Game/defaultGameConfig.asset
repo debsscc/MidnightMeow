@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 432d34b6b16d86944b8539236631e410, type: 3}
-  m_Name: defaultGameConfig
+  m_Name: DefaultGameConfig
   m_EditorClassIdentifier: Assembly-CSharp::GameConfig
   victoryDelay: 2
   defeatDelay: 1

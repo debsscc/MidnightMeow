@@ -1,22 +1,24 @@
 ///* ----------------------------------------------------------------
 // CRIADO EM: 13-11-2025
 // FEITO POR: Pedro Caurio
-// DESCRI��O: Gerencia a muni��o do jogador, incluindo coleta e uso.
+// DESCRIÇÃO: Gerencia a munição do jogador, incluindo coleta e uso.
 // ---------------------------------------------------------------- */
 using UnityEngine;
 
 public class PlayerAmmo : MonoBehaviour
 {
     [SerializeField] private PlayerStats stats;
+    private PlayerStats _runtimeStats;
     private int _currentAmmo;
 
-    // Propriedade p�blica para outros scripts (como UI) lerem
-    public int CurrentAmmo => _currentAmmo; // O => � uma express�o de corpo para propriedades somente leitura
+    private PlayerStats ActiveStats => _runtimeStats != null ? _runtimeStats : stats;
+
+    public int CurrentAmmo => _currentAmmo;
 
     private void Start()
     {
-        _currentAmmo = stats.maxAmmo;
-        // Idealmente, disparar um evento OnAmmoChanged aqui para a UI
+        if (ActiveStats != null)
+            _currentAmmo = ActiveStats.maxAmmo;
     }
 
     private void OnEnable()
@@ -31,11 +33,12 @@ public class PlayerAmmo : MonoBehaviour
 
     private void HandleAmmoCollected()
     {
-        if (_currentAmmo < stats.maxAmmo && !stats.infinityAmmo)
-        {
+        PlayerStats activeStats = ActiveStats;
+        if (activeStats == null)
+            return;
+
+        if (_currentAmmo < activeStats.maxAmmo && !activeStats.infinityAmmo)
             _currentAmmo++;
-            // Disparar evento OnAmmoChanged(_currentAmmo) para a UI
-        }
     }
 
     public bool HasAmmo()
@@ -45,11 +48,9 @@ public class PlayerAmmo : MonoBehaviour
 
     public void UseAmmo(int amount = 1)
     {
-        if (!stats.infinityAmmo){
+        PlayerStats activeStats = ActiveStats;
+        if (activeStats != null && !activeStats.infinityAmmo)
             _currentAmmo = Mathf.Max(0, _currentAmmo - amount);
-        }
-        // Disparar evento OnAmmoChanged(_currentAmmo) para a UI
-//        Debug.Log($"Muni��o Usada! Restante: {_currentAmmo}");
     }
 
     /// <summary>
@@ -57,8 +58,13 @@ public class PlayerAmmo : MonoBehaviour
     /// </summary>
     public void ApplySyncedAmmo(int value)
     {
-        // Em multiplayer, o servidor é a fonte de verdade da munição.
-        // Não limitar ao maxAmmo local evita divergência cliente/host por configuração diferente.
         _currentAmmo = Mathf.Max(0, value);
+    }
+
+    public void ApplyRuntimeStats(PlayerStats runtimeStats)
+    {
+        _runtimeStats = runtimeStats;
+        if (runtimeStats != null)
+            _currentAmmo = runtimeStats.maxAmmo;
     }
 }

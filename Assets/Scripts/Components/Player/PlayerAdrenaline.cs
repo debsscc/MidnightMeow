@@ -25,6 +25,16 @@ public class PlayerAdrenaline : MonoBehaviour
     public bool IsFrenzyActive => _isFrenzyActive;
     public float CurrentAdrenaline => _currentAdrenaline;
 
+    public void ApplyRuntimeStats(PlayerStats runtimeStats)
+    {
+        stats = runtimeStats;
+        if (stats != null)
+        {
+            _currentAdrenaline = stats.maxAdrenaline;
+            GameEvents.InvokePlayerAdrenalineChanged(_currentAdrenaline, stats.maxAdrenaline);
+        }
+    }
+
     private void Awake()
     {
         _input = GetComponent<PlayerInputHandler>();

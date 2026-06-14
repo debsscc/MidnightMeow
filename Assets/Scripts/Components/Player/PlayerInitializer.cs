@@ -54,6 +54,8 @@ public class PlayerInitializer : MonoBehaviour
         ApplyProgressionToPlayer();
     }
 
+    public void ApplyBaseStats(PlayerStats runtimeStats) => baseStats = runtimeStats;
+
     private void ApplyProgressionToPlayer()
     {
         float GetBonus(PlayerProgressionData.UpgradeType type)

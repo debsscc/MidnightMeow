@@ -95,7 +95,8 @@ public class PlayerAim : MonoBehaviour
 
     // Refer�ncias do Inspector
     [SerializeField] private Transform firePoint;
-    [SerializeField] private PlayerStats stats; 
+    [SerializeField] private PlayerStats stats;
+    private float _attackRangeOverride = -1f; 
 
     private Camera _mainCamera;
     private Vector2 _mousePosition;
@@ -242,7 +243,18 @@ public class PlayerAim : MonoBehaviour
 
     private float ResolveFirePointRadius()
     {
+        if (_attackRangeOverride > 0f)
+            return _attackRangeOverride;
+
         return stats != null ? stats.firePointRadius : Mathf.Max(0.01f, firePoint.localPosition.magnitude);
+    }
+
+    public void ApplyRuntimeStats(PlayerStats runtimeStats) => stats = runtimeStats;
+
+    public void ApplyRangedCombatStats(RangedCombatStats rangedStats)
+    {
+        if (rangedStats != null && rangedStats.attackRange > 0f)
+            _attackRangeOverride = rangedStats.attackRange;
     }
 
     private void EmitAimPipeline(

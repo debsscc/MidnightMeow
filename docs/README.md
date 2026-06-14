@@ -24,6 +24,7 @@ Documentação para desenvolvedores e **agentes de IA** que trabalham neste proj
 8. [Movimentação de arquivos](practices/08-movimentacao-arquivos.md) — `.meta` sempre junto
 9. [Otimização de rede](practices/09-otimizacao-rede.md) — NGO, bandwidth, RPCs, Relay
 10. [Artes e visual](practices/10-artes-e-visual.md) — Pipeline para artistas no Editor
+11. [Perfis de personagem e animação](practices/11-character-profiles-animation.md) — GameplayProfile + AnimatorOverride via SO
 
 ### Combate
 

@@ -14,6 +14,7 @@ public class PlayerMovement : MonoBehaviour
     public ParticleSystem dustParticle; 
 
     [SerializeField] private PlayerStats stats;
+    private PlayerStats _runtimeStats;
     private Rigidbody2D _rb;
     private PlayerInputHandler _input;
     private PlayerAdrenaline _adrenaline;
@@ -108,8 +109,16 @@ public class PlayerMovement : MonoBehaviour
         }
 
         float speedMultiplier = _adrenaline != null ? _adrenaline.GetSpeedMultiplier() : 1f;
-        // Nota: Substituído linearVelocity por velocity (compatibilidade genérica Unity)
-        _rb.linearVelocity = _moveDirection * stats.moveSpeed * speedMultiplier;
+        PlayerStats activeStats = _runtimeStats != null ? _runtimeStats : stats;
+        if (activeStats == null)
+            return;
+
+        _rb.linearVelocity = _moveDirection * activeStats.moveSpeed * speedMultiplier;
+    }
+
+    public void ApplyRuntimeStats(PlayerStats runtimeStats)
+    {
+        _runtimeStats = runtimeStats;
     }
 
     void CreateDust()

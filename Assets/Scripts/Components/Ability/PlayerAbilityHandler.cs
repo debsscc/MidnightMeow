@@ -352,6 +352,8 @@ public class PlayerAbilityHandler : MonoBehaviour
             _passiveHandler.Configure(set);
     }
 
+    public void ApplyAbilitySet(CharacterAbilitySet set) => ConfigureAbilitySet(set);
+
     public void SetProgression(AbilityProgressionState state)
     {
         if (state != null)

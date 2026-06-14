@@ -34,7 +34,9 @@ public class XStats : ScriptableObject
 
 ## Exemplos no projeto
 
-- `PlayerStats` → `Assets/Data/Stats/Player/DefaultPlayerStats.asset`
+- `PlayerStats` → `Assets/Data/Stats/Player/PlayerCoreStats.asset`
+- `RangedCombatStats` / `MeleeCombatStats` → perfis em `Assets/Data/Characters/`
+- `CharacterGameplayProfile` + `CharacterAnimationProfile` → ver [11-character-profiles-animation.md](11-character-profiles-animation.md)
 - `EnemyStats`, `ProjectileStats`, `UpgradeDefinition`, `WaveSettings`, `GameConfig`
 
 ## Para agentes de IA
