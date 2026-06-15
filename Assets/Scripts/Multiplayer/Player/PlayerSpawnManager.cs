@@ -53,7 +53,6 @@ public class PlayerSpawnManager : NetworkBehaviour
     private int _nextSpawnIndex = 0;
     private Coroutine _spawnRecoveryCoroutine;
     private Coroutine _forceRespawnCoroutine;
-    private bool _spawnedForCurrentGameplayRound;
     [SerializeField] private float gameplaySpawnDelaySeconds = 0.35f;
     [Tooltip("Distância entre jogadores que compartilham o mesmo spawn point.")]
     [SerializeField] private float coSpawnSeparation = 1.35f;
@@ -111,7 +110,6 @@ public class PlayerSpawnManager : NetworkBehaviour
         if (sceneEvent.SceneEventType == SceneEventType.Load
             && !ShouldReconcilePlayersForScene(sceneEvent.SceneName))
         {
-            _spawnedForCurrentGameplayRound = false;
             DespawnAllPlayers();
             return;
         }
@@ -172,7 +170,6 @@ public class PlayerSpawnManager : NetworkBehaviour
         }
 
         ReconcilePlayerAfterSceneLoad(clientId, forceRespawn);
-        _spawnedForCurrentGameplayRound = true;
     }
 
     private void DespawnAllPlayers()

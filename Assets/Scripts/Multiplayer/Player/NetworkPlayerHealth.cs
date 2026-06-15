@@ -413,8 +413,11 @@ public class NetworkPlayerHealth : NetworkBehaviour
         {
             yield return null;
 
-            if (!IsSpawned || !IsOwner || !CanFight)
+            if (!IsOwner)
                 yield break;
+
+            if (!IsSpawned || !CanFight)
+                continue;
 
             NotifyHealthChanged(CurrentHealth, MaxHealth);
             yield break;
