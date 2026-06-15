@@ -13,15 +13,16 @@ public class MeleeAttackDebugVisual : MonoBehaviour
     [SerializeField] private float lineWidth = 0.04f;
 
     private PlayerMeleeCombat _melee;
+    private PlayerPassiveHandler _passiveHandler;
     private LineRenderer _lineRenderer;
     private float _displayTimer;
     private Vector2 _lastOrigin;
     private Vector2 _lastForward;
-    private MeleeCombatStats _lastStats;
 
     private void Awake()
     {
         _melee = GetComponent<PlayerMeleeCombat>();
+        _passiveHandler = GetComponent<PlayerPassiveHandler>();
         EnsureLineRenderer();
     }
 
@@ -41,7 +42,6 @@ public class MeleeAttackDebugVisual : MonoBehaviour
     {
         _lastOrigin = origin;
         _lastForward = forward;
-        _lastStats = stats;
         _displayTimer = 0.35f;
         RefreshLineRenderer();
     }
@@ -61,18 +61,23 @@ public class MeleeAttackDebugVisual : MonoBehaviour
 
     private void RefreshLineRenderer()
     {
-        if (_lastStats == null || _lineRenderer == null) return;
+        if (_lineRenderer == null) return;
+        if (!TryGetSwingShape(out Vector2 origin, out Vector2 forward, out float attackRange, out float nearHalfWidth, out float farHalfWidth))
+        {
+            _lineRenderer.enabled = false;
+            return;
+        }
 
         EnsureLineRenderer();
         _lineRenderer.enabled = true;
 
         float z = transform.position.z;
         var corners = MeleeHitUtility.GetTrapezoidWorldCorners(
-            _lastOrigin,
-            _lastForward,
-            _lastStats.attackRange,
-            _lastStats.nearHalfWidth,
-            _lastStats.farHalfWidth,
+            origin,
+            forward,
+            attackRange,
+            nearHalfWidth,
+            farHalfWidth,
             z);
 
         _lineRenderer.positionCount = 5;
@@ -117,21 +122,12 @@ public class MeleeAttackDebugVisual : MonoBehaviour
         if (_melee == null)
             _melee = GetComponent<PlayerMeleeCombat>();
 
-        var stats = _melee != null ? _melee.CombatStats : null;
-        if (stats == null) return;
-
-        Vector2 origin = _melee.AttackOriginPosition;
-        Vector2 forward = Application.isPlaying ? _lastForward : Vector2.up;
-        if (forward.sqrMagnitude < 0.0001f)
-            forward = Vector2.up;
-
-        float offset = stats.attackOriginForwardOffset;
-        if (offset > 0f)
-            origin += forward.normalized * offset;
+        if (!TryGetSwingShape(out Vector2 origin, out Vector2 forward, out float attackRange, out float nearHalfWidth, out float farHalfWidth))
+            return;
 
         float z = transform.position.z;
         var corners = MeleeHitUtility.GetTrapezoidWorldCorners(
-            origin, forward, stats.attackRange, stats.nearHalfWidth, stats.farHalfWidth, z);
+            origin, forward, attackRange, nearHalfWidth, farHalfWidth, z);
 
         Gizmos.color = fillColor;
         Gizmos.DrawLine(corners[0], corners[1]);
@@ -142,5 +138,44 @@ public class MeleeAttackDebugVisual : MonoBehaviour
         Gizmos.color = outlineColor;
         for (int i = 0; i < 4; i++)
             Gizmos.DrawLine(corners[i], corners[(i + 1) % 4]);
+    }
+
+    private bool TryGetSwingShape(
+        out Vector2 origin,
+        out Vector2 forward,
+        out float attackRange,
+        out float nearHalfWidth,
+        out float farHalfWidth)
+    {
+        origin = Vector2.zero;
+        forward = Vector2.up;
+        attackRange = 0f;
+        nearHalfWidth = 0f;
+        farHalfWidth = 0f;
+
+        if (_melee == null)
+            return false;
+
+        var stats = _melee.CombatStats;
+        if (stats == null)
+            return false;
+
+        forward = Application.isPlaying && _lastForward.sqrMagnitude > 0.0001f
+            ? _lastForward
+            : Vector2.up;
+
+        origin = Application.isPlaying && _displayTimer > 0f
+            ? _lastOrigin
+            : _melee.AttackOriginPosition;
+
+        float offset = stats.attackOriginForwardOffset;
+        if (offset > 0f)
+            origin += forward.normalized * offset;
+
+        float areaMultiplier = _passiveHandler != null ? _passiveHandler.CleaveAreaMultiplier : 1f;
+        attackRange = stats.attackRange * areaMultiplier;
+        nearHalfWidth = stats.nearHalfWidth * areaMultiplier;
+        farHalfWidth = stats.farHalfWidth * areaMultiplier;
+        return attackRange > 0f;
     }
 }

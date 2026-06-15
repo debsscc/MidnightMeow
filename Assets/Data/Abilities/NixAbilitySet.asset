@@ -17,7 +17,7 @@ MonoBehaviour:
   ability2: {fileID: 11400000, guid: b2a1c3d4e5f6478990a1b2c3d4e5f220, type: 2}
   passive: {fileID: 11400000, guid: b2a1c3d4e5f6478990a1b2c3d4e5f110, type: 2}
   primaryAttackTier1:
-    range: 1.8
+    range: 2.5
     damage: 2
     slowMultiplier: 1
     slowDuration: 0
@@ -29,7 +29,7 @@ MonoBehaviour:
     areaWidth: 0
     damagePerSecond: 0
   primaryAttackTier2:
-    range: 2.3
+    range: 2.5
     damage: 3
     slowMultiplier: 1
     slowDuration: 0
@@ -41,7 +41,7 @@ MonoBehaviour:
     areaWidth: 0
     damagePerSecond: 0
   primaryAttackTier3:
-    range: 2.8
+    range: 2.5
     damage: 4
     slowMultiplier: 1
     slowDuration: 0
