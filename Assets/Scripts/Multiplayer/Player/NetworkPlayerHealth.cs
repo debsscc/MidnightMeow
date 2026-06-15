@@ -6,6 +6,7 @@
 
 
 
+using System.Collections;
 using Unity.Netcode;
 
 using UnityEngine;
@@ -203,8 +204,15 @@ public class NetworkPlayerHealth : NetworkBehaviour
 
 
         _networkCurrentHealth.OnValueChanged += HandleNetworkHealthChanged;
+        _networkMaxHealth.OnValueChanged += HandleNetworkMaxHealthChanged;
 
         _networkIsUnconscious.OnValueChanged += HandleUnconsciousChanged;
+
+        if (IsServer)
+            StartCoroutine(SyncHealthToNetworkAfterInitRoutine());
+
+        if (IsOwner)
+            StartCoroutine(NotifyOwnerHealthAfterInitRoutine());
 
     }
 
@@ -227,6 +235,7 @@ public class NetworkPlayerHealth : NetworkBehaviour
 
 
         _networkCurrentHealth.OnValueChanged -= HandleNetworkHealthChanged;
+        _networkMaxHealth.OnValueChanged -= HandleNetworkMaxHealthChanged;
 
         _networkIsUnconscious.OnValueChanged -= HandleUnconsciousChanged;
 
@@ -368,6 +377,48 @@ public class NetworkPlayerHealth : NetworkBehaviour
             _healthComponent.ApplyNetworkMirror(newValue, _networkMaxHealth.Value, false);
 
         NotifyHealthChanged(newValue, _networkMaxHealth.Value);
+    }
+
+    private void HandleNetworkMaxHealthChanged(float oldValue, float newValue)
+    {
+        if (!IsServer && _healthComponent != null && !_networkIsUnconscious.Value)
+            _healthComponent.ApplyNetworkMirror(_networkCurrentHealth.Value, newValue, false);
+
+        NotifyHealthChanged(_networkCurrentHealth.Value, newValue);
+    }
+
+    private IEnumerator SyncHealthToNetworkAfterInitRoutine()
+    {
+        for (int i = 0; i < 30; i++)
+        {
+            yield return null;
+
+            if (_healthComponent == null || _networkIsUnconscious.Value)
+                yield break;
+
+            float current = _healthComponent.CurrentHealth;
+            float max = _healthComponent.MaxHealth;
+            if (max <= 0f || current <= 0f)
+                continue;
+
+            _networkCurrentHealth.Value = current;
+            _networkMaxHealth.Value = max;
+            yield break;
+        }
+    }
+
+    private IEnumerator NotifyOwnerHealthAfterInitRoutine()
+    {
+        for (int i = 0; i < 30; i++)
+        {
+            yield return null;
+
+            if (!IsSpawned || !IsOwner || !CanFight)
+                yield break;
+
+            NotifyHealthChanged(CurrentHealth, MaxHealth);
+            yield break;
+        }
     }
 
 
@@ -533,6 +584,10 @@ public class NetworkPlayerHealth : NetworkBehaviour
         if (TryGetComponent<PlayerDash>(out var dash)) dash.enabled = enabled;
 
         if (TryGetComponent<PlayerAbilityHandler>(out var ability)) ability.enabled = enabled;
+
+        if (TryGetComponent<PlayerFacingController>(out var facing)) facing.enabled = enabled;
+
+        if (TryGetComponent<PlayerAim>(out var aim)) aim.enabled = enabled;
 
     }
 

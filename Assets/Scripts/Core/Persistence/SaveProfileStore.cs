@@ -187,6 +187,7 @@ public class SaveProfileStore : MonoBehaviour
         {
             slotIndex = slot,
             magiculas = 2,
+            selectedContractIndex = -1,
             nix = new CharacterSaveData { characterType = LobbyCharacterType.CharacterA },
             cora = new CharacterSaveData { characterType = LobbyCharacterType.CharacterB }
         };

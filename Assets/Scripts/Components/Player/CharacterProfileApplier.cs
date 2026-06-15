@@ -120,5 +120,8 @@ public class CharacterProfileApplier : MonoBehaviour
 
         if (TryGetComponent(out NixPushAbilityExecutor push))
             push.ApplyEnemyLayers(profile.enemyLayers);
+
+        if (TryGetComponent(out NetworkPlayerAbilityRelay abilityRelay))
+            abilityRelay.ApplyEnemyLayers(profile.enemyLayers);
     }
 }

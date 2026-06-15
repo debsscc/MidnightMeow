@@ -82,6 +82,8 @@ public class MultiplayerCameraController : MonoBehaviour
     private Collider2D _sceneBoundsCollider;
     private bool _deathFocusActive;
     private float _savedOrthographicSize;
+    private bool _introZoomActive;
+    private float _introZoomTimer;
 
     public Transform CurrentTarget => _currentTarget;
     public bool HasTarget => _currentTarget != null;
@@ -186,6 +188,7 @@ public class MultiplayerCameraController : MonoBehaviour
         _mainCam = ResolveMainCamera();
         DisableLegacyCameraFollowIfPresent();
         ApplyConfigToCamera();
+        BeginIntroZoomIfConfigured();
         InitializeSubControllers();
         _findPlayerCoroutine = StartCoroutine(FindLocalPlayerRoutine());
         RefreshDiagnosticsRoutine();
@@ -313,7 +316,9 @@ public class MultiplayerCameraController : MonoBehaviour
 
     private void Update()
     {
-        if (_isZooming && virtualCamera != null)
+        if (_introZoomActive)
+            UpdateIntroZoom();
+        else if (_isZooming && virtualCamera != null)
             AnimateZoom();
 
         if (_currentTarget == null && _findPlayerCoroutine == null)
@@ -375,6 +380,9 @@ public class MultiplayerCameraController : MonoBehaviour
         virtualCamera.Lens = lens;
         _targetOrthographicSize = config.defaultOrthographicSize;
 
+        if (_mainCam != null && _mainCam.orthographic)
+            _mainCam.orthographicSize = config.defaultOrthographicSize;
+
         // Configura o damping do CinemachinePositionComposer se presente
         bool hasPositionComposer = virtualCamera.TryGetComponent<CinemachinePositionComposer>(out var composer);
         bool hasFollow = virtualCamera.TryGetComponent<CinemachineFollow>(out _);
@@ -398,6 +406,56 @@ public class MultiplayerCameraController : MonoBehaviour
 
         Debug.Log($"[MultiplayerCameraController] Config aplicada. OrthographicSize={config.defaultOrthographicSize}");
     }
+
+    private void BeginIntroZoomIfConfigured()
+    {
+        if (config == null || virtualCamera == null || !config.playIntroZoom || config.introZoomInAmount <= 0f)
+            return;
+
+        float startSize = config.defaultOrthographicSize + config.introZoomInAmount;
+        ApplyOrthographicSize(startSize);
+        _introZoomTimer = 0f;
+        _introZoomActive = true;
+    }
+
+    private void UpdateIntroZoom()
+    {
+        if (config == null)
+        {
+            _introZoomActive = false;
+            return;
+        }
+
+        _introZoomTimer += Time.deltaTime;
+        float t = Mathf.Clamp01(_introZoomTimer / config.introZoomDuration);
+        float smoothT = SmoothIntroZoomT(t);
+        float startSize = config.defaultOrthographicSize + config.introZoomInAmount;
+        float size = Mathf.Lerp(startSize, config.defaultOrthographicSize, smoothT);
+        ApplyOrthographicSize(size);
+
+        if (t >= 1f)
+        {
+            ApplyOrthographicSize(config.defaultOrthographicSize);
+            _targetOrthographicSize = config.defaultOrthographicSize;
+            _introZoomActive = false;
+        }
+    }
+
+    private void ApplyOrthographicSize(float size)
+    {
+        if (virtualCamera != null)
+        {
+            var lens = virtualCamera.Lens;
+            lens.OrthographicSize = size;
+            virtualCamera.Lens = lens;
+        }
+
+        if (_mainCam != null && _mainCam.orthographic)
+            _mainCam.orthographicSize = size;
+    }
+
+    private static float SmoothIntroZoomT(float t) =>
+        t * t * t * (t * (t * 6f - 15f) + 10f);
 
     private void TryBindCameraBounds()
     {

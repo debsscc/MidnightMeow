@@ -15,11 +15,25 @@ public class Solid : MonoBehaviour
 
     void OnEnable()
     {
-        _myRenderer = GetComponent<SpriteRenderer>();
-        myMaterial = Shader.Find("GUI/Text Shader");
+        if (_myRenderer == null)
+            _myRenderer = GetComponent<SpriteRenderer>();
+        if (myMaterial == null)
+            myMaterial = Shader.Find("GUI/Text Shader");
+    }
+
+    /// <summary>Chamar após posicionar/escalar o ghost — evita capturar escala do prefab (ex.: 1.5).</summary>
+    public void SyncPresentation(Color color)
+    {
+        if (_myRenderer == null)
+            _myRenderer = GetComponent<SpriteRenderer>();
+        if (myMaterial == null)
+            myMaterial = Shader.Find("GUI/Text Shader");
+
+        _color = color;
         _timer = 0f;
-        _startAlpha = _color.a;
+        _startAlpha = color.a;
         _initialScale = transform.localScale;
+
         if (_myRenderer != null)
         {
             _myRenderer.material.shader = myMaterial;

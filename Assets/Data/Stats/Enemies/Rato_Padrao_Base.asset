@@ -14,8 +14,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnemyStats
   targetPriority: 0
   targetDetectionRange: 20
-  scale: 1.7
+  targetScanInterval: 0.25
+  scale: 0.4
+  hitStunDuration: 0.35
+  randomWalkRadius: 6
+  randomWalkInterval: 2.5
   maxHealth: 2
+  deathDespawnDelay: 0.4
   moveSpeed: 8
   attackRange: 3
   attackCooldown: 0.7

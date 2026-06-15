@@ -2,16 +2,13 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
 /// Escuta GameEvents.OnDamageShown e instancia números flutuantes de dano.
-/// Coloque na cena (ex.: MultiplayerManagers) ou Bootstrap.
-/// </summary>
 public class DamageIndicatorPresenter : MonoBehaviour
 {
     [SerializeField] private float floatDistance = 0.8f;
     [SerializeField] private float lifetime = 0.75f;
     [SerializeField] private Color damageColor = new Color(1f, 0.35f, 0.25f, 1f);
-    [SerializeField] private int fontSize = 4;
+    [SerializeField] private float fontSize = 4;
 
     private void OnEnable()
     {
@@ -60,9 +57,7 @@ public class DamageIndicatorPresenter : MonoBehaviour
     }
 }
 
-/// <summary>
 /// Anima o número para cima e destrói o objeto.
-/// </summary>
 public class DamageIndicatorFloater : MonoBehaviour
 {
     private float _floatDistance;

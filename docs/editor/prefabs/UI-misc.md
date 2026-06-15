@@ -46,5 +46,5 @@
 
 | Confirmar | Valor atual |
 |-----------|-------------|
-| Relação com sombra no Player | |
-| Layer Shadow (13) | |
+| Template do ghosting de dash (`Shadow.Sombra` em Cora/Nixie) | Sim |
+| **Não** confundir com filho `Shadow` (elipse no chão, layer Shadow) | |

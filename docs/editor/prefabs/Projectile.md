@@ -40,6 +40,16 @@ Projétil do **jogador** (Cora): física local + sincronização NGO no mesmo pr
 | `_hitAnimDuration` | 0.3 |
 | `_playHitOnExpire` | false |
 
+## Sprite / animação
+
+| Uso | Asset |
+|-----|--------|
+| Voo / spawn | `Assets/Art/Sprites/Old/NYXIE/Projectiles/Bullet 1.png` (`guid: 3083c22…`) |
+| Hit (frames) | `Bullet 2.png` … `Bullet 5.png` na mesma pasta |
+| Animator | `Assets/Data/Animacoes/Projectiles/Projectile Player.controller` |
+
+**Não apagar** a pasta `Old/NYXIE/Projectiles` — o prefab e as animações referenciam esses GUIDs.
+
 ## Colisões (código)
 
 - Layer `Projectile` ignora `Player` (projétil da Cora não acerta Nixie/aliado).

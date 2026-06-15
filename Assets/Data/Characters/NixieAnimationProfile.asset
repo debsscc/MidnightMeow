@@ -27,7 +27,7 @@ MonoBehaviour:
   attackAnimClipLength: 0.333
   deathDestroyDelay: 4
   deathAnimatorStateName: Dying
-  postDeathHoldSeconds: 5
+  postDeathHoldSeconds: 2
   deathClipLengthFallback: 1.5
   sortingOrderOffset: 5000
   sortingPrecision: 100

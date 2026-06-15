@@ -97,6 +97,9 @@ public class NetworkEnemyController : NetworkBehaviour
 
         if (GetComponent<EnemySlowEffect>() == null)
             gameObject.AddComponent<EnemySlowEffect>();
+
+        if (GetComponent<EnemyPhysicsBody>() == null)
+            gameObject.AddComponent<EnemyPhysicsBody>();
     }
 
     public override void OnDestroy()
@@ -600,7 +603,7 @@ public class NetworkEnemyController : NetworkBehaviour
 
     private void ApplyClientAnimationState(
         float moveSpeed,
-        bool facingFlipX,
+        bool facingRight,
         byte attackSequence,
         bool isAttacking,
         bool triggerAttack)
@@ -615,7 +618,7 @@ public class NetworkEnemyController : NetworkBehaviour
         }
 
         if (_spriteRenderer != null)
-            _spriteRenderer.flipX = facingFlipX;
+            _spriteRenderer.flipX = !facingRight;
 
         if (triggerAttack && attackSequence != _lastClientAttackSequence)
         {

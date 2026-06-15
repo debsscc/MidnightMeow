@@ -1,14 +1,46 @@
+using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// Ações do menu de pause. Substitui referências legadas à classe Buttons.
+/// Ações do menu de pause. Solo: reiniciar fase. MP: reiniciar desabilitado.
+/// Abandonar usa o mesmo fluxo de vitória/derrota (ExitToMainMenu).
 /// </summary>
 [DisallowMultipleComponent]
 public class PauseMenuActions : MonoBehaviour
 {
-    [SerializeField] private UIActionBridge uiActionBridge;
-    [SerializeField] private GameManager2 gameManager;
+    [SerializeField] private GameObject quitConfirmationRoot;
+    [SerializeField] private GameObject controlsPanel;
+
+    private Button _resumeButton;
+    private Button _restartButton;
+    private Button _abandonButton;
+    private Button _controlsButton;
+    private Button _quitAppButton;
+    private Button _confirmQuitAppButton;
+    private Button _cancelQuitAppButton;
+    private Button _controlsBackButton;
+
+    private Transform _backgroundRoot;
+    private readonly List<GameObject> _pauseMainContent = new List<GameObject>();
+
+    private void Awake()
+    {
+        if (quitConfirmationRoot == null)
+            quitConfirmationRoot = transform.Find("Background_PopUp")?.gameObject;
+
+        ResolveButtons();
+        WireButtons();
+        HideQuitConfirmation();
+    }
+
+    private void OnEnable()
+    {
+        HideQuitConfirmation();
+        HideControls();
+        RefreshForCurrentMode();
+    }
 
     public void ClosePauseMenu()
     {
@@ -18,53 +50,254 @@ public class PauseMenuActions : MonoBehaviour
             return;
         }
 
-        if (uiActionBridge != null)
+        UIActionBridge bridge = FindFirstObjectByType<UIActionBridge>();
+        if (bridge != null)
         {
-            uiActionBridge.ClosePauseMenu();
+            bridge.ClosePauseMenu();
             return;
         }
 
-        if (gameManager == null)
-            gameManager = FindFirstObjectByType<GameManager2>();
-
-        gameManager?.ResumeGame();
+        FindFirstObjectByType<GameManager2>()?.ResumeGame();
     }
 
-    public void ReloadCurrentScene()
+    public void RestartCurrentPhase()
     {
-        if (GameFlowOrchestrator.Instance != null)
-            GameFlowOrchestrator.Instance.LockTransitions(1f);
+        if (!GameSessionContext.IsSinglePlayer)
+            return;
+
+        if (GameFlowOrchestrator.Instance != null && !GameFlowOrchestrator.Instance.CanRequestTransition())
+            return;
 
         Time.timeScale = 1f;
-
-        if (gameManager == null)
-            gameManager = FindFirstObjectByType<GameManager2>();
-
-        if (gameManager != null)
-        {
-            gameManager.RestartCurrentScene();
-            return;
-        }
-
-        UnityEngine.SceneManagement.SceneManager.LoadScene(
-            UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
+        GameFlowOrchestrator.Instance?.NotifyPauseChanged(false);
+        ScreenFlowStateMachine.RestartCurrentGameplay();
     }
 
-    public void QuitGame()
+    public void AbandonRun()
     {
-        if (uiActionBridge == null)
-            uiActionBridge = FindFirstObjectByType<UIActionBridge>();
-
-        if (uiActionBridge != null)
-        {
-            uiActionBridge.QuitGame();
+        if (GameFlowOrchestrator.Instance != null && !GameFlowOrchestrator.Instance.CanRequestTransition())
             return;
-        }
+
+        Time.timeScale = 1f;
+        GameFlowOrchestrator.Instance?.NotifyPauseChanged(false);
+        ScreenFlowStateMachine.ExitToMainMenu();
+    }
+
+    public void ShowQuitConfirmation()
+    {
+        if (quitConfirmationRoot != null)
+            quitConfirmationRoot.SetActive(true);
+    }
+
+    public void HideQuitConfirmation()
+    {
+        if (quitConfirmationRoot != null)
+            quitConfirmationRoot.SetActive(false);
+    }
+
+    public void QuitApplication()
+    {
+        Time.timeScale = 1f;
+        HideQuitConfirmation();
 
 #if UNITY_EDITOR
         UnityEditor.EditorApplication.isPlaying = false;
 #else
         Application.Quit();
 #endif
+    }
+
+    public void ShowControls()
+    {
+        GameObject panel = ResolveControlsPanel();
+        SetPauseMainContentVisible(false);
+
+        if (panel != null)
+            panel.SetActive(true);
+    }
+
+    public void HideControls()
+    {
+        GameObject panel = ResolveControlsPanel();
+        if (panel != null)
+            panel.SetActive(false);
+
+        SetPauseMainContentVisible(true);
+    }
+
+    /// <summary>Legado — redireciona para <see cref="RestartCurrentPhase"/>.</summary>
+    public void ReloadCurrentScene() => RestartCurrentPhase();
+
+    /// <summary>Legado — redireciona para <see cref="QuitApplication"/>.</summary>
+    public void QuitGame() => ShowQuitConfirmation();
+
+    private void ResolveButtons()
+    {
+        _resumeButton = FindButton("Resume");
+        _restartButton = FindButton("Replay");
+        _abandonButton = FindButton("Menu");
+        _controlsButton = FindButton("Config");
+        _quitAppButton = FindQuitAppEntryButton();
+        _confirmQuitAppButton = FindConfirmQuitButton();
+        _cancelQuitAppButton = FindButton("Don'tQuit");
+        _controlsBackButton = FindControlsBackButton();
+    }
+
+    private void WireButtons()
+    {
+        Bind(_resumeButton, ClosePauseMenu);
+        Bind(_restartButton, RestartCurrentPhase);
+        Bind(_abandonButton, AbandonRun);
+        Bind(_controlsButton, ShowControls);
+        Bind(_quitAppButton, ShowQuitConfirmation);
+        Bind(_confirmQuitAppButton, QuitApplication);
+        Bind(_cancelQuitAppButton, HideQuitConfirmation);
+        Bind(_controlsBackButton, HideControls);
+
+        SetButtonLabel(_restartButton, "Reiniciar fase");
+        SetButtonLabel(_abandonButton, "Abandonar");
+    }
+
+    private void RefreshForCurrentMode()
+    {
+        bool solo = GameSessionContext.IsSinglePlayer;
+
+        if (_restartButton != null)
+        {
+            _restartButton.interactable = solo;
+            _restartButton.gameObject.SetActive(solo);
+        }
+    }
+
+    private Button FindQuitAppEntryButton()
+    {
+        Transform buttons2 = transform.Find("Buttons2");
+        if (buttons2 == null)
+            return null;
+
+        foreach (Button button in buttons2.GetComponentsInChildren<Button>(true))
+        {
+            if (button != null && button.gameObject.name == "Quit")
+                return button;
+        }
+
+        return null;
+    }
+
+    private Button FindConfirmQuitButton()
+    {
+        Transform popup = transform.Find("Background_PopUp/QuitPopUp");
+        if (popup == null)
+            return null;
+
+        foreach (Button button in popup.GetComponentsInChildren<Button>(true))
+        {
+            if (button != null && button.gameObject.name == "Quit")
+                return button;
+        }
+
+        return null;
+    }
+
+    private Button FindButton(string objectName)
+    {
+        foreach (Button button in GetComponentsInChildren<Button>(true))
+        {
+            if (button != null && button.gameObject.name == objectName)
+                return button;
+        }
+
+        return null;
+    }
+
+    private static void Bind(Button button, UnityEngine.Events.UnityAction action)
+    {
+        if (button == null || action == null)
+            return;
+
+        button.onClick.RemoveAllListeners();
+        button.onClick.AddListener(action);
+    }
+
+    private static void SetButtonLabel(Button button, string label)
+    {
+        if (button == null || string.IsNullOrEmpty(label))
+            return;
+
+        TMP_Text tmp = button.GetComponentInChildren<TMP_Text>(true);
+        if (tmp != null)
+            tmp.text = label;
+    }
+
+    private Button FindControlsBackButton()
+    {
+        GameObject panel = ResolveControlsPanel();
+        if (panel == null)
+            return null;
+
+        foreach (Button button in panel.GetComponentsInChildren<Button>(true))
+        {
+            if (button != null && button.gameObject.name == "Back")
+                return button;
+        }
+
+        return null;
+    }
+
+    private void CachePauseMainContent()
+    {
+        if (_backgroundRoot != null)
+            return;
+
+        Transform background = transform.Find("Background");
+        if (background == null)
+            return;
+
+        _backgroundRoot = background;
+        GameObject controls = ResolveControlsPanel();
+
+        for (int i = 0; i < background.childCount; i++)
+        {
+            Transform child = background.GetChild(i);
+            if (child == null || (controls != null && child.gameObject == controls))
+                continue;
+
+            _pauseMainContent.Add(child.gameObject);
+        }
+    }
+
+    private void SetPauseMainContentVisible(bool visible)
+    {
+        CachePauseMainContent();
+
+        for (int i = 0; i < _pauseMainContent.Count; i++)
+        {
+            GameObject content = _pauseMainContent[i];
+            if (content != null)
+                content.SetActive(visible);
+        }
+    }
+
+    private GameObject ResolveControlsPanel()
+    {
+        if (controlsPanel != null)
+            return controlsPanel;
+
+        Transform background = transform.Find("Background");
+        if (background != null)
+        {
+            Transform controls = background.Find("Controls");
+            if (controls != null)
+            {
+                controlsPanel = controls.gameObject;
+                return controlsPanel;
+            }
+        }
+
+        GameObject found = GameObject.Find("Controls");
+        if (found != null)
+            controlsPanel = found;
+
+        return controlsPanel;
     }
 }

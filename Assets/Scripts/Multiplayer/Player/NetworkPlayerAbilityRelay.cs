@@ -35,6 +35,12 @@ public class NetworkPlayerAbilityRelay : NetworkBehaviour
 
     public bool NetworkIsDashing => _networkIsDashing.Value;
 
+    public void ApplyEnemyLayers(LayerMask layers)
+    {
+        if (layers.value != 0)
+            chargeEnemyLayers = layers;
+    }
+
     private void Awake()
     {
         _rb = GetComponent<Rigidbody2D>();

@@ -855,6 +855,7 @@ GameObject:
   - component: {fileID: 368780630942871205}
   - component: {fileID: 8672063634041377872}
   - component: {fileID: 5518291974316697505}
+  - component: {fileID: 8877665544332211001}
   m_Layer: 5
   m_Name: PauseMenu
   m_TagString: Untagged
@@ -921,6 +922,20 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &8877665544332211001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2277025816660959201}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4ebe536dcb62ce148a8156146a0537da, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PauseMenuActions
+  quitConfirmationRoot: {fileID: 5335302860359232854}
+  controlsPanel: {fileID: 0}
 --- !u!1 &3075644423498640759
 GameObject:
   m_ObjectHideFlags: 0
@@ -986,7 +1001,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Replay
+  m_text: Reiniciar fase
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 1b3470473beb0a94fae0c8ce0d21aa72, type: 2}
   m_sharedMaterial: {fileID: -8751352832925204753, guid: 1b3470473beb0a94fae0c8ce0d21aa72, type: 2}
@@ -1539,7 +1554,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Menu
+  m_text: Abandonar
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}

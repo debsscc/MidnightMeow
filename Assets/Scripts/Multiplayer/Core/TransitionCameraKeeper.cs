@@ -8,6 +8,7 @@ public static class TransitionCameraKeeper
 {
     private static Camera _fallbackCamera;
     private static bool _subscribed;
+    private static bool _quitting;
 
     public static Camera FallbackCamera => _fallbackCamera;
 
@@ -16,6 +17,14 @@ public static class TransitionCameraKeeper
     {
         EnsureSubscribed();
         Refresh();
+    }
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetStatics()
+    {
+        _fallbackCamera = null;
+        _subscribed = false;
+        _quitting = false;
     }
 
     public static void EnsureActive()
@@ -46,12 +55,34 @@ public static class TransitionCameraKeeper
 
         SceneManager.sceneLoaded += HandleSceneLoaded;
         SceneManager.sceneUnloaded += HandleSceneUnloaded;
+        Application.quitting += HandleApplicationQuitting;
         _subscribed = true;
+    }
+
+    private static void HandleApplicationQuitting()
+    {
+        _quitting = true;
+        DestroyFallbackCamera();
+    }
+
+    private static void DestroyFallbackCamera()
+    {
+        if (_fallbackCamera == null)
+            return;
+
+        Object.Destroy(_fallbackCamera.gameObject);
+        _fallbackCamera = null;
     }
 
     private static void HandleSceneLoaded(Scene _, LoadSceneMode __) => Refresh();
 
-    private static void HandleSceneUnloaded(Scene _) => EnsureActive();
+    private static void HandleSceneUnloaded(Scene _)
+    {
+        if (_quitting)
+            return;
+
+        EnsureActive();
+    }
 
     private static void CreateFallbackCamera()
     {

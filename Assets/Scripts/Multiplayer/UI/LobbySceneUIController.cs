@@ -183,6 +183,16 @@ public class LobbySceneUIController : MonoBehaviour
     private void StartSolo()
     {
         GameSessionContext.BeginSinglePlayer();
+        StartCoroutine(BeginPreparationWhenReadyRoutine());
+    }
+
+    private IEnumerator BeginPreparationWhenReadyRoutine()
+    {
+        yield return ScreenFlowTransitionGate.WaitUntilReady();
+
+        if (_matchTransitionStarted)
+            yield break;
+
         TryBeginPreparation();
     }
 

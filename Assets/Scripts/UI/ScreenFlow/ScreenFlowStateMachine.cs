@@ -28,6 +28,8 @@ public static class ScreenFlowStateMachine
 
         GameSessionContext.CurrentPhase = phase;
 
+        MidnightMeowAnalytics.TrackFlowPhase(phase);
+
     }
 
 
@@ -66,7 +68,7 @@ public static class ScreenFlowStateMachine
 
         GameSessionContext.CharactersMode = GameSessionContext.CharactersScreenMode.SelectionAllowed;
 
-
+        ResetPreparationContractForNewLobbyEntry();
 
         if (TryTransition(SceneFlowRouteIds.LobbyToLoading1))
 
@@ -256,6 +258,68 @@ public static class ScreenFlowStateMachine
 
 
 
+    /// <summary>Reinicia a fase atual (somente solo). Reseta progresso da rodada.</summary>
+
+    public static bool RestartCurrentGameplay()
+
+    {
+
+        if (!GameSessionContext.IsSinglePlayer)
+
+            return false;
+
+
+
+        Time.timeScale = 1f;
+
+        EnterPhase(ScreenFlowPhase.Gameplay);
+
+        GameSessionContext.ResetContractRound();
+
+        PreparationSessionManager.Instance?.ResetRound();
+
+        RoundMagiculaTracker.Instance?.ResetRound();
+
+
+
+        string scene = string.IsNullOrEmpty(GameSessionContext.ActiveGameplaySceneName)
+
+            ? SceneManager.GetActiveScene().name
+
+            : GameSessionContext.ActiveGameplaySceneName;
+
+
+
+        NetworkManager networkManager = NetworkManager.Singleton;
+
+        if (networkManager != null && networkManager.IsServer)
+
+        {
+
+            networkManager.SceneManager.LoadScene(scene, LoadSceneMode.Single);
+
+            return true;
+
+        }
+
+
+
+        if (ScreenFlowController.Instance != null
+
+            && ScreenFlowController.Instance.TryBeginTransition(scene))
+
+            return true;
+
+
+
+        SceneManager.LoadScene(scene);
+
+        return true;
+
+    }
+
+
+
     /// <summary>Legado — redireciona para ContinueAfterEndGame.</summary>
 
     public static bool ReturnToContractSelect() => ContinueAfterEndGame();
@@ -354,7 +418,22 @@ public static class ScreenFlowStateMachine
 
     }
 
+    private static void ResetPreparationContractForNewLobbyEntry()
+    {
+        PreparationSessionManager session = PreparationSessionManager.Instance;
+        if (session != null && session.IsServer)
+            session.ResetRound();
 
+        if (!GameSessionContext.IsSinglePlayer)
+            return;
+
+        SaveProfileStore save = SaveProfileStore.Instance;
+        if (save?.Active == null)
+            return;
+
+        save.Active.selectedContractIndex = -1;
+        save.SaveActive();
+    }
 
     private static bool LoadSceneFallback(string sceneName)
 
@@ -374,9 +453,10 @@ public static class ScreenFlowStateMachine
 
 
 
-        if (ScreenFlowController.Instance != null)
+        if (ScreenFlowController.Instance != null
+            && ScreenFlowController.Instance.TryBeginTransition(sceneName))
 
-            return ScreenFlowController.Instance.TryBeginTransition(sceneName);
+            return true;
 
 
 

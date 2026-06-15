@@ -42,12 +42,12 @@ Nixie
 | `NetworkPlayerAbilityRelay` | Sync animações MP |
 | `NetworkAbilityObjectSpawner` | — (Nix não usa spawn) |
 | `PlayerAnimationHandler` | |
-| `PlayerDeathPresentation` | Morte: anim `Dying` + hold 5s; dissolve só se aliado vivo (MP) |
+| `PlayerDeathPresentation` | Morte: anim `Dying` completa → hold 5s (tempo real) → derrota; flip travado; dissolve só se aliado vivo (MP) |
 | `HealthComponent` | `_maxHealth: 100`; `OnDied` sem dissolve (VFX via presentation) |
 | `PlayerAdrenaline` | |
 | `PlayerInitializer` | `playerShooting` vazio |
 | `PlayerAudioController` | |
-| `PlayerDash` | `passThroughLayer` = DashableWall + Enemy + Player + ProjectileEnemy (`m_Bits: 5384`); `dashFailsafeExtraSeconds: 0.35` |
+| `PlayerDash` | `passThroughLayer` = DashableWall + Player + ProjectileEnemy (`m_Bits: 4360`); dash **não** atravessa Enemy; `dashFailsafeExtraSeconds: 0.35` |
 | `KnockbackReceiver` | |
 | `PlayerMeleeCombat` | `combatStats` → MeleeCombatStats |
 | `OwnerNetworkTransform` | |
@@ -56,7 +56,7 @@ Nixie
 | `NetworkPlayerAdrenaline` | |
 | `NetworkPlayerSpectator` | |
 | `NetworkPlayerRevive` | |
-| `Shadow`, `DissolveEffect` | |
+| `Shadow`, `DissolveEffect` | `Shadow.Sombra` → `Assets/Prefabs/UI/Shadow.prefab` (ghosting dash); filho **Shadow** = elipse no chão |
 | `PlayerGameplayModuleInstaller` | `installMeleeDebugVisual` + `installAbilityDebugVisual` |
 | `AbilityDebugVisualHost` | Instalado em runtime; shader `AbilityZoneFill`; gizmos ON |
 
@@ -83,7 +83,7 @@ Nixie
 
 - [x] `NetworkObject` + `OwnerNetworkTransform`
 - Atribuir `meleeCombat` em `NetworkPlayerController` no prefab
-- **Morte:** `NetworkPlayerHealth` → `PlayerDeathPresentation` (anim completa + 5s). Com aliado vivo: dissolve + câmera no parceiro. Game over só quando todos caíram (`MultiplayerGameManager` espera duração da apresentação).
+- **Morte:** `NetworkPlayerHealth` → `PlayerDeathPresentation` (anim completa + 5s em tempo real; `PlayerFacingController` desliga). Game over após esse tempo → fade para derrota (`Route_Gameplay_Defeat`, 1s). Com aliado vivo: dissolve + câmera no parceiro.
 - **Ratos na derrota (combo):** para spawn + slow-mo ~2s + fade dos ratos (3–8s) + vinheta/zoom no corpo (`DeathHordePresentation`). MP com aliado vivo: só slow-mo + foco no corpo até o dissolve.
 
 ## Histórico

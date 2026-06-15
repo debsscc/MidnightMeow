@@ -5,22 +5,23 @@ using UnityEngine.Pool;
 
 public class Shadow : MonoBehaviour
 {
-    public static Shadow me;
+    [Tooltip("Prefab do trail de dash (Assets/Prefabs/UI/Shadow.prefab). Não confundir com o filho Shadow = elipse no chão.")]
     public GameObject Sombra;
     public List<GameObject> SombraList = new List<GameObject>();
     private float cronometer;
     public float speed;
     public Color _color;
 
-    void Awake()
-    {
-        me = this;
-
-    }
-
     public GameObject GetShadows()
     {
-        for(int i = 0; i < SombraList.Count; i++)
+        if (Sombra == null)
+            return null;
+
+        var sourceSr = GetComponent<SpriteRenderer>();
+        if (sourceSr == null)
+            return null;
+
+        for (int i = 0; i < SombraList.Count; i++)
         {
             if (!SombraList[i].activeInHierarchy)
             {
@@ -28,25 +29,36 @@ public class Shadow : MonoBehaviour
                 SombraList[i].transform.rotation = transform.rotation;
                 SombraList[i].transform.localScale = transform.localScale;
                 SombraList[i].SetActive(true);
-                var sr = GetComponent<SpriteRenderer>();
                 var objSr = SombraList[i].GetComponent<SpriteRenderer>();
-                objSr.sprite = sr.sprite;
-                objSr.flipX = sr.flipX;
-                objSr.sortingLayerID = sr.sortingLayerID;
-                objSr.sortingOrder = sr.sortingOrder - 1;
-                SombraList[i].GetComponent<Solid>()._color = _color;
+                if (objSr != null)
+                {
+                    objSr.sprite = sourceSr.sprite;
+                    objSr.flipX = sourceSr.flipX;
+                    objSr.sortingLayerID = sourceSr.sortingLayerID;
+                    objSr.sortingOrder = sourceSr.sortingOrder - 1;
+                }
+
+                if (SombraList[i].TryGetComponent(out Solid solid))
+                    solid.SyncPresentation(_color);
+
                 return SombraList[i];
             }
         }
-        GameObject obj = Instantiate(Sombra, transform.position, transform.rotation) as GameObject;
+
+        GameObject obj = Instantiate(Sombra, transform.position, transform.rotation);
         obj.transform.localScale = transform.localScale;
-        var sourceSr = GetComponent<SpriteRenderer>();
         var newObjSr = obj.GetComponent<SpriteRenderer>();
-        newObjSr.sprite = sourceSr.sprite;
-        newObjSr.flipX = sourceSr.flipX;
-        newObjSr.sortingLayerID = sourceSr.sortingLayerID;
-        newObjSr.sortingOrder = sourceSr.sortingOrder - 1;
-        obj.GetComponent<Solid>()._color = _color;
+        if (newObjSr != null)
+        {
+            newObjSr.sprite = sourceSr.sprite;
+            newObjSr.flipX = sourceSr.flipX;
+            newObjSr.sortingLayerID = sourceSr.sortingLayerID;
+            newObjSr.sortingOrder = sourceSr.sortingOrder - 1;
+        }
+
+        if (obj.TryGetComponent(out Solid newSolid))
+            newSolid.SyncPresentation(_color);
+
         SombraList.Add(obj);
         return obj;
     }

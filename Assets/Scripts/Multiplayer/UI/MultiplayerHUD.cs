@@ -91,6 +91,21 @@ public class MultiplayerHUD : MonoBehaviour
 
         card.Initialize(clientId, $"Jogador {clientId + 1}", cardColor, playerColor);
         _playerCards[clientId] = card;
+        SyncCardHealthFromWorld(clientId, card);
+    }
+
+    private void SyncCardHealthFromWorld(ulong clientId, PlayerHUDCard card)
+    {
+        NetworkPlayerHealth[] players = FindObjectsByType<NetworkPlayerHealth>(FindObjectsSortMode.None);
+        for (int i = 0; i < players.Length; i++)
+        {
+            NetworkPlayerHealth health = players[i];
+            if (health == null || !health.IsSpawned || health.OwnerClientId != clientId)
+                continue;
+
+            card.UpdateHealth(health.CurrentHealth, health.MaxHealth);
+            return;
+        }
     }
 
     private void RemoveCardForPlayer(ulong clientId)

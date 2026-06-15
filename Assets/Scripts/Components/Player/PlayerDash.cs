@@ -28,10 +28,15 @@ public class PlayerDash : MonoBehaviour
     [Header("Failsafe")]
     [SerializeField] private float dashFailsafeExtraSeconds = 0.35f;
 
+    [Header("Collision")]
+    [SerializeField] private Collider2D dashCollider;
+    [SerializeField] private float dashCollisionSkin = 0.04f;
+
     public event Action OnDashStarted;
     public event Action OnDashEnded;
 
     private Rigidbody2D _rb;
+    private Shadow _dashGhosting;
     private NetworkObject _networkObject;
     private AbilityDebugVisualHost _debugHost;
     private Vector2 _currentMoveDirection = Vector2.up;
@@ -43,6 +48,9 @@ public class PlayerDash : MonoBehaviour
     private float _dashFailsafeDeadline = -1f;
     private int[] _ignoredLayers = Array.Empty<int>();
     private int _playerLayer;
+    private ContactFilter2D _blockFilter;
+    private readonly RaycastHit2D[] _castHits = new RaycastHit2D[16];
+    private CollisionDetectionMode2D _defaultCollisionDetection;
 
     public bool IsDashing => _isDashing;
 
@@ -61,22 +69,17 @@ public class PlayerDash : MonoBehaviour
     private void Awake()
     {
         _rb = GetComponent<Rigidbody2D>();
+        _dashGhosting = GetComponent<Shadow>();
         _networkObject = GetComponent<NetworkObject>();
         _debugHost = GetComponent<AbilityDebugVisualHost>();
         if (inputHandler == null) inputHandler = GetComponent<PlayerInputHandler>();
         _playerLayer = gameObject.layer;
-        passThroughLayer = BuildDefaultPassThroughMask(passThroughLayer);
+        if (dashCollider == null)
+            dashCollider = GetComponent<Collider2D>();
+        RebuildBlockFilter();
         RefreshDashStats();
-    }
-
-    private static LayerMask BuildDefaultPassThroughMask(LayerMask configured)
-    {
-        int mask = configured.value;
-        mask |= LayerMaskToBit("DashableWall");
-        mask |= LayerMaskToBit("Enemy");
-        mask |= LayerMaskToBit("Player");
-        mask |= LayerMaskToBit("ProjectileEnemy");
-        return mask;
+        if (_rb != null)
+            _defaultCollisionDetection = _rb.collisionDetectionMode;
     }
 
     private static int LayerMaskToBit(string layerName)
@@ -110,16 +113,43 @@ public class PlayerDash : MonoBehaviour
 
     private void FixedUpdate()
     {
-        if (!_isDashing) return;
+        if (!_isDashing || _rb == null) return;
 
-        if (_rb != null)
-            _rb.linearVelocity = _activeDashDirection * _dashSpeedActive;
+        float step = _dashSpeedActive * Time.fixedDeltaTime;
+        if (TryGetBlockingHit(step, out float allowedDistance))
+        {
+            float travel = Mathf.Max(0f, allowedDistance - dashCollisionSkin);
+            if (travel > 0f)
+                _rb.MovePosition(_rb.position + _activeDashDirection * travel);
 
-        Shadow.me?.Sombras_skill();
+            _rb.linearVelocity = Vector2.zero;
+            InterruptDash("collision-block");
+            return;
+        }
+
+        _rb.linearVelocity = Vector2.zero;
+        _rb.MovePosition(_rb.position + _activeDashDirection * step);
+
+        _dashGhosting?.Sombras_skill();
 
         _dashTimeRemaining -= Time.fixedDeltaTime;
         if (_dashTimeRemaining <= 0f)
             CompleteDash();
+    }
+
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (!_isDashing || collision == null || IsPassThroughCollision(collision))
+            return;
+
+        if (_rb != null && collision.contactCount > 0)
+        {
+            ContactPoint2D contact = collision.GetContact(0);
+            _rb.position = contact.point + contact.normal * dashCollisionSkin;
+            _rb.linearVelocity = Vector2.zero;
+        }
+
+        InterruptDash("collision-block");
     }
 
     private void UpdateMoveDirection(Vector2 direction)
@@ -181,6 +211,9 @@ public class PlayerDash : MonoBehaviour
         _ignoredLayers = GetLayersFromMask(passThroughLayer);
         foreach (int layer in _ignoredLayers)
             Physics2D.IgnoreLayerCollision(_playerLayer, layer, true);
+
+        if (_rb != null)
+            _rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
 
         if (_debugHost != null)
         {
@@ -260,6 +293,9 @@ public class PlayerDash : MonoBehaviour
         foreach (int layer in _ignoredLayers)
             Physics2D.IgnoreLayerCollision(_playerLayer, layer, false);
         _ignoredLayers = Array.Empty<int>();
+
+        if (_rb != null)
+            _rb.collisionDetectionMode = _defaultCollisionDetection;
     }
 
     private static int[] GetLayersFromMask(LayerMask mask)
@@ -286,9 +322,78 @@ public class PlayerDash : MonoBehaviour
 
     public void ApplyPassThroughLayers(LayerMask layers)
     {
-        if (layers.value != 0)
-            passThroughLayer = layers;
+        passThroughLayer = layers;
+        RebuildBlockFilter();
     }
+
+    private void RebuildBlockFilter()
+    {
+        _blockFilter = new ContactFilter2D
+        {
+            useLayerMask = true,
+            useTriggers = false
+        };
+        _blockFilter.SetLayerMask(~passThroughLayer.value);
+    }
+
+    private bool TryGetBlockingHit(float distance, out float allowedDistance)
+    {
+        allowedDistance = distance;
+        if (dashCollider == null || distance <= 0f)
+            return false;
+
+        float closest = float.MaxValue;
+
+        int castCount = dashCollider.Cast(_activeDashDirection, _blockFilter, _castHits, distance);
+        closest = Mathf.Min(closest, GetClosestValidCastDistance(castCount));
+
+        if (_rb != null)
+        {
+            int bodyCastCount = _rb.Cast(_activeDashDirection, _castHits, distance);
+            closest = Mathf.Min(closest, GetClosestValidCastDistance(bodyCastCount));
+        }
+
+        Bounds bounds = dashCollider.bounds;
+        float radius = Mathf.Max(0.05f, Mathf.Min(bounds.extents.x, bounds.extents.y) * 0.85f);
+        RaycastHit2D circleHit = Physics2D.CircleCast(
+            bounds.center,
+            radius,
+            _activeDashDirection,
+            distance,
+            _blockFilter.layerMask);
+
+        if (circleHit.collider != null && !IsPassThroughCollider(circleHit.collider) && circleHit.collider != dashCollider)
+            closest = Mathf.Min(closest, circleHit.distance);
+
+        if (closest >= float.MaxValue)
+            return false;
+
+        allowedDistance = closest;
+        return true;
+    }
+
+    private float GetClosestValidCastDistance(int count)
+    {
+        float closest = float.MaxValue;
+
+        for (int i = 0; i < count; i++)
+        {
+            Collider2D hitCollider = _castHits[i].collider;
+            if (hitCollider == null || hitCollider == dashCollider || IsPassThroughCollider(hitCollider))
+                continue;
+
+            if (_castHits[i].distance < closest)
+                closest = _castHits[i].distance;
+        }
+
+        return closest;
+    }
+
+    private bool IsPassThroughCollider(Collider2D collider) =>
+        collider != null && ((1 << collider.gameObject.layer) & passThroughLayer.value) != 0;
+
+    private bool IsPassThroughCollision(Collision2D collision) =>
+        collision != null && collision.collider != null && IsPassThroughCollider(collision.collider);
 
     public void ApplyFailsafeExtraSeconds(float seconds)
     {

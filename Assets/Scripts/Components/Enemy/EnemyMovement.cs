@@ -43,6 +43,9 @@ public class EnemyMovement : MonoBehaviour
         if (GetComponent<EnemySlowEffect>() == null)
             gameObject.AddComponent<EnemySlowEffect>();
 
+        if (GetComponent<EnemyPhysicsBody>() == null)
+            gameObject.AddComponent<EnemyPhysicsBody>();
+
         _isFacingRight = transform.localScale.x >= 0f;
     }
 

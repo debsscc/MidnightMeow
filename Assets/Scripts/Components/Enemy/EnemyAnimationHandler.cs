@@ -154,7 +154,10 @@ public class EnemyAnimationHandler : MonoBehaviour
     private void HandleFlipSprite(bool facingRight)
     {
         if (_spriteRenderer != null)
-            _spriteRenderer.flipX = facingRight;
+        {
+            // Sprites dos ratos foram desenhados olhando para a direita; flipX espelha para a esquerda.
+            _spriteRenderer.flipX = !facingRight;
+        }
     }
 
     private void HandleAttack()

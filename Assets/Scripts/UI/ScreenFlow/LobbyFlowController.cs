@@ -85,6 +85,16 @@ public class LobbyFlowController : MonoBehaviour
     private void OnSoloClicked()
     {
         GameSessionContext.BeginSinglePlayer();
+        StartCoroutine(BeginPreparationWhenReadyRoutine());
+    }
+
+    private IEnumerator BeginPreparationWhenReadyRoutine()
+    {
+        yield return ScreenFlowTransitionGate.WaitUntilReady();
+
+        if (_matchTransitionStarted)
+            yield break;
+
         TryBeginPreparation();
     }
 
@@ -99,7 +109,8 @@ public class LobbyFlowController : MonoBehaviour
             return;
 
         _matchTransitionStarted = true;
-        LobbyMatchFlow.TryBeginMatchFromLobby();
+        if (!LobbyMatchFlow.TryBeginMatchFromLobby())
+            _matchTransitionStarted = false;
     }
 
     private IEnumerator AutoContinueRoutine()

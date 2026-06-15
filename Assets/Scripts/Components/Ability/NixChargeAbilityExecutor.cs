@@ -18,6 +18,10 @@ public class NixChargeAbilityExecutor : MonoBehaviour, IAbilityExecutor
 
     public CharacterAbilityType AbilityType => CharacterAbilityType.NixCharge;
 
+    public bool IsCharging { get; private set; }
+
+    public Vector2 ActiveChargeDirection { get; private set; } = Vector2.up;
+
     private PlayerAbilityHandler _abilityHandler;
     private Rigidbody2D _rb;
     private NetworkObject _networkObject;
@@ -64,6 +68,7 @@ public class NixChargeAbilityExecutor : MonoBehaviour, IAbilityExecutor
         Vector2 direction = context.AimDirection.sqrMagnitude > 0.0001f
             ? context.AimDirection.normalized
             : Vector2.up;
+        ActiveChargeDirection = direction;
 
         float distance = tierData.range;
         float halfWidth = tierData.areaWidth * 0.5f;
@@ -72,24 +77,33 @@ public class NixChargeAbilityExecutor : MonoBehaviour, IAbilityExecutor
         Vector2 chargeOrigin = _rb.position;
 
         _abilityRelay?.ResetChargeSession();
+        IsCharging = true;
 
-        while (traveled < distance)
+        try
         {
-            float step = speed * Time.fixedDeltaTime;
-            if (traveled + step > distance)
-                step = distance - traveled;
+            while (traveled < distance)
+            {
+                float step = speed * Time.fixedDeltaTime;
+                if (traveled + step > distance)
+                    step = distance - traveled;
 
-            traveled += step;
-            Vector2 nextPos = _rb.position + direction * step;
-            _rb.MovePosition(nextPos);
+                traveled += step;
+                Vector2 nextPos = chargeOrigin + direction * traveled;
+                _rb.linearVelocity = Vector2.zero;
+                _rb.MovePosition(nextPos);
 
-            ApplyChargeDamage(chargeOrigin, direction, traveled, halfWidth, tierData, context);
+                ApplyChargeDamage(chargeOrigin, direction, traveled, halfWidth, tierData, context);
 
-            yield return new WaitForFixedUpdate();
+                yield return new WaitForFixedUpdate();
+            }
         }
-
-        if (_rb != null)
-            _rb.linearVelocity = Vector2.zero;
+        finally
+        {
+            IsCharging = false;
+            ActiveChargeDirection = Vector2.up;
+            if (_rb != null)
+                _rb.linearVelocity = Vector2.zero;
+        }
     }
 
     private void ApplyChargeDamage(

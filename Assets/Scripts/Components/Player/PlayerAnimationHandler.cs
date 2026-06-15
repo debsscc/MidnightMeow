@@ -112,8 +112,6 @@ public class PlayerAnimationHandler : MonoBehaviour
             playerMeleeCombat.OnAttackPerformed += HandleMeleeAttack;
         if (playerAbilityHandler != null)
             playerAbilityHandler.OnAbilityActivated += HandleAbility;
-        if (playerMovement != null)
-            playerMovement.OnFlipSprite += HandleFlipSprite;
         if (healthComponent != null)
         {
             healthComponent.OnTakeDamage.AddListener(HandleHit);
@@ -128,8 +126,6 @@ public class PlayerAnimationHandler : MonoBehaviour
             playerMeleeCombat.OnAttackPerformed -= HandleMeleeAttack;
         if (playerAbilityHandler != null)
             playerAbilityHandler.OnAbilityActivated -= HandleAbility;
-        if (playerMovement != null)
-            playerMovement.OnFlipSprite -= HandleFlipSprite;
         if (healthComponent != null)
         {
             healthComponent.OnTakeDamage.RemoveListener(HandleHit);
@@ -275,8 +271,6 @@ public class PlayerAnimationHandler : MonoBehaviour
         return Time.time - _lastAttackTriggerTime >= attackInterval - 0.016f;
     }
 
-    private void HandleFlipSprite(bool facingRight) => ApplyFacingToRenderers(facingRight);
-
     public void ApplyNetworkFacing(bool facingRight) => ApplyFacingToRenderers(facingRight);
 
     private void ApplyFacingToRenderers(bool facingRight)
@@ -299,7 +293,7 @@ public class PlayerAnimationHandler : MonoBehaviour
 
     public void HandleDeath()
     {
-        if (healthComponent != null)
+        if (healthComponent != null && !TryGetComponent<PlayerDeathPresentation>(out _))
             healthComponent.SetDestroyDelay(_deathDestroyDelay);
 
         _rb.linearVelocity = Vector2.zero;
@@ -308,6 +302,10 @@ public class PlayerAnimationHandler : MonoBehaviour
         if (_collider2D != null) _collider2D.enabled = false;
         if (playerMovement != null) playerMovement.enabled = false;
         if (playerShooting != null) playerShooting.enabled = false;
+        if (TryGetComponent<PlayerFacingController>(out var facingController))
+            facingController.enabled = false;
+        if (TryGetComponent<PlayerAim>(out var aim))
+            aim.enabled = false;
 
         _animator.SetTrigger(_hashOnDie);
     }

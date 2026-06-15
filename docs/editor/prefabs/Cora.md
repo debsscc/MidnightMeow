@@ -44,13 +44,13 @@ Cora
 | `NetworkPlayerAbilityRelay` | Sync animações MP |
 | `NetworkAbilityObjectSpawner` | Spawn barreira/poça em rede |
 | `PlayerAnimationHandler` | |
-| `PlayerDeathPresentation` | Morte: anim `Dying` + hold 5s; dissolve só se aliado vivo (MP) |
+| `PlayerDeathPresentation` | Morte: anim `Dying` completa → hold 5s (tempo real) → derrota; flip travado; dissolve só se aliado vivo (MP) |
 | `HealthComponent` | `_maxHealth: 100`, `_destroyDelay: 4`; `OnDied` sem dissolve |
 | `PlayerAdrenaline` | |
 | `SpriteBlink` | |
 | `PlayerInitializer` | Progressão + upgrades |
 | `PlayerAudioController` | |
-| `PlayerDash` | `passThroughLayer` = DashableWall + Enemy + Player + ProjectileEnemy (`m_Bits: 5384`) |
+| `PlayerDash` | `passThroughLayer` = DashableWall + Player + ProjectileEnemy (`m_Bits: 4360`); dash **não** atravessa Enemy |
 | `KnockbackReceiver` | |
 | `OwnerNetworkTransform` | |
 | `NetworkPlayerController` | Refs wired (shooting, ammo, etc.) |
@@ -60,7 +60,7 @@ Cora
 | `NetworkProjectileSpawner` | |
 | `MultiplayerCombatIntegrityLogger` | |
 | `NetworkPlayerRevive` | |
-| `Shadow` | Sombra local |
+| `Shadow` | Ghosting de dash (`Sombra` → `Assets/Prefabs/UI/Shadow.prefab`); filho **Shadow** = elipse no chão |
 | `DissolveEffect` | |
 | `PlayerGameplayModuleInstaller` | Imunidade + UI downed/revive + `installAbilityDebugVisual` |
 | `AbilityDebugVisualHost` | Instalado em runtime; shader `AbilityZoneFill`; gizmos ON |
@@ -92,7 +92,7 @@ Cora
 
 - [x] `NetworkObject` + `OwnerNetworkTransform`
 - Dono: movimento, mira, tiro; servidor valida projéteis via `NetworkProjectileSpawner`
-- **Morte:** mesmo fluxo que Nixie (`PlayerDeathPresentation` + game over quando todos caíram)
+- **Morte:** mesmo fluxo que Nixie (`PlayerDeathPresentation`: anim + 5s → fade derrota; flip travado na queda)
 - **Ratos na derrota:** combo via `DeathHordePresentation` (ver Nixie.md)
 
 ## Histórico

@@ -7,7 +7,7 @@ using UnityEngine;
 public class PlayerGameplayModuleInstaller : MonoBehaviour
 {
     [SerializeField] private bool installDamageImmunity = true;
-    [SerializeField] private bool installDownedUI = true;
+    [SerializeField] private bool installDownedUI = false;
     [SerializeField] private bool installReviveZoneVisual = true;
     [SerializeField] private bool installRevivePromptUI = true;
     [SerializeField] private bool installMeleeDebugVisual = true;
@@ -35,5 +35,8 @@ public class PlayerGameplayModuleInstaller : MonoBehaviour
         if (installAbilityDebugVisual && GetComponent<PlayerAbilityHandler>() != null &&
             GetComponent<AbilityDebugVisualHost>() == null)
             gameObject.AddComponent<AbilityDebugVisualHost>();
+
+        if (GetComponent<PlayerFacingController>() == null)
+            gameObject.AddComponent<PlayerFacingController>();
     }
 }

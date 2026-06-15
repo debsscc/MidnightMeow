@@ -588,6 +588,10 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.x
       value: 359
       objectReference: {fileID: 0}
+    - target: {fileID: 7945809633661193902, guid: 24e00425b52f50342a9d45ab5cc1b682, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8488530722324404796, guid: 24e00425b52f50342a9d45ab5cc1b682, type: 3}
       propertyPath: m_text
       value: "Por favor, clique em host se for jogar Multiplayer. \n\nSe for jogador

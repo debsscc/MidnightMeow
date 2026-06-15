@@ -14,7 +14,7 @@ public class GameSaveData
     public bool wasHost;
     public string lastJoinCode = string.Empty;
     public int magiculas;
-    public int selectedContractIndex;
+    public int selectedContractIndex = -1;
     public string lastSceneName = string.Empty;
 
     public CharacterSaveData nix = new CharacterSaveData { characterType = LobbyCharacterType.CharacterA };

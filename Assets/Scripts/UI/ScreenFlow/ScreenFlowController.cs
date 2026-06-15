@@ -44,6 +44,7 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
     public static void EnsureExists()
     {
         TransitionFadeOverlay.EnsureExists();
+        MusicCrossfadeController.EnsureExists();
 
         if (Instance != null)
         {
@@ -303,8 +304,10 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
         }
 
         bool instantLoadingFeedback = useLoading && ScreenFlowLoadingScenes.IsDedicatedLoadingScene(sceneName);
+        MusicCrossfadeController music = MusicCrossfadeController.Instance;
         if (useFade && !instantLoadingFeedback)
         {
+            music?.HandleTransitionFadeOut(fadeTime);
             yield return overlay.FadeOut(fadeTime, delta =>
             {
                 if (!useLoading)
@@ -316,6 +319,8 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
         }
         else if (useFade && instantLoadingFeedback)
         {
+            float quickFade = fadeTime > 0f ? fadeTime : defaultFadeTime;
+            music?.HandleTransitionFadeOut(quickFade);
             overlay.SetFadeImmediate(1f);
         }
 
@@ -419,10 +424,23 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
         if (useLoading && !handoffToDedicatedLoadingScene)
             overlay.HideLoading();
 
+        music = MusicCrossfadeController.Instance;
+        music?.PrepareSceneMusic(SceneManager.GetActiveScene());
+
         if (useFade && !handoffToDedicatedLoadingScene)
+        {
+            music?.FadeInPending(fadeTime);
             yield return overlay.FadeIn(fadeTime);
+        }
         else if (!handoffToDedicatedLoadingScene)
+        {
+            music?.FadeInPending(defaultFadeTime);
             overlay.ResetFade();
+        }
+        else
+        {
+            music?.FadeInPending(fadeTime > 0f ? fadeTime : defaultFadeTime);
+        }
     }
 
     public void ClearTransitionOverlay()
@@ -607,9 +625,7 @@ public class TransitionFadeOverlay : Singleton<TransitionFadeOverlay>
 
     private Image GetActiveFadeImage()
     {
-        if (_legacyFadeImage != null)
-            return _legacyFadeImage;
-
+        EnsureOverlayBuilt();
         return _fadeImage;
     }
 
@@ -642,6 +658,7 @@ public class TransitionFadeOverlay : Singleton<TransitionFadeOverlay>
     public IEnumerator FadeOut(float duration, Action<float> onUnscaledTick = null)
     {
         EnsureFadeReady();
+        SetBuiltInOverlayVisible(true);
         EnsureLegacyCanvasFront();
 
         Image fadeTarget = GetActiveFadeImage();
@@ -668,6 +685,8 @@ public class TransitionFadeOverlay : Singleton<TransitionFadeOverlay>
 
     public IEnumerator FadeIn(float duration)
     {
+        SetBuiltInOverlayVisible(true);
+
         Image fadeTarget = GetActiveFadeImage();
         if (fadeTarget == null)
             yield break;
@@ -810,7 +829,7 @@ public class TransitionFadeOverlay : Singleton<TransitionFadeOverlay>
         _canvas = ScreenFlowPlaceholderFactory.EnsureCanvas(root.transform, "TransitionOverlay");
         _canvas.renderMode = RenderMode.ScreenSpaceOverlay;
         _canvas.overrideSorting = true;
-        _canvas.sortingOrder = 10000;
+        _canvas.sortingOrder = 32767;
 
         GameObject fadeGo = new GameObject("Fade", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
         fadeGo.transform.SetParent(_canvas.transform, false);

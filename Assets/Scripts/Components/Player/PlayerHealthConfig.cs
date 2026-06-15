@@ -47,6 +47,11 @@ public class PlayerHealthConfig : MonoBehaviour
 
     private void _OnDied()
     {
+        if (GetComponent<NetworkPlayerHealth>() != null)
+            return;
+
+        _healthComponent.SetAllowDestroyOnDeath(false);
+
         if (TryGetComponent<PlayerDeathPresentation>(out var presentation))
         {
             presentation.BeginDeathPresentation(dissolveAfterHold: false, onComplete: () =>

@@ -131,7 +131,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 753e0a8d39326dd4c88b36c51f8d5370, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DamageIndicatorPresenter
-  floatDistance: 0.8
-  lifetime: 0.75
-  damageColor: {r: 1, g: 0.35, b: 0.25, a: 1}
-  fontSize: 4
+  floatDistance: 2
+  lifetime: 1
+  damageColor: {r: 0.6886792, g: 0, b: 0.027528754, a: 1}
+  fontSize: 0.5

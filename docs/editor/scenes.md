@@ -46,7 +46,7 @@ Assets de NavMesh baked por cena em subpastas (`NavMesh-*.asset`). Prefabs: `Nav
 - **Shake ao tomar dano:** `PlayerCameraFeedback` → `CameraShakeController` (preset Medium em `CameraConfig`); rede dispara no `PlayTakeDamageVisualClientRpc` só para `IsOwner`; cenas offline/legado usam `HealthComponent`.
 - **Limites da câmera:** adicione um GameObject com `CameraBoundsVolume` + `PolygonCollider2D` na Fase-1; o `MultiplayerCameraController` liga ao `CinemachineConfiner2D` e aplica clamp manual via `CameraBoundsClampUtility` quando `useDirectCameraFollow` está ativo (Brain desligado).
 - **HUD habilidades:** `PlayerAbilityHud` é criado automaticamente no Canvas ao entrar em Fase-1/2 (cooldowns Dash/Q/R + barra da passiva, canto inferior direito).
-- **Magículas na fase:** `ScienceIndicator` deve ficar filho de `Indicator` (canto superior direito da caixa de pontuação).
+- **Magículas na fase:** posicione `ScienceIndicator` no Canvas/HUD pelo Editor (RectTransform); o script só atualiza o texto via `RoundMagiculaTracker`.
 - **Estado da partida:** ao carregar Fase-1 como servidor, `MultiplayerGameManager` passa automaticamente para `Playing` (campo `gameplaySceneName`). Sem isso, `NetworkWaveManager` fica em espera e nenhum inimigo spawna.
 
 ### Hierarquia recomendada (Fase-1)

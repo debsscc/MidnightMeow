@@ -21,11 +21,13 @@ public class PlayerMovement : MonoBehaviour
     
     // Referência ao novo componente de Dash
     private PlayerDash _dash;
+    private NixChargeAbilityExecutor _charge;
     private KnockbackReceiver _knockback;
 
     private Vector2 _moveDirection;
 
-    public event Action<bool> OnFlipSprite;
+    public Vector2 MoveDirection => _moveDirection;
+    public bool IsMoving => _isMoving;
 
     // Evento disparado quando o jogador começa a se mover
     public event Action OnMovement;
@@ -33,7 +35,7 @@ public class PlayerMovement : MonoBehaviour
     public event Action OnStop;
 
     private bool _isMoving = false;
-    private bool facingRight = false;
+    private int _lastDustFlipSign;
 
     private void Awake()
     {
@@ -41,7 +43,11 @@ public class PlayerMovement : MonoBehaviour
         _input = GetComponent<PlayerInputHandler>();
         _adrenaline = GetComponent<PlayerAdrenaline>();
         _dash = GetComponent<PlayerDash>(); // Busca o componente de Dash
+        _charge = GetComponent<NixChargeAbilityExecutor>();
         _knockback = GetComponent<KnockbackReceiver>();
+
+        if (_rb != null)
+            _rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
     }
 
     private void OnEnable()
@@ -71,19 +77,19 @@ public class PlayerMovement : MonoBehaviour
             _isMoving = false;
         }
 
-        //-------Flip w/ Dust Particle--------
-        if (_moveDirection.x > 0 && !facingRight)
+        // Poeira ao mudar direção horizontal do input
+        if (_moveDirection.x > 0f && _lastDustFlipSign <= 0)
         {
-            OnFlipSprite?.Invoke(true);
-            facingRight = true;
+            _lastDustFlipSign = 1;
             CreateDust();
         }
-        else if (_moveDirection.x < 0 && facingRight)
+        else if (_moveDirection.x < 0f && _lastDustFlipSign >= 0)
         {
-            OnFlipSprite?.Invoke(false);
-            facingRight = false;
+            _lastDustFlipSign = -1;
             CreateDust();
         }
+        else if (_moveDirection.x == 0f)
+            _lastDustFlipSign = 0;
     }
 
     private void FixedUpdate()
@@ -92,6 +98,12 @@ public class PlayerMovement : MonoBehaviour
         // Se o Dash ou Knockback estiverem ocorrendo, o PlayerMovement cede o controle do Rigidbody.
         if (_dash != null && _dash.IsDashing)
             return;
+
+        if (_charge != null && _charge.IsCharging)
+        {
+            _rb.linearVelocity = Vector2.zero;
+            return;
+        }
 
         if (_knockback != null && _knockback.IsKnockedBack)
             return;

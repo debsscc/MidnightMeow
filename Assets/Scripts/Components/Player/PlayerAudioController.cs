@@ -9,21 +9,17 @@ using UnityEngine.Audio;
 [DisallowMultipleComponent]
 public class PlayerAudioController : MonoBehaviour
 {
-    [Header("Dependencies")]
-    [Tooltip("Referência ao componente de movimento para escutar OnMovement e OnStop")]
-    [SerializeField] private PlayerMovement playerMovement;
-
     [Header("Mixer")]
     [SerializeField] private AudioMixerGroup sfxMixerGroup;
-    
+
     [Tooltip("Referência ao componente de tiro para escutar OnShoot")]
     [SerializeField] private PlayerShooting playerShooting;
     [SerializeField] private PlayerDash playerDash;
 
     [Header("Audio Sources")]
-    [Tooltip("AudioSource dedicado a sons contínuos (em loop)")]
+    [Tooltip("AudioSource dedicado a passos (one-shot)")]
     [SerializeField] private AudioSource loopSource;
-    
+
     [Tooltip("AudioSource dedicado a sons instantâneos (one-shot)")]
     [SerializeField] private AudioSource sfxSource;
     [SerializeField] private AudioSource dashSource;
@@ -33,108 +29,113 @@ public class PlayerAudioController : MonoBehaviour
     [SerializeField] private AudioClip shootClip;
     [SerializeField] private AudioClip dashClip;
 
+    [Header("Footsteps")]
+    [SerializeField] private float footstepMinSpeed = 0.35f;
+    [SerializeField] private float footstepBaseInterval = 0.38f;
+    [SerializeField] private float footstepReferenceSpeed = 5f;
+    [SerializeField] private float footstepMinInterval = 0.22f;
+    [SerializeField] private float footstepMaxInterval = 0.55f;
+    [Range(0f, 1f)]
+    [SerializeField] private float footstepVolume = 0.85f;
+
+    private Rigidbody2D _rb;
+    private float _stepTimer;
+
     private void Awake()
     {
-        // Fallback de segurança caso os componentes estejam no mesmo GameObject e não tenham sido arrastados
-        if (playerMovement == null) playerMovement = GetComponent<PlayerMovement>();
         if (playerShooting == null) playerShooting = GetComponent<PlayerShooting>();
         if (playerDash == null) playerDash = GetComponent<PlayerDash>();
+        _rb = GetComponent<Rigidbody2D>();
 
-        // Configura a fonte de loop automaticamente para evitar erros de design
         if (loopSource != null)
         {
-            loopSource.loop = true;
+            loopSource.loop = false;
             loopSource.playOnAwake = false;
+            loopSource.outputAudioMixerGroup = sfxMixerGroup;
         }
 
         if (sfxSource != null)
-        {
-            if (sfxSource != null) sfxSource.outputAudioMixerGroup = sfxMixerGroup;
-            if (dashSource != null) dashSource.outputAudioMixerGroup = sfxMixerGroup;
-        }
+            sfxSource.outputAudioMixerGroup = sfxMixerGroup;
+
+        if (dashSource != null)
+            dashSource.outputAudioMixerGroup = sfxMixerGroup;
     }
 
     private void OnEnable()
     {
-        if (playerMovement != null)
-        {
-            playerMovement.OnMovement += HandleMovementStarted;
-            playerMovement.OnStop += HandleMovementStopped;
-        }
-
         if (playerShooting != null)
-        {
             playerShooting.OnShoot += HandleShoot;
-        }
 
         if (playerDash != null)
         {
             playerDash.OnDashStarted += HandleDashStarted;
             playerDash.OnDashEnded += HandleDashEnded;
         }
-        
     }
 
     private void OnDisable()
     {
-        if (playerMovement != null)
-        {
-            playerMovement.OnMovement -= HandleMovementStarted;
-            playerMovement.OnStop -= HandleMovementStopped;
-        }
-
         if (playerShooting != null)
-        {
             playerShooting.OnShoot -= HandleShoot;
-        }
+
         if (playerDash != null)
         {
             playerDash.OnDashStarted -= HandleDashStarted;
             playerDash.OnDashEnded -= HandleDashEnded;
         }
+
+        _stepTimer = 0f;
     }
 
-    private void HandleMovementStarted()
+    private void Update()
     {
-        if (loopSource == null || movementClip == null) return;
-
-        // Evita reiniciar o áudio se ele já estiver tocando (evita som engasgado)
-        if (!loopSource.isPlaying || loopSource.clip != movementClip)
-        {
-            loopSource.clip = movementClip;
-            loopSource.Play();
-        }
+        UpdateFootsteps();
     }
 
-    private void HandleMovementStopped()
+    private void UpdateFootsteps()
     {
-        if (loopSource != null && loopSource.isPlaying)
+        if (loopSource == null || movementClip == null || _rb == null)
+            return;
+
+        if (playerDash != null && playerDash.IsDashing)
         {
-            loopSource.Stop();
+            _stepTimer = 0f;
+            return;
         }
+
+        float speed = _rb.linearVelocity.magnitude;
+        if (speed < footstepMinSpeed)
+        {
+            _stepTimer = 0f;
+            return;
+        }
+
+        float interval = footstepBaseInterval * (footstepReferenceSpeed / speed);
+        interval = Mathf.Clamp(interval, footstepMinInterval, footstepMaxInterval);
+
+        _stepTimer += Time.deltaTime;
+        if (_stepTimer < interval)
+            return;
+
+        _stepTimer = 0f;
+        loopSource.PlayOneShot(movementClip, footstepVolume);
     }
 
     private void HandleShoot()
     {
         if (sfxSource != null && shootClip != null)
-        {
             sfxSource.PlayOneShot(shootClip);
-        }
     }
 
     private void HandleDashStarted()
     {
         if (dashSource != null && dashClip != null)
-        {
             dashSource.PlayOneShot(dashClip);
-        }
     }
 
     private void HandleDashEnded()
     {
         if (dashSource != null && dashSource.isPlaying)
-        {
             dashSource.Stop();
-        }
     }
 }

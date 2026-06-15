@@ -48,6 +48,18 @@ public class CameraConfig : ScriptableObject
     [Range(1f, 20f)]
     public float zoomLerpSpeed = 5f;
 
+    [Header("Zoom Inicial da Fase")]
+    [Tooltip("Zoom in suave ao entrar em Fase-1/Fase-2 (como o FollowCamera legado).")]
+    public bool playIntroZoom = true;
+
+    [Tooltip("Tamanho ortográfico extra no frame 0 (mais aberto); anima até defaultOrthographicSize.")]
+    [Range(0f, 8f)]
+    public float introZoomInAmount = 2f;
+
+    [Tooltip("Duração do zoom in inicial em segundos.")]
+    [Range(0.1f, 5f)]
+    public float introZoomDuration = 2.5f;
+
     [Header("Shake — Preset: Leve")]
     [Tooltip("Intensidade do shake leve (dano pequeno, UI feedback).")]
     [Range(0f, 1f)]

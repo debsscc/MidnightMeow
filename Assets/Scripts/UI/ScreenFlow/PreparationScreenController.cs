@@ -36,7 +36,6 @@ public class PreparationScreenController : MonoBehaviour
 
     private void Start()
     {
-        RestoreSinglePlayerContractState();
         ScreenFlowController.Instance?.ClearTransitionOverlay();
         EnsureUi();
         if (!_buttonsWired)
@@ -109,7 +108,6 @@ public class PreparationScreenController : MonoBehaviour
 
     private void OnEnable()
     {
-        RestoreSinglePlayerContractState();
         PreparationSessionManager.OnInstanceAvailable += TrySubscribeSession;
         TrySubscribeSession();
         RefreshCharacterLabel();
@@ -245,6 +243,12 @@ public class PreparationScreenController : MonoBehaviour
             save.SaveActive();
         }
 
+        string gameplayScene = contracts != null && index >= 0 && index < contracts.Length && contracts[index] != null
+            ? contracts[index].gameplaySceneName
+            : string.Empty;
+        MidnightMeowAnalyticsTracker.NotifyContractSelected(index, gameplayScene);
+        MidnightMeowAnalyticsTracker.NotifyUiClick("preparation", $"select_contract_{index + 1}");
+
         RefreshView();
     }
 
@@ -253,6 +257,7 @@ public class PreparationScreenController : MonoBehaviour
         if (GameSessionContext.IsSinglePlayer)
         {
             _localReady = !_localReady;
+            MidnightMeowAnalyticsTracker.NotifyUiClick("preparation", _localReady ? "ready" : "unready");
             string error = ValidateSinglePlayerReady();
             if (!string.IsNullOrEmpty(error))
             {

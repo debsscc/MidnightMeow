@@ -5,9 +5,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// Menu principal: Novo Jogo, Continuar (saves de host), Opções e Sair.
-/// </summary>
+/// Menu principal: Novo Jogo, Continuar (saves de host), Opções, feedback de playtest e Sair.
 [DisallowMultipleComponent]
 public class MainMenuController : MonoBehaviour
 {
@@ -26,7 +24,12 @@ public class MainMenuController : MonoBehaviour
     [SerializeField] private Button newGameButton;
     [SerializeField] private Button continueButton;
     [SerializeField] private Button optionsButton;
+    [SerializeField] private Button playtestFeedbackButton;
     [SerializeField] private Button quitButton;
+
+    [Header("Playtest")]
+    [SerializeField] private string playtestFormUrl =
+        "https://docs.google.com/forms/d/e/1FAIpQLScqrERAjHtXbsp-kTXYh86otM1uvqKOICOwL0JFGYLe5203aw/viewform?usp=sharing&ouid=104196659444550947531";
 
     [Header("Saves")]
     [SerializeField] private TMP_Text savesListText;
@@ -114,6 +117,7 @@ public class MainMenuController : MonoBehaviour
         if (newGameButton != null) newGameButton.onClick.AddListener(OnNewGame);
         if (continueButton != null) continueButton.onClick.AddListener(OnContinue);
         if (optionsButton != null) optionsButton.onClick.AddListener(OnOptions);
+        if (playtestFeedbackButton != null) playtestFeedbackButton.onClick.AddListener(OnOpenPlaytestForm);
         if (quitButton != null) quitButton.onClick.AddListener(OnQuit);
         if (savesBackButton != null) savesBackButton.onClick.AddListener(ShowMainMenu);
         if (optionsBackButton != null) optionsBackButton.onClick.AddListener(ShowMainMenu);
@@ -159,6 +163,7 @@ public class MainMenuController : MonoBehaviour
         if (GameFlowOrchestrator.Instance != null && !GameFlowOrchestrator.Instance.CanRequestTransition())
             return;
 
+        MidnightMeowAnalyticsTracker.NotifyUiClick("main_menu", "new_game");
         GameSessionContext.BeginNewGame();
         SaveProfileStore save = SaveProfileStore.Instance;
         save?.LoadOrCreate(0);
@@ -171,6 +176,7 @@ public class MainMenuController : MonoBehaviour
 
     public void OnContinue()
     {
+        MidnightMeowAnalyticsTracker.NotifyUiClick("main_menu", "continue");
         SaveProfileStore save = SaveProfileStore.Instance;
         if (save == null || !save.HasAnyHostSave())
             return;
@@ -181,6 +187,7 @@ public class MainMenuController : MonoBehaviour
 
     public void OnOptions()
     {
+        MidnightMeowAnalyticsTracker.NotifyUiClick("main_menu", "options");
         if (optionsInfoText != null)
             optionsInfoText.text = "Gráficos, áudio, controles e geral — placeholders para implementação futura.";
 
@@ -196,6 +203,7 @@ public class MainMenuController : MonoBehaviour
         if (GameFlowOrchestrator.Instance != null && !GameFlowOrchestrator.Instance.CanRequestTransition())
             return;
 
+        MidnightMeowAnalyticsTracker.NotifyUiClick("main_menu", $"continue_slot_{slot + 1}");
         GameSessionContext.BeginContinue(slot);
         save.LoadOrCreate(slot);
 
@@ -207,11 +215,24 @@ public class MainMenuController : MonoBehaviour
 
     public void OnQuit()
     {
+        MidnightMeowAnalyticsTracker.NotifyUiClick("main_menu", "quit");
 #if UNITY_EDITOR
         UnityEditor.EditorApplication.isPlaying = false;
 #else
         Application.Quit();
 #endif
+    }
+
+    public void OnOpenPlaytestForm()
+    {
+        if (string.IsNullOrWhiteSpace(playtestFormUrl))
+        {
+            Debug.LogWarning("[MainMenuController] URL do formulário de playtest não configurada.");
+            return;
+        }
+
+        MidnightMeowAnalyticsTracker.NotifyUiClick("main_menu", "playtest_feedback");
+        Application.OpenURL(playtestFormUrl);
     }
 
     private void RefreshContinueState()
@@ -307,6 +328,10 @@ public class MainMenuController : MonoBehaviour
         y += height + gap;
 
         optionsButton = ScreenFlowPlaceholderFactory.CreateButton(panel.transform, "Opções",
+            new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(left, -y - height), new Vector2(left + width, -y));
+        y += height + gap;
+
+        playtestFeedbackButton = ScreenFlowPlaceholderFactory.CreateButton(panel.transform, "Feedback Playtest",
             new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(left, -y - height), new Vector2(left + width, -y));
         y += height + gap;
 

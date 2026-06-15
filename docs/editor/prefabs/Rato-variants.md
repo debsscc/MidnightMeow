@@ -6,6 +6,8 @@ Variantes compartilham a mesma hierarquia base (`Enemy` / ranged): `NetworkObjec
 
 ## Animação (horde)
 
+Sprites desenhados olhando para a **direita**; `EnemyAnimationHandler` / `NetworkEnemyController` aplicam `flipX = !facingRight` (mesma convenção dos players).
+
 Controllers em `Assets/Data/Animacoes/Enemy_AC/` (`AC_Enemy`, `AC_Enemy_Acid`, `AC_Enemy_Helmet`):
 
 - **Default state:** `Running` (não `Idle`)
@@ -25,6 +27,12 @@ Cada `Rato_*` inclui `EnemyTelegraphModuleInstaller` com pattern SO em `Assets/D
 | Rato_Eletrico | `Assets/Prefabs/Enemies/Rato_Eletrico.prefab` | `Rato_Eletrico.asset` |
 | Rato_Acido | `Assets/Prefabs/Enemies/Rato_Acido.prefab` | `Rato_Acido.asset` |
 | Enemy 1 | `Assets/Prefabs/Enemies/Enemy 1.prefab` | Legado — preferir `Rato_Padrao_Base` |
+
+## Física vs player
+
+- `EnemyPhysicsBody`: `Rigidbody2D` **Kinematic** — bloqueia o player (não entra dentro do rato) sem ser empurrado pelo motor do jogador.
+- NavMesh continua movendo o `transform`; o RB kinematic sincroniza em `FixedUpdate`.
+- Colisão **Player–Enemy permanece ativa** (não é ignore layer).
 
 ## GameObject raiz (comum)
 

@@ -19,7 +19,7 @@ public class PlayerDeathPresentation : MonoBehaviour
     [SerializeField] private string deathStateName = "Dying";
 
     [Header("Timing")]
-    [SerializeField] private float postDeathHoldSeconds = 5f;
+    [SerializeField] private float postDeathHoldSeconds = 10f;
 
     private Coroutine _routine;
 
@@ -55,10 +55,10 @@ public class PlayerDeathPresentation : MonoBehaviour
     {
         float hold = profile != null && profile.postDeathHoldSeconds > 0f
             ? profile.postDeathHoldSeconds
-            : 5f;
+            : 2f;
 
         float clip = AnimatorDeathTimingUtility.ResolveConfiguredClipLength(profile, 1f);
-        float total = Mathf.Max(clip, hold);
+        float total = clip + hold;
 
         if (includeDissolve && dissolve != null)
             total += dissolve.Duration;
@@ -71,14 +71,27 @@ public class PlayerDeathPresentation : MonoBehaviour
         if (_routine != null)
             StopCoroutine(_routine);
 
+        PrepareForDeathPresentation();
         _routine = StartCoroutine(DeathPresentationRoutine(dissolveAfterHold, onComplete));
+    }
+
+    private void PrepareForDeathPresentation()
+    {
+        if (healthComponent != null)
+        {
+            healthComponent.SetAllowDestroyOnDeath(false);
+            healthComponent.SetDestroyDelay(EstimatePresentationDuration(
+                animationBinder != null ? animationBinder.Profile : null,
+                dissolveEffect,
+                includeDissolve: false) + 2f);
+        }
+
+        if (animator != null)
+            animator.updateMode = AnimatorUpdateMode.UnscaledTime;
     }
 
     private IEnumerator DeathPresentationRoutine(bool dissolveAfterHold, Action onComplete)
     {
-        if (healthComponent != null)
-            healthComponent.SetAllowDestroyOnDeath(false);
-
         BeginDeathAmbience(dissolveAfterHold);
 
         animationHandler?.HandleDeath();
@@ -86,19 +99,10 @@ public class PlayerDeathPresentation : MonoBehaviour
         yield return null;
         yield return null;
 
-        float presentationStart = Time.unscaledTime;
+        yield return WaitUntilDeathAnimationCompletes();
+        FreezeDeathPose();
 
-        float clipLength = AnimatorDeathTimingUtility.MeasureCurrentStateLength(
-            animator,
-            fallbackSeconds: AnimatorDeathTimingUtility.ResolveConfiguredClipLength(
-                animationBinder != null ? animationBinder.Profile : null,
-                1f));
-
-        float holdDuration = Mathf.Max(clipLength, postDeathHoldSeconds);
-        yield return new WaitForSeconds(holdDuration);
-
-        if (!dissolveAfterHold)
-            yield return WaitForRemainingAmbience(presentationStart);
+        yield return new WaitForSecondsRealtime(postDeathHoldSeconds);
 
         if (dissolveAfterHold && dissolveEffect != null)
             dissolveEffect.HandleDeath();
@@ -148,12 +152,33 @@ public class PlayerDeathPresentation : MonoBehaviour
         return netObject.IsOwner;
     }
 
-    private IEnumerator WaitForRemainingAmbience(float presentationStartUnscaled)
+    private IEnumerator WaitUntilDeathAnimationCompletes()
     {
-        DeathHordePresentation horde = GetComponent<DeathHordePresentation>();
-        float ambienceEnd = horde != null ? horde.AmbienceEndSeconds : DeathHordePresentation.DefaultAmbienceEndSeconds;
-        float remaining = ambienceEnd - (Time.unscaledTime - presentationStartUnscaled);
-        if (remaining > 0f)
-            yield return new WaitForSecondsRealtime(remaining);
+        float fallbackSeconds = AnimatorDeathTimingUtility.ResolveConfiguredClipLength(
+            animationBinder != null ? animationBinder.Profile : null,
+            1f);
+        float deadline = Time.unscaledTime + fallbackSeconds + 1.5f;
+
+        while (Time.unscaledTime < deadline)
+        {
+            if (animator == null)
+                yield break;
+
+            AnimatorStateInfo state = animator.GetCurrentAnimatorStateInfo(0);
+            if (state.IsName(deathStateName) && state.normalizedTime >= 0.99f && !animator.IsInTransition(0))
+                yield break;
+
+            yield return null;
+        }
+    }
+
+    private void FreezeDeathPose()
+    {
+        if (animator == null)
+            return;
+
+        animator.Play(deathStateName, 0, 1f);
+        animator.Update(0f);
+        animator.speed = 0f;
     }
 }

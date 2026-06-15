@@ -20,11 +20,12 @@ public class FollowCamera : MonoBehaviour
     [SerializeField] private CinemachineCamera cinemachineCamera;
     [Tooltip("O quanto vai dar zoom in (subtraído do valor do inspector). Ex: 2 = zoom in de 2 unidades")]
     [SerializeField] private float zoomInAmount = 2f;
-    [SerializeField] private float zoomInDuration = 0.6f;
+    [SerializeField] private float zoomInDuration = 2.5f;
 
     private float _baseSize;
     private float _zoomTimer = 0f;
     private bool _isZooming = false;
+    private Camera _mainCamera;
 
     private Vector3 _shakeOffset = Vector3.zero;
     private float _shakeTimer = 0f;
@@ -38,6 +39,8 @@ public class FollowCamera : MonoBehaviour
 
     private void Start()
     {
+        _mainCamera = GetComponent<Camera>();
+
         if (cinemachineCamera == null)
             cinemachineCamera = FindAnyObjectByType<CinemachineCamera>();
 
@@ -54,11 +57,15 @@ public class FollowCamera : MonoBehaviour
         {
             _zoomTimer += Time.deltaTime;
             float t = Mathf.Clamp01(_zoomTimer / zoomInDuration);
-            float smoothT = 1f - Mathf.Pow(1f - t, 3f);
+            float smoothT = SmoothIntroZoomT(t);
 
+            float size = Mathf.Lerp(_baseSize, _baseSize - zoomInAmount, smoothT);
             var lens = cinemachineCamera.Lens;
-            lens.OrthographicSize = Mathf.Lerp(_baseSize, _baseSize - zoomInAmount, smoothT);
+            lens.OrthographicSize = size;
             cinemachineCamera.Lens = lens;
+
+            if (_mainCamera != null && _mainCamera.orthographic)
+                _mainCamera.orthographicSize = size;
 
             if (t >= 1f)
                 _isZooming = false;
@@ -93,4 +100,7 @@ public class FollowCamera : MonoBehaviour
         _currentShakeDuration = duration < 0f ? shakeDuration : duration;
         _shakeTimer = _currentShakeDuration;
     }
+
+    private static float SmoothIntroZoomT(float t) =>
+        t * t * t * (t * (t * 6f - 15f) + 10f);
 }

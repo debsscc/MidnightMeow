@@ -34,7 +34,8 @@ Para **silenciar** os logs da câmera: no SO, desmarque **Camera Diagnostics** (
 | Campo | Descrição | Valor atual |
 |-------|-----------|-------------|
 | Target group / follow | Como escolhe jogador local | |
-| CameraConfig SO | Se usado | |
+| CameraConfig SO | Se usado | `Assets/Data/Multiplayer/CameraConfig.asset` |
+| **Intro zoom** | Zoom in ao iniciar fase | `playIntroZoom`, `introZoomInAmount` (2), `introZoomDuration` (2.5s) no SO |
 | Bounds / confiner | Limites do mapa | |
 | Prioridades Cinemachine | | |
 | cameraDiagnostics | Logs CAM-DIAG | **false** (padrão) |

@@ -36,6 +36,8 @@ public class MultiplayerGameManager : NetworkBehaviour
         NetworkVariableWritePermission.Server
     );
 
+    private bool _defeatSequenceStarted;
+
     public GameState CurrentState => _networkGameState.Value;
     public int PlayersFighting => _playersFighting.Value;
     public int PlayersAlive => _playersFighting.Value;
@@ -91,6 +93,7 @@ public class MultiplayerGameManager : NetworkBehaviour
     {
         if (!IsServer || _networkGameState.Value != GameState.WaitingForPlayers) return;
 
+        _defeatSequenceStarted = false;
         _playersFighting.Value = NetworkManager.Singleton.ConnectedClientsIds.Count;
         _networkGameState.Value = GameState.Playing;
         Debug.Log($"[MultiplayerGameManager] Jogo iniciado com {_playersFighting.Value} jogador(es).");
@@ -109,8 +112,14 @@ public class MultiplayerGameManager : NetworkBehaviour
     public void RegisterPlayerDowned()
     {
         if (!IsServer) return;
+
+        if (_networkGameState.Value == GameState.WaitingForPlayers)
+            ServerBeginGameplaySession();
+
         _playersFighting.Value = Mathf.Max(0, _playersFighting.Value - 1);
         Debug.Log($"[MultiplayerGameManager] Jogador inconsciente. Em combate: {_playersFighting.Value}");
+
+        TryBeginDefeatSequence();
     }
 
     public void RegisterPlayerRevived()
@@ -185,12 +194,20 @@ public class MultiplayerGameManager : NetworkBehaviour
     private void HandlePlayersFightingChanged(int oldValue, int newValue)
     {
         if (!IsServer) return;
-        if (newValue <= 0 && _networkGameState.Value == GameState.Playing)
-        {
-            StopWaveSpawningOnServer();
-            PlayDefeatAmbienceClientRpc();
-            StartCoroutine(TriggerDefeatRoutine());
-        }
+        if (newValue <= 0 && oldValue > newValue)
+            TryBeginDefeatSequence();
+    }
+
+    private void TryBeginDefeatSequence()
+    {
+        if (_defeatSequenceStarted || !IsServer) return;
+        if (_networkGameState.Value != GameState.Playing) return;
+        if (_playersFighting.Value > 0) return;
+
+        _defeatSequenceStarted = true;
+        StopWaveSpawningOnServer();
+        PlayDefeatAmbienceClientRpc();
+        StartCoroutine(TriggerDefeatRoutine());
     }
 
     private static void StopWaveSpawningOnServer()
@@ -223,8 +240,9 @@ public class MultiplayerGameManager : NetworkBehaviour
     {
         float delay = ResolveDefeatPresentationDelay();
         if (delay > 0f)
-            yield return new WaitForSeconds(delay);
+            yield return new WaitForSecondsRealtime(delay);
 
+        Time.timeScale = 1f;
         _networkGameState.Value = GameState.Defeat;
     }
 
@@ -254,9 +272,7 @@ public class MultiplayerGameManager : NetworkBehaviour
         if (delay <= 0f)
             delay = gameConfig != null ? gameConfig.defeatDelay : 2f;
 
-        delay = Mathf.Max(delay, DeathHordePresentation.DefaultAmbienceEndSeconds);
-
-        return delay;
+        return Mathf.Max(delay, 0.5f);
     }
 
     private static void StopLocalWaveSystemsIfPresent()
@@ -290,6 +306,8 @@ public class MultiplayerGameManager : NetworkBehaviour
 
     private IEnumerator ReturnToPreparationRoutine(GameState endState)
     {
+        Time.timeScale = 1f;
+
         float delay = endState == GameState.Victory
             ? (gameConfig != null ? gameConfig.victoryDelay : 2f)
             : 0f;
