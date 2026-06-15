@@ -8,6 +8,8 @@ Garantir que alterações **não quebrem** lógica pura nem contratos entre comp
 
 - **Unity Test Framework** + **NUnit**
 - Pasta de testes: `Assets/Tests/` (Edit Mode e Play Mode conforme necessidade)
+- Assembly runtime: `Assets/Scripts/MidnightMeow.asmdef` (código do jogo referenciável por testes)
+- Assembly Edit Mode: `MidnightMeow.Tests.EditMode.asmdef` com `includePlatforms: ["Editor"]` (obrigatório para builds IL2CPP)
 
 ## O que testar
 
