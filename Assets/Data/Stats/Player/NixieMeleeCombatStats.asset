@@ -14,12 +14,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MeleeCombatStats
   damage: 1
   attackCooldown: 0.45
-  attackRange: 6
-  attackOriginForwardOffset: 1.15
+  attackRange: 9
+  attackOriginForwardOffset: 0.35
   windupDelay: 0.08
-  nearHalfWidth: 4
-  farHalfWidth: 6
+  nearHalfWidth: 2.2
+  farHalfWidth: 3.4
   knockbackForce: 100
   knockbackDuration: 1
   knockbackDistance: 3
   drawDebugGizmos: 1
+  attackAnimationSpeedMultiplier: 1.55

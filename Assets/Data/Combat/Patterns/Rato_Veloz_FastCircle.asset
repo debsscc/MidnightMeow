@@ -17,7 +17,7 @@ MonoBehaviour:
   stopMovementDuringPattern: 0
   strikes:
   - shape: 0
-    size: {x: 0.85, y: 0.85}
+    size: {x: 1.19, y: 1.19}
     localOffset: {x: 0, y: 0}
     rotationOffsetDegrees: 0
     delayBeforeStart: 0

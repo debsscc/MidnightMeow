@@ -43,9 +43,10 @@ public class NixPushAbilityExecutor : MonoBehaviour, IAbilityExecutor
         Vector2 nixPosition = context.User != null
             ? (Vector2)context.User.transform.position
             : attackOrigin != null ? (Vector2)attackOrigin.position : (Vector2)transform.position;
-        Vector2 origin = attackOrigin != null ? (Vector2)attackOrigin.position : nixPosition;
         Vector2 direction = context.AimDirection.sqrMagnitude > 0.0001f ? context.AimDirection.normalized : Vector2.up;
-        float radius = tierData.range;
+        const float forwardOffset = 1.15f;
+        Vector2 origin = nixPosition + direction * forwardOffset;
+        float radius = tierData.range * 1.35f;
 
         var hits = Physics2D.OverlapCircleAll(origin, radius, enemyLayers);
         var processed = new HashSet<int>();

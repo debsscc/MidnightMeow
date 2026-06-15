@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: PlayerCoreStats
   m_EditorClassIdentifier: Assembly-CSharp::PlayerStats
   maxHealth: 7
-  moveSpeed: 10
+  moveSpeed: 7.5
   maxAmmo: 5
   infinityAmmo: 1
   firePointRadius: 4
@@ -28,6 +28,6 @@ MonoBehaviour:
   damageUpgradeLevel: 0
   fireRateUpgradeLevel: 0
   healthUpgradeLevel: 0
-  dashDuration: 0.3
-  dashSpeed: 18
+  dashDuration: 0.175
+  dashSpeed: 26
   dashCooldown: 1

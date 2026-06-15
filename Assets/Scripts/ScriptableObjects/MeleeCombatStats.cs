@@ -25,4 +25,8 @@ public class MeleeCombatStats : ScriptableObject
 
     [Header("Debug")]
     public bool drawDebugGizmos = true;
+
+    [Header("Animação")]
+    [Tooltip("Multiplicador da velocidade da animação de ataque (1 = padrão).")]
+    [Min(0.1f)] public float attackAnimationSpeedMultiplier = 1f;
 }

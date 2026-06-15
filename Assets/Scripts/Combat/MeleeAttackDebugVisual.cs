@@ -125,6 +125,10 @@ public class MeleeAttackDebugVisual : MonoBehaviour
         if (forward.sqrMagnitude < 0.0001f)
             forward = Vector2.up;
 
+        float offset = stats.attackOriginForwardOffset;
+        if (offset > 0f)
+            origin += forward.normalized * offset;
+
         float z = transform.position.z;
         var corners = MeleeHitUtility.GetTrapezoidWorldCorners(
             origin, forward, stats.attackRange, stats.nearHalfWidth, stats.farHalfWidth, z);

@@ -15,7 +15,7 @@ MonoBehaviour:
   abilityType: 1
   displayName: Empurrao
   tier1:
-    range: 2.5
+    range: 3.5
     damage: 2
     slowMultiplier: 0.75
     slowDuration: 3
@@ -27,7 +27,7 @@ MonoBehaviour:
     areaWidth: 0
     damagePerSecond: 0
   tier2:
-    range: 3.5
+    range: 4.5
     damage: 3
     slowMultiplier: 0.6
     slowDuration: 3
@@ -39,7 +39,7 @@ MonoBehaviour:
     areaWidth: 0
     damagePerSecond: 0
   tier3:
-    range: 4.5
+    range: 5.5
     damage: 4
     slowMultiplier: 0.45
     slowDuration: 3

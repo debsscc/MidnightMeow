@@ -67,7 +67,7 @@ public class NetworkPlayerAbilityRelay : NetworkBehaviour
             if (_shooting != null)
                 _shooting.OnShoot += HandleOwnerAttack;
             if (_melee != null)
-                _melee.OnAttackPerformed += HandleOwnerMeleeAttack;
+                _melee.OnMeleeAttackStarted += HandleOwnerMeleeAttackStarted;
         }
         else if (_animationHandler != null)
         {
@@ -84,7 +84,7 @@ public class NetworkPlayerAbilityRelay : NetworkBehaviour
             if (_shooting != null)
                 _shooting.OnShoot -= HandleOwnerAttack;
             if (_melee != null)
-                _melee.OnAttackPerformed -= HandleOwnerMeleeAttack;
+                _melee.OnMeleeAttackStarted -= HandleOwnerMeleeAttackStarted;
         }
 
         _moveSpeed.OnValueChanged -= HandleMoveSpeedChanged;
@@ -185,15 +185,15 @@ public class NetworkPlayerAbilityRelay : NetworkBehaviour
                 ? networkEnemy.NetworkObject.NetworkObjectId
                 : (ulong)hit.GetInstanceID();
 
-            if (!_chargeDamagedEnemyIds.Add(enemyKey))
-                continue;
-
             var damageable = hit.GetComponentInParent<HealthComponent>();
             if (damageable == null || !damageable.IsAlive)
                 continue;
 
             Vector2 targetPoint = hit.bounds.center;
             if (!RectHitUtility.IsInsideOrientedRect(origin, direction, depth, halfWidth, targetPoint))
+                continue;
+
+            if (!_chargeDamagedEnemyIds.Add(enemyKey))
                 continue;
 
             EnemyCombatUtility.ApplyDamage(damageable.gameObject, damage, instigatorClientId, gameObject);
@@ -217,7 +217,7 @@ public class NetworkPlayerAbilityRelay : NetworkBehaviour
 
     private void HandleOwnerAttack() => _attackSequence.Value++;
 
-    private void HandleOwnerMeleeAttack(Vector2 _, Vector2 __, MeleeCombatStats ___)
+    private void HandleOwnerMeleeAttackStarted()
     {
         if (_dash != null && _dash.IsDashing)
         {

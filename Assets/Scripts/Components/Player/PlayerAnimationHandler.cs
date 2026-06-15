@@ -109,7 +109,7 @@ public class PlayerAnimationHandler : MonoBehaviour
         if (playerShooting != null)
             playerShooting.OnShoot += HandleShoot;
         if (playerMeleeCombat != null)
-            playerMeleeCombat.OnAttackPerformed += HandleMeleeAttack;
+            playerMeleeCombat.OnMeleeAttackStarted += HandleMeleeAttackStarted;
         if (playerAbilityHandler != null)
             playerAbilityHandler.OnAbilityActivated += HandleAbility;
         if (healthComponent != null)
@@ -123,7 +123,7 @@ public class PlayerAnimationHandler : MonoBehaviour
         if (playerShooting != null)
             playerShooting.OnShoot -= HandleShoot;
         if (playerMeleeCombat != null)
-            playerMeleeCombat.OnAttackPerformed -= HandleMeleeAttack;
+            playerMeleeCombat.OnMeleeAttackStarted -= HandleMeleeAttackStarted;
         if (playerAbilityHandler != null)
             playerAbilityHandler.OnAbilityActivated -= HandleAbility;
         if (healthComponent != null)
@@ -140,6 +140,29 @@ public class PlayerAnimationHandler : MonoBehaviour
 
     public void PlayRemoteDashAttackAnimation() => TriggerDashAttackAnimation();
 
+    public void TriggerMeleeAttackAnimation()
+    {
+        if (playerDash != null && playerDash.IsDashing)
+            TriggerDashAttackAnimation();
+        else
+            TriggerAttackAnimation();
+    }
+
+    public float GetMeleeStrikeDelay()
+    {
+        float clipLength = _attackAnimClipLength > 0f ? _attackAnimClipLength : 0.333f;
+        return clipLength / Mathf.Max(0.1f, GetMeleeAttackSpeedMultiplier());
+    }
+
+    private float GetMeleeAttackSpeedMultiplier()
+    {
+        if (playerMeleeCombat == null || playerMeleeCombat.CombatStats == null)
+            return 1f;
+
+        float baseSpeed = _attackAnimClipLength / Mathf.Max(0.1f, playerMeleeCombat.CombatStats.attackCooldown);
+        return baseSpeed * Mathf.Max(0.1f, playerMeleeCombat.CombatStats.attackAnimationSpeedMultiplier);
+    }
+
     private void Update()
     {
         float moveSpeed = _useNetworkMoveSpeed ? _networkMoveSpeed : _rb.linearVelocity.magnitude;
@@ -155,7 +178,7 @@ public class PlayerAnimationHandler : MonoBehaviour
         if (playerShooting != null && playerShooting.BaseFireRate > 0f)
             attackSpeedMult = _attackAnimClipLength * playerShooting.CurrentFireRate;
         else if (playerMeleeCombat != null && playerMeleeCombat.CombatStats != null)
-            attackSpeedMult = _attackAnimClipLength / Mathf.Max(0.1f, playerMeleeCombat.CombatStats.attackCooldown);
+            attackSpeedMult = GetMeleeAttackSpeedMultiplier();
 
         _animator.SetFloat(_hashAttackSpeed, Mathf.Max(0.1f, attackSpeedMult));
     }
@@ -221,13 +244,7 @@ public class PlayerAnimationHandler : MonoBehaviour
 
     private void HandleShoot() => TriggerAttackAnimation();
 
-    private void HandleMeleeAttack(Vector2 origin, Vector2 direction, MeleeCombatStats stats)
-    {
-        if (playerDash != null && playerDash.IsDashing)
-            TriggerDashAttackAnimation();
-        else
-            TriggerAttackAnimation();
-    }
+    private void HandleMeleeAttackStarted() => TriggerMeleeAttackAnimation();
 
     private void TriggerAttackAnimation()
     {

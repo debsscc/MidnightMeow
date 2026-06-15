@@ -1187,7 +1187,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4879470536611371837, guid: 9dfe366e7244702459c1b35aa279dc08, type: 3}
       propertyPath: m_Layer
-      value: 6
+      value: 12
       objectReference: {fileID: 0}
     - target: {fileID: 8739368221720536477, guid: 9dfe366e7244702459c1b35aa279dc08, type: 3}
       propertyPath: m_Size.x
@@ -3450,7 +3450,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4879470536611371837, guid: 9dfe366e7244702459c1b35aa279dc08, type: 3}
       propertyPath: m_Layer
-      value: 6
+      value: 12
       objectReference: {fileID: 0}
     - target: {fileID: 8739368221720536477, guid: 9dfe366e7244702459c1b35aa279dc08, type: 3}
       propertyPath: m_Size.x
@@ -3700,13 +3700,13 @@ PrefabInstance:
       value: 3602628692
       objectReference: {fileID: 0}
     - target: {fileID: 2777443433679010467, guid: ba1a9e415cbbce14a8ef9f713fa8677d, type: 3}
-      propertyPath: 'spawnPoints.Array.data[0]'
-      value: 
-      objectReference: {fileID: 446385847}
-    - target: {fileID: 2777443433679010467, guid: ba1a9e415cbbce14a8ef9f713fa8677d, type: 3}
       propertyPath: spawnPoints.Array.size
       value: 2
       objectReference: {fileID: 0}
+    - target: {fileID: 2777443433679010467, guid: ba1a9e415cbbce14a8ef9f713fa8677d, type: 3}
+      propertyPath: 'spawnPoints.Array.data[0]'
+      value: 
+      objectReference: {fileID: 446385847}
     - target: {fileID: 2777443433679010467, guid: ba1a9e415cbbce14a8ef9f713fa8677d, type: 3}
       propertyPath: 'spawnPoints.Array.data[1]'
       value: 
@@ -3941,7 +3941,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4879470536611371837, guid: 9dfe366e7244702459c1b35aa279dc08, type: 3}
       propertyPath: m_Layer
-      value: 6
+      value: 12
       objectReference: {fileID: 0}
     - target: {fileID: 8739368221720536477, guid: 9dfe366e7244702459c1b35aa279dc08, type: 3}
       propertyPath: m_Size.x
@@ -4209,7 +4209,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4879470536611371837, guid: 9dfe366e7244702459c1b35aa279dc08, type: 3}
       propertyPath: m_Layer
-      value: 6
+      value: 12
       objectReference: {fileID: 0}
     - target: {fileID: 8739368221720536477, guid: 9dfe366e7244702459c1b35aa279dc08, type: 3}
       propertyPath: m_Size.x

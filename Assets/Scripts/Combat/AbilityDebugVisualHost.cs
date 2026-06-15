@@ -109,6 +109,9 @@ public class AbilityDebugVisualHost : MonoBehaviour
         if (_zoneRenderer == null) return;
 
         Transform zoneTransform = _zoneRenderer.transform;
+        if (zoneTransform.parent != null)
+            zoneTransform.SetParent(null, true);
+
         Vector2 forward = snapshot.aimDirection.sqrMagnitude > 0.0001f
             ? snapshot.aimDirection.normalized
             : Vector2.up;
@@ -141,6 +144,8 @@ public class AbilityDebugVisualHost : MonoBehaviour
         if (_zoneRenderer == null) return;
 
         _zoneRenderer.enabled = false;
+        if (transform != null)
+            _zoneRenderer.transform.SetParent(transform, false);
         _zoneRenderer.transform.localPosition = Vector3.zero;
         _zoneRenderer.transform.localRotation = Quaternion.identity;
         _zoneRenderer.transform.localScale = Vector3.one;

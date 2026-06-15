@@ -15,6 +15,7 @@ public class PlayerMeleeCombat : MonoBehaviour
     [SerializeField] private Transform attackOrigin;
     [SerializeField] private bool drawDebugHits = true;
 
+    public event Action OnMeleeAttackStarted;
     public event Action<Vector2, Vector2, MeleeCombatStats> OnAttackPerformed;
 
     public MeleeCombatStats CombatStats => _runtimeCombatStats != null ? _runtimeCombatStats : combatStats;
@@ -22,12 +23,14 @@ public class PlayerMeleeCombat : MonoBehaviour
     private MeleeCombatStats _runtimeCombatStats;
 
     public void ApplyRuntimeStats(MeleeCombatStats runtimeStats) => _runtimeCombatStats = runtimeStats;
-    public Vector2 AttackOriginPosition => attackOrigin != null ? (Vector2)attackOrigin.position : (Vector2)transform.position;
+    public Vector2 AttackOriginPosition => GetBodyPosition();
 
     private PlayerInputHandler _input;
     private PlayerAim _aim;
     private PlayerAbilityHandler _abilityHandler;
     private PlayerPassiveHandler _passiveHandler;
+    private PlayerAnimationHandler _animationHandler;
+    private Rigidbody2D _rb;
     private float _lastAttackTime = -999f;
     private bool _isAttacking;
     private Coroutine _attackRoutine;
@@ -40,6 +43,8 @@ public class PlayerMeleeCombat : MonoBehaviour
         _aim = GetComponent<PlayerAim>();
         _abilityHandler = GetComponent<PlayerAbilityHandler>();
         _passiveHandler = GetComponent<PlayerPassiveHandler>();
+        _animationHandler = GetComponent<PlayerAnimationHandler>();
+        _rb = GetComponent<Rigidbody2D>();
 
         if (attackOrigin == null)
             attackOrigin = transform;
@@ -87,14 +92,28 @@ public class PlayerMeleeCombat : MonoBehaviour
         _isAttacking = true;
         _lastAttackTime = Time.time;
 
-        if (CombatStats.windupDelay > 0f)
-            yield return new WaitForSeconds(CombatStats.windupDelay);
+        OnMeleeAttackStarted?.Invoke();
+
+        float strikeDelay = ResolveMeleeStrikeDelay();
+        if (strikeDelay > 0f)
+            yield return new WaitForSeconds(strikeDelay);
 
         if (!_aim.TryGetAimDirection(out Vector2 direction, out _))
             direction = Vector2.up;
 
         PerformMeleeHit(direction);
         CancelAttackState();
+    }
+
+    private float ResolveMeleeStrikeDelay()
+    {
+        if (_animationHandler != null)
+            return _animationHandler.GetMeleeStrikeDelay();
+
+        if (CombatStats == null)
+            return 0.25f;
+
+        return Mathf.Max(CombatStats.windupDelay, CombatStats.attackCooldown * 0.85f);
     }
 
     private void CancelAttackState()
@@ -171,9 +190,17 @@ public class PlayerMeleeCombat : MonoBehaviour
             $"swing origin={origin} dir={direction}"));
     }
 
+    private Vector2 GetBodyPosition()
+    {
+        if (_rb != null)
+            return _rb.position;
+
+        return transform.position;
+    }
+
     private Vector2 GetSwingOrigin(Vector2 direction)
     {
-        Vector2 origin = AttackOriginPosition;
+        Vector2 origin = GetBodyPosition();
         float offset = CombatStats != null ? CombatStats.attackOriginForwardOffset : 0f;
         if (offset > 0f)
             origin += direction * offset;

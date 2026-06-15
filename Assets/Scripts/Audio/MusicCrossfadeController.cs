@@ -80,6 +80,8 @@ public class MusicCrossfadeController : Singleton<MusicCrossfadeController>
         if (!SceneMusicResolver.TryResolve(scene, out AudioClip clip, out bool loop))
         {
             _pendingClip = null;
+            if (SceneMusicResolver.IsSilentHubScene(scene.name))
+                HandleTransitionFadeOut(defaultFadeSeconds);
             return;
         }
 

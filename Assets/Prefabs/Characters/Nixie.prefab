@@ -5653,7 +5653,7 @@ MonoBehaviour:
   dashGizmoWidth: 0.6
   passThroughLayer:
     serializedVersion: 2
-    m_Bits: 4360
+    m_Bits: 6416
   dashDistanceMultiplier: 1.3
   dashFailsafeExtraSeconds: 0.35
   dashCollider: {fileID: 0}

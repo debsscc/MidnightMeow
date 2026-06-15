@@ -36,8 +36,13 @@ public class CoraDamagePool : MonoBehaviour
         _tierData = tierData;
         _ownerClientId = ownerClientId;
 
+        const float referenceRange = 4f;
+        const float basePrefabScale = 2.42f;
+        float scaleMultiplier = Mathf.Max(0.5f, tierData.range / referenceRange);
+        transform.localScale = Vector3.one * (basePrefabScale * scaleMultiplier);
+
         if (_trigger != null)
-            _trigger.radius = tierData.range;
+            _trigger.radius = tierData.range / (basePrefabScale * scaleMultiplier);
 
         if (_damageRoutine != null)
             StopCoroutine(_damageRoutine);

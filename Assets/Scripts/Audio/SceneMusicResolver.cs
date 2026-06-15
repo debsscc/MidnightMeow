@@ -16,9 +16,15 @@ public static class SceneMusicResolver
         if (!scene.IsValid() || !scene.isLoaded)
             return false;
 
+        if (IsSceneWithoutMusic(scene.name))
+            return false;
+
         GameObject[] roots = scene.GetRootGameObjects();
         for (int i = 0; i < roots.Length; i++)
         {
+            if (!roots[i].activeInHierarchy)
+                continue;
+
             if (TryResolveInHierarchy(roots[i], out clip, out loop))
                 return true;
         }
@@ -41,7 +47,7 @@ public static class SceneMusicResolver
         clip = null;
         loop = true;
 
-        if (root == null)
+        if (root == null || !root.activeInHierarchy)
             return false;
 
         if (IsMusicObject(root.name) && root.TryGetComponent(out AudioSource rootSource))
@@ -54,7 +60,7 @@ public static class SceneMusicResolver
         for (int i = 0; i < sources.Length; i++)
         {
             AudioSource source = sources[i];
-            if (source == null || !IsMusicObject(source.gameObject.name))
+            if (source == null || !source.gameObject.activeInHierarchy || !IsMusicObject(source.gameObject.name))
                 continue;
 
             if (TryReadClip(source, out clip, out loop))
@@ -114,4 +120,9 @@ public static class SceneMusicResolver
         source.Stop();
         source.enabled = false;
     }
+
+    private static bool IsSceneWithoutMusic(string sceneName) => IsSilentHubScene(sceneName);
+
+    public static bool IsSilentHubScene(string sceneName) =>
+        sceneName is "Loading1" or "Loading2" or "Preparation" or "Characters" or "Lobby" or "Menu2";
 }

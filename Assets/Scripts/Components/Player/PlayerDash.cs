@@ -41,6 +41,9 @@ public class PlayerDash : MonoBehaviour
     private AbilityDebugVisualHost _debugHost;
     private Vector2 _currentMoveDirection = Vector2.up;
     private Vector2 _activeDashDirection = Vector2.up;
+    private Vector2 _dashStartPosition;
+    private float _dashTotalDistance;
+    private float _dashDistanceTraveled;
     private bool _isDashing;
     private float _dashTimeRemaining;
     private float _dashSpeedActive;
@@ -116,30 +119,32 @@ public class PlayerDash : MonoBehaviour
         if (!_isDashing || _rb == null) return;
 
         float step = _dashSpeedActive * Time.fixedDeltaTime;
-        if (TryGetBlockingHit(step, out float allowedDistance))
+        float remaining = _dashTotalDistance - _dashDistanceTraveled;
+        if (remaining <= 0f)
         {
-            float travel = Mathf.Max(0f, allowedDistance - dashCollisionSkin);
-            if (travel > 0f)
-                _rb.MovePosition(_rb.position + _activeDashDirection * travel);
-
-            _rb.linearVelocity = Vector2.zero;
-            InterruptDash("collision-block");
+            CompleteDash();
             return;
         }
 
-        _rb.linearVelocity = Vector2.zero;
-        _rb.MovePosition(_rb.position + _activeDashDirection * step);
+        step = Mathf.Min(step, remaining);
+
+        Vector2 nextPosition = _rb.position + _activeDashDirection * step;
+        _rb.MovePosition(nextPosition);
+        SyncTransformFromRigidbody();
+        _dashDistanceTraveled += step;
 
         _dashGhosting?.Sombras_skill();
 
-        _dashTimeRemaining -= Time.fixedDeltaTime;
-        if (_dashTimeRemaining <= 0f)
+        if (_dashDistanceTraveled >= _dashTotalDistance - 0.01f)
             CompleteDash();
     }
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        if (!_isDashing || collision == null || IsPassThroughCollision(collision))
+        if (!_isDashing || collision == null || collision.collider == null || collision.collider.isTrigger)
+            return;
+
+        if (IsPassThroughCollision(collision))
             return;
 
         if (_rb != null && collision.contactCount > 0)
@@ -184,8 +189,7 @@ public class PlayerDash : MonoBehaviour
             return false;
         }
 
-        float duration = (_currentDashDuration > 0f ? _currentDashDuration : stats.dashDuration)
-                         * Mathf.Max(1f, dashDistanceMultiplier);
+        float duration = GetPlannedDashDuration();
         float speed = _currentDashSpeed > 0f ? _currentDashSpeed : stats.dashSpeed;
         if (duration <= 0f || speed <= 0f)
         {
@@ -199,10 +203,11 @@ public class PlayerDash : MonoBehaviour
             return false;
         }
 
-        _activeDashDirection = _currentMoveDirection.sqrMagnitude > 0.0001f
-            ? _currentMoveDirection
-            : Vector2.up;
+        _activeDashDirection = ResolveDashDirection();
 
+        _dashStartPosition = _rb != null ? _rb.position : (Vector2)transform.position;
+        _dashTotalDistance = GetPlannedDashDistance(speed, duration);
+        _dashDistanceTraveled = 0f;
         _dashTimeRemaining = duration;
         _dashSpeedActive = speed;
         _isDashing = true;
@@ -216,10 +221,7 @@ public class PlayerDash : MonoBehaviour
             _rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
 
         if (_debugHost != null)
-        {
-            float distance = speed * duration;
-            _debugHost.ShowDash((Vector2)transform.position, _activeDashDirection, distance, dashGizmoWidth);
-        }
+            _debugHost.ShowDash(_dashStartPosition, _activeDashDirection, _dashTotalDistance, dashGizmoWidth);
 
         OnDashStarted?.Invoke();
         GameplayDiagnosticHub.EmitPlayerDash(new PlayerDashDiagnostic(
@@ -232,10 +234,39 @@ public class PlayerDash : MonoBehaviour
         return true;
     }
 
-    public float GetDashLockDuration()
+    public float GetDashLockDuration() => GetPlannedDashDuration();
+
+    private float GetPlannedDashDuration()
     {
-        if (stats == null) return 0.2f;
-        return _currentDashDuration > 0f ? _currentDashDuration : stats.dashDuration;
+        if (stats == null)
+            return 0.2f;
+
+        float baseDuration = _currentDashDuration > 0f ? _currentDashDuration : stats.dashDuration;
+        return baseDuration * Mathf.Max(1f, dashDistanceMultiplier);
+    }
+
+    private float GetPlannedDashDistance(float speed, float duration) => speed * duration;
+
+    private Vector2 ResolveDashDirection()
+    {
+        if (_currentMoveDirection.sqrMagnitude > 0.0001f)
+            return _currentMoveDirection;
+
+        if (TryGetComponent<PlayerAim>(out var aim) && aim.TryGetAimDirection(out Vector2 aimDirection, out _)
+            && aimDirection.sqrMagnitude > 0.0001f)
+            return aimDirection.normalized;
+
+        return Vector2.up;
+    }
+
+    private void SyncTransformFromRigidbody()
+    {
+        if (_rb == null)
+            return;
+
+        Vector3 synced = _rb.position;
+        synced.z = transform.position.z;
+        transform.position = synced;
     }
 
     private void CompleteDash()
@@ -248,6 +279,8 @@ public class PlayerDash : MonoBehaviour
         RestoreCollisions();
         _isDashing = false;
         _dashTimeRemaining = 0f;
+        _dashDistanceTraveled = 0f;
+        _dashTotalDistance = 0f;
         _dashFailsafeDeadline = -1f;
         _lastDashEndTime = Time.time;
 
@@ -275,6 +308,8 @@ public class PlayerDash : MonoBehaviour
         RestoreCollisions();
         _isDashing = false;
         _dashTimeRemaining = 0f;
+        _dashDistanceTraveled = 0f;
+        _dashTotalDistance = 0f;
         _dashFailsafeDeadline = -1f;
         _lastDashEndTime = Time.time;
 
@@ -420,16 +455,20 @@ public class PlayerDash : MonoBehaviour
     {
         if (!drawDebugGizmos || stats == null) return;
 
-        float duration = _currentDashDuration > 0f ? _currentDashDuration : stats.dashDuration;
+        float duration = GetPlannedDashDuration();
         float speed = _currentDashSpeed > 0f ? _currentDashSpeed : stats.dashSpeed;
-        Vector2 direction = Application.isPlaying ? _activeDashDirection : _currentMoveDirection;
+        Vector2 direction = Application.isPlaying ? _activeDashDirection : ResolveDashDirection();
         if (direction.sqrMagnitude < 0.0001f)
             direction = Vector2.up;
 
+        Vector2 origin = Application.isPlaying && _isDashing
+            ? _dashStartPosition
+            : (_rb != null ? _rb.position : (Vector2)transform.position);
+
         AbilityDebugGizmoUtility.DrawDash(
-            transform.position,
+            origin,
             direction,
-            speed * duration,
+            GetPlannedDashDistance(speed, duration),
             dashGizmoWidth,
             new Color(0.2f, 0.95f, 0.95f, 0.25f),
             new Color(0.6f, 1f, 1f, 0.9f));

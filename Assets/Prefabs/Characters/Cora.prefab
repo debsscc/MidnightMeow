@@ -5451,7 +5451,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerShooting
   projectilePrefab: {fileID: 691743863976024828, guid: eadee2043abe1c540b4356dff9dbd9a7, type: 3}
   firePoint: {fileID: 874212205570085287}
-  baseFireRate: 3
+  baseFireRate: 1.5
   CurrentFireRate: 0
   DamageMultiplier: 1
 --- !u!114 &5631259045198985370
@@ -5686,7 +5686,7 @@ MonoBehaviour:
   dashGizmoWidth: 0.6
   passThroughLayer:
     serializedVersion: 2
-    m_Bits: 4360
+    m_Bits: 6416
   dashDistanceMultiplier: 1
   dashFailsafeExtraSeconds: 0.35
 --- !u!223 &6101838958175283613

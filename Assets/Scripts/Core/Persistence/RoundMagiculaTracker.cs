@@ -55,11 +55,15 @@ public class RoundMagiculaTracker : MonoBehaviour
     private void OnEnable()
     {
         GameEvents.OnCienciaCollected += HandleCollected;
+        MultiplayerGameManager.OnVictory += HandleRoundEnded;
+        MultiplayerGameManager.OnDefeat += HandleRoundEnded;
     }
 
     private void OnDisable()
     {
         GameEvents.OnCienciaCollected -= HandleCollected;
+        MultiplayerGameManager.OnVictory -= HandleRoundEnded;
+        MultiplayerGameManager.OnDefeat -= HandleRoundEnded;
     }
 
     public void ResetRound()
@@ -76,6 +80,8 @@ public class RoundMagiculaTracker : MonoBehaviour
         _roundTotal += amount;
         OnRoundTotalChanged?.Invoke(_roundTotal);
     }
+
+    private void HandleRoundEnded() => CommitToSave();
 
     public void CommitToSave()
     {
