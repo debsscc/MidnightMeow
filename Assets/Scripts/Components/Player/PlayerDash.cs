@@ -49,6 +49,11 @@ public class PlayerDash : MonoBehaviour
     private float _dashSpeedActive;
     private float _lastDashEndTime = -Mathf.Infinity;
     private float _dashFailsafeDeadline = -1f;
+    private int _currentCharges;
+    private int _maxDashCharges = 1;
+    private int _bonusDashCharges;
+    private int _pendingRecharges;
+    private float _nextRechargeTime = -Mathf.Infinity;
     private int[] _ignoredLayers = Array.Empty<int>();
     private int _playerLayer;
     private ContactFilter2D _blockFilter;
@@ -60,13 +65,19 @@ public class PlayerDash : MonoBehaviour
     public float GetCooldownDuration() =>
         _currentDashCooldown > 0f ? _currentDashCooldown : stats != null ? stats.dashCooldown : 1f;
 
+    public int GetMaxCharges() => Mathf.Max(1, _maxDashCharges + _bonusDashCharges);
+
+    public int GetChargesRemaining() => _currentCharges;
+
     public float GetCooldownRemaining()
     {
-        if (stats == null)
+        if (_currentCharges > 0)
             return 0f;
 
-        float cooldown = GetCooldownDuration();
-        return Mathf.Max(0f, _lastDashEndTime + cooldown - Time.time);
+        if (_pendingRecharges <= 0)
+            return 0f;
+
+        return Mathf.Max(0f, _nextRechargeTime - Time.time);
     }
 
     private void Awake()
@@ -108,10 +119,27 @@ public class PlayerDash : MonoBehaviour
 
     private void Update()
     {
+        UpdateChargeRecharge();
+
         if (!_isDashing || _dashFailsafeDeadline < 0f) return;
 
         if (Time.unscaledTime > _dashFailsafeDeadline)
             InterruptDash("failsafe-timeout");
+    }
+
+    private void UpdateChargeRecharge()
+    {
+        if (_pendingRecharges <= 0 || _currentCharges >= GetMaxCharges())
+            return;
+
+        if (Time.time < _nextRechargeTime)
+            return;
+
+        _currentCharges++;
+        _pendingRecharges--;
+
+        if (_pendingRecharges > 0 && _currentCharges < GetMaxCharges())
+            _nextRechargeTime = Time.time + GetCooldownDuration();
     }
 
     private void FixedUpdate()
@@ -176,8 +204,8 @@ public class PlayerDash : MonoBehaviour
         if (_networkObject != null && _networkObject.IsSpawned && !_networkObject.IsOwner)
             return false;
 
-        float cooldown = _currentDashCooldown > 0f ? _currentDashCooldown : stats.dashCooldown;
-        if (Time.time < _lastDashEndTime + cooldown)
+        float cooldown = GetCooldownDuration();
+        if (_currentCharges <= 0)
         {
             GameplayDiagnosticHub.EmitPlayerDash(new PlayerDashDiagnostic(
                 gameObject.name,
@@ -283,6 +311,7 @@ public class PlayerDash : MonoBehaviour
         _dashTotalDistance = 0f;
         _dashFailsafeDeadline = -1f;
         _lastDashEndTime = Time.time;
+        ConsumeDashCharge();
 
         OnDashEnded?.Invoke();
         GameplayDiagnosticHub.EmitPlayerDash(new PlayerDashDiagnostic(
@@ -312,6 +341,7 @@ public class PlayerDash : MonoBehaviour
         _dashTotalDistance = 0f;
         _dashFailsafeDeadline = -1f;
         _lastDashEndTime = Time.time;
+        ConsumeDashCharge();
 
         OnDashEnded?.Invoke();
         GameplayDiagnosticHub.EmitPlayerDash(new PlayerDashDiagnostic(
@@ -442,6 +472,29 @@ public class PlayerDash : MonoBehaviour
         _currentDashSpeed = stats.dashSpeed;
         _currentDashCooldown = stats.dashCooldown;
         _currentDashDuration = stats.dashDuration;
+        _maxDashCharges = Mathf.Max(1, stats.maxDashCharges);
+        if (!Application.isPlaying || _currentCharges <= 0)
+            _currentCharges = GetMaxCharges();
+    }
+
+    private void ConsumeDashCharge()
+    {
+        if (_currentCharges > 0)
+            _currentCharges--;
+
+        if (_currentCharges >= GetMaxCharges())
+            return;
+
+        if (_pendingRecharges <= 0)
+            _nextRechargeTime = Time.time + GetCooldownDuration();
+
+        _pendingRecharges++;
+    }
+
+    public void SetDashChargeBonus(int extraCharges)
+    {
+        _bonusDashCharges = Mathf.Max(0, extraCharges);
+        _currentCharges = Mathf.Min(GetMaxCharges(), Mathf.Max(_currentCharges, 1));
     }
 
     public void SetDashUpgrades(float extraSpeed, float cooldownReduction)

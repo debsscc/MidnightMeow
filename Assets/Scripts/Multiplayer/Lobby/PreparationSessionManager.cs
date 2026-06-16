@@ -22,13 +22,21 @@ public class PreparationSessionManager : NetworkBehaviour
         NetworkVariableReadPermission.Everyone,
         NetworkVariableWritePermission.Server);
 
+    private readonly NetworkVariable<bool> _contractConfirmed = new NetworkVariable<bool>(
+        false,
+        NetworkVariableReadPermission.Everyone,
+        NetworkVariableWritePermission.Server);
+
+    private readonly NetworkVariable<int> _startCountdown = new NetworkVariable<int>(
+        -1,
+        NetworkVariableReadPermission.Everyone,
+        NetworkVariableWritePermission.Server);
+
     private readonly NetworkList<PreparationPlayerState> _players = new NetworkList<PreparationPlayerState>(
         readPerm: NetworkVariableReadPermission.Everyone,
         writePerm: NetworkVariableWritePermission.Server);
 
     public event Action OnPreparationStateChanged;
-
-    private int _clientContractIndex = -1;
 
     public int SelectedContractIndex
     {
@@ -42,6 +50,12 @@ public class PreparationSessionManager : NetworkBehaviour
     }
 
     public NetworkList<PreparationPlayerState> Players => _players;
+
+    public bool ContractConfirmed => _contractConfirmed.Value;
+    public int StartCountdown => _startCountdown.Value;
+
+    private int _clientContractIndex = -1;
+    private Coroutine _countdownCoroutine;
 
     private void Awake()
     {
@@ -62,6 +76,8 @@ public class PreparationSessionManager : NetworkBehaviour
         DontDestroyOnLoad(gameObject);
 
         _selectedContractIndex.OnValueChanged += HandleContractChanged;
+        _contractConfirmed.OnValueChanged += HandleContractConfirmedChanged;
+        _startCountdown.OnValueChanged += HandleCountdownChanged;
         _players.OnListChanged += HandleListChanged;
 
         if (IsServer && NetworkManager != null)
@@ -82,6 +98,8 @@ public class PreparationSessionManager : NetworkBehaviour
     public override void OnNetworkDespawn()
     {
         _selectedContractIndex.OnValueChanged -= HandleContractChanged;
+        _contractConfirmed.OnValueChanged -= HandleContractConfirmedChanged;
+        _startCountdown.OnValueChanged -= HandleCountdownChanged;
         _players.OnListChanged -= HandleListChanged;
 
         if (IsServer && NetworkManager != null)
@@ -107,8 +125,36 @@ public class PreparationSessionManager : NetworkBehaviour
             return;
 
         _selectedContractIndex.Value = contractIndex;
+        _contractConfirmed.Value = false;
+        _startCountdown.Value = -1;
         ClearAllReady();
         BroadcastHubStateChanged();
+    }
+
+    [Rpc(SendTo.Server)]
+    public void RequestConfirmContractRpc(RpcParams rpcParams = default)
+    {
+        ulong caller = rpcParams.Receive.SenderClientId;
+        if (NetworkManager.Singleton != null && caller != NetworkManager.ServerClientId)
+            return;
+
+        if (_selectedContractIndex.Value < 0)
+        {
+            NotifyFeedbackClientRpc("Escolha um contrato antes de confirmar.", CreateTargetClientParams(caller));
+            return;
+        }
+
+        _contractConfirmed.Value = true;
+        _startCountdown.Value = -1;
+        ClearAllReady();
+        BroadcastHubStateChanged();
+        NotifyContractConfirmedClientRpc();
+    }
+
+    [ClientRpc]
+    private void NotifyContractConfirmedClientRpc()
+    {
+        ScreenFlowStateMachine.OpenCharactersFromPreparation();
     }
 
     [Rpc(SendTo.Server)]
@@ -144,8 +190,37 @@ public class PreparationSessionManager : NetworkBehaviour
         _players[index] = state;
 
         if (isReady && AreAllReady())
-            BeginLoading2();
+        {
+            if (_startCountdown.Value < 0)
+                BeginStartCountdown();
+        }
+        else if (!isReady)
+        {
+            CancelStartCountdown();
+        }
 
+        BroadcastHubStateChanged();
+    }
+
+    [Rpc(SendTo.Server)]
+    public void RequestClearCharacterRpc(RpcParams rpcParams = default)
+    {
+        ulong caller = rpcParams.Receive.SenderClientId;
+        int index = FindPlayerIndex(caller);
+        if (index < 0)
+            return;
+
+        PreparationPlayerState state = _players[index];
+        if (state.CharacterType == LobbyCharacterType.Default)
+            return;
+
+        state.CharacterType = LobbyCharacterType.Default;
+        state.IsReady = false;
+        _players[index] = state;
+
+        CancelStartCountdown();
+        PushCharactersSessionSnapshot();
+        LobbySelectionStore.CaptureFromPreparation(_players);
         BroadcastHubStateChanged();
     }
 
@@ -164,6 +239,24 @@ public class PreparationSessionManager : NetworkBehaviour
         if (type == LobbyCharacterType.Default)
             return false;
 
+        int index = EnsurePlayerIndex(clientId);
+        if (index < 0)
+            return false;
+
+        PreparationPlayerState state = _players[index];
+
+        if (state.CharacterType == type)
+        {
+            state.CharacterType = LobbyCharacterType.Default;
+            state.IsReady = false;
+            _players[index] = state;
+            CancelStartCountdown();
+            PushCharactersSessionSnapshot();
+            LobbySelectionStore.CaptureFromPreparation(_players);
+            BroadcastHubStateChanged();
+            return true;
+        }
+
         if (IsCharacterTakenByOther(clientId, type))
         {
             if (notifyOnError)
@@ -171,15 +264,11 @@ public class PreparationSessionManager : NetworkBehaviour
             return false;
         }
 
-        int index = EnsurePlayerIndex(clientId);
-        if (index < 0)
-            return false;
-
-        PreparationPlayerState state = _players[index];
         state.CharacterType = type;
         state.IsReady = false;
         _players[index] = state;
 
+        CancelStartCountdown();
         PushCharactersSessionSnapshot();
         ApplyCharacterToSave(clientId, type);
         LobbySelectionStore.CaptureFromPreparation(_players);
@@ -272,8 +361,8 @@ public class PreparationSessionManager : NetworkBehaviour
 
     private string ValidateReady(ulong callerId)
     {
-        if (_selectedContractIndex.Value < 0)
-            return "Escolha um contrato antes de confirmar.";
+        if (!_contractConfirmed.Value)
+            return "Aguarde o host confirmar o contrato.";
 
         int index = FindPlayerIndex(callerId);
         if (index < 0)
@@ -311,6 +400,9 @@ public class PreparationSessionManager : NetworkBehaviour
             return;
 
         _selectedContractIndex.Value = -1;
+        _contractConfirmed.Value = false;
+        _startCountdown.Value = -1;
+        CancelStartCountdown();
         for (int i = 0; i < _players.Count; i++)
         {
             PreparationPlayerState state = _players[i];
@@ -320,6 +412,46 @@ public class PreparationSessionManager : NetworkBehaviour
         }
 
         GameSessionContext.ResetContractRound();
+    }
+
+    private void BeginStartCountdown()
+    {
+        if (!IsServer || _countdownCoroutine != null)
+            return;
+
+        _countdownCoroutine = StartCoroutine(StartCountdownRoutine());
+    }
+
+    private void CancelStartCountdown()
+    {
+        if (!IsServer)
+            return;
+
+        if (_countdownCoroutine != null)
+        {
+            StopCoroutine(_countdownCoroutine);
+            _countdownCoroutine = null;
+        }
+
+        _startCountdown.Value = -1;
+    }
+
+    private System.Collections.IEnumerator StartCountdownRoutine()
+    {
+        for (int seconds = 5; seconds >= 0; seconds--)
+        {
+            _startCountdown.Value = seconds;
+            OnPreparationStateChanged?.Invoke();
+            BroadcastHubStateChanged();
+
+            if (seconds == 0)
+                break;
+
+            yield return new WaitForSeconds(1f);
+        }
+
+        _countdownCoroutine = null;
+        BeginLoading2();
     }
 
     private void BeginLoading2()
@@ -355,7 +487,7 @@ public class PreparationSessionManager : NetworkBehaviour
 
     private bool AreAllReady()
     {
-        if (_selectedContractIndex.Value < 0)
+        if (!_contractConfirmed.Value)
             return false;
 
         int required = GameSessionContext.IsSinglePlayer ? 1 : minimumPlayersToProceed;
@@ -469,6 +601,13 @@ public class PreparationSessionManager : NetworkBehaviour
         CharactersSessionManager.Instance?.EnsurePlayerEntry(clientId);
         return FindPlayerIndex(clientId);
     }
+
+    private void HandleContractConfirmedChanged(bool _, bool next)
+    {
+        OnPreparationStateChanged?.Invoke();
+    }
+
+    private void HandleCountdownChanged(int _, int next) => OnPreparationStateChanged?.Invoke();
 
     private void HandleContractChanged(int _, int next)
     {

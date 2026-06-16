@@ -30,6 +30,10 @@ public class EnemyStats : ScriptableObject
 
     [Header("Health")]
     public float maxHealth = 50f;
+
+    [Tooltip("Redução percentual (0–1) do dano de ataques Ranged.")]
+    [Range(0f, 1f)]
+    public float rangedDefense;
     [Tooltip("Segundos após a morte até o prefab ser removido da rede (despawn).")]
     public float deathDespawnDelay = 0.4f;
 

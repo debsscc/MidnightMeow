@@ -331,12 +331,11 @@ public class MainMenuController : MonoBehaviour
             new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(left, -y - height), new Vector2(left + width, -y));
         y += height + gap;
 
-        playtestFeedbackButton = ScreenFlowPlaceholderFactory.CreateButton(panel.transform, "Feedback Playtest",
-            new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(left, -y - height), new Vector2(left + width, -y));
-        y += height + gap;
-
         quitButton = ScreenFlowPlaceholderFactory.CreateButton(panel.transform, "Sair",
             new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(left, -y - height), new Vector2(left + width, -y));
+
+        playtestFeedbackButton = ScreenFlowPlaceholderFactory.CreateButton(panel.transform, "Feedback Playtest",
+            new Vector2(1f, 0f), new Vector2(1f, 0f), new Vector2(-304f, 24f), new Vector2(-24f, 96f));
 
         return panel;
     }

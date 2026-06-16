@@ -341,7 +341,7 @@ public class Projectile : MonoBehaviour
     private bool ApplyDamageToHealth(HealthComponent health)
     {
         if (health == null || health.IsDead) return false;
-        health.TakeDamage(stats.damage * _damageMultiplier, gameObject);
+        health.TakeDamage(stats.damage * _damageMultiplier, gameObject, DamageType.Ranged);
         return true;
     }
 

@@ -11,6 +11,7 @@ public class healthBarUi : MonoBehaviour
 
     private void OnEnable()
     {
+        GameplaySceneBootstrap.TryEnsureGameplayHud();
         GameEvents.OnPlayerHealthChanged += UpdateHealthBar;
         NetworkPlayerHealth.OnNetworkHealthChanged += HandleNetworkHealthChanged;
         NetworkPlayerController.OnLocalPlayerSpawned += HandleLocalPlayerSpawned;

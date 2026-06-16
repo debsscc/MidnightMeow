@@ -339,13 +339,41 @@ public class MultiplayerCameraController : MonoBehaviour
         if (!useDirectCameraFollow && !_useFallbackFollow)
             return;
 
-        Vector3 desired = new Vector3(_currentTarget.position.x, _currentTarget.position.y, GetGameplayCameraZ());
+        Vector3 desired = ComputeEdgeFollowPosition();
         desired = ClampCameraPosition(desired);
+        float smoothing = config != null ? config.edgePanSmoothing : 15f;
         Vector3 next = Vector3.Lerp(
             _mainCam.transform.position,
             desired,
-            Time.deltaTime * 15f);
+            Time.deltaTime * smoothing);
         _mainCam.transform.position = ClampCameraPosition(next);
+    }
+
+    private Vector3 ComputeEdgeFollowPosition()
+    {
+        Vector3 playerPos = _currentTarget.position;
+        float z = GetGameplayCameraZ();
+
+        if (config == null || _mainCam == null)
+            return new Vector3(playerPos.x, playerPos.y, z);
+
+        Vector3 camPos = _mainCam.transform.position;
+        float halfHeight = GetActiveOrthographicSize();
+        float halfWidth = halfHeight * GetActiveAspect();
+        float marginX = halfWidth * (1f - config.edgeDeadZoneX * 2f);
+        float marginY = halfHeight * (1f - config.edgeDeadZoneY * 2f);
+
+        float targetX = camPos.x;
+        float targetY = camPos.y;
+        float deltaX = playerPos.x - camPos.x;
+        float deltaY = playerPos.y - camPos.y;
+
+        if (Mathf.Abs(deltaX) > marginX)
+            targetX = playerPos.x - Mathf.Sign(deltaX) * marginX;
+        if (Mathf.Abs(deltaY) > marginY)
+            targetY = playerPos.y - Mathf.Sign(deltaY) * marginY;
+
+        return new Vector3(targetX, targetY, z);
     }
 
     private float GetGameplayCameraZ()

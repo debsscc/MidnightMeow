@@ -18,7 +18,8 @@ public class FollowCamera : MonoBehaviour
 
     [Header("Zoom Inicial")]
     [SerializeField] private CinemachineCamera cinemachineCamera;
-    [Tooltip("O quanto vai dar zoom in (subtraído do valor do inspector). Ex: 2 = zoom in de 2 unidades")]
+    [SerializeField] private CameraConfig cameraConfig;
+    [Tooltip("Usado só se CameraConfig não estiver atribuído.")]
     [SerializeField] private float zoomInAmount = 2f;
     [SerializeField] private float zoomInDuration = 2.5f;
 
@@ -41,14 +42,40 @@ public class FollowCamera : MonoBehaviour
     {
         _mainCamera = GetComponent<Camera>();
 
+        if (cameraConfig == null)
+            cameraConfig = ResolveCameraConfig();
+
         if (cinemachineCamera == null)
             cinemachineCamera = FindAnyObjectByType<CinemachineCamera>();
 
         if (cinemachineCamera != null)
         {
+            if (cameraConfig != null)
+            {
+                var lens = cinemachineCamera.Lens;
+                lens.OrthographicSize = cameraConfig.defaultOrthographicSize;
+                cinemachineCamera.Lens = lens;
+                if (_mainCamera != null && _mainCamera.orthographic)
+                    _mainCamera.orthographicSize = cameraConfig.defaultOrthographicSize;
+                zoomInAmount = cameraConfig.introZoomInAmount;
+                zoomInDuration = cameraConfig.introZoomDuration;
+            }
+
             _baseSize = cinemachineCamera.Lens.OrthographicSize;
-            _isZooming = true;
+            _isZooming = cameraConfig == null || cameraConfig.playIntroZoom;
         }
+    }
+
+    private static CameraConfig ResolveCameraConfig()
+    {
+        CameraConfig[] configs = Resources.FindObjectsOfTypeAll<CameraConfig>();
+        for (int i = 0; i < configs.Length; i++)
+        {
+            if (configs[i] != null && configs[i].name == "CameraConfig")
+                return configs[i];
+        }
+
+        return configs.Length > 0 ? configs[0] : null;
     }
 
     void Update()

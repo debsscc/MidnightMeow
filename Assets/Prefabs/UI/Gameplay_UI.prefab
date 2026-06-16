@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 637089848194797133}
   - component: {fileID: 6919393656178867644}
   - component: {fileID: 1903840129259070308}
+  - component: {fileID: 8822334455667788990}
   m_Layer: 5
   m_Name: Gameplay_UI
   m_TagString: Untagged
@@ -28,7 +29,7 @@ RectTransform:
   m_GameObject: {fileID: 865996226094126822}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 221789382818177665}
@@ -105,6 +106,23 @@ MonoBehaviour:
   m_BlockingMask:
     serializedVersion: 2
     m_Bits: 4294967295
+--- !u!114 &8822334455667788990
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 865996226094126822}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d4e5f6a7b8c9401d9e0f1a2b3c4d5e6f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameplayHudController
+  waveIndicator: {fileID: 0}
+  abilityHud: {fileID: 0}
+  feedbackButton: {fileID: 0}
+  offscreenIndicator: {fileID: 0}
+  visualTheme: {fileID: 0}
 --- !u!1 &3816010287555567685
 GameObject:
   m_ObjectHideFlags: 0

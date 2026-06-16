@@ -66,7 +66,15 @@ public class HealthComponent : MonoBehaviour, IDamageable
 
     public void TakeDamage(float amount, GameObject instigator)
     {
+        TakeDamage(amount, instigator, DamageType.Generic);
+    }
+
+    public void TakeDamage(float amount, GameObject instigator, DamageType damageType)
+    {
         if (_isDead || amount <= 0f || IsInvulnerable) return;
+
+        amount = DamageDefenseUtility.ApplyDefense(amount, damageType, DamageDefenseUtility.ResolveEnemyStats(gameObject));
+        if (amount <= 0f) return;
 
         _currentHealth -= amount;
         _currentHealth = Mathf.Clamp(_currentHealth, 0f, _maxHealth);

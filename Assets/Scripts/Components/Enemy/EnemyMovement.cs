@@ -12,6 +12,8 @@ public class EnemyMovement : MonoBehaviour
 {
     [SerializeField] private EnemyStats stats;
 
+    public EnemyStats Stats => stats;
+
     private NavMeshAgent _agent;
     private EnemyTargetFinder _targetFinder;
     private EnemyHitStun _hitStun;

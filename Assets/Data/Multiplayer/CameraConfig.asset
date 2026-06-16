@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3f8ee803f6715ab49befd15d93bfa073, type: 3}
   m_Name: CameraConfig
   m_EditorClassIdentifier: Assembly-CSharp::CameraConfig
-  defaultOrthographicSize: 5
+  defaultOrthographicSize: 8
   followDampingX: 1.09
   followDampingY: 3.26
   followOffset: {x: 0, y: 0, z: -10}
@@ -22,7 +22,7 @@ MonoBehaviour:
   maxOrthographicSize: 30
   zoomLerpSpeed: 13.14
   playIntroZoom: 1
-  introZoomInAmount: 5
+  introZoomInAmount: 2
   introZoomDuration: 2.5
   shakeLightIntensity: 0
   shakeLightDuration: 0
@@ -59,3 +59,6 @@ MonoBehaviour:
   cutsceneHoldDuration: 1.5
   damageVignetteColor: {r: 0.8, g: 0, b: 0, a: 0.4}
   damageFlashDuration: 0.336
+  edgeDeadZoneX: 0.22
+  edgeDeadZoneY: 0.18
+  edgePanSmoothing: 8

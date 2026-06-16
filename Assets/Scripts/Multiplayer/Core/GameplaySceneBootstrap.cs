@@ -21,9 +21,56 @@ public static class GameplaySceneBootstrap
         RoundMagiculaTracker.EnsureExists();
         RoundMagiculaTracker.Instance?.ResetRound();
 
-        Canvas hudCanvas = Object.FindFirstObjectByType<Canvas>();
+        TryEnsureGameplayHud();
+    }
+
+    public static void TryEnsureGameplayHud()
+    {
+        if (!IsGameplayScene(SceneManager.GetActiveScene().name))
+            return;
+
+        Canvas hudCanvas = ResolveGameplayHudCanvas();
         if (hudCanvas != null)
-            PlayerAbilityHud.EnsureOnCanvas(hudCanvas);
+            EnsureGameplayHudWidgets(hudCanvas);
+    }
+
+    private static void EnsureGameplayHudWidgets(Canvas hudCanvas)
+    {
+        if (hudCanvas == null)
+            return;
+
+        if (hudCanvas.transform.localScale.sqrMagnitude < 0.01f)
+            hudCanvas.transform.localScale = Vector3.one;
+
+        GameplayHudController controller = hudCanvas.GetComponent<GameplayHudController>();
+        if (controller == null)
+            controller = hudCanvas.gameObject.AddComponent<GameplayHudController>();
+        else
+            controller.EnsureWidgets();
+    }
+
+    private static Canvas ResolveGameplayHudCanvas()
+    {
+        Canvas[] canvases = Object.FindObjectsByType<Canvas>(FindObjectsSortMode.None);
+        for (int i = 0; i < canvases.Length; i++)
+        {
+            if (canvases[i] != null && canvases[i].name == "Gameplay_UI")
+                return canvases[i];
+        }
+
+        for (int i = 0; i < canvases.Length; i++)
+        {
+            Canvas canvas = canvases[i];
+            if (canvas == null)
+                continue;
+
+            if (canvas.GetComponent<GameplayHudController>() != null
+                || canvas.GetComponentInChildren<HordeIndicator>(true) != null
+                || canvas.GetComponentInChildren<healthBarUi>(true) != null)
+                return canvas;
+        }
+
+        return Object.FindFirstObjectByType<Canvas>();
     }
 
     /// <summary>Garante que o rig existe e está ativo, sem rebind (seguro para TryBindCameraNow).</summary>

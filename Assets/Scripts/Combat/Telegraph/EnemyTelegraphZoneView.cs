@@ -56,13 +56,23 @@ public class EnemyTelegraphZoneView : MonoBehaviour
     {
         if (_materialInstance != null) return;
 
-        var shader = Shader.Find("MidnightMeow/TelegraphFill");
-        if (shader == null)
-            shader = Shader.Find("Sprites/Default");
-
+        Shader shader = ResolveTelegraphShader();
         _materialInstance = new Material(shader);
         _renderer.material = _materialInstance;
         _renderer.color = Color.white;
+    }
+
+    private static Shader ResolveTelegraphShader()
+    {
+        Material template = Resources.Load<Material>("TelegraphZoneMaterial");
+        if (template != null && template.shader != null)
+            return template.shader;
+
+        Shader shader = Shader.Find("MidnightMeow/TelegraphFill");
+        if (shader != null)
+            return shader;
+
+        return Shader.Find("Sprites/Default");
     }
 
     private void OnDestroy()

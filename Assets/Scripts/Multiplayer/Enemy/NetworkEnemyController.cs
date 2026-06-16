@@ -352,7 +352,7 @@ public class NetworkEnemyController : NetworkBehaviour
         _health.ApplyNetworkMirror(current, max, isDead);
     }
 
-    public bool ServerApplyDamage(float amount, ulong instigatorClientId)
+    public bool ServerApplyDamage(float amount, ulong instigatorClientId, DamageType damageType = DamageType.Generic)
     {
         if (!IsServer)
         {
@@ -385,7 +385,7 @@ public class NetworkEnemyController : NetworkBehaviour
 
         float before = _health.CurrentHealth;
         _lastInstigatorClientId = instigatorClientId;
-        _health.TakeDamage(amount, gameObject);
+        _health.TakeDamage(amount, gameObject, damageType);
 
         if (_health.IsDead)
             FinalizeDeathOnServer();
@@ -635,9 +635,9 @@ public class NetworkEnemyController : NetworkBehaviour
     }
 
     [Rpc(SendTo.Server)]
-    public void TakeDamageRpc(float amount, ulong instigatorClientId)
+    public void TakeDamageRpc(float amount, ulong instigatorClientId, DamageType damageType = DamageType.Generic)
     {
-        ServerApplyDamage(amount, instigatorClientId);
+        ServerApplyDamage(amount, instigatorClientId, damageType);
     }
 
     private void SetAIComponentsActive(bool active)

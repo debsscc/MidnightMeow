@@ -110,6 +110,19 @@ public class CameraConfig : ScriptableObject
     [Tooltip("Duração do flash de dano em segundos.")]
     [Range(0f, 1f)]
     public float damageFlashDuration = 0.2f;
+
+    [Header("Dead Zone — Pan suave nas bordas")]
+    [Tooltip("Fração horizontal do viewport (0–0.5) onde a câmera não se move até o jogador ultrapassar.")]
+    [Range(0f, 0.45f)]
+    public float edgeDeadZoneX = 0.22f;
+
+    [Tooltip("Fração vertical do viewport (0–0.5) onde a câmera não se move até o jogador ultrapassar.")]
+    [Range(0f, 0.45f)]
+    public float edgeDeadZoneY = 0.18f;
+
+    [Tooltip("Suavização do deslocamento da câmera ao sair da dead zone.")]
+    [Range(1f, 25f)]
+    public float edgePanSmoothing = 8f;
 }
 
 /// <summary>

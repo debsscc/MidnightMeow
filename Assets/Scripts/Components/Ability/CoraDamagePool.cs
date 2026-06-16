@@ -96,7 +96,7 @@ public class CoraDamagePool : MonoBehaviour
             var health = hit.GetComponentInParent<HealthComponent>();
             if (health == null || !health.IsAlive) continue;
 
-            EnemyCombatUtility.ApplyDamage(health.gameObject, damage, _ownerClientId, gameObject);
+            EnemyCombatUtility.ApplyDamage(health.gameObject, damage, _ownerClientId, gameObject, DamageType.Ranged);
         }
     }
 

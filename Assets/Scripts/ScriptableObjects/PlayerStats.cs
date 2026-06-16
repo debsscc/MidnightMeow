@@ -51,4 +51,8 @@ public class PlayerStats : ScriptableObject
     
     [Tooltip("Tempo de recarga (cooldown) do dash em segundos.")]
     public float dashCooldown = 1f;
+
+    [Tooltip("Cargas máximas de dash antes de esperar recarga.")]
+    [Min(1)]
+    public int maxDashCharges = 1;
 }

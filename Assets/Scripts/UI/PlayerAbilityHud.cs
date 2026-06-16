@@ -1,4 +1,3 @@
-using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -16,11 +15,14 @@ public class PlayerAbilityHud : MonoBehaviour
         public Image Background;
         public Image CooldownFill;
         public Image LockOverlay;
-        public TMP_Text Label;
-        public TMP_Text Timer;
+        public Text Label;
+        public Text Timer;
     }
 
+    private static Font _runtimeFont;
+
     [Header("Arte opcional (substitui fallback quando atribuído)")]
+    [SerializeField] private PlayerAbilityHudTheme theme;
     [SerializeField] private Sprite passiveIcon;
     [SerializeField] private Sprite dashIcon;
     [SerializeField] private Sprite ability1Icon;
@@ -51,32 +53,87 @@ public class PlayerAbilityHud : MonoBehaviour
 
     private void Awake()
     {
-        if (buildIfMissing && _root == null)
+        ResolveThemeIcons();
+        EnsureBuilt();
+    }
+
+    public void EnsureBuilt()
+    {
+        if (_slots[0] != null)
+            return;
+
+        if (buildIfMissing)
             BuildUi();
+    }
+
+    private void ResolveThemeIcons()
+    {
+        if (theme == null)
+            theme = Resources.Load<PlayerAbilityHudTheme>("DefaultPlayerAbilityHudTheme");
+
+        if (theme == null)
+            return;
+
+        if (passiveIcon == null) passiveIcon = theme.passiveIcon;
+        if (dashIcon == null) dashIcon = theme.dashIcon;
+        if (ability1Icon == null) ability1Icon = theme.ability1Icon;
+        if (ability2Icon == null) ability2Icon = theme.ability2Icon;
     }
 
     private void LateUpdate()
     {
-        if (_abilityHandler == null)
-        {
-            TryBindLocalPlayer();
-            if (_abilityHandler == null)
-                return;
-        }
+        TryBindLocalPlayer();
+        EnsureBuilt();
 
         RefreshPassiveSlot();
-        RefreshSlot(_slots[1], AbilitySlot.Dash, "Dash", GetDashCooldownRemaining(), GetDashCooldownTotal());
-        RefreshSlot(_slots[2], AbilitySlot.Ability1, "Q", _abilityHandler.GetCooldownRemaining(AbilitySlot.Ability1), _abilityHandler.GetCooldownTotal(AbilitySlot.Ability1));
-        RefreshSlot(_slots[3], AbilitySlot.Ability2, "R", _abilityHandler.GetCooldownRemaining(AbilitySlot.Ability2), _abilityHandler.GetCooldownTotal(AbilitySlot.Ability2));
+        RefreshDashSlot();
+        RefreshAbilitySlot(_slots[2], AbilitySlot.Ability1, "Q");
+        RefreshAbilitySlot(_slots[3], AbilitySlot.Ability2, "R");
     }
 
-    public static void EnsureOnCanvas(Canvas canvas)
+    public static void EnsureOnCanvas(Canvas canvas, PlayerAbilityHudTheme hudTheme = null)
     {
-        if (canvas == null || canvas.GetComponentInChildren<PlayerAbilityHud>(true) != null)
+        if (canvas == null)
             return;
 
+        EnsureOnParent(canvas.transform, hudTheme);
+    }
+
+    public static void EnsureOnParent(Transform parent, PlayerAbilityHudTheme hudTheme = null)
+    {
+        if (parent == null)
+            return;
+
+        PlayerAbilityHud existing = parent.GetComponentInChildren<PlayerAbilityHud>(true);
+        if (existing != null)
+        {
+            if (hudTheme != null)
+                existing.ApplyTheme(hudTheme);
+            existing.EnsureBuilt();
+            existing.transform.SetAsLastSibling();
+            return;
+        }
+
+        CreateUnder(parent, hudTheme);
+    }
+
+    public static PlayerAbilityHud CreateUnder(Transform parent, PlayerAbilityHudTheme hudTheme = null)
+    {
         GameObject go = new GameObject("PlayerAbilityHud", typeof(RectTransform), typeof(PlayerAbilityHud));
-        go.transform.SetParent(canvas.transform, false);
+        go.transform.SetParent(parent, false);
+        go.transform.SetAsLastSibling();
+        go.layer = parent.gameObject.layer;
+        PlayerAbilityHud hud = go.GetComponent<PlayerAbilityHud>();
+        if (hudTheme != null)
+            hud.ApplyTheme(hudTheme);
+        hud.EnsureBuilt();
+        return hud;
+    }
+
+    public void ApplyTheme(PlayerAbilityHudTheme hudTheme)
+    {
+        theme = hudTheme;
+        ResolveThemeIcons();
     }
 
     private void HandleLocalPlayerSpawned(NetworkPlayerController player) => BindPlayer(player != null ? player.gameObject : null);
@@ -120,8 +177,95 @@ public class PlayerAbilityHud : MonoBehaviour
         _passive = null;
     }
 
-    private float GetDashCooldownRemaining() => _dash != null ? _dash.GetCooldownRemaining() : 0f;
-    private float GetDashCooldownTotal() => _dash != null ? _dash.GetCooldownDuration() : 1f;
+    private void RefreshDashSlot()
+    {
+        SlotView slot = _slots[1];
+        if (slot == null)
+            return;
+
+        bool unlocked = _abilityHandler == null || _abilityHandler.IsSlotUnlocked(AbilitySlot.Dash);
+        float cooldownRemaining = _dash != null ? _dash.GetCooldownRemaining() : 0f;
+        float cooldownTotal = _dash != null ? _dash.GetCooldownDuration() : 1f;
+        string label = _abilityHandler != null
+            ? _abilityHandler.GetSlotDisplayName(AbilitySlot.Dash)
+            : string.Empty;
+
+        RefreshCooldownSlot(slot, unlocked, cooldownRemaining, cooldownTotal,
+            string.IsNullOrEmpty(label) ? "Dash" : label, unlockWave: 1);
+    }
+
+    private void RefreshAbilitySlot(SlotView slot, AbilitySlot abilitySlot, string fallbackLabel)
+    {
+        if (slot == null)
+            return;
+
+        if (_abilityHandler == null)
+        {
+            RefreshCooldownSlot(slot, unlocked: true, cooldownRemaining: 0f, cooldownTotal: 1f, fallbackLabel, unlockWave: 1);
+            return;
+        }
+
+        bool unlocked = _abilityHandler.IsSlotUnlocked(abilitySlot);
+        float cooldownRemaining = _abilityHandler.GetCooldownRemaining(abilitySlot);
+        float cooldownTotal = _abilityHandler.GetCooldownTotal(abilitySlot);
+        string custom = _abilityHandler.GetSlotDisplayName(abilitySlot);
+        int unlockWave = _abilityHandler.GetSlotUnlockWave(abilitySlot);
+
+        RefreshCooldownSlot(slot, unlocked, cooldownRemaining, cooldownTotal,
+            string.IsNullOrEmpty(custom) ? fallbackLabel : custom, unlockWave);
+    }
+
+    private static void RefreshCooldownSlot(
+        SlotView slot,
+        bool unlocked,
+        float cooldownRemaining,
+        float cooldownTotal,
+        string label,
+        int unlockWave)
+    {
+        if (slot.Label != null)
+        {
+            slot.Label.text = label;
+            slot.Label.color = unlocked ? Color.white : new Color(1f, 1f, 1f, 0.45f);
+        }
+
+        if (!unlocked)
+        {
+            if (slot.LockOverlay != null)
+                slot.LockOverlay.gameObject.SetActive(true);
+            if (slot.CooldownFill != null)
+            {
+                slot.CooldownFill.fillAmount = 1f;
+                slot.CooldownFill.gameObject.SetActive(true);
+            }
+            if (slot.Timer != null)
+            {
+                slot.Timer.gameObject.SetActive(true);
+                slot.Timer.text = unlockWave > 1 ? $"W{unlockWave}" : "Bloq";
+            }
+            return;
+        }
+
+        if (slot.LockOverlay != null)
+            slot.LockOverlay.gameObject.SetActive(false);
+
+        float total = Mathf.Max(0.01f, cooldownTotal);
+        float ratio = Mathf.Clamp01(cooldownRemaining / total);
+        bool onCooldown = cooldownRemaining > 0.05f;
+
+        if (slot.CooldownFill != null)
+        {
+            slot.CooldownFill.fillAmount = ratio;
+            slot.CooldownFill.gameObject.SetActive(onCooldown);
+        }
+
+        if (slot.Timer != null)
+        {
+            slot.Timer.gameObject.SetActive(onCooldown);
+            if (onCooldown)
+                slot.Timer.text = cooldownRemaining >= 10f ? $"{cooldownRemaining:0}" : $"{cooldownRemaining:0.#}";
+        }
+    }
 
     private void RefreshPassiveSlot()
     {
@@ -136,9 +280,17 @@ public class PlayerAbilityHud : MonoBehaviour
         if (!hasPassive)
         {
             if (slot.CooldownFill != null)
+            {
                 slot.CooldownFill.fillAmount = 0f;
+                slot.CooldownFill.gameObject.SetActive(false);
+            }
             if (slot.Timer != null)
+            {
                 slot.Timer.gameObject.SetActive(false);
+                slot.Timer.text = string.Empty;
+            }
+            if (slot.Label != null)
+                slot.Label.text = "Passiva";
             return;
         }
 
@@ -181,39 +333,6 @@ public class PlayerAbilityHud : MonoBehaviour
             slot.Label.text = "Passiva";
     }
 
-    private void RefreshSlot(SlotView slot, AbilitySlot abilitySlot, string fallbackLabel, float cooldownRemaining, float cooldownTotal)
-    {
-        if (slot == null || _abilityHandler == null)
-            return;
-
-        bool unlocked = _abilityHandler.IsSlotUnlocked(abilitySlot);
-        if (slot.LockOverlay != null)
-            slot.LockOverlay.gameObject.SetActive(!unlocked);
-
-        if (slot.Label != null)
-        {
-            string custom = _abilityHandler.GetSlotDisplayName(abilitySlot);
-            slot.Label.text = string.IsNullOrEmpty(custom) ? fallbackLabel : custom;
-            slot.Label.color = unlocked ? Color.white : new Color(1f, 1f, 1f, 0.45f);
-        }
-
-        float total = Mathf.Max(0.01f, cooldownTotal);
-        float ratio = unlocked ? Mathf.Clamp01(cooldownRemaining / total) : 1f;
-        if (slot.CooldownFill != null)
-        {
-            slot.CooldownFill.fillAmount = ratio;
-            slot.CooldownFill.gameObject.SetActive(unlocked && cooldownRemaining > 0.01f);
-        }
-
-        if (slot.Timer != null)
-        {
-            bool showTimer = unlocked && cooldownRemaining > 0.05f;
-            slot.Timer.gameObject.SetActive(showTimer);
-            if (showTimer)
-                slot.Timer.text = cooldownRemaining >= 10f ? $"{cooldownRemaining:0}" : $"{cooldownRemaining:0.#}";
-        }
-    }
-
     private void BuildUi()
     {
         if (_root != null && _slots[0] != null)
@@ -226,13 +345,17 @@ public class PlayerAbilityHud : MonoBehaviour
         _root.anchorMin = new Vector2(0f, 0f);
         _root.anchorMax = new Vector2(0f, 0f);
         _root.pivot = new Vector2(0f, 0f);
-        _root.anchoredPosition = new Vector2(24f, 24f);
-        _root.sizeDelta = new Vector2(280f, 72f);
+        Vector2 anchor = theme != null ? theme.anchoredPosition : new Vector2(24f, 24f);
+        _root.anchoredPosition = anchor;
+
+        float spacing = theme != null ? theme.slotSpacing : 68f;
+        float slotSize = theme != null ? theme.slotSize : 56f;
+        _root.sizeDelta = new Vector2(spacing * 3f + slotSize + 16f, slotSize + 16f);
 
         _slots[0] = CreateSlot("PassiveSlot", AbilitySlot.Ability1, "Passiva", passiveIcon, new Vector2(0f, 8f));
-        _slots[1] = CreateSlot("DashSlot", AbilitySlot.Dash, "Dash", dashIcon, new Vector2(68f, 8f));
-        _slots[2] = CreateSlot("Ability1Slot", AbilitySlot.Ability1, "Q", ability1Icon, new Vector2(136f, 8f));
-        _slots[3] = CreateSlot("Ability2Slot", AbilitySlot.Ability2, "R", ability2Icon, new Vector2(204f, 8f));
+        _slots[1] = CreateSlot("DashSlot", AbilitySlot.Dash, "Dash", dashIcon, new Vector2(spacing * 1f, 8f));
+        _slots[2] = CreateSlot("Ability1Slot", AbilitySlot.Ability1, "Q", ability1Icon, new Vector2(spacing * 2f, 8f));
+        _slots[3] = CreateSlot("Ability2Slot", AbilitySlot.Ability2, "R", ability2Icon, new Vector2(spacing * 3f, 8f));
     }
 
     private SlotView CreateSlot(string name, AbilitySlot slot, string label, Sprite iconSprite, Vector2 position)
@@ -243,10 +366,10 @@ public class PlayerAbilityHud : MonoBehaviour
         rt.anchorMax = new Vector2(0f, 0f);
         rt.pivot = new Vector2(0f, 0f);
         rt.anchoredPosition = position;
-        rt.sizeDelta = new Vector2(56f, 56f);
+        rt.sizeDelta = new Vector2(theme != null ? theme.slotSize : 56f, theme != null ? theme.slotSize : 56f);
 
         Image bg = root.GetComponent<Image>();
-        bg.color = new Color(0.1f, 0.1f, 0.14f, 0.92f);
+        bg.color = theme != null ? theme.backgroundColor : new Color(0.1f, 0.1f, 0.14f, 0.92f);
 
         GameObject iconGo = CreateUiObject("Icon", rt);
         RectTransform iconRt = iconGo.GetComponent<RectTransform>();
@@ -263,27 +386,30 @@ public class PlayerAbilityHud : MonoBehaviour
         else
         {
             icon.color = name.Contains("Passive")
-                ? new Color(0.85f, 0.55f, 0.15f, 0.9f)
+                ? (theme != null ? theme.passiveFallbackColor : new Color(0.85f, 0.55f, 0.15f, 0.9f))
                 : slot == AbilitySlot.Dash
-                    ? new Color(0.35f, 0.75f, 0.95f, 0.9f)
-                    : new Color(0.75f, 0.55f, 0.2f, 0.9f);
+                    ? (theme != null ? theme.dashFallbackColor : new Color(0.35f, 0.75f, 0.95f, 0.9f))
+                    : (theme != null ? theme.abilityFallbackColor : new Color(0.75f, 0.55f, 0.2f, 0.9f));
         }
 
         GameObject fillGo = CreateUiObject("Cooldown", rt);
         Stretch(fillGo.GetComponent<RectTransform>());
         Image fill = fillGo.GetComponent<Image>();
-        fill.color = new Color(0f, 0f, 0f, 0.65f);
+        fill.color = theme != null ? theme.cooldownOverlayColor : new Color(0f, 0f, 0f, 0.65f);
         fill.type = Image.Type.Filled;
         fill.fillMethod = Image.FillMethod.Vertical;
         fill.fillOrigin = (int)Image.OriginVertical.Top;
+        fill.gameObject.SetActive(false);
 
         GameObject lockGo = CreateUiObject("Lock", rt);
         Stretch(lockGo.GetComponent<RectTransform>());
         Image lockImg = lockGo.GetComponent<Image>();
         lockImg.color = new Color(0f, 0f, 0f, 0.7f);
+        lockGo.SetActive(false);
 
-        TMP_Text title = CreateText(rt, label, 14, TextAlignmentOptions.Center, new Vector2(0f, -2f), new Vector2(1f, 0.28f));
-        TMP_Text timer = CreateText(rt, "", 16, TextAlignmentOptions.Center, new Vector2(0f, 0.28f), new Vector2(1f, 0.82f));
+        Text title = CreateText(rt, label, 13, TextAnchor.LowerCenter, new Vector2(0f, 0f), new Vector2(1f, 0.3f));
+        Text timer = CreateText(rt, string.Empty, 18, TextAnchor.UpperCenter, new Vector2(0f, 0.3f), new Vector2(1f, 1f));
+        timer.gameObject.SetActive(false);
 
         return new SlotView
         {
@@ -301,25 +427,39 @@ public class PlayerAbilityHud : MonoBehaviour
     {
         GameObject go = new GameObject(name, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
         go.transform.SetParent(parent, false);
+        go.layer = parent.gameObject.layer;
         LoadingProgressUtility.ApplySolidSprite(go.GetComponent<Image>());
         return go;
     }
 
-    private static TMP_Text CreateText(Transform parent, string text, int size, TextAlignmentOptions alignment, Vector2 anchorMin, Vector2 anchorMax)
+    private static Text CreateText(Transform parent, string text, int size, TextAnchor alignment, Vector2 anchorMin, Vector2 anchorMax)
     {
-        GameObject go = new GameObject("Text", typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
+        GameObject go = new GameObject("Text", typeof(RectTransform), typeof(CanvasRenderer), typeof(Text));
         go.transform.SetParent(parent, false);
+        go.layer = parent.gameObject.layer;
         RectTransform rt = go.GetComponent<RectTransform>();
         rt.anchorMin = anchorMin;
         rt.anchorMax = anchorMax;
         rt.offsetMin = Vector2.zero;
         rt.offsetMax = Vector2.zero;
-        TMP_Text tmp = go.GetComponent<TextMeshProUGUI>();
-        tmp.text = text;
-        tmp.fontSize = size;
-        tmp.alignment = alignment;
-        tmp.color = Color.white;
-        return tmp;
+        Text label = go.GetComponent<Text>();
+        label.text = text;
+        label.fontSize = size;
+        label.alignment = alignment;
+        label.color = Color.white;
+        label.font = GetRuntimeFont();
+        label.horizontalOverflow = HorizontalWrapMode.Overflow;
+        label.verticalOverflow = VerticalWrapMode.Overflow;
+        return label;
+    }
+
+    private static Font GetRuntimeFont()
+    {
+        if (_runtimeFont != null)
+            return _runtimeFont;
+
+        _runtimeFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        return _runtimeFont;
     }
 
     private static void Stretch(RectTransform rt)

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: NixieMeleeCombatStats
   m_EditorClassIdentifier: Assembly-CSharp::MeleeCombatStats
   damage: 1
-  attackCooldown: 0.45
+  attackCooldown: 0.32
   attackRange: 2.5
   attackOriginForwardOffset: 0.35
   windupDelay: 0.08
@@ -23,4 +23,4 @@ MonoBehaviour:
   knockbackDuration: 1
   knockbackDistance: 3
   drawDebugGizmos: 1
-  attackAnimationSpeedMultiplier: 1.55
+  attackAnimationSpeedMultiplier: 1.15

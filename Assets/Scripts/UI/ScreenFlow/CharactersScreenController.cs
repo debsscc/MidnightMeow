@@ -28,6 +28,9 @@ public class CharactersScreenController : MonoBehaviour
     [SerializeField] private TMP_Text skillPopupLevel;
     [SerializeField] private Button skillPopupUpgradeButton;
     [SerializeField] private Button backButton;
+    [SerializeField] private Button readyButton;
+    [SerializeField] private TMP_Text countdownText;
+    [SerializeField] private TMP_Text readyStatusText;
     [SerializeField] private TMP_Text feedbackText;
 
     [SerializeField] private bool buildPlaceholderIfMissing = true;
@@ -160,6 +163,58 @@ public class CharactersScreenController : MonoBehaviour
         if (coraSkill3Button != null) coraSkill3Button.onClick.AddListener(() => OpenSkillPopup(LobbyCharacterType.CharacterB, AbilitySlot.PrimaryAttack));
         if (skillPopupUpgradeButton != null) skillPopupUpgradeButton.onClick.AddListener(TryUpgradeFromPopup);
         if (backButton != null) backButton.onClick.AddListener(GoBack);
+        if (readyButton != null) readyButton.onClick.AddListener(ToggleReady);
+    }
+
+    private void ToggleReady()
+    {
+        if (!AllowSelection)
+            return;
+
+        if (GameSessionContext.IsSinglePlayer)
+        {
+            LobbyCharacterType selected = ResolveLocalSelection();
+            if (selected == LobbyCharacterType.Default)
+            {
+                ShowFeedback("Escolha um personagem antes de confirmar.");
+                return;
+            }
+
+            LobbySelectionStore.CaptureSinglePlayer(selected);
+            ApplySinglePlayerContractScene();
+            ScreenFlowStateMachine.BeginGameplayLoading();
+            return;
+        }
+
+        PreparationSessionManager session = HubSessionStateReader.GetPreparationSession();
+        if (session == null)
+        {
+            ShowFeedback("Aguardando sessão de rede...");
+            return;
+        }
+
+        bool targetReady = !session.GetLocalReadyState();
+        session.RequestSetReadyRpc(targetReady);
+        RefreshView();
+    }
+
+    private void ApplySinglePlayerContractScene()
+    {
+        SaveProfileStore save = SaveProfileStore.Instance;
+        int index = save?.Active?.selectedContractIndex ?? -1;
+        string sceneName = "Fase-1";
+
+        ContractDefinition[] contracts = Resources.FindObjectsOfTypeAll<ContractDefinition>();
+        for (int i = 0; i < contracts.Length; i++)
+        {
+            if (contracts[i] != null && contracts[i].name == $"Contract_{index + 1}")
+            {
+                sceneName = contracts[i].gameplaySceneName;
+                break;
+            }
+        }
+
+        GameSessionContext.ActiveGameplaySceneName = sceneName;
     }
 
     private void OnCharacterSelect(LobbyCharacterType type)
@@ -266,6 +321,69 @@ public class CharactersScreenController : MonoBehaviour
 
         RefreshCharacterButtons();
         UpdateSkillButtonLabels();
+        RefreshReadyUi();
+    }
+
+    private void RefreshReadyUi()
+    {
+        bool showReady = AllowSelection;
+
+        if (readyButton != null)
+        {
+            readyButton.gameObject.SetActive(showReady);
+            if (showReady && !GameSessionContext.IsSinglePlayer)
+            {
+                PreparationSessionManager session = HubSessionStateReader.GetPreparationSession();
+                TMP_Text label = readyButton.GetComponentInChildren<TMP_Text>();
+                if (label != null)
+                    label.text = session != null && session.GetLocalReadyState() ? "Desmarcar Pronto" : "Pronto";
+            }
+            else if (showReady)
+            {
+                TMP_Text label = readyButton.GetComponentInChildren<TMP_Text>();
+                if (label != null)
+                    label.text = "Pronto";
+            }
+        }
+
+        if (countdownText != null)
+        {
+            if (!showReady || GameSessionContext.IsSinglePlayer)
+            {
+                countdownText.gameObject.SetActive(false);
+                return;
+            }
+
+            PreparationSessionManager session = HubSessionStateReader.GetPreparationSession();
+            int countdown = session != null ? session.StartCountdown : -1;
+            bool visible = countdown >= 0;
+            countdownText.gameObject.SetActive(visible);
+            if (visible)
+                countdownText.text = countdown > 0 ? $"Iniciando em {countdown}..." : "Iniciando!";
+        }
+
+        if (readyStatusText != null && showReady && !GameSessionContext.IsSinglePlayer)
+        {
+            PreparationSessionManager session = HubSessionStateReader.GetPreparationSession();
+            if (session == null)
+            {
+                readyStatusText.text = string.Empty;
+                return;
+            }
+
+            int readyCount = 0;
+            for (int i = 0; i < session.Players.Count; i++)
+            {
+                if (session.Players[i].IsReady)
+                    readyCount++;
+            }
+
+            readyStatusText.text = $"Prontos: {readyCount}/{session.Players.Count}";
+        }
+        else if (readyStatusText != null)
+        {
+            readyStatusText.text = string.Empty;
+        }
     }
 
     private void RefreshCharacterButtons()
@@ -489,5 +607,16 @@ public class CharactersScreenController : MonoBehaviour
 
         backButton = ScreenFlowPlaceholderFactory.CreateButton(panel.transform, "Voltar",
             new Vector2(0.08f, 0.08f), new Vector2(0.08f, 0.08f), new Vector2(-100f, -35f), new Vector2(100f, 35f));
+
+        readyButton = ScreenFlowPlaceholderFactory.CreateButton(panel.transform, "Pronto",
+            new Vector2(1f, 0f), new Vector2(1f, 0f), new Vector2(-220f, 40f), new Vector2(-40f, 100f));
+
+        countdownText = ScreenFlowPlaceholderFactory.CreateText(panel.transform, "", 36,
+            TextAlignmentOptions.Center, Color.white,
+            new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(-180f, -30f), new Vector2(180f, 30f));
+
+        readyStatusText = ScreenFlowPlaceholderFactory.CreateText(panel.transform, "", 24,
+            TextAlignmentOptions.Bottom, Color.white,
+            new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(-280f, 110f), new Vector2(280f, 150f));
     }
 }

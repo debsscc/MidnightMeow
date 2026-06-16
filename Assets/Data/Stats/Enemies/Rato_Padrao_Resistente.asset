@@ -20,6 +20,7 @@ MonoBehaviour:
   randomWalkRadius: 6
   randomWalkInterval: 2.5
   maxHealth: 2
+  rangedDefense: 0.25
   deathDespawnDelay: 0.4
   moveSpeed: 8.8
   attackRange: 3

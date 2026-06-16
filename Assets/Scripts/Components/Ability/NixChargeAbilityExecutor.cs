@@ -144,7 +144,8 @@ public class NixChargeAbilityExecutor : MonoBehaviour, IAbilityExecutor
                 damageable.gameObject,
                 tierData.damage,
                 context.OwnerClientId,
-                context.User);
+                context.User,
+                DamageType.Melee);
         }
     }
 

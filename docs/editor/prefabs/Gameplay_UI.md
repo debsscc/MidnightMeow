@@ -20,7 +20,15 @@ Canvas de HUD principal (vida, upgrades, magículas da fase) durante gameplay si
 |--------|--------|
 | `healthBarUi` | Barra de vida do jogador local |
 | `ScienceIndicator` | Contador de magículas coletadas na fase (`RoundMagiculaTracker`) |
-| `PlayerAbilityHud` | Cooldowns Passiva / Dash / Q / R — canto inferior esquerdo (criado por `GameplaySceneBootstrap` se ausente) |
+| `GameplayHudController` | Orquestra widgets de HUD no `Awake` (cooldowns, wave, feedback, indicadores) |
+| `HordeIndicator` | Wave atual, inimigos restantes e kills — topo central |
+| `PlayerAbilityHud` | Cooldowns Passiva / Dash / Q / R — canto inferior esquerdo |
+| `PlaytestFeedbackButton` | Botão de feedback — canto inferior **direito** (280×72) |
+
+## Correção 2026-06-16
+
+- **Escala do root:** `Gameplay_UI` estava com `localScale (0,0,0)` — corrigido para `(1,1,1)`.
+- **`GameplayHudController`:** camadas `GameplayHudLayers` com fallback **apenas** para widgets ausentes; reutiliza `HordeIndicator` da cena quando presente.
 
 ## HUD de habilidades (`PlayerAbilityHud`)
 

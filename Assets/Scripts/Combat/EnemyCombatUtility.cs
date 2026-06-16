@@ -8,12 +8,17 @@ public static class EnemyCombatUtility
 {
     public static void ApplyDamage(GameObject target, float damage, ulong instigatorClientId, GameObject instigator)
     {
+        ApplyDamage(target, damage, instigatorClientId, instigator, DamageType.Generic);
+    }
+
+    public static void ApplyDamage(GameObject target, float damage, ulong instigatorClientId, GameObject instigator, DamageType damageType)
+    {
         if (target == null || damage <= 0f) return;
 
         if (target.TryGetComponent<NetworkEnemyController>(out var networkEnemy) && networkEnemy.IsSpawned)
-            networkEnemy.TakeDamageRpc(damage, instigatorClientId);
+            networkEnemy.TakeDamageRpc(damage, instigatorClientId, damageType);
         else if (target.TryGetComponent<HealthComponent>(out var health))
-            health.TakeDamage(damage, instigator);
+            health.TakeDamage(damage, instigator, damageType);
     }
 
     public static void ApplyKnockback(GameObject target, Vector2 direction, float distance, float duration)

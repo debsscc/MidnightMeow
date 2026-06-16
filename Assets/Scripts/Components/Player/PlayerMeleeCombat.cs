@@ -217,12 +217,12 @@ public class PlayerMeleeCombat : MonoBehaviour
         if (target.TryGetComponent<NetworkEnemyController>(out var networkEnemy) && networkEnemy.IsSpawned)
         {
             ulong localId = NetworkManager.Singleton != null ? NetworkManager.Singleton.LocalClientId : 0;
-            networkEnemy.TakeDamageRpc(damage, localId);
+            networkEnemy.TakeDamageRpc(damage, localId, DamageType.Melee);
             networkEnemy.ApplyKnockbackRpc(knockDir, CombatStats.knockbackDistance, CombatStats.knockbackDuration);
         }
         else if (target.TryGetComponent<HealthComponent>(out var health))
         {
-            health.TakeDamage(damage, gameObject);
+            health.TakeDamage(damage, gameObject, DamageType.Melee);
             if (target.TryGetComponent<KnockbackReceiver>(out var knockback))
             {
                 knockback.ApplyKnockback(knockDir, CombatStats.knockbackForce, CombatStats.knockbackDuration);

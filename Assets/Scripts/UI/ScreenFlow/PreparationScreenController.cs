@@ -17,6 +17,9 @@ public class PreparationScreenController : MonoBehaviour
     [SerializeField] private TMP_Text tooltipText;
     [SerializeField] private TMP_Text selectedCharacterText;
     [SerializeField] private Button chooseCharacterButton;
+    [SerializeField] private Button confirmContractButton;
+    [SerializeField] private Button backButton;
+    [SerializeField] private Button leaveLobbyButton;
     [SerializeField] private Button readyButton;
     [SerializeField] private TMP_Text readyStatusText;
     [SerializeField] private bool buildPlaceholderIfMissing = true;
@@ -47,7 +50,7 @@ public class PreparationScreenController : MonoBehaviour
     private void EnsureUi()
     {
         bool missingUi = contractButtons == null || contractButtons.Length == 0
-                         || readyButton == null || chooseCharacterButton == null;
+                         || readyButton == null || confirmContractButton == null;
 
         if (buildPlaceholderIfMissing && missingUi)
             BuildPlaceholderUI();
@@ -153,6 +156,15 @@ public class PreparationScreenController : MonoBehaviour
         if (readyButton != null)
             readyButton.onClick.AddListener(ToggleReady);
 
+        if (confirmContractButton != null)
+            confirmContractButton.onClick.AddListener(ConfirmContract);
+
+        if (backButton != null)
+            backButton.onClick.AddListener(GoBackToMenu);
+
+        if (leaveLobbyButton != null)
+            leaveLobbyButton.onClick.AddListener(LeaveLobby);
+
         if (chooseCharacterButton != null)
             chooseCharacterButton.onClick.AddListener(OnChooseCharacter);
 
@@ -195,6 +207,58 @@ public class PreparationScreenController : MonoBehaviour
             ctrl?.ShowTooltip(index);
         });
         trigger.triggers.Add(entry);
+    }
+
+    private void ConfirmContract()
+    {
+        if (!IsLocalHost())
+        {
+            ShowFeedback("Apenas o host pode confirmar o contrato.");
+            return;
+        }
+
+        if (GameSessionContext.IsSinglePlayer)
+        {
+            if (_localSelectedContract < 0)
+            {
+                ShowFeedback("Escolha um contrato antes de confirmar.");
+                return;
+            }
+
+            ScreenFlowStateMachine.OpenCharactersFromPreparation();
+            RefreshView();
+            return;
+        }
+
+        PreparationSessionManager session = HubSessionStateReader.GetPreparationSession();
+        if (session == null)
+        {
+            ShowFeedback("Aguardando sessão de rede...");
+            return;
+        }
+
+        if (session.IsServer)
+            session.RequestConfirmContractRpc();
+        else
+            session.RequestConfirmContractRpc();
+    }
+
+    private void GoBackToMenu()
+    {
+        RequestNavigation(SceneFlowRouteIds.ReturnToMenu);
+    }
+
+    private void LeaveLobby()
+    {
+        RequestNavigation(SceneFlowRouteIds.ReturnToLobby);
+    }
+
+    private static void RequestNavigation(string routeId)
+    {
+        if (GameFlowOrchestrator.Instance != null)
+            GameFlowOrchestrator.Instance.TryRequestRoute(routeId);
+        else
+            ScreenFlowController.Instance?.RequestRoute(routeId);
     }
 
     private void OnChooseCharacter()
@@ -381,13 +445,8 @@ public class PreparationScreenController : MonoBehaviour
 
     private void RefreshCharacterLabel()
     {
-        if (selectedCharacterText == null)
-            return;
-
-        LobbyCharacterType selected = ResolveLocalCharacter();
-        selectedCharacterText.text = selected == LobbyCharacterType.Default
-            ? "Personagem: (não escolhido)"
-            : $"Personagem: {(selected == LobbyCharacterType.CharacterB ? "Cora" : "Nixie")}";
+        if (selectedCharacterText != null)
+            selectedCharacterText.gameObject.SetActive(false);
     }
 
     private LobbyCharacterType ResolveLocalCharacter()
@@ -414,10 +473,18 @@ public class PreparationScreenController : MonoBehaviour
             {
                 if (_localSelectedContract < 0)
                     readyStatusText.text = "Escolha um contrato";
-                else if (_soloCharacter == LobbyCharacterType.Default)
-                    readyStatusText.text = "Escolha um personagem";
                 else
-                    readyStatusText.text = _localReady ? "Iniciando fase..." : "Confirme para jogar";
+                    readyStatusText.text = "Confirme o contrato para continuar";
+            }
+
+            if (chooseCharacterButton != null)
+                chooseCharacterButton.gameObject.SetActive(false);
+            if (readyButton != null)
+                readyButton.gameObject.SetActive(false);
+            if (confirmContractButton != null)
+            {
+                confirmContractButton.gameObject.SetActive(true);
+                confirmContractButton.interactable = _localSelectedContract >= 0;
             }
 
             if (_localSelectedContract >= 0)
@@ -464,6 +531,17 @@ public class PreparationScreenController : MonoBehaviour
         ApplyContractButtonLabels();
         if (session.SelectedContractIndex >= 0)
             HighlightSelectedContract(session.SelectedContractIndex);
+
+        bool contractConfirmed = session.ContractConfirmed;
+        if (chooseCharacterButton != null)
+            chooseCharacterButton.gameObject.SetActive(false);
+        if (readyButton != null)
+            readyButton.gameObject.SetActive(false);
+        if (confirmContractButton != null)
+        {
+            confirmContractButton.gameObject.SetActive(!contractConfirmed && IsLocalHost());
+            confirmContractButton.interactable = session.SelectedContractIndex >= 0;
+        }
     }
 
     private void ApplyContractButtonLabels()
@@ -540,12 +618,14 @@ public class PreparationScreenController : MonoBehaviour
             TextAlignmentOptions.TopLeft, Color.white,
             new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(-210f, 20f), new Vector2(210f, 200f));
 
-        selectedCharacterText = ScreenFlowPlaceholderFactory.CreateText(panel.transform, "Personagem: (não escolhido)", 28,
-            TextAlignmentOptions.BottomLeft, Color.white,
-            new Vector2(0f, 0f), new Vector2(0f, 0f), new Vector2(40f, 120f), new Vector2(520f, 180f));
+        confirmContractButton = ScreenFlowPlaceholderFactory.CreateButton(panel.transform, "Confirmar Contrato!",
+            new Vector2(1f, 0f), new Vector2(1f, 0f), new Vector2(-360f, 120f), new Vector2(-40f, 180f));
 
-        chooseCharacterButton = ScreenFlowPlaceholderFactory.CreateButton(panel.transform, "Escolher Personagem",
-            new Vector2(0f, 0f), new Vector2(0f, 0f), new Vector2(40f, 40f), new Vector2(320f, 100f));
+        backButton = ScreenFlowPlaceholderFactory.CreateButton(panel.transform, "Voltar ao Menu",
+            new Vector2(0f, 0f), new Vector2(0f, 0f), new Vector2(40f, 210f), new Vector2(260f, 270f));
+
+        leaveLobbyButton = ScreenFlowPlaceholderFactory.CreateButton(panel.transform, "Sair do Lobby",
+            new Vector2(0f, 0f), new Vector2(0f, 0f), new Vector2(40f, 90f), new Vector2(260f, 150f));
 
         readyButton = ScreenFlowPlaceholderFactory.CreateButton(panel.transform, "Pronto",
             new Vector2(1f, 0f), new Vector2(1f, 0f), new Vector2(-320f, 40f), new Vector2(-40f, 100f));

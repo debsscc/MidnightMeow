@@ -5689,6 +5689,8 @@ MonoBehaviour:
     m_Bits: 6416
   dashDistanceMultiplier: 1
   dashFailsafeExtraSeconds: 0.35
+  dashCollider: {fileID: 0}
+  dashCollisionSkin: 0.04
 --- !u!223 &6101838958175283613
 Canvas:
   m_ObjectHideFlags: 0

@@ -30,6 +30,16 @@ public class AbilityProgressionState
         };
     }
 
+    public int GetUnlockWave(AbilitySlot slot)
+    {
+        return slot switch
+        {
+            AbilitySlot.Ability1 => 2,
+            AbilitySlot.Ability2 => 3,
+            _ => 1
+        };
+    }
+
     public int GetTierForSlot(AbilitySlot slot)
     {
         return slot switch

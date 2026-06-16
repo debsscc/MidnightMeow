@@ -10,6 +10,8 @@ public class EnemyTargetFinder : MonoBehaviour
 {
     [SerializeField] private EnemyStats stats;
 
+    public EnemyStats Stats => stats;
+
     private Transform _currentTarget;
     private float _nextScanTime;
 

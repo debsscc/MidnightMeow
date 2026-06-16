@@ -294,6 +294,8 @@ public class PlayerAbilityHandler : MonoBehaviour
 
     public bool IsSlotUnlocked(AbilitySlot slot) => _progression.IsSlotUnlocked(slot);
 
+    public int GetSlotUnlockWave(AbilitySlot slot) => _progression.GetUnlockWave(slot);
+
     public string GetSlotDisplayName(AbilitySlot slot)
     {
         CharacterAbilityDefinition definition = GetDefinitionForSlot(slot);

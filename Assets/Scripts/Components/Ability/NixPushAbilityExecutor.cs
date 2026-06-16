@@ -65,7 +65,7 @@ public class NixPushAbilityExecutor : MonoBehaviour, IAbilityExecutor
             if (knockDir.sqrMagnitude < 0.0001f)
                 knockDir = -direction;
 
-            EnemyCombatUtility.ApplyDamage(targetRoot, tierData.damage, context.OwnerClientId, context.User);
+            EnemyCombatUtility.ApplyDamage(targetRoot, tierData.damage, context.OwnerClientId, context.User, DamageType.Melee);
             EnemyCombatUtility.ApplyKnockback(targetRoot, knockDir, tierData.knockbackDistance, tierData.knockbackDuration);
             EnemyCombatUtility.ApplySlow(targetRoot, tierData.slowMultiplier, tierData.slowDuration);
         }

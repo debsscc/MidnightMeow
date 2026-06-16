@@ -33,6 +33,7 @@ public class LobbyFlowController : MonoBehaviour
     [SerializeField] private TMP_InputField clientJoinCodeInput;
     [SerializeField] private Button clientConfirmButton;
     [SerializeField] private TMP_Text clientStatusText;
+    [SerializeField] private Button leaveLobbyButton;
 
     [Header("Fluxo")]
     [SerializeField] private int requiredPlayersForLoading = 2;
@@ -80,6 +81,15 @@ public class LobbyFlowController : MonoBehaviour
         if (joinButton != null) joinButton.onClick.AddListener(() => navigator?.ShowPanel(PanelClientJoin));
         if (charactersButton != null) charactersButton.onClick.AddListener(OnCharactersClicked);
         if (clientConfirmButton != null) clientConfirmButton.onClick.AddListener(OnClientConfirm);
+        if (leaveLobbyButton != null) leaveLobbyButton.onClick.AddListener(LeaveLobby);
+    }
+
+    private void LeaveLobby()
+    {
+        if (GameFlowOrchestrator.Instance != null)
+            GameFlowOrchestrator.Instance.TryRequestRoute(SceneFlowRouteIds.ReturnToMenu);
+        else
+            ScreenFlowController.Instance?.RequestRoute(SceneFlowRouteIds.ReturnToMenu);
     }
 
     private void OnSoloClicked()
@@ -304,6 +314,8 @@ public class LobbyFlowController : MonoBehaviour
             new Vector2(0.5f, 0.35f), new Vector2(0.5f, 0.35f), new Vector2(-240f, -40f), new Vector2(240f, 40f));
         charactersButton = ScreenFlowPlaceholderFactory.CreateButton(panel.transform, "Personagens",
             new Vector2(0.5f, 0.2f), new Vector2(0.5f, 0.2f), new Vector2(-240f, -40f), new Vector2(240f, 40f));
+        leaveLobbyButton = ScreenFlowPlaceholderFactory.CreateButton(panel.transform, "Sair do Lobby",
+            new Vector2(0.08f, 0.08f), new Vector2(0.08f, 0.08f), new Vector2(-120f, -35f), new Vector2(120f, 35f));
         return panel;
     }
 
@@ -316,6 +328,13 @@ public class LobbyFlowController : MonoBehaviour
             new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(-300f, -25f), new Vector2(300f, 25f));
         hostFeedbackText = ScreenFlowPlaceholderFactory.CreateText(panel.transform, "Aguardando segundo jogador...", 24, TextAlignmentOptions.Center, new Color(0.8f, 0.8f, 0.85f),
             new Vector2(0.5f, 0.35f), new Vector2(0.5f, 0.35f), new Vector2(-400f, -25f), new Vector2(400f, 25f));
+        if (leaveLobbyButton == null)
+            leaveLobbyButton = ScreenFlowPlaceholderFactory.CreateButton(panel.transform, "Sair do Lobby",
+                new Vector2(0.08f, 0.08f), new Vector2(0.08f, 0.08f), new Vector2(-120f, -35f), new Vector2(120f, 35f));
+        else
+            ScreenFlowPlaceholderFactory.CreateButton(panel.transform, "Sair do Lobby",
+                new Vector2(0.08f, 0.08f), new Vector2(0.08f, 0.08f), new Vector2(-120f, -35f), new Vector2(120f, 35f))
+                .onClick.AddListener(LeaveLobby);
         return panel;
     }
 
@@ -328,6 +347,13 @@ public class LobbyFlowController : MonoBehaviour
             new Vector2(0.5f, 0.4f), new Vector2(0.5f, 0.4f), new Vector2(-200f, -40f), new Vector2(200f, 40f));
         clientStatusText = ScreenFlowPlaceholderFactory.CreateText(panel.transform, "", 22, TextAlignmentOptions.Center, Color.white,
             new Vector2(0.5f, 0.25f), new Vector2(0.5f, 0.25f), new Vector2(-400f, -30f), new Vector2(400f, 30f));
+        if (leaveLobbyButton == null)
+            leaveLobbyButton = ScreenFlowPlaceholderFactory.CreateButton(panel.transform, "Sair do Lobby",
+                new Vector2(0.08f, 0.08f), new Vector2(0.08f, 0.08f), new Vector2(-120f, -35f), new Vector2(120f, 35f));
+        else
+            ScreenFlowPlaceholderFactory.CreateButton(panel.transform, "Sair do Lobby",
+                new Vector2(0.08f, 0.08f), new Vector2(0.08f, 0.08f), new Vector2(-120f, -35f), new Vector2(120f, 35f))
+                .onClick.AddListener(LeaveLobby);
         return panel;
     }
 }

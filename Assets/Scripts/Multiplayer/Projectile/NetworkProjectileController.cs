@@ -179,7 +179,7 @@ public class NetworkProjectileController : NetworkBehaviour
     public bool ServerApplyEnemyHit(NetworkEnemyController enemy, float baseDamage)
     {
         if (!IsServer || enemy == null || enemy.IsDeadOnNetwork) return false;
-        return enemy.ServerApplyDamage(baseDamage * _damageMultiplier, _ownerClientId);
+        return enemy.ServerApplyDamage(baseDamage * _damageMultiplier, _ownerClientId, DamageType.Ranged);
     }
 
     /// <summary>
