@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9267ac74f46cd854b8a8bb249f38128f, type: 3}
+  m_Name: NixieCoreStats
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerStats
+  maxHealth: 7
+  moveSpeed: 7.5
+  maxAmmo: 5
+  infinityAmmo: 1
+  firePointRadius: 4
+  maxAdrenaline: 10
+  adrenalineDecayRate: 0.5
+  adrenalineGainPerCiencia: 2
+  adrenalineThresholdToActivate: 2
+  adrenalineLowThreshold: 1
+  frenzySpeedMultiplier: 2
+  frenzyBonusBounces: 2
+  frenzyDuration: 10
+  damageUpgradeLevel: 0
+  fireRateUpgradeLevel: 0
+  healthUpgradeLevel: 0
+  dashDuration: 0.14
+  dashSpeed: 20
+  dashCooldown: 1
+  maxDashCharges: 2
