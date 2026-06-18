@@ -225,8 +225,26 @@ public class MultiplayerGameManager : NetworkBehaviour
     [ClientRpc]
     private void PlayDefeatAmbienceClientRpc()
     {
-        if (NetworkPlayerHealth.TryGetLastDownedFocusTarget(out Transform focus))
-            DeathHordePresentation.TryBeginFinalDefeat(this, focus);
+        StartCoroutine(PlayDefeatAmbienceWhenReady());
+    }
+
+    private IEnumerator PlayDefeatAmbienceWhenReady()
+    {
+        const float timeout = 2f;
+        float elapsed = 0f;
+
+        while (elapsed < timeout)
+        {
+            if (NetworkPlayerHealth.TryGetLastDownedFocusTarget(out Transform focus))
+            {
+                float defeatUiDelay = DefeatPresentationTiming.ResolveMaxDefeatUiDelayForUnconsciousPlayers();
+                DeathHordePresentation.TryBeginFinalDefeat(this, focus, null, defeatUiDelay);
+                yield break;
+            }
+
+            elapsed += Time.unscaledDeltaTime;
+            yield return null;
+        }
     }
 
     private IEnumerator TriggerVictoryRoutine()
@@ -248,26 +266,7 @@ public class MultiplayerGameManager : NetworkBehaviour
 
     private float ResolveDefeatPresentationDelay()
     {
-        float delay = 0f;
-
-        NetworkPlayerHealth[] players =
-            Object.FindObjectsByType<NetworkPlayerHealth>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
-
-        for (int i = 0; i < players.Length; i++)
-        {
-            NetworkPlayerHealth health = players[i];
-            if (health == null || !health.IsUnconscious)
-                continue;
-
-            AnimatorProfileBinder binder = health.GetComponent<AnimatorProfileBinder>();
-            DissolveEffect dissolve = health.GetComponent<DissolveEffect>();
-            float estimate = PlayerDeathPresentation.EstimatePresentationDuration(
-                binder != null ? binder.Profile : null,
-                dissolve,
-                includeDissolve: false);
-
-            delay = Mathf.Max(delay, estimate);
-        }
+        float delay = DefeatPresentationTiming.ResolveMaxDefeatUiDelayForUnconsciousPlayers();
 
         if (delay <= 0f)
             delay = gameConfig != null ? gameConfig.defeatDelay : 2f;

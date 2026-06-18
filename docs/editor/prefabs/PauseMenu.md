@@ -30,6 +30,7 @@ Menu de pausa (UI). Usado como **nested prefab** em `Lobby.prefab` e em cenas de
 | **Reiniciar fase** | Recarrega Fase-1 via NGO + reset de round | Oculto |
 | **Abandonar** | `ScreenFlowStateMachine.ExitToMainMenu()` | Igual (desconecta NGO) |
 | **Controles** | Abre painel `Controls` (esconde botões do pause) | Igual |
+| **Créditos** | `CreditsOverlayController.OpenFromPause()` — rola, escurece, fecha; volta ao pause | Igual (UI local; jogo continua pausado) |
 | **Voltar** (`Controls/Back`) | Volta ao painel principal do pause | Igual |
 | **Sair** (Buttons2) | Abre confirmação → fecha o aplicativo | Igual |
 
@@ -41,7 +42,7 @@ Menu de pausa (UI). Usado como **nested prefab** em `Lobby.prefab` e em cenas de
 |----------------|-------|-------------|
 | Canvas Group | Interactable / Blocks Raycasts quando pausado | |
 | `PauseMenuActions` no root | `quitConfirmationRoot` → `Background_PopUp` | Ligado |
-| Botões | Rewire automático por nome (`Resume`, `Replay`, `Menu`, `Config`, `Quit`, `Don'tQuit`, `Back` em `Controls`) | |
+| Botões | Rewire automático por nome (`Resume`, `Replay`, `Menu`, `Config`, `Credits`, `Quit`, `Don'tQuit`, `Back` em `Controls`) | |
 | MP pause UI | `MultiplayerGameManager.ApplyPauseClientRpc` → `GameManager2.ShowPauseOverlay` | |
 
 ## Referenciado por

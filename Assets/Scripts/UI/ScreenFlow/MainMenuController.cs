@@ -24,6 +24,7 @@ public class MainMenuController : MonoBehaviour
     [SerializeField] private Button newGameButton;
     [SerializeField] private Button continueButton;
     [SerializeField] private Button optionsButton;
+    [SerializeField] private Button creditsButton;
     [SerializeField] private Button playtestFeedbackButton;
     [SerializeField] private Button quitButton;
 
@@ -49,6 +50,7 @@ public class MainMenuController : MonoBehaviour
         if (buildPlaceholderIfMissing && mainMenuPanel == null)
             BuildPlaceholderUI();
 
+        EnsureCreditsButtonIfMissing();
         WireButtons();
         RefreshContinueState();
 
@@ -117,6 +119,7 @@ public class MainMenuController : MonoBehaviour
         if (newGameButton != null) newGameButton.onClick.AddListener(OnNewGame);
         if (continueButton != null) continueButton.onClick.AddListener(OnContinue);
         if (optionsButton != null) optionsButton.onClick.AddListener(OnOptions);
+        if (creditsButton != null) creditsButton.onClick.AddListener(OnCredits);
         if (playtestFeedbackButton != null) playtestFeedbackButton.onClick.AddListener(OnOpenPlaytestForm);
         if (quitButton != null) quitButton.onClick.AddListener(OnQuit);
         if (savesBackButton != null) savesBackButton.onClick.AddListener(ShowMainMenu);
@@ -148,7 +151,10 @@ public class MainMenuController : MonoBehaviour
         for (int i = 0; i < canvases.Length; i++)
         {
             Canvas canvas = canvases[i];
-            if (canvas.gameObject.name == "FadeManager")
+            if (canvas.gameObject.name is "FadeManager" or "CreditsOverlay")
+                continue;
+
+            if (canvas.GetComponentInParent<CreditsOverlayController>(true) != null)
                 continue;
 
             if (mainMenuPanel != null && mainMenuPanel.transform.IsChildOf(canvas.transform))
@@ -192,6 +198,12 @@ public class MainMenuController : MonoBehaviour
             optionsInfoText.text = "Gráficos, áudio, controles e geral — placeholders para implementação futura.";
 
         navigator?.ShowPanel(PanelOptions);
+    }
+
+    public void OnCredits()
+    {
+        MidnightMeowAnalyticsTracker.NotifyUiClick("main_menu", "credits");
+        CreditsOverlayController.Open();
     }
 
     private void OnSaveSlotSelected(int slot)
@@ -331,6 +343,10 @@ public class MainMenuController : MonoBehaviour
             new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(left, -y - height), new Vector2(left + width, -y));
         y += height + gap;
 
+        creditsButton = ScreenFlowPlaceholderFactory.CreateButton(panel.transform, "Créditos",
+            new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(left, -y - height), new Vector2(left + width, -y));
+        y += height + gap;
+
         quitButton = ScreenFlowPlaceholderFactory.CreateButton(panel.transform, "Sair",
             new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(left, -y - height), new Vector2(left + width, -y));
 
@@ -338,6 +354,77 @@ public class MainMenuController : MonoBehaviour
             new Vector2(1f, 0f), new Vector2(1f, 0f), new Vector2(-304f, 24f), new Vector2(-24f, 96f));
 
         return panel;
+    }
+
+    private void EnsureCreditsButtonIfMissing()
+    {
+        if (creditsButton != null)
+            return;
+
+        Transform searchRoot = mainMenuPanel != null ? mainMenuPanel.transform : transform;
+        creditsButton = FindCreditsButtonInHierarchy(searchRoot);
+        if (creditsButton != null || !buildPlaceholderIfMissing)
+            return;
+
+        Transform buttonParent = mainMenuPanel != null ? mainMenuPanel.transform : transform;
+        TryCreateCreditsButton(buttonParent);
+    }
+
+    private static Button FindCreditsButtonInHierarchy(Transform root)
+    {
+        Button[] buttons = root.GetComponentsInChildren<Button>(true);
+        for (int i = 0; i < buttons.Length; i++)
+        {
+            Button button = buttons[i];
+            if (ContainsCreditsKeyword(button.gameObject.name))
+                return button;
+
+            TMP_Text label = button.GetComponentInChildren<TMP_Text>(true);
+            if (label != null && ContainsCreditsKeyword(label.text))
+                return button;
+        }
+
+        return null;
+    }
+
+    private static bool ContainsCreditsKeyword(string value)
+    {
+        return !string.IsNullOrEmpty(value)
+            && value.IndexOf("crédito", StringComparison.OrdinalIgnoreCase) >= 0;
+    }
+
+    private void TryCreateCreditsButton(Transform parent)
+    {
+        const float left = 40f;
+        const float width = 280f;
+        const float height = 56f;
+        const float gap = 16f;
+
+        if (quitButton != null)
+        {
+            RectTransform quitRt = quitButton.GetComponent<RectTransform>();
+            float topEdge = -quitRt.offsetMin.y + gap;
+            creditsButton = ScreenFlowPlaceholderFactory.CreateButton(parent, "Créditos",
+                quitRt.anchorMin, quitRt.anchorMax,
+                new Vector2(quitRt.offsetMin.x, -topEdge - height),
+                new Vector2(quitRt.offsetMax.x, -topEdge));
+            return;
+        }
+
+        if (optionsButton != null)
+        {
+            RectTransform optionsRt = optionsButton.GetComponent<RectTransform>();
+            float topEdge = -optionsRt.offsetMin.y + height + gap;
+            creditsButton = ScreenFlowPlaceholderFactory.CreateButton(parent, "Créditos",
+                optionsRt.anchorMin, optionsRt.anchorMax,
+                new Vector2(optionsRt.offsetMin.x, -topEdge - height),
+                new Vector2(optionsRt.offsetMax.x, -topEdge));
+            return;
+        }
+
+        creditsButton = ScreenFlowPlaceholderFactory.CreateButton(parent, "Créditos",
+            new Vector2(0f, 1f), new Vector2(0f, 1f),
+            new Vector2(left, -492f), new Vector2(left + width, -436f));
     }
 
     private GameObject BuildSavesPanel(Transform parent)

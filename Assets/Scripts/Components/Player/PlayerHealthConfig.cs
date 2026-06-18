@@ -47,7 +47,8 @@ public class PlayerHealthConfig : MonoBehaviour
 
     private void _OnDied()
     {
-        if (GetComponent<NetworkPlayerHealth>() != null)
+        NetworkPlayerHealth networkHealth = GetComponent<NetworkPlayerHealth>();
+        if (networkHealth != null && networkHealth.IsSpawned)
             return;
 
         _healthComponent.SetAllowDestroyOnDeath(false);

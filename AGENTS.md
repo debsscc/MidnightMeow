@@ -25,13 +25,13 @@ Documentação completa em **[docs/README.md](docs/README.md)**:
 - Project name: MidnightMeow
 - Unity version: Unity 6000.3.13f1
 - Active scene:
-  - Name: Fase-1
+  - Name: CreditsOverlay
   - Tags:
     - Untagged, Respawn, Finish, EditorOnly, MainCamera, Player, GameController, Structure, Enemy, Drop
   - Layers:
-    - Default, TransparentFX, Ignore Raycast, Player, Water, UI, Wall, Projectile, ProjectileEnemy, Structure, Enemy, Collectable, DashableWall, Shadow
+    - Default, TransparentFX, Ignore Raycast, Water, UI
 - Active game object:
-  - Name: Sprite Light 2D (2)
+  - Name: CreditsOverlay
   - Tag: Untagged
   - Layer: Default
 <!-- UNITY CODE ASSIST INSTRUCTIONS END -->

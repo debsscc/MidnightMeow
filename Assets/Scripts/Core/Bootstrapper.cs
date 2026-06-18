@@ -10,6 +10,7 @@ public class Bootstrapper : MonoBehaviour
     {
         TransitionFadeOverlay.EnsureExists();
         ScreenFlowController.EnsureExists();
+        CreditsOverlayController.EnsureExists();
     }
 
     [SerializeField] private GameFlowManager gameFlowManager;

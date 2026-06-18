@@ -12643,7 +12643,10 @@ MonoBehaviour:
   newGameButton: {fileID: 0}
   continueButton: {fileID: 0}
   optionsButton: {fileID: 0}
+  creditsButton: {fileID: 0}
+  playtestFeedbackButton: {fileID: 0}
   quitButton: {fileID: 0}
+  playtestFormUrl: https://docs.google.com/forms/d/e/1FAIpQLScqrERAjHtXbsp-kTXYh86otM1uvqKOICOwL0JFGYLe5203aw/viewform?usp=sharing&ouid=104196659444550947531
   savesListText: {fileID: 0}
   savesBackButton: {fileID: 0}
   saveSlotButtons: []

@@ -1,0 +1,156 @@
+<size=140%><b>MidnightMeow</b></size>
+
+
+<size=120%><b>DESENVOLVIMENTO</b></size>
+
+<b>Direção e Produção</b>
+Debs Carvalho
+
+<b>Programação de Gameplay e Sistemas</b>
+Pedro Caurio
+
+<b>Programação de UI, Áudio e Infraestrutura</b>
+Debs Carvalho
+
+<b>Arquitetura Multiplayer e Rede</b>
+Pedro Caurio
+Debs Carvalho
+
+
+<size=120%><b>DESIGN DE JOGO</b></size>
+
+<b>Game Design e Balanceamento</b>
+Juliana Acunha
+Pedro Caurio
+Debs Carvalho
+
+
+<size=120%><b>ARTE E ANIMAÇÃO</b></size>
+
+<b>Arte Visual e Concept</b>
+x
+
+<b>Sprites e Animação Nixie</b>
+x
+
+<b>Sprites e Animação Cora</b>
+x
+
+<b>Sprites e Animação Inimigos (Ratos)</b>
+x
+
+<b>Arte de Ambiente e UI</b>
+x
+
+<b>Efeitos Visuais e Shaders</b>
+Debs Carvalho
+Pedro Caurio
+
+<b>Shader de Dissolve (asset externo)</b>
+VOiD1 Gaming
+
+
+<size=120%><b>ÁUDIO</b></size>
+
+<b>Trilha Sonora Original</b>
+[Nome do(a) Compositor(a)]
+
+<b>Música de Menu, Gameplay e Créditos</b>
+[Nome do(a) Compositor(a)]
+
+<b>Design de Som e SFX</b>
+Juliana Acunha
+
+<b>Implementação de Áudio no Jogo</b>
+Debs Carvalho 
+Juliana Acunha
+
+
+<size=120%><b>NARRATIVA E LORE</b></size>
+
+<b>Roteiro e Mundo</b>
+[Nome]
+
+<b>Textos de Interface</b>
+Debs Carvalho
+Pedro Caurio
+
+
+<size=120%><b>TESTES E QUALIDADE</b></size>
+
+<b>Playtest e Feedback Interno</b>
+Pedro Caurio
+Debs Carvalho
+
+<b>Testes Multiplayer</b>
+[Nomes dos playtesters]
+
+<b>QA e Relatos de Bug</b>
+A todos que sentaram para jogar uma noite a mais
+
+
+<size=120%><b>ORIENTAÇÃO ACADÊMICA</b></size>
+
+<b>Professor(a) Orientador(a)</b>
+[Nome completo, titulação]
+[Instituição / Curso / Disciplina]
+
+<b>Professor(a) Co-orientador(a)</b>
+[Nome completo, titulação]
+
+<b>Banca Examinadora</b>
+[Nome, titulação]
+[Nome, titulação]
+[Nome, titulação]
+
+<b>Instituição de Ensino</b>
+[Nome da Faculdade / Universidade]
+[Nome do Curso, ex.: Jogos Digitais, Design, Ciência da Computação]
+Turma [Ano / Período]
+
+
+<size=120%><b>AGRADECIMENTOS ESPECIAIS</b></size>
+
+À nossa família e amigos, por suportarem mais uma noite de “só mais um commit”.
+
+Aos professores que acreditaram no projeto desde o rascunho, pela paciência, orientação e por nos empurrarem a terminar o que começamos.
+
+Aos playtesters anônimos e não tão anônimos, cada morte contra a horda de ratos ajudou a deixar o jogo melhor.
+
+À comunidade Unity e aos criadores de ferramentas open source, por documentação, fóruns e exemplos que salvaram noites inteiras de debug.
+
+Aos gatos reais que inspiraram Nixie e Cora, mesmo quando deitaram em cima do teclado no momento mais importante.
+
+E a você, que chegou até aqui, obrigado por jogar MidnightMeow.
+
+
+<size=120%><b>TECNOLOGIAS E FERRAMENTAS</b></size>
+
+Unity 6000.3
+Netcode for GameObjects
+Unity Gaming Services, Relay e Lobby
+TextMesh Pro
+DOTween, Demigiant
+Universal Render Pipeline (URP)
+Cursor e ferramentas de IA assistiva no desenvolvimento
+
+
+<size=120%><b>LICENÇAS E ASSETS DE TERCEIROS</b></size>
+
+DOTween, Copyright © Daniele Giardini / Demigiant
+TextMesh Pro, Unity Technologies
+VOiD1 Gaming, 2D Dissolve Shader Graph
+Demais pacotes Unity listados em Packages/manifest.json
+
+
+<size=120%><b>DEDICATÓRIA</b></size>
+
+Para quem acredita que jogos pequenos também podem ter alma grande,
+e que a meia-noite é a hora em que os gatos ficam mais corajosos.
+
+
+<size=140%><b>MidnightMeow</b></size>
+<size=85%>© 2024 a 2026 Equipe MidnightMeow
+Todos os direitos reservados.</size>
+
+<size=90%><i>Até a próxima noite.</i></size>

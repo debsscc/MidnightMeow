@@ -105,11 +105,16 @@ public class PlayerDeathPresentation : MonoBehaviour
 
         yield return new WaitForSecondsRealtime(postDeathHoldSeconds);
 
+        if (!dissolveAfterHold)
+            yield return new WaitForSecondsRealtime(DefeatPresentationTiming.DefeatUiBufferSeconds);
+
         if (dissolveAfterHold && dissolveEffect != null)
             dissolveEffect.HandleDeath();
 
         if (dissolveAfterHold)
             MultiplayerCameraController.Resolve()?.EndDeathFocus();
+
+        GameplayVignetteController.ClearIfActive();
 
         TryRebindCameraToAliveTeammate();
 
@@ -137,12 +142,20 @@ public class PlayerDeathPresentation : MonoBehaviour
             return;
 
         DeathHordePresentation settings = GetComponent<DeathHordePresentation>();
+        CharacterAnimationProfile profile = animationBinder != null ? animationBinder.Profile : null;
+        float defeatUiDelay = DefeatPresentationTiming.ResolveDefeatUiDelay(profile, this);
+
+        if (!dissolveAfterHold)
+            GameplayVignetteController.PlayDeathSequence(defeatUiDelay, ResolveDeathVignettePeak());
 
         if (dissolveAfterHold)
             DeathHordePresentation.TryBeginSpectatorDeath(this, transform, settings);
         else
-            DeathHordePresentation.TryBeginFinalDefeat(this, transform, settings);
+            DeathHordePresentation.TryBeginFinalDefeat(this, transform, settings, defeatUiDelay);
     }
+
+    private static float ResolveDeathVignettePeak() =>
+        GameSessionContext.IsSinglePlayer ? 0.72f : 0.62f;
 
     private bool ShouldRunLocalDeathAmbience()
     {

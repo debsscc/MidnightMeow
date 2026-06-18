@@ -184,6 +184,8 @@ public static class ScreenFlowStateMachine
 
     {
 
+        GameplayVignetteController.ClearIfActive();
+
         EnterPhase(ScreenFlowPhase.Gameplay);
 
         if (TryTransition(SceneFlowRouteIds.GameplayToDefeat))

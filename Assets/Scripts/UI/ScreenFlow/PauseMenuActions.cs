@@ -20,6 +20,7 @@ public class PauseMenuActions : MonoBehaviour
     private Button _quitAppButton;
     private Button _confirmQuitAppButton;
     private Button _cancelQuitAppButton;
+    private Button _creditsButton;
     private Button _controlsBackButton;
 
     private Transform _backgroundRoot;
@@ -31,6 +32,7 @@ public class PauseMenuActions : MonoBehaviour
             quitConfirmationRoot = transform.Find("Background_PopUp")?.gameObject;
 
         ResolveButtons();
+        EnsureCreditsButtonIfMissing();
         WireButtons();
         HideQuitConfirmation();
     }
@@ -58,6 +60,11 @@ public class PauseMenuActions : MonoBehaviour
         }
 
         FindFirstObjectByType<GameManager2>()?.ResumeGame();
+    }
+
+    public void ShowCredits()
+    {
+        CreditsOverlayController.OpenFromPause();
     }
 
     public void RestartCurrentPhase()
@@ -137,6 +144,7 @@ public class PauseMenuActions : MonoBehaviour
         _restartButton = FindButton("Replay");
         _abandonButton = FindButton("Menu");
         _controlsButton = FindButton("Config");
+        _creditsButton = FindCreditsButton();
         _quitAppButton = FindQuitAppEntryButton();
         _confirmQuitAppButton = FindConfirmQuitButton();
         _cancelQuitAppButton = FindButton("Don'tQuit");
@@ -149,6 +157,7 @@ public class PauseMenuActions : MonoBehaviour
         Bind(_restartButton, RestartCurrentPhase);
         Bind(_abandonButton, AbandonRun);
         Bind(_controlsButton, ShowControls);
+        Bind(_creditsButton, ShowCredits);
         Bind(_quitAppButton, ShowQuitConfirmation);
         Bind(_confirmQuitAppButton, QuitApplication);
         Bind(_cancelQuitAppButton, HideQuitConfirmation);
@@ -156,6 +165,59 @@ public class PauseMenuActions : MonoBehaviour
 
         SetButtonLabel(_restartButton, "Reiniciar fase");
         SetButtonLabel(_abandonButton, "Abandonar");
+        SetButtonLabel(_creditsButton, "Créditos");
+    }
+
+    private void EnsureCreditsButtonIfMissing()
+    {
+        if (_creditsButton != null)
+            return;
+
+        _creditsButton = FindCreditsButton();
+        if (_creditsButton != null)
+            return;
+
+        Transform buttons1 = transform.Find("Background/Buttons/Buttons1");
+        if (buttons1 == null)
+            return;
+
+        Button template = _controlsButton != null ? _controlsButton : _abandonButton;
+        if (template == null)
+            return;
+
+        RectTransform templateRt = template.GetComponent<RectTransform>();
+        Vector2 size = templateRt.sizeDelta;
+        float gap = 12f;
+        Vector2 shift = new Vector2(0f, -size.y - gap);
+
+        _creditsButton = ScreenFlowPlaceholderFactory.CreateButton(buttons1, "Credits",
+            templateRt.anchorMin, templateRt.anchorMax,
+            templateRt.offsetMin + shift,
+            templateRt.offsetMax + shift);
+    }
+
+    private Button FindCreditsButton()
+    {
+        foreach (Button button in GetComponentsInChildren<Button>(true))
+        {
+            if (button == null)
+                continue;
+
+            if (ContainsCreditsKeyword(button.gameObject.name))
+                return button;
+
+            TMP_Text label = button.GetComponentInChildren<TMP_Text>(true);
+            if (label != null && ContainsCreditsKeyword(label.text))
+                return button;
+        }
+
+        return null;
+    }
+
+    private static bool ContainsCreditsKeyword(string value)
+    {
+        return !string.IsNullOrEmpty(value)
+               && value.IndexOf("crédito", System.StringComparison.OrdinalIgnoreCase) >= 0;
     }
 
     private void RefreshForCurrentMode()

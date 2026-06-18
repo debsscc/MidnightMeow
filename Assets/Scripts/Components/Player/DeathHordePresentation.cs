@@ -11,28 +11,30 @@ public class DeathHordePresentation : MonoBehaviour
     [Header("Timing (segundos reais)")]
     [SerializeField] private float slowMoDuration = 2f;
     [SerializeField] private float slowMoTimeScale = 0.65f;
-    [SerializeField] private float enemyFadeStart = 3f;
-    [SerializeField] private float enemyFadeEnd = 8f;
+    [Tooltip("Fade dos ratos só nos últimos segundos antes da UI de derrota.")]
+    [SerializeField] private float defeatTransitionFadeDuration = 1.25f;
 
     [Header("Spectator Death")]
-    [SerializeField] private float spectatorAmbienceDuration = 6f;
-    [SerializeField] private float spectatorEnemyFadeStart = 1f;
-    [SerializeField] private float spectatorEnemyFadeEnd = 5f;
+    [SerializeField] private float spectatorAmbienceDuration = 2.5f;
+    [SerializeField] private float spectatorEnemyDimStart = 0.35f;
+    [SerializeField] private float spectatorEnemyDimEnd = 1.75f;
     [SerializeField] private float spectatorEnemyFadeRadius = 6f;
+    [SerializeField] [Range(0.35f, 1f)] private float spectatorEnemyMinAlpha = 0.55f;
 
     [Header("Câmera")]
-    [SerializeField] private float deathZoomOrthographicSize = 7f;
-    [SerializeField] private float vignettePeakIntensity = 0.42f;
+    [SerializeField] private float deathZoomOrthographicSize = 6.5f;
 
     private static bool _finalDefeatRunning;
     private Coroutine _routine;
     private readonly List<FadedEnemySprite> _fadedSprites = new List<FadedEnemySprite>();
     private float _focusZoomFrom = 8f;
+    private float _ambienceDuration;
+    private float _enemyFadeMinAlpha = 0f;
     private Transform _focusBody;
 
-    public float AmbienceEndSeconds => enemyFadeEnd;
+    public float AmbienceEndSeconds => _ambienceDuration > 0f ? _ambienceDuration : 6f;
 
-    public static float DefaultAmbienceEndSeconds => 8f;
+    public static float DefaultAmbienceEndSeconds => 6f;
 
     private struct FadedEnemySprite
     {
@@ -40,7 +42,11 @@ public class DeathHordePresentation : MonoBehaviour
         public float InitialAlpha;
     }
 
-    public static void TryBeginFinalDefeat(MonoBehaviour runner, Transform focusBody, DeathHordePresentation settingsSource = null)
+    public static void TryBeginFinalDefeat(
+        MonoBehaviour runner,
+        Transform focusBody,
+        DeathHordePresentation settingsSource = null,
+        float ambienceDuration = -1f)
     {
         if (_finalDefeatRunning || runner == null)
             return;
@@ -49,7 +55,7 @@ public class DeathHordePresentation : MonoBehaviour
         if (presentation == null)
             presentation = runner.gameObject.AddComponent<DeathHordePresentation>();
 
-        presentation.BeginFinalDefeat(focusBody);
+        presentation.BeginFinalDefeat(focusBody, ambienceDuration);
     }
 
     public static void TryBeginSpectatorDeath(MonoBehaviour runner, Transform focusBody, DeathHordePresentation settingsSource = null)
@@ -64,7 +70,7 @@ public class DeathHordePresentation : MonoBehaviour
         presentation.BeginSpectatorDeath(focusBody);
     }
 
-    public void BeginFinalDefeat(Transform focusBody)
+    public void BeginFinalDefeat(Transform focusBody, float ambienceDuration = -1f)
     {
         if (_finalDefeatRunning)
             return;
@@ -74,6 +80,8 @@ public class DeathHordePresentation : MonoBehaviour
 
         _finalDefeatRunning = true;
         _focusBody = focusBody;
+        _ambienceDuration = ambienceDuration > 0f ? ambienceDuration : DefaultAmbienceEndSeconds;
+        _enemyFadeMinAlpha = 0f;
         _focusZoomFrom = MultiplayerCameraController.Resolve()?.GetActiveOrthographicSize() ?? deathZoomOrthographicSize;
         RequestStopWaveSpawning();
         FocusCamera(focusBody);
@@ -86,6 +94,8 @@ public class DeathHordePresentation : MonoBehaviour
             StopCoroutine(_routine);
 
         _focusBody = focusBody;
+        _ambienceDuration = spectatorAmbienceDuration;
+        _enemyFadeMinAlpha = spectatorEnemyMinAlpha;
         _focusZoomFrom = MultiplayerCameraController.Resolve()?.GetActiveOrthographicSize() ?? deathZoomOrthographicSize;
         FocusCamera(focusBody);
         _routine = StartCoroutine(SpectatorDeathRoutine());
@@ -97,7 +107,9 @@ public class DeathHordePresentation : MonoBehaviour
         ApplySlowMo(true);
         CacheEnemySprites();
 
-        while (elapsed < enemyFadeEnd)
+        float fadeStart = Mathf.Max(0f, _ambienceDuration - defeatTransitionFadeDuration);
+
+        while (elapsed < _ambienceDuration)
         {
             elapsed += Time.unscaledDeltaTime;
 
@@ -109,16 +121,15 @@ public class DeathHordePresentation : MonoBehaviour
             float focusT = Mathf.Clamp01(elapsed / slowMoDuration);
             UpdateDeathFocus(focusT);
 
-            if (elapsed >= enemyFadeStart)
+            if (elapsed >= fadeStart)
             {
-                float fadeT = Mathf.InverseLerp(enemyFadeStart, enemyFadeEnd, elapsed);
+                float fadeT = Mathf.InverseLerp(fadeStart, _ambienceDuration, elapsed);
                 ApplyEnemyFade(fadeT);
             }
 
             yield return null;
         }
 
-        ApplyEnemyFade(1f);
         ApplySlowMo(false);
         _finalDefeatRunning = false;
         _routine = null;
@@ -142,16 +153,16 @@ public class DeathHordePresentation : MonoBehaviour
             float focusT = Mathf.Clamp01(elapsed / slowMoDuration);
             UpdateDeathFocus(focusT);
 
-            if (elapsed >= spectatorEnemyFadeStart)
+            if (elapsed >= spectatorEnemyDimStart)
             {
-                float fadeT = Mathf.InverseLerp(spectatorEnemyFadeStart, spectatorEnemyFadeEnd, elapsed);
+                float fadeT = Mathf.InverseLerp(spectatorEnemyDimStart, spectatorEnemyDimEnd, elapsed);
                 ApplyEnemyFade(fadeT);
             }
 
             yield return null;
         }
 
-        ApplyEnemyFade(1f);
+        RestoreEnemyFade();
         ApplySlowMo(false);
         ClearDeathFocus();
         _routine = null;
@@ -159,9 +170,6 @@ public class DeathHordePresentation : MonoBehaviour
 
     private void UpdateDeathFocus(float t)
     {
-        GameplayVignetteController vignette = GameplayVignetteController.Instance;
-        vignette?.SetIntensity(Mathf.Lerp(0f, vignettePeakIntensity, t));
-
         float zoom = Mathf.Lerp(_focusZoomFrom, deathZoomOrthographicSize, t);
         MultiplayerCameraController.Resolve()?.UpdateDeathFocusZoom(zoom);
     }
@@ -177,7 +185,6 @@ public class DeathHordePresentation : MonoBehaviour
 
     private void ClearDeathFocus()
     {
-        GameplayVignetteController.ClearIfActive();
         MultiplayerCameraController.Resolve()?.EndDeathFocus();
     }
 
@@ -256,7 +263,8 @@ public class DeathHordePresentation : MonoBehaviour
 
     private void ApplyEnemyFade(float t)
     {
-        float alphaMultiplier = 1f - Mathf.Clamp01(t);
+        float fade = Mathf.Clamp01(t);
+        float alphaMultiplier = Mathf.Lerp(1f, _enemyFadeMinAlpha, fade);
 
         for (int i = 0; i < _fadedSprites.Count; i++)
         {
@@ -268,6 +276,22 @@ public class DeathHordePresentation : MonoBehaviour
             color.a = _fadedSprites[i].InitialAlpha * alphaMultiplier;
             renderer.color = color;
         }
+    }
+
+    private void RestoreEnemyFade()
+    {
+        for (int i = 0; i < _fadedSprites.Count; i++)
+        {
+            SpriteRenderer renderer = _fadedSprites[i].Renderer;
+            if (renderer == null)
+                continue;
+
+            Color color = renderer.color;
+            color.a = _fadedSprites[i].InitialAlpha;
+            renderer.color = color;
+        }
+
+        _fadedSprites.Clear();
     }
 
     private static bool IsEnemy(GameObject go)
