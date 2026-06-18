@@ -14,6 +14,12 @@ public class DeathHordePresentation : MonoBehaviour
     [SerializeField] private float enemyFadeStart = 3f;
     [SerializeField] private float enemyFadeEnd = 8f;
 
+    [Header("Spectator Death")]
+    [SerializeField] private float spectatorAmbienceDuration = 6f;
+    [SerializeField] private float spectatorEnemyFadeStart = 1f;
+    [SerializeField] private float spectatorEnemyFadeEnd = 5f;
+    [SerializeField] private float spectatorEnemyFadeRadius = 6f;
+
     [Header("Câmera")]
     [SerializeField] private float deathZoomOrthographicSize = 7f;
     [SerializeField] private float vignettePeakIntensity = 0.42f;
@@ -22,6 +28,7 @@ public class DeathHordePresentation : MonoBehaviour
     private Coroutine _routine;
     private readonly List<FadedEnemySprite> _fadedSprites = new List<FadedEnemySprite>();
     private float _focusZoomFrom = 8f;
+    private Transform _focusBody;
 
     public float AmbienceEndSeconds => enemyFadeEnd;
 
@@ -66,6 +73,7 @@ public class DeathHordePresentation : MonoBehaviour
             StopCoroutine(_routine);
 
         _finalDefeatRunning = true;
+        _focusBody = focusBody;
         _focusZoomFrom = MultiplayerCameraController.Resolve()?.GetActiveOrthographicSize() ?? deathZoomOrthographicSize;
         RequestStopWaveSpawning();
         FocusCamera(focusBody);
@@ -77,6 +85,7 @@ public class DeathHordePresentation : MonoBehaviour
         if (_routine != null)
             StopCoroutine(_routine);
 
+        _focusBody = focusBody;
         _focusZoomFrom = MultiplayerCameraController.Resolve()?.GetActiveOrthographicSize() ?? deathZoomOrthographicSize;
         FocusCamera(focusBody);
         _routine = StartCoroutine(SpectatorDeathRoutine());
@@ -119,15 +128,30 @@ public class DeathHordePresentation : MonoBehaviour
     {
         float elapsed = 0f;
         ApplySlowMo(true);
+        CacheEnemySpritesNearFocus(_focusBody, spectatorEnemyFadeRadius);
 
-        while (elapsed < slowMoDuration)
+        while (elapsed < spectatorAmbienceDuration)
         {
             elapsed += Time.unscaledDeltaTime;
+
+            if (elapsed <= slowMoDuration)
+                ApplySlowMo(true);
+            else
+                ApplySlowMo(false);
+
             float focusT = Mathf.Clamp01(elapsed / slowMoDuration);
             UpdateDeathFocus(focusT);
+
+            if (elapsed >= spectatorEnemyFadeStart)
+            {
+                float fadeT = Mathf.InverseLerp(spectatorEnemyFadeStart, spectatorEnemyFadeEnd, elapsed);
+                ApplyEnemyFade(fadeT);
+            }
+
             yield return null;
         }
 
+        ApplyEnemyFade(1f);
         ApplySlowMo(false);
         ClearDeathFocus();
         _routine = null;
@@ -184,13 +208,19 @@ public class DeathHordePresentation : MonoBehaviour
         waveGenerator?.StopSpawning();
     }
 
-    private void CacheEnemySprites()
+    private void CacheEnemySprites() => CacheEnemySpritesNearFocus(null, 0f);
+
+    private void CacheEnemySpritesNearFocus(Transform focus, float radius)
     {
         _fadedSprites.Clear();
 
         HealthComponent[] healthComponents = Object.FindObjectsByType<HealthComponent>(
             FindObjectsInactive.Exclude,
             FindObjectsSortMode.None);
+
+        Vector2 focusPosition = focus != null ? (Vector2)focus.position : Vector2.zero;
+        float radiusSqr = radius > 0f ? radius * radius : 0f;
+        bool filterByRadius = focus != null && radius > 0f;
 
         for (int i = 0; i < healthComponents.Length; i++)
         {
@@ -200,6 +230,13 @@ public class DeathHordePresentation : MonoBehaviour
 
             if (!IsEnemy(health.gameObject))
                 continue;
+
+            if (filterByRadius)
+            {
+                float distSqr = ((Vector2)health.transform.position - focusPosition).sqrMagnitude;
+                if (distSqr > radiusSqr)
+                    continue;
+            }
 
             SpriteRenderer[] renderers = health.GetComponentsInChildren<SpriteRenderer>(true);
             for (int r = 0; r < renderers.Length; r++)

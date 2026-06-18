@@ -129,12 +129,12 @@ TextureImporter:
       name: AcidGetUpFrame_3_0
       rect:
         serializedVersion: 2
-        x: 166
-        y: 51
-        width: 402
-        height: 390
+        x: 0
+        y: 0
+        width: 800
+        height: 497
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -151,7 +151,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 
+    spriteID: 4dc5f712ec47aa2468663865aab0343f
     internalID: 0
     vertices: []
     indices: 

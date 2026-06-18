@@ -32,6 +32,9 @@ public class PlayerGameplayModuleInstaller : MonoBehaviour
             GetComponent<MeleeAttackDebugVisual>() == null)
             gameObject.AddComponent<MeleeAttackDebugVisual>();
 
+        if (GetComponent<PlayerMeleeCombat>() != null && GetComponent<PlayerMeleeHitFeedback>() == null)
+            gameObject.AddComponent<PlayerMeleeHitFeedback>();
+
         if (installAbilityDebugVisual && GetComponent<PlayerAbilityHandler>() != null &&
             GetComponent<AbilityDebugVisualHost>() == null)
             gameObject.AddComponent<AbilityDebugVisualHost>();

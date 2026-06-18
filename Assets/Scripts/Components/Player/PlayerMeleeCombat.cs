@@ -17,6 +17,7 @@ public class PlayerMeleeCombat : MonoBehaviour
 
     public event Action OnMeleeAttackStarted;
     public event Action<Vector2, Vector2, MeleeCombatStats> OnAttackPerformed;
+    public event Action<MeleeHitResult> OnMeleeHitsConfirmed;
 
     public MeleeCombatStats CombatStats => _runtimeCombatStats != null ? _runtimeCombatStats : combatStats;
 
@@ -34,6 +35,7 @@ public class PlayerMeleeCombat : MonoBehaviour
     private float _lastAttackTime = -999f;
     private bool _isAttacking;
     private Coroutine _attackRoutine;
+    private bool _strikeTriggered;
 
     public bool IsAttacking => _isAttacking && _attackRoutine != null;
 
@@ -87,21 +89,41 @@ public class PlayerMeleeCombat : MonoBehaviour
         _attackRoutine = StartCoroutine(MeleeAttackRoutine());
     }
 
+    /// <summary>Chamado por Animation Event no frame de impacto (fallback: deadline por SO).</summary>
+    public void PerformStrike()
+    {
+        if (!_isAttacking)
+            return;
+
+        _strikeTriggered = true;
+    }
+
     private IEnumerator MeleeAttackRoutine()
     {
         _isAttacking = true;
+        _strikeTriggered = false;
         _lastAttackTime = Time.time;
 
         OnMeleeAttackStarted?.Invoke();
 
-        float strikeDelay = ResolveMeleeStrikeDelay();
-        if (strikeDelay > 0f)
-            yield return new WaitForSeconds(strikeDelay);
+        float strikeDeadline = ResolveMeleeStrikeDelay();
+        float elapsed = 0f;
+        while (!_strikeTriggered && elapsed < strikeDeadline)
+        {
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
 
         if (!_aim.TryGetAimDirection(out Vector2 direction, out _))
             direction = Vector2.up;
 
-        PerformMeleeHit(direction);
+        MeleeHitResult result = PerformMeleeHit(direction);
+        OnMeleeHitsConfirmed?.Invoke(result);
+
+        float recoveryDelay = ResolveMeleeRecoveryDelay();
+        if (recoveryDelay > 0f)
+            yield return new WaitForSeconds(recoveryDelay);
+
         CancelAttackState();
     }
 
@@ -113,7 +135,18 @@ public class PlayerMeleeCombat : MonoBehaviour
         if (CombatStats == null)
             return 0.25f;
 
-        return Mathf.Max(CombatStats.windupDelay, CombatStats.attackCooldown * 0.85f);
+        return MeleeStrikeTimingUtility.ComputeStrikeDelay(CombatStats, 0.333f, 1f);
+    }
+
+    private float ResolveMeleeRecoveryDelay()
+    {
+        if (_animationHandler != null)
+            return _animationHandler.GetMeleeRecoveryDelay();
+
+        if (CombatStats == null)
+            return 0f;
+
+        return MeleeStrikeTimingUtility.ComputeRecoveryDelay(CombatStats, 0.333f, 1f);
     }
 
     private void CancelAttackState()
@@ -125,11 +158,13 @@ public class PlayerMeleeCombat : MonoBehaviour
         }
 
         _isAttacking = false;
+        _strikeTriggered = false;
     }
 
-    private void PerformMeleeHit(Vector2 direction)
+    private MeleeHitResult PerformMeleeHit(Vector2 direction)
     {
-        if (CombatStats == null) return;
+        if (CombatStats == null)
+            return MeleeHitResult.Miss;
 
         direction = direction.sqrMagnitude > 0.0001f ? direction.normalized : Vector2.up;
         Vector2 origin = GetSwingOrigin(direction);
@@ -141,19 +176,22 @@ public class PlayerMeleeCombat : MonoBehaviour
         OnAttackPerformed?.Invoke(origin, direction, CombatStats);
 
         float searchRadius = attackRange + farHalfWidth + 0.5f;
-        var hits = Physics2D.OverlapCircleAll(origin, searchRadius, enemyLayers);
-        var processed = new HashSet<int>();
+        Collider2D[] hits = Physics2D.OverlapCircleAll(origin, searchRadius, enemyLayers);
+        HashSet<int> processed = new HashSet<int>();
         int maxTargets = _passiveHandler != null ? _passiveHandler.CleaveMaxTargets : 1;
         int hitCount = 0;
 
-        foreach (var hit in hits)
+        List<Vector2> hitPoints = new List<Vector2>(maxTargets);
+        List<GameObject> targets = new List<GameObject>(maxTargets);
+
+        foreach (Collider2D hit in hits)
         {
             if (hit == null) continue;
 
             int id = hit.GetInstanceID();
             if (!processed.Add(id)) continue;
 
-            var damageable = hit.GetComponentInParent<HealthComponent>();
+            HealthComponent damageable = hit.GetComponentInParent<HealthComponent>();
             if (damageable == null) continue;
 
             Vector2 targetPoint = hit.bounds.center;
@@ -166,8 +204,10 @@ public class PlayerMeleeCombat : MonoBehaviour
                     targetPoint))
                 continue;
 
-            var targetRoot = damageable.gameObject;
+            GameObject targetRoot = damageable.gameObject;
             ApplyHitToTarget(targetRoot, direction, origin, targetPoint);
+            hitPoints.Add(targetPoint);
+            targets.Add(targetRoot);
             hitCount++;
             if (hitCount >= maxTargets) break;
 
@@ -187,7 +227,9 @@ public class PlayerMeleeCombat : MonoBehaviour
             "-",
             0f,
             false,
-            $"swing origin={origin} dir={direction}"));
+            $"swing origin={origin} dir={direction} hits={hitCount}"));
+
+        return new MeleeHitResult(hitCount, hitPoints.ToArray(), targets.ToArray());
     }
 
     private Vector2 GetBodyPosition()
@@ -228,6 +270,5 @@ public class PlayerMeleeCombat : MonoBehaviour
                 knockback.ApplyKnockback(knockDir, CombatStats.knockbackForce, CombatStats.knockbackDuration);
             }
         }
-
     }
 }

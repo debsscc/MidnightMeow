@@ -11,6 +11,7 @@ using UnityEngine.AI;
 public class NetworkEnemyController : NetworkBehaviour
 {
     [SerializeField] private float deathDespawnDelay = 0.4f;
+    [SerializeField] private float deathPresentationFallbackSeconds = 8f;
 
     private EnemyMovement _movement;
     private EnemyTargetFinder _targetFinder;
@@ -20,6 +21,7 @@ public class NetworkEnemyController : NetworkBehaviour
     private EnemyAnimationHandler _animationHandler;
     private EnemyDropHandler _dropHandler;
     private EnemyHitStun _hitStun;
+    private DissolveEffect _dissolveEffect;
     private HealthComponent _health;
     private NavMeshAgent _agent;
 
@@ -60,6 +62,7 @@ public class NetworkEnemyController : NetworkBehaviour
 
     private static readonly int HashMoveSpeed = Animator.StringToHash("MoveSpeed");
     private static readonly int HashOnAttack = Animator.StringToHash("OnAttack");
+    private static readonly int HashOnDie = Animator.StringToHash("OnDie");
     private static readonly int HashIsAttacking = Animator.StringToHash("IsAttacking");
 
     private Animator _animator;
@@ -71,6 +74,8 @@ public class NetworkEnemyController : NetworkBehaviour
     private float _lastSyncedHealth = -1f;
     private ulong _lastInstigatorClientId;
     private bool _deathFinalized;
+    private bool _deathVisualsPlayed;
+    private bool _deathPresentationCompleted;
     private Coroutine _despawnCoroutine;
     private Coroutine _knockbackCoroutine;
 
@@ -87,6 +92,7 @@ public class NetworkEnemyController : NetworkBehaviour
         _animationHandler = GetComponent<EnemyAnimationHandler>();
         _dropHandler = GetComponent<EnemyDropHandler>();
         _hitStun = GetComponent<EnemyHitStun>();
+        _dissolveEffect = GetComponent<DissolveEffect>();
         _health = GetComponent<HealthComponent>();
         _agent = GetComponent<NavMeshAgent>();
         _animator = GetComponent<Animator>();
@@ -112,6 +118,8 @@ public class NetworkEnemyController : NetworkBehaviour
     public override void OnNetworkSpawn()
     {
         _deathFinalized = false;
+        _deathVisualsPlayed = false;
+        _deathPresentationCompleted = false;
 
         if (_animationHandler != null)
             _animationHandler.enabled = true;
@@ -172,6 +180,9 @@ public class NetworkEnemyController : NetworkBehaviour
         if (!IsServer || !IsSpawned || _movement == null)
             return;
 
+        if (_deathFinalized || IsDeadOnNetwork)
+            return;
+
         float speed = _movement.GetCurrentSpeed();
         if (!Mathf.Approximately(_animMoveSpeed.Value, speed))
             _animMoveSpeed.Value = speed;
@@ -200,10 +211,9 @@ public class NetworkEnemyController : NetworkBehaviour
         }
 
         ApplyDeathPresentation();
-        if (_animationHandler != null)
-            _animationHandler.PlayDeathAnimation();
+        PlayDeathVisuals();
 
-        ScheduleDeathDespawn(deathDespawnDelay);
+        ScheduleDeathPresentationFallback();
     }
 
     private void FinalizeDeathOnServer()
@@ -229,26 +239,80 @@ public class NetworkEnemyController : NetworkBehaviour
 
         GameEvents.InvokeEnemyKilledByPlayer(_lastInstigatorClientId);
 
+        _animMoveSpeed.Value = 0f;
+        _animIsAttacking.Value = false;
+
         PlayDeathVisualClientRpc();
-        ScheduleDeathDespawn(GetDeathDespawnDelay());
+        ScheduleDeathPresentationFallback();
     }
 
-    private float GetDeathDespawnDelay()
+    public void NotifyDeathPresentationFinished()
     {
-        if (_dropHandler != null)
+        HideAllVisualsLocal();
+
+        if (!IsSpawned)
         {
-            float fromStats = _dropHandler.DeathDespawnDelay;
-            if (fromStats > 0f)
-                return fromStats;
+            Destroy(gameObject, 0.05f);
+            return;
         }
 
-        return Mathf.Max(0.05f, deathDespawnDelay);
+        if (IsServer)
+            FinalizeDeathPresentation();
+        else
+            NotifyDeathPresentationFinishedServerRpc();
     }
 
-    private void ScheduleDeathDespawn(float delay)
+    [ServerRpc(RequireOwnership = false)]
+    private void NotifyDeathPresentationFinishedServerRpc()
+    {
+        if (!IsServer || !_deathFinalized || _deathPresentationCompleted)
+            return;
+
+        FinalizeDeathPresentation();
+    }
+
+    private void ScheduleDeathPresentationFallback()
     {
         CancelDeathDespawnRoutine();
-        _despawnCoroutine = StartCoroutine(DeathDespawnRoutine(delay));
+        _despawnCoroutine = StartCoroutine(DeathPresentationFallbackRoutine());
+    }
+
+    private float GetDeathPresentationFallbackDelay()
+    {
+        if (_dissolveEffect != null)
+            return Mathf.Max(deathPresentationFallbackSeconds, _dissolveEffect.EstimatedTotalDuration + 1f);
+
+        if (_dropHandler != null && _dropHandler.DeathDespawnDelay > 0f)
+            return _dropHandler.DeathDespawnDelay;
+
+        return Mathf.Max(deathDespawnDelay, 2f);
+    }
+
+    private IEnumerator DeathPresentationFallbackRoutine()
+    {
+        yield return new WaitForSeconds(GetDeathPresentationFallbackDelay());
+        FinalizeDeathPresentation();
+        _despawnCoroutine = null;
+    }
+
+    private void FinalizeDeathPresentation()
+    {
+        if (_deathPresentationCompleted)
+            return;
+
+        _deathPresentationCompleted = true;
+        CancelDeathDespawnRoutine();
+        HideAllVisualsLocal();
+        HideVisualsClientRpc();
+        DespawnEnemy();
+    }
+
+    private void HideAllVisualsLocal()
+    {
+        if (_dissolveEffect != null)
+            _dissolveEffect.HideVisuals();
+        else
+            DeathVisualHider.Hide(transform);
     }
 
     private void CancelDeathDespawnRoutine()
@@ -260,16 +324,6 @@ public class NetworkEnemyController : NetworkBehaviour
         }
 
         CancelInvoke(nameof(DespawnEnemy));
-    }
-
-    private IEnumerator DeathDespawnRoutine(float delay)
-    {
-        if (delay > 0f)
-            yield return new WaitForSeconds(delay);
-
-        HideVisualsClientRpc();
-        DespawnEnemy();
-        _despawnCoroutine = null;
     }
 
     private void DespawnEnemy()
@@ -342,8 +396,33 @@ public class NetworkEnemyController : NetworkBehaviour
         SetAIComponentsActive(false);
         ApplyDeathPresentation();
 
+        PlayDeathVisuals();
+    }
+
+    private void PlayDeathVisuals()
+    {
+        if (_deathVisualsPlayed)
+            return;
+
+        _deathVisualsPlayed = true;
+        PrepareAnimatorForDeathPresentation();
+
         if (_animationHandler != null)
             _animationHandler.PlayDeathAnimation();
+        else if (_animator != null)
+            _animator.SetTrigger(HashOnDie);
+
+        if (_dissolveEffect != null)
+            _dissolveEffect.HandleDeath();
+    }
+
+    private void PrepareAnimatorForDeathPresentation()
+    {
+        if (_animator == null)
+            return;
+
+        _animator.SetFloat(HashMoveSpeed, 0f);
+        _animator.SetBool(HashIsAttacking, false);
     }
 
     private void ApplyClientMirror(float current, float max, bool isDead)
@@ -501,15 +580,13 @@ public class NetworkEnemyController : NetworkBehaviour
     [ClientRpc]
     private void PlayDeathVisualClientRpc()
     {
-        if (_animationHandler != null)
-            _animationHandler.PlayDeathAnimation();
+        PlayDeathVisuals();
     }
 
     [ClientRpc]
     private void HideVisualsClientRpc()
     {
-        foreach (var sr in GetComponentsInChildren<SpriteRenderer>(true))
-            sr.enabled = false;
+        HideAllVisualsLocal();
     }
 
     public void BroadcastTelegraphToClients(
@@ -609,6 +686,9 @@ public class NetworkEnemyController : NetworkBehaviour
         bool triggerAttack)
     {
         if (!IsSpawned || IsServer)
+            return;
+
+        if (_deathVisualsPlayed)
             return;
 
         if (_animator != null)

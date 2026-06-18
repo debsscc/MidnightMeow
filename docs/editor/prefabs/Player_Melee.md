@@ -1,12 +1,31 @@
 # Guia: personagem melee (Nixie)
 
-Última revisão: 2026-05-22
+Última revisão: 2026-06-17
 
 > **Prefab de produção:** `Assets/Prefabs/Characters/Nixie.prefab` — documentação completa em [Nixie.md](Nixie.md).
 
 ## Resumo
 
 Personagem **corpo a corpo**: sem tiro, com dash, ataque em trapézio na direção da mira e knockback no servidor.
+
+## Timing do golpe (sync)
+
+| Campo (`MeleeCombatStats`) | Função |
+|----------------------------|--------|
+| `strikeNormalizedTime` | Momento do dano no clip (ex.: `0.35` = 35%) |
+| `recoveryNormalizedTime` | Tempo pós-hit bloqueando movimento (`0` = resto do clip) |
+| Animation Event `PerformStrike()` | Opcional no clip `Hitting` — antecipa o hit antes do deadline |
+
+Cálculo: `MeleeStrikeTimingUtility` + `PlayerAnimationHandler.GetMeleeStrikeDelay()` / `GetMeleeRecoveryDelay()`.
+
+## Juice no acerto
+
+| Sistema | Comportamento |
+|---------|----------------|
+| `PlayerMeleeHitFeedback` | Instalado via `PlayerGameplayModuleInstaller` |
+| `MeleeHitBurstVfx` | 4 partículas amarelo/branco no `hitPoint` |
+| `SpriteBlink.Pulse` | Reforço no rato acertado |
+| `PlayerCameraFeedback.ShakeOnMeleeHit` | Light (~0,08 / 0,08s) só se `hitCount > 0`; suprimido 0,15s após shake de dano |
 
 ## Passo a passo no Unity (se criar variante nova)
 
@@ -29,6 +48,8 @@ Personagem **corpo a corpo**: sem tiro, com dash, ataque em trapézio na direç�
 | Script                          | Função                                         |
 | ------------------------------- | ---------------------------------------------- |
 | `PlayerMeleeCombat`             | Cone + dano + knockback via `MeleeCombatStats` |
+| `PlayerMeleeHitFeedback`        | Burst, blink pulse, shake leve no acerto       |
+| `MeleeStrikeTimingUtility`      | Strike/recovery normalizados no clip           |
 | `MeleeCombatStats`              | SO: dano, cone, range, knockback               |
 | `KnockbackReceiver`             | `ApplyKnockback(direction, force, duration)`   |
 | `PlayerDamageImmunity`          | I-frames + atravessar inimigos após dano       |

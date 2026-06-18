@@ -156,7 +156,7 @@ Transform:
   m_GameObject: {fileID: 2414318488435118671}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.25, y: -1.33, z: 0}
+  m_LocalPosition: {x: 0.68, y: -3.08, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -352,7 +352,7 @@ ParticleSystem:
       serializedVersion: 2
       minMaxState: 0
       minColor: {r: 1, g: 1, b: 1, a: 1}
-      maxColor: {r: 0.6679245, g: 0.6679245, b: 0.6679245, a: 1}
+      maxColor: {r: 0.24313726, g: 0.60784316, b: 1, a: 1}
       maxGradient:
         serializedVersion: 2
         key0: {r: 1, g: 1, b: 1, a: 1}
@@ -416,7 +416,7 @@ ParticleSystem:
     startSize:
       serializedVersion: 2
       minMaxState: 0
-      scalar: 0.35
+      scalar: 0.38
       minScalar: 1
       maxCurve:
         serializedVersion: 2
@@ -1437,8 +1437,8 @@ ParticleSystem:
       maxColor: {r: 1, g: 1, b: 1, a: 1}
       maxGradient:
         serializedVersion: 2
-        key0: {r: 1, g: 1, b: 1, a: 1}
-        key1: {r: 1, g: 1, b: 1, a: 0}
+        key0: {r: 0.24313726, g: 0.60784316, b: 1, a: 1}
+        key1: {r: 0.83137256, g: 0.9539152, b: 1, a: 1}
         key2: {r: 0, g: 0, b: 0, a: 0}
         key3: {r: 0, g: 0, b: 0, a: 0}
         key4: {r: 0, g: 0, b: 0, a: 0}
@@ -1446,7 +1446,7 @@ ParticleSystem:
         key6: {r: 0, g: 0, b: 0, a: 0}
         key7: {r: 0, g: 0, b: 0, a: 0}
         ctime0: 0
-        ctime1: 65535
+        ctime1: 39861
         ctime2: 0
         ctime3: 0
         ctime4: 0
@@ -6187,9 +6187,21 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DissolveEffect
   spriteRenderer: {fileID: 7050732553715643850}
+  animationBinder: {fileID: 0}
+  visualRoot: {fileID: 0}
+  includeChildRenderers: 1
   dissolveMaterial: {fileID: 2100000, guid: 33566b8d8d9359649bfd2bf459ae623b, type: 2}
   duration: 1.5
+  hideAtDissolveProgress: 0.82
+  void1HideAtLinearTime: 0.62
+  waitForDeathAnimation: 1
+  deathStateName: Dying
+  dissolveStartNormalizedTime: 0.72
+  deathAnimLeadTimeFallback: 0.52
   edgeColor: {r: 0.15294118, g: 0.14117648, b: 0.227451, a: 1}
+  edgeIntensity: 3.5
+  sparkleIntensity: 2
+  playSparkleParticles: 1
 --- !u!114 &1595175843066875490
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6598,7 +6610,7 @@ Transform:
   m_GameObject: {fileID: 5715922893988417228}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.48, y: 3.14, z: 0}
+  m_LocalPosition: {x: 0.38, y: -0.84, z: 0}
   m_LocalScale: {x: 0.46624002, y: 0.46624002, z: 2.3312001}
   m_ConstrainProportionsScale: 1
   m_Children: []

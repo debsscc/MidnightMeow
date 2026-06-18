@@ -5,8 +5,11 @@ Shader "Custom/DissolveSprite"
         _MainTex ("Sprite Texture", 2D) = "white" {}
         [PerRendererData] _Color ("Tint", Color) = (1,1,1,1)
         _DissolveAmount ("Dissolve Amount", Range(0,1)) = 0
-        _EdgeWidth ("Edge Width", Range(0, 0.2)) = 0.05
-        _EdgeColor ("Edge Color", Color) = (0, 0.8, 1, 1)
+        _EdgeWidth ("Edge Width", Range(0, 0.2)) = 0.08
+        _EdgeColor ("Edge Color", Color) = (0.85, 0.95, 1, 1)
+        _EdgeIntensity ("Edge Intensity", Range(1, 8)) = 3.5
+        _SparkleIntensity ("Sparkle Intensity", Range(0, 6)) = 2
+        _SparkleScale ("Sparkle Scale", Float) = 40
         _NoiseScale ("Noise Scale", Float) = 5.0
     }
 
@@ -55,6 +58,9 @@ Shader "Custom/DissolveSprite"
             float     _DissolveAmount;
             float     _EdgeWidth;
             fixed4    _EdgeColor;
+            float     _EdgeIntensity;
+            float     _SparkleIntensity;
+            float     _SparkleScale;
             float     _NoiseScale;
 
             float hash(float2 p)
@@ -76,7 +82,6 @@ Shader "Custom/DissolveSprite"
                 float d = hash(i + float2(1, 1));
                 float n = lerp(lerp(a, b, u.x), lerp(c, d, u.x), u.y);
 
-                // Segunda oitava
                 float2 uv2 = uv * 2.1;
                 float2 i2  = floor(uv2);
                 float2 f2  = frac(uv2);
@@ -104,18 +109,22 @@ Shader "Custom/DissolveSprite"
             fixed4 frag(v2f IN) : SV_Target
             {
                 fixed4 texColor = tex2D(_MainTex, IN.texcoord) * IN.color;
+                if (texColor.a < 0.01)
+                    discard;
 
                 float n = noise(IN.texcoord * _NoiseScale);
-
-                // Descarta pixel se abaixo do threshold
                 clip(n - _DissolveAmount);
 
-                // Borda brilhante
-                float  edge      = smoothstep(_DissolveAmount, _DissolveAmount + _EdgeWidth, n);
-                fixed4 edgeColor = _EdgeColor;
+                float edgeBand = smoothstep(_DissolveAmount, _DissolveAmount + _EdgeWidth, n);
+                fixed4 edgeColor = _EdgeColor * _EdgeIntensity;
                 edgeColor.a *= texColor.a;
 
-                fixed4 finalColor = lerp(edgeColor, texColor, edge);
+                float edgeProximity = 1.0 - saturate((n - _DissolveAmount) / max(_EdgeWidth, 0.001));
+                float sparkleCell = hash(floor(IN.texcoord * _SparkleScale + float2(_DissolveAmount * 12.0, 0.0)));
+                float sparkle = step(0.82, sparkleCell) * edgeProximity * _SparkleIntensity;
+                edgeColor.rgb += sparkle;
+
+                fixed4 finalColor = lerp(edgeColor, texColor, edgeBand);
                 finalColor.a = texColor.a * step(_DissolveAmount, n);
 
                 return finalColor;

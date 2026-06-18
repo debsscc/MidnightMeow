@@ -25,6 +25,7 @@ public class PlayerAnimationHandler : MonoBehaviour
 
     [Header("Death Animation")]
     [SerializeField] private float _deathDestroyDelay = 4f;
+    [SerializeField] private int deadSortingOrderBoost = 50;
 
     private Animator _animator;
     private Rigidbody2D _rb;
@@ -48,6 +49,10 @@ public class PlayerAnimationHandler : MonoBehaviour
     private bool _loggedOnce;
     private bool _useNetworkMoveSpeed;
     private float _networkMoveSpeed;
+    private Transform _dustFacingTransform;
+    private Vector3 _dustBaseLocalScale;
+    private NetworkPlayerHealth _networkHealth;
+    private bool _deathPresentationActive;
 
     private void Awake()
     {
@@ -60,8 +65,17 @@ public class PlayerAnimationHandler : MonoBehaviour
         if (playerMeleeCombat == null) playerMeleeCombat = GetComponent<PlayerMeleeCombat>();
         if (playerAbilityHandler == null) playerAbilityHandler = GetComponent<PlayerAbilityHandler>();
         if (playerDash == null) playerDash = GetComponent<PlayerDash>();
+        if (playerMovement == null) playerMovement = GetComponent<PlayerMovement>();
+        if (healthComponent == null) healthComponent = GetComponent<HealthComponent>();
         if (animationBinder == null) animationBinder = GetComponent<AnimatorProfileBinder>();
         _abilityRelay = GetComponent<NetworkPlayerAbilityRelay>();
+        _networkHealth = GetComponent<NetworkPlayerHealth>();
+
+        if (playerMovement != null && playerMovement.dustParticle != null)
+        {
+            _dustFacingTransform = playerMovement.dustParticle.transform;
+            _dustBaseLocalScale = _dustFacingTransform.localScale;
+        }
 
         ResolveAnimationHashes();
     }
@@ -151,7 +165,21 @@ public class PlayerAnimationHandler : MonoBehaviour
     public float GetMeleeStrikeDelay()
     {
         float clipLength = _attackAnimClipLength > 0f ? _attackAnimClipLength : 0.333f;
-        return clipLength / Mathf.Max(0.1f, GetMeleeAttackSpeedMultiplier());
+        MeleeCombatStats stats = playerMeleeCombat != null ? playerMeleeCombat.CombatStats : null;
+        return MeleeStrikeTimingUtility.ComputeStrikeDelay(
+            stats,
+            clipLength,
+            GetMeleeAttackSpeedMultiplier());
+    }
+
+    public float GetMeleeRecoveryDelay()
+    {
+        float clipLength = _attackAnimClipLength > 0f ? _attackAnimClipLength : 0.333f;
+        MeleeCombatStats stats = playerMeleeCombat != null ? playerMeleeCombat.CombatStats : null;
+        return MeleeStrikeTimingUtility.ComputeRecoveryDelay(
+            stats,
+            clipLength,
+            GetMeleeAttackSpeedMultiplier());
     }
 
     private float GetMeleeAttackSpeedMultiplier()
@@ -298,6 +326,20 @@ public class PlayerAnimationHandler : MonoBehaviour
             _spriteRenderer.flipX = flipX;
         if (shadowSpriteRenderer != null)
             shadowSpriteRenderer.flipX = flipX;
+
+        ApplyDustFacing(facingRight);
+    }
+
+    private void ApplyDustFacing(bool facingRight)
+    {
+        if (_dustFacingTransform == null)
+            return;
+
+        float sign = facingRight ? 1f : -1f;
+        _dustFacingTransform.localScale = new Vector3(
+            Mathf.Abs(_dustBaseLocalScale.x) * sign,
+            _dustBaseLocalScale.y,
+            _dustBaseLocalScale.z);
     }
 
     private void HandleHit()
@@ -313,10 +355,10 @@ public class PlayerAnimationHandler : MonoBehaviour
         if (healthComponent != null && !TryGetComponent<PlayerDeathPresentation>(out _))
             healthComponent.SetDestroyDelay(_deathDestroyDelay);
 
+        _deathPresentationActive = true;
         _rb.linearVelocity = Vector2.zero;
         _rb.simulated = false;
 
-        if (_collider2D != null) _collider2D.enabled = false;
         if (playerMovement != null) playerMovement.enabled = false;
         if (playerShooting != null) playerShooting.enabled = false;
         if (TryGetComponent<PlayerFacingController>(out var facingController))
@@ -325,6 +367,41 @@ public class PlayerAnimationHandler : MonoBehaviour
             aim.enabled = false;
 
         _animator.SetTrigger(_hashOnDie);
+
+        if (!TryGetComponent<PlayerDeathPresentation>(out _))
+            FinalizeDeathPhysics();
+    }
+
+    /// <summary>Desliga colisor após a animação de morte; mantém sorting via sprite bounds até lá.</summary>
+    public void FinalizeDeathPhysics()
+    {
+        if (_collider2D != null)
+            _collider2D.enabled = false;
+    }
+
+    private bool IsInDeathPresentation()
+    {
+        if (_deathPresentationActive)
+            return true;
+
+        if (_networkHealth != null && _networkHealth.IsSpawned && _networkHealth.IsUnconscious)
+            return true;
+
+        return healthComponent != null && healthComponent.IsDead;
+    }
+
+    private float ResolveSortingReferenceY()
+    {
+        if (IsInDeathPresentation() && _spriteRenderer != null)
+            return _spriteRenderer.bounds.min.y;
+
+        if (_collider2D != null && _collider2D.enabled)
+            return _collider2D.bounds.min.y;
+
+        if (_spriteRenderer != null)
+            return _spriteRenderer.bounds.min.y;
+
+        return transform.position.y;
     }
 
     private void UpdateSortingOrder()
@@ -332,8 +409,9 @@ public class PlayerAnimationHandler : MonoBehaviour
         if (_spriteRenderer == null)
             return;
 
-        float referenceY = _collider2D != null ? _collider2D.bounds.min.y : transform.position.y;
-        int newOrder = sortingOrderOffset - Mathf.RoundToInt(referenceY * sortingPrecision);
+        int newOrder = sortingOrderOffset - Mathf.RoundToInt(ResolveSortingReferenceY() * sortingPrecision);
+        if (IsInDeathPresentation())
+            newOrder += deadSortingOrderBoost;
 
         if (!_loggedOnce)
         {

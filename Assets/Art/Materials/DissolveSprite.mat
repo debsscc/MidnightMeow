@@ -31,10 +31,13 @@ Material:
     m_Ints: []
     m_Floats:
     - _DissolveAmount: 0
-    - _EdgeWidth: 0.05
+    - _EdgeWidth: 0.08
+    - _EdgeIntensity: 3.5
     - _NoiseScale: 5
+    - _SparkleIntensity: 2
+    - _SparkleScale: 40
     m_Colors:
     - _Color: {r: 1, g: 1, b: 1, a: 1}
-    - _EdgeColor: {r: 0, g: 0.8, b: 1, a: 1}
+    - _EdgeColor: {r: 0.85, g: 0.95, b: 1, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

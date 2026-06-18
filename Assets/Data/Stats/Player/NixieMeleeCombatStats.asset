@@ -24,3 +24,6 @@ MonoBehaviour:
   knockbackDistance: 3
   drawDebugGizmos: 1
   attackAnimationSpeedMultiplier: 1.15
+  strikeNormalizedTime: 0.35
+  recoveryNormalizedTime: 0
+  hitBlinkPulse: 1

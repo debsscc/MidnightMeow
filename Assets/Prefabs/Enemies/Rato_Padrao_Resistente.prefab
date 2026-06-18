@@ -284,6 +284,7 @@ GameObject:
   - component: {fileID: 7891096206824008346}
   - component: {fileID: 6099581994700018888}
   - component: {fileID: 999000003000000003}
+  - component: {fileID: 764039431503846554}
   m_Layer: 10
   m_Name: Rato_Padrao_Resistente
   m_TagString: Enemy
@@ -640,7 +641,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
-  GlobalObjectIdHash: 373492627
+  GlobalObjectIdHash: 1080892529
   InScenePlacedSourceGlobalObjectIdHash: 0
   DeferredDespawnTick: 0
   Ownership: 1
@@ -667,6 +668,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::NetworkEnemyController
   ShowTopMostFoldoutHeaderGroup: 1
   deathDespawnDelay: 0.4
+  deathPresentationFallbackSeconds: 8
 --- !u!114 &7891096206824008346
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -741,3 +743,31 @@ MonoBehaviour:
   attackPattern: {fileID: 11400000, guid: b3030303030303030303030303030303, type: 2}
   visualStyle: {fileID: 0}
   attackOrigin: {fileID: 7769710525481836737}
+--- !u!114 &764039431503846554
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8336658271261246405}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 42f7e5bea7f7c5c4baa76b1d030ff144, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MidnightMeow::DissolveEffect
+  spriteRenderer: {fileID: 2629720616798489814}
+  animationBinder: {fileID: 0}
+  visualRoot: {fileID: 0}
+  includeChildRenderers: 1
+  dissolveMaterial: {fileID: 2100000, guid: fccf762bfb69edf4f966569172c84ca9, type: 2}
+  duration: 3
+  hideAtDissolveProgress: 0.5
+  void1HideAtLinearTime: 0.62
+  waitForDeathAnimation: 1
+  deathStateName: Dying
+  dissolveStartNormalizedTime: 0.72
+  deathAnimLeadTimeFallback: 0.52
+  edgeColor: {r: 0, g: 0.8, b: 1, a: 1}
+  edgeIntensity: 3.5
+  sparkleIntensity: 2
+  playSparkleParticles: 0

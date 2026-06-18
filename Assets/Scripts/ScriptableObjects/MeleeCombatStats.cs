@@ -29,4 +29,14 @@ public class MeleeCombatStats : ScriptableObject
     [Header("Animação")]
     [Tooltip("Multiplicador da velocidade da animação de ataque (1 = padrão).")]
     [Min(0.1f)] public float attackAnimationSpeedMultiplier = 1f;
+
+    [Tooltip("Momento normalizado do clip (0–1) em que o dano é aplicado.")]
+    [Range(0.05f, 0.95f)] public float strikeNormalizedTime = 0.35f;
+
+    [Tooltip("Tempo normalizado restante após o strike (0 = auto: 1 - strikeNormalizedTime).")]
+    [Range(0f, 0.95f)] public float recoveryNormalizedTime = 0f;
+
+    [Header("Feedback no acerto")]
+    [Tooltip("Intensidade do blink no inimigo acertado (1 = blink completo).")]
+    [Range(0.5f, 1.5f)] public float hitBlinkPulse = 1f;
 }

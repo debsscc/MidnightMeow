@@ -33,7 +33,12 @@ public class SpriteBlink : MonoBehaviour
 
     public void Blink()
     {
-        _blinkFactor = 1f;
+        Pulse(1f);
+    }
+
+    public void Pulse(float intensity)
+    {
+        _blinkFactor = Mathf.Max(_blinkFactor, Mathf.Clamp01(intensity));
         ApplyBlinkEffect();
     }
 

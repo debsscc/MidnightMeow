@@ -104,8 +104,8 @@ public class EnemyAnimationHandler : MonoBehaviour
 
         if (healthComponent != null)
         {
+            healthComponent.OnTakeDamage.AddListener(HandleTakeDamageEvent);
             healthComponent.OnHealthChanged.AddListener(HandleHealthChanged);
-            healthComponent.OnDied.AddListener(HandleDie);
         }
     }
 
@@ -122,7 +122,7 @@ public class EnemyAnimationHandler : MonoBehaviour
 
         if (healthComponent != null)
         {
-            healthComponent.OnDied.RemoveListener(HandleDie);
+            healthComponent.OnTakeDamage.RemoveListener(HandleTakeDamageEvent);
             healthComponent.OnHealthChanged.RemoveListener(HandleHealthChanged);
         }
     }
@@ -130,6 +130,7 @@ public class EnemyAnimationHandler : MonoBehaviour
     private void Update()
     {
         if (_animator == null) return;
+        if (healthComponent != null && !healthComponent.IsAlive) return;
         if (_networkEnemyController != null && _networkEnemyController.DrivesAnimatorOnClient)
             return;
 
@@ -203,11 +204,6 @@ public class EnemyAnimationHandler : MonoBehaviour
         _animator.SetTrigger(_hashOnTakeDamage);
     }
 
-    private void HandleDie()
-    {
-        PlayDeathAnimation();
-    }
-
     public void PlayDeathAnimation()
     {
         if (_animator == null) return;
@@ -221,17 +217,18 @@ public class EnemyAnimationHandler : MonoBehaviour
         _animator.SetTrigger(_hashOnTakeDamage);
     }
 
+    private void HandleTakeDamageEvent()
+    {
+        if (_animator == null)
+            return;
+
+        PlayTakeDamageAnimation();
+    }
+
     private void HandleHealthChanged(float current, float max)
     {
-        if (debugLogs) Debug.Log($"EnemyAnimationHandler.HandleHealthChanged - {gameObject.name}: current={current}, max={max}");
-
-        if (_animator == null) return;
-
-        if (current > 0 && current < max)
-        {
-            if (debugLogs) Debug.Log($"EnemyAnimationHandler.Triggering TakeDamage for {gameObject.name}");
-            _animator.SetTrigger(_hashOnTakeDamage);
-        }
+        if (debugLogs)
+            Debug.Log($"EnemyAnimationHandler.HandleHealthChanged - {gameObject.name}: current={current}, max={max}");
     }
 
     private void UpdateSortingOrder()

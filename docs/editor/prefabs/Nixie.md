@@ -83,6 +83,7 @@ Nixie
 
 - [x] `NetworkObject` + `OwnerNetworkTransform`
 - Atribuir `meleeCombat` em `NetworkPlayerController` no prefab
+- **Melee:** `OnShoot` → `Hitting`; strike em `strikeNormalizedTime` (SO); recovery pós-hit; juice via `PlayerMeleeHitFeedback`
 - **Morte:** `NetworkPlayerHealth` → `PlayerDeathPresentation` (anim completa + 5s em tempo real; `PlayerFacingController` desliga). Game over após esse tempo → fade para derrota (`Route_Gameplay_Defeat`, 1s). Com aliado vivo: dissolve + câmera no parceiro.
 - **Ratos na derrota (combo):** para spawn + slow-mo ~2s + fade dos ratos (3–8s) + vinheta/zoom no corpo (`DeathHordePresentation`). MP com aliado vivo: só slow-mo + foco no corpo até o dissolve.
 
@@ -90,6 +91,7 @@ Nixie
 
 | Data | Alteração |
 |------|-----------|
+| 2026-06-17 | Melee polish: sync strike/recovery, burst, blink pulse, shake no acerto |
 | 2026-06-14 | Combo derrota: `DeathHordePresentation` (spawn off, slow-mo, fade ratos, vinheta/zoom) |
 | 2026-06-12 | Fluxo de morte B: presentation + dissolve MP; bleed-out pausado |
 | 2026-06-14 | Animador dedicado `AC_NIXIE.controller` + clips em `Assets/Art/Sprites/Animations/Nyxie/` via `NixieAnimationProfile` |

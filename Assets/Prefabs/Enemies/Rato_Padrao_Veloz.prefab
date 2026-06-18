@@ -358,7 +358,7 @@ SpriteRenderer:
   m_SortingOrder: 2
   m_MaskInteraction: 0
   m_Sprite: {fileID: 21300000, guid: cab058e9c59dad645a1044e123c56d4b, type: 3}
-  m_Color: {r: 0, g: 1, b: 0.5179994, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -697,6 +697,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::NetworkEnemyController
   ShowTopMostFoldoutHeaderGroup: 1
   deathDespawnDelay: 0.4
+  deathPresentationFallbackSeconds: 8
 --- !u!114 &65845335612496854
 MonoBehaviour:
   m_ObjectHideFlags: 0

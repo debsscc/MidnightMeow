@@ -149,8 +149,18 @@ public class EnemyMovement : MonoBehaviour
 
     public float GetCurrentSpeed()
     {
-        if (_attackPaused) return 0f;
-        if (_hitStun != null && _hitStun.IsStunned) return 0f;
+        if (_health != null && !_health.IsAlive)
+            return 0f;
+
+        if (_attackPaused)
+            return 0f;
+
+        if (_hitStun != null && _hitStun.IsStunned)
+            return 0f;
+
+        if (_agent == null || !_agent.enabled || !_agent.isOnNavMesh)
+            return 0f;
+
         return _agent.isStopped ? 0f : _agent.velocity.magnitude;
     }
 }

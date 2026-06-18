@@ -101,6 +101,7 @@ public class PlayerDeathPresentation : MonoBehaviour
 
         yield return WaitUntilDeathAnimationCompletes();
         FreezeDeathPose();
+        animationHandler?.FinalizeDeathPhysics();
 
         yield return new WaitForSecondsRealtime(postDeathHoldSeconds);
 
