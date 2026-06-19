@@ -262,7 +262,7 @@ public class NetworkEnemyController : NetworkBehaviour
             NotifyDeathPresentationFinishedServerRpc();
     }
 
-    [ServerRpc(RequireOwnership = false)]
+    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
     private void NotifyDeathPresentationFinishedServerRpc()
     {
         if (!IsServer || !_deathFinalized || _deathPresentationCompleted)
@@ -413,7 +413,10 @@ public class NetworkEnemyController : NetworkBehaviour
             _animator.SetTrigger(HashOnDie);
 
         if (_dissolveEffect != null)
+        {
             _dissolveEffect.HandleDeath();
+            return;
+        }
     }
 
     private void PrepareAnimatorForDeathPresentation()
@@ -421,6 +424,8 @@ public class NetworkEnemyController : NetworkBehaviour
         if (_animator == null)
             return;
 
+        _animator.enabled = true;
+        _animator.speed = 1f;
         _animator.SetFloat(HashMoveSpeed, 0f);
         _animator.SetBool(HashIsAttacking, false);
     }

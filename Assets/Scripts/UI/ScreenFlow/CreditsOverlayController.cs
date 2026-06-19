@@ -378,7 +378,7 @@ public class CreditsOverlayController : Singleton<CreditsOverlayController>
         tmp.fontSize = 28;
         tmp.color = new Color(0.92f, 0.92f, 0.95f, 1f);
         tmp.alignment = TextAlignmentOptions.Top;
-        tmp.enableWordWrapping = true;
+        tmp.textWrappingMode = TextWrappingModes.Normal;
         tmp.overflowMode = TextOverflowModes.Overflow;
         tmp.margin = new Vector4(48f, 0f, 48f, 0f);
         tmp.raycastTarget = false;

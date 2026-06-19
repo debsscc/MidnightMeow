@@ -241,6 +241,9 @@ public class PlayerDash : MonoBehaviour
         _isDashing = true;
         _dashFailsafeDeadline = Time.unscaledTime + duration + dashFailsafeExtraSeconds;
 
+        if (TryGetComponent<HealthComponent>(out var health))
+            health.SetInvulnerableFor(duration + 0.05f);
+
         _ignoredLayers = GetLayersFromMask(passThroughLayer);
         foreach (int layer in _ignoredLayers)
             Physics2D.IgnoreLayerCollision(_playerLayer, layer, true);

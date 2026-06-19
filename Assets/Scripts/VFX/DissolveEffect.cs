@@ -4,7 +4,7 @@ using UnityEngine;
 
 /// <summary>
 /// Dissolve sincronizado em todos os SpriteRenderers (incluindo filhos) + brilho/partículas.
-/// Sequência: animação Dying → dissolve perto do fim → esconde sprites → avisa rede.
+/// Sequência: animação Dying até o fim → dissolve (visível → invisível) → esconde renderers.
 /// </summary>
 public class DissolveEffect : MonoBehaviour
 {
@@ -24,10 +24,10 @@ public class DissolveEffect : MonoBehaviour
     [Tooltip("Esconde quando o dissolve chega neste progresso do shader (0–1).")]
     [SerializeField] [Range(0.5f, 1f)] private float hideAtDissolveProgress = 0.82f;
     [Tooltip("VOiD1: esconde nesta fração linear do duration (o brilho acaba antes do fim do duration).")]
-    [SerializeField] [Range(0.35f, 0.95f)] private float void1HideAtLinearTime = 0.62f;
+    [SerializeField] [Range(0.35f, 0.95f)] private float void1HideAtLinearTime = 0.92f;
     [SerializeField] private bool waitForDeathAnimation = true;
     [SerializeField] private string deathStateName = "Dying";
-    [SerializeField] [Range(0.5f, 0.95f)] private float dissolveStartNormalizedTime = 0.72f;
+    [SerializeField] [Range(0.5f, 0.95f)] private float dissolveStartNormalizedTime = 0.98f;
     [SerializeField] private float deathAnimLeadTimeFallback = 0.52f;
     [SerializeField] private Color edgeColor = new Color(0.85f, 0.95f, 1f, 1f);
     [SerializeField] private float edgeIntensity = 3.5f;
@@ -36,6 +36,7 @@ public class DissolveEffect : MonoBehaviour
 
     private readonly List<SpriteRenderer> _targets = new List<SpriteRenderer>(4);
     private readonly List<Material> _instanceMaterials = new List<Material>(4);
+    private readonly List<Material> _originalSharedMaterials = new List<Material>(4);
 
     private DissolveMaterialBinding _binding;
     private NetworkEnemyController _networkEnemyController;
@@ -48,7 +49,7 @@ public class DissolveEffect : MonoBehaviour
 
     /// <summary>Timeout de segurança para despawn no servidor (pior caso de espera + dissolve).</summary>
     public float EstimatedTotalDuration =>
-        (ResolveDeathClipLength() + 0.5f) * 2f + duration + 0.35f;
+        ResolveDeathClipLength() + duration + 0.5f;
 
     private void Awake()
     {
@@ -103,6 +104,13 @@ public class DissolveEffect : MonoBehaviour
 
         _visualsHidden = false;
         _isPlaying = true;
+
+        if (_animator != null)
+        {
+            _animator.enabled = true;
+            _animator.speed = 1f;
+        }
+
         StartCoroutine(DeathPresentationRoutine());
     }
 
@@ -110,8 +118,10 @@ public class DissolveEffect : MonoBehaviour
     {
         try
         {
-            if (ShouldWaitForDeathAnimation())
-                yield return WaitUntilDissolveStartPoint();
+            yield return null;
+
+            if (waitForDeathAnimation)
+                yield return WaitUntilDeathAnimationComplete();
 
             if (_animator != null)
                 _animator.speed = 0f;
@@ -168,12 +178,15 @@ public class DissolveEffect : MonoBehaviour
         return normalized * normalized;
     }
 
-    private IEnumerator WaitUntilDissolveStartPoint()
+    private IEnumerator WaitUntilDeathAnimationComplete()
     {
         if (_animator == null)
+        {
+            yield return new WaitForSeconds(ResolveDeathClipLength());
             yield break;
+        }
 
-        float timeout = ResolveDeathClipLength() + 0.5f;
+        float timeout = ResolveDeathClipLength() + 1.5f;
         float elapsed = 0f;
 
         while (elapsed < timeout)
@@ -190,20 +203,27 @@ public class DissolveEffect : MonoBehaviour
         while (elapsed < timeout)
         {
             AnimatorStateInfo state = _animator.GetCurrentAnimatorStateInfo(0);
-            if (state.shortNameHash == _deathStateHash && state.normalizedTime >= dissolveStartNormalizedTime)
+            if (state.shortNameHash != _deathStateHash)
+            {
+                elapsed += Time.deltaTime;
+                yield return null;
+                continue;
+            }
+
+            float clipLength = state.length > 0.05f
+                ? state.length
+                : ResolveDeathClipLength();
+
+            float completionThreshold = Mathf.Clamp(dissolveStartNormalizedTime, 0.9f, 1f);
+            if (state.normalizedTime >= completionThreshold)
                 break;
 
             elapsed += Time.deltaTime;
+            if (elapsed >= clipLength + 0.35f)
+                break;
+
             yield return null;
         }
-    }
-
-    private bool ShouldWaitForDeathAnimation()
-    {
-        if (!waitForDeathAnimation)
-            return false;
-
-        return _animator == null || _animator.speed > 0f;
     }
 
     private float ResolveDeathClipLength()
@@ -221,6 +241,7 @@ public class DissolveEffect : MonoBehaviour
     private void CollectTargets()
     {
         _targets.Clear();
+        _originalSharedMaterials.Clear();
 
         if (includeChildRenderers)
         {
@@ -229,7 +250,10 @@ public class DissolveEffect : MonoBehaviour
             {
                 SpriteRenderer renderer = renderers[i];
                 if (renderer != null && renderer.sprite != null)
+                {
                     _targets.Add(renderer);
+                    _originalSharedMaterials.Add(renderer.sharedMaterial);
+                }
             }
 
             return;
@@ -239,12 +263,26 @@ public class DissolveEffect : MonoBehaviour
             spriteRenderer = GetComponent<SpriteRenderer>();
 
         if (spriteRenderer != null)
+        {
             _targets.Add(spriteRenderer);
+            _originalSharedMaterials.Add(spriteRenderer.sharedMaterial);
+        }
+    }
+
+    private void DestroyInstanceMaterials()
+    {
+        for (int i = 0; i < _instanceMaterials.Count; i++)
+        {
+            if (_instanceMaterials[i] != null)
+                Destroy(_instanceMaterials[i]);
+        }
+
+        _instanceMaterials.Clear();
     }
 
     private void ApplyDissolveMaterials()
     {
-        ReleaseMaterials();
+        DestroyInstanceMaterials();
 
         for (int i = 0; i < _targets.Count; i++)
         {
@@ -271,20 +309,19 @@ public class DissolveEffect : MonoBehaviour
 
     private void ReleaseMaterials()
     {
+        DestroyInstanceMaterials();
+
         for (int i = 0; i < _targets.Count; i++)
         {
             SpriteRenderer target = _targets[i];
-            if (target != null)
-                target.sharedMaterial = null;
+            if (target == null)
+                continue;
+
+            if (i < _originalSharedMaterials.Count && _originalSharedMaterials[i] != null)
+                target.sharedMaterial = _originalSharedMaterials[i];
         }
 
-        for (int i = 0; i < _instanceMaterials.Count; i++)
-        {
-            if (_instanceMaterials[i] != null)
-                Destroy(_instanceMaterials[i]);
-        }
-
-        _instanceMaterials.Clear();
+        _originalSharedMaterials.Clear();
     }
 
     private void OnDestroy()

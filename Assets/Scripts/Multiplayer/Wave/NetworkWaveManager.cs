@@ -39,6 +39,9 @@ public class NetworkWaveManager : NetworkBehaviour
     {
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
+
+        if (GetComponent<NetworkRatHoleSealManager>() == null)
+            gameObject.AddComponent<NetworkRatHoleSealManager>();
     }
 
     public override void OnNetworkSpawn()
@@ -147,10 +150,13 @@ public class NetworkWaveManager : NetworkBehaviour
 
     private void SpawnNetworkEnemy(GameObject prefab)
     {
-        if (spawnPoints == null || spawnPoints.Length == 0) return;
+        if (!RatHoleSpawnSelectionUtility.TryPickSpawnPoint(spawnPoints, out Transform spawnPoint, out Vector3 spawnPosition))
+        {
+            Debug.LogWarning("[NetworkWaveManager] Nenhum spawn point ativo disponível.");
+            return;
+        }
 
-        Transform spawnPoint = spawnPoints[Random.Range(0, spawnPoints.Length)];
-        GameObject enemyObj = Instantiate(prefab, spawnPoint.position, Quaternion.identity);
+        GameObject enemyObj = Instantiate(prefab, spawnPosition, Quaternion.identity);
 
         NetworkObject netObj = enemyObj.GetComponent<NetworkObject>();
         if (netObj == null)

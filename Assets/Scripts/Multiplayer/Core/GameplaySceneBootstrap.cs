@@ -22,6 +22,17 @@ public static class GameplaySceneBootstrap
         RoundMagiculaTracker.Instance?.ResetRound();
 
         TryEnsureGameplayHud();
+        EnsureCooperativeZoneVisuals();
+    }
+
+    private static void EnsureCooperativeZoneVisuals()
+    {
+        if (Object.FindFirstObjectByType<RatHoleSealZoneVisual>(FindObjectsInactive.Include) != null)
+            return;
+
+        var root = new GameObject("CooperativeZoneVisuals");
+        root.AddComponent<RatHoleSealZoneVisual>();
+        root.AddComponent<CarriageRepairZoneVisual>();
     }
 
     public static void TryEnsureGameplayHud()

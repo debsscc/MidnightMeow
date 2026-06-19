@@ -73,6 +73,9 @@ public class HealthComponent : MonoBehaviour, IDamageable
     {
         if (_isDead || amount <= 0f || IsInvulnerable) return;
 
+        if (gameObject.CompareTag("Player") && IsPlayerDashing(gameObject))
+            return;
+
         amount = DamageDefenseUtility.ApplyDefense(amount, damageType, DamageDefenseUtility.ResolveEnemyStats(gameObject));
         if (amount <= 0f) return;
 
@@ -141,6 +144,20 @@ public class HealthComponent : MonoBehaviour, IDamageable
         _currentHealth = Mathf.Clamp(current, 0f, max);
         _isDead = isDead;
         OnHealthChanged?.Invoke(_currentHealth, _maxHealth);
+    }
+
+    private static bool IsPlayerDashing(GameObject player)
+    {
+        if (player == null)
+            return false;
+
+        if (player.TryGetComponent<PlayerDash>(out var dash) && dash.IsDashing)
+            return true;
+
+        if (player.TryGetComponent<NetworkPlayerAbilityRelay>(out var relay) && relay.NetworkIsDashing)
+            return true;
+
+        return false;
     }
 
     private void Die()

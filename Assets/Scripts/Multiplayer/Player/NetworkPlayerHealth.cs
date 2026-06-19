@@ -527,6 +527,9 @@ public class NetworkPlayerHealth : NetworkBehaviour
         if (!IsServer || !CanFight || amount <= 0f)
             return false;
 
+        if (TryGetComponent<NetworkPlayerAbilityRelay>(out var relay) && relay.NetworkIsDashing)
+            return false;
+
         float before = _healthComponent.CurrentHealth;
         _healthComponent.TakeDamage(amount, instigator != null ? instigator : gameObject);
         float dealt = Mathf.Max(0f, before - _healthComponent.CurrentHealth);

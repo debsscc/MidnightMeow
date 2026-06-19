@@ -7,6 +7,7 @@ Documentação completa em **[docs/README.md](docs/README.md)**:
 - Práticas: data-driven, eventos, SRP, testes, movimentação de `.meta`, rede, artes
 - Editor: prefabs, cenas, tags/layers em [docs/editor/project-context.md](docs/editor/project-context.md)
 - Estrutura de pastas: [docs/assets/STRUCTURE.md](docs/assets/STRUCTURE.md)
+- Erros comuns do Console: [docs/troubleshooting/common-errors.md](docs/troubleshooting/common-errors.md)
 
 **Regra:** ao alterar prefab, cena ou SO, atualize o markdown correspondente em `docs/editor/`.
 

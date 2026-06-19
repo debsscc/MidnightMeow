@@ -18,6 +18,7 @@ internal readonly struct DissolveMaterialBinding
     private static readonly int SparkleIntensityId = Shader.PropertyToID("_SparkleIntensity");
 
     private static readonly int Void1FadeId = Shader.PropertyToID("Vector1_51DDBE76");
+    private static readonly int Void1FadeMaxId = Shader.PropertyToID("Vector1_C79B2600");
     private static readonly int Void1EdgeColorId = Shader.PropertyToID("Color_AE581CF8");
 
     public Kind Driver { get; }
@@ -47,11 +48,18 @@ internal readonly struct DissolveMaterialBinding
 
         if (template.HasProperty(Void1FadeId))
         {
+            float fadeMax = template.HasProperty(Void1FadeMaxId)
+                ? template.GetFloat(Void1FadeMaxId)
+                : 50f;
+            if (fadeMax <= 0f)
+                fadeMax = 50f;
+
+            // VOiD1: Fade 0 = sprite intacto; Fade aumenta até sumir (range do graph: 0–50).
             return new DissolveMaterialBinding(
                 Kind.Void1Sprite2D,
                 Void1FadeId,
                 0f,
-                50f,
+                fadeMax,
                 template.HasProperty(Void1EdgeColorId) ? Void1EdgeColorId : -1);
         }
 

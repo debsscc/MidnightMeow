@@ -112,17 +112,17 @@ public class CameraConfig : ScriptableObject
     public float damageFlashDuration = 0.2f;
 
     [Header("Dead Zone — Pan suave nas bordas")]
-    [Tooltip("Fração horizontal do viewport (0–0.5) onde a câmera não se move até o jogador ultrapassar.")]
+    [Tooltip("Fração do viewport (0–0.5) reservada ao centro. Valores MAIORES fazem a câmera reagir antes (jogador não precisa encostar na borda).")]
     [Range(0f, 0.45f)]
-    public float edgeDeadZoneX = 0.22f;
+    public float edgeDeadZoneX = 0.42f;
 
-    [Tooltip("Fração vertical do viewport (0–0.5) onde a câmera não se move até o jogador ultrapassar.")]
+    [Tooltip("Fração vertical do viewport (0–0.5) reservada ao centro. Valores MAIORES = pan nas bordas mais cedo.")]
     [Range(0f, 0.45f)]
-    public float edgeDeadZoneY = 0.18f;
+    public float edgeDeadZoneY = 0.40f;
 
-    [Tooltip("Suavização do deslocamento da câmera ao sair da dead zone.")]
-    [Range(1f, 25f)]
-    public float edgePanSmoothing = 8f;
+    [Tooltip("Suavização do deslocamento da câmera ao sair da dead zone. Valores maiores = resposta mais rápida.")]
+    [Range(1f, 35f)]
+    public float edgePanSmoothing = 28f;
 }
 
 /// <summary>

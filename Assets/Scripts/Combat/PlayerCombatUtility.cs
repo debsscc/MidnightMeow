@@ -20,6 +20,16 @@ public static class PlayerCombatUtility
             return networkHealth.ServerApplyExternalDamage(amount, instigator);
         }
 
+        var structureHealth = collider.GetComponentInParent<HealthComponent>();
+        if (structureHealth != null && structureHealth.IsAlive && collider.CompareTag("Structure"))
+        {
+            if (NetworkManager.Singleton != null && !NetworkManager.Singleton.IsServer)
+                return false;
+
+            structureHealth.TakeDamage(amount, instigator);
+            return true;
+        }
+
         var damageable = collider.GetComponentInParent<IDamageable>();
         if (damageable != null)
         {

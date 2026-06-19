@@ -90,6 +90,8 @@ public static class GameEvents
     public static event System.Action OnAllPlayersDefeated;
     // Disparado quando um inimigo morre (ClientId do instigador)
     public static event System.Action<ulong> OnEnemyKilledByPlayer;
+    public static event Action<float> OnCarriagePathProgressChanged;
+    public static event Action OnCarriageArrived;
 
     public static void InvokePlayerJoined(ulong clientId, bool isLocalPlayer)
     {
@@ -109,5 +111,15 @@ public static class GameEvents
     public static void InvokeEnemyKilledByPlayer(ulong killerClientId)
     {
         OnEnemyKilledByPlayer?.Invoke(killerClientId);
+    }
+
+    public static void InvokeCarriagePathProgressChanged(float normalizedProgress)
+    {
+        OnCarriagePathProgressChanged?.Invoke(Mathf.Clamp01(normalizedProgress));
+    }
+
+    public static void InvokeCarriageArrived()
+    {
+        OnCarriageArrived?.Invoke();
     }
 }

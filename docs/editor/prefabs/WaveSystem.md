@@ -13,6 +13,7 @@ Ondas autoritativas no servidor (`NetworkWaveManager`). Instanciado em Fase-1 so
 |------------|--------|
 | `NetworkObject` | |
 | `NetworkWaveManager` | Spawns inimigos + ciência |
+| `NetworkRatHoleSealManager` | Selamento de buracos (auto-adicionado em runtime; preferir referência a `RatHoleSealConfig` no Inspector) |
 
 ## Campos no prefab asset (YAML)
 

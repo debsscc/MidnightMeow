@@ -92,18 +92,15 @@ public class WaveGenerator : MonoBehaviour
 
     private void SpawnEnemy(GameObject prefab)
     {
-        if (spawnPoints == null || spawnPoints.Length == 0)
+        if (!RatHoleSpawnSelectionUtility.TryPickSpawnPoint(spawnPoints, out Transform spawnPoint, out Vector3 spawnPosition))
         {
-            Debug.LogError("Nenhum spawn point configurado no WaveGenerator!");
+            Debug.LogWarning("Nenhum spawn point ativo disponível no WaveGenerator.");
             return;
         }
 
-        Transform randomSpawnPoint = spawnPoints[Random.Range(0, spawnPoints.Length)];
-
-        // Usa delegate de spawn de rede se disponível; caso contrário usa Instantiate padrão
         GameObject enemy = SpawnDelegate != null
-            ? SpawnDelegate(prefab, randomSpawnPoint)
-            : Instantiate(prefab, randomSpawnPoint.position, Quaternion.identity, this.transform);
+            ? SpawnDelegate(prefab, spawnPoint)
+            : Instantiate(prefab, spawnPosition, Quaternion.identity, transform);
 
         _enemiesAlive++;
         UpdateWaveStatus();

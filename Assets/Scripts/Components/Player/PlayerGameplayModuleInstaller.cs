@@ -12,11 +12,21 @@ public class PlayerGameplayModuleInstaller : MonoBehaviour
     [SerializeField] private bool installRevivePromptUI = true;
     [SerializeField] private bool installMeleeDebugVisual = true;
     [SerializeField] private bool installAbilityDebugVisual = true;
+    [SerializeField] private bool installRatHoleSealInteraction = true;
 
     private void Awake()
     {
         if (installDamageImmunity && GetComponent<PlayerDamageImmunity>() == null)
             gameObject.AddComponent<PlayerDamageImmunity>();
+
+        if (installRatHoleSealInteraction && GetComponent<PlayerRatHoleSealInteraction>() == null)
+            gameObject.AddComponent<PlayerRatHoleSealInteraction>();
+
+        if (installRatHoleSealInteraction && GetComponent<RatHoleSealPromptUI>() == null)
+            gameObject.AddComponent<RatHoleSealPromptUI>();
+
+        if (GetComponent<CarriageRepairPromptUI>() == null)
+            gameObject.AddComponent<CarriageRepairPromptUI>();
 
         if (installDownedUI && GetComponent<DownedPlayerWorldUI>() == null)
             gameObject.AddComponent<DownedPlayerWorldUI>();
