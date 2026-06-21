@@ -55,4 +55,30 @@ public class SaveProfileStoreTests
         Assert.IsTrue(store.TrySpendMagiculas(2));
         Assert.AreEqual(3, store.Active.magiculas);
     }
+
+    [Test]
+    public void DeleteSlot_RemovesFileAndCanContinueBecomesFalse()
+    {
+        SaveProfileStore store = _host.GetComponent<SaveProfileStore>();
+        store.Active.wasHost = true;
+        store.SaveActive();
+
+        Assert.IsTrue(store.CanContinue(0));
+        Assert.IsTrue(store.DeleteSlot(0));
+        Assert.IsFalse(store.HasSave(0));
+        Assert.IsFalse(store.CanContinue(0));
+    }
+
+    [Test]
+    public void DeleteAllSlots_RemovesEverySaveFile()
+    {
+        SaveProfileStore store = _host.GetComponent<SaveProfileStore>();
+        store.Active.wasHost = true;
+        store.SaveActive();
+
+        int deleted = store.DeleteAllSlots();
+        Assert.AreEqual(1, deleted);
+        Assert.IsFalse(store.HasAnySave());
+        Assert.IsFalse(store.HasAnyHostSave());
+    }
 }

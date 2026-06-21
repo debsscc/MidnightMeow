@@ -16,6 +16,7 @@ public class ScreenFlowSceneBootstrap : MonoBehaviour
     {
         TransitionFadeOverlay.EnsureExists();
         ScreenFlowController.EnsureExists();
+        GameAudioSettings.EnsureExists();
         MusicCrossfadeController.EnsureExists();
         ScreenFlowLegacySceneCleanup.ApplyForActiveScene();
         SuppressLegacyMenuButton();
@@ -153,6 +154,7 @@ public class ScreenFlowSceneBootstrap : MonoBehaviour
 
         TransitionFadeOverlay.EnsureExists();
         ScreenFlowController.EnsureExists();
+        GameAudioSettings.EnsureExists();
         MusicCrossfadeController.EnsureExists();
         ScreenFlowLegacySceneCleanup.ApplyForActiveScene();
 

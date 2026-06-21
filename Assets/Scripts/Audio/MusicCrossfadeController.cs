@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.Audio;
 using UnityEngine.SceneManagement;
 
 /// <summary>
@@ -11,6 +12,7 @@ public class MusicCrossfadeController : Singleton<MusicCrossfadeController>
 {
     [SerializeField] private float defaultFadeSeconds = 1f;
     [SerializeField] [Range(0f, 1f)] private float musicVolume = 1f;
+    [SerializeField] private AudioMixerGroup musicMixerGroup;
 
     private AudioSource _sourceA;
     private AudioSource _sourceB;
@@ -22,6 +24,8 @@ public class MusicCrossfadeController : Singleton<MusicCrossfadeController>
 
     public static void EnsureExists()
     {
+        GameAudioSettings.EnsureExists();
+
         if (Instance != null)
             return;
 
@@ -36,9 +40,20 @@ public class MusicCrossfadeController : Singleton<MusicCrossfadeController>
     protected override void Awake()
     {
         base.Awake();
+        ResolveMusicMixerGroup();
         _sourceA = CreateMusicSource("MusicA");
         _sourceB = CreateMusicSource("MusicB");
         _activeSource = null;
+    }
+
+    private void ResolveMusicMixerGroup()
+    {
+        if (musicMixerGroup != null)
+            return;
+
+        GameAudioSettings settings = GameAudioSettings.Instance;
+        if (settings != null)
+            musicMixerGroup = settings.MusicGroup;
     }
 
     private AudioSource CreateMusicSource(string childName)
@@ -51,7 +66,18 @@ public class MusicCrossfadeController : Singleton<MusicCrossfadeController>
         source.loop = true;
         source.spatialBlend = 0f;
         source.volume = 0f;
+        AssignMusicOutput(source);
         return source;
+    }
+
+    private void AssignMusicOutput(AudioSource source)
+    {
+        if (source == null)
+            return;
+
+        ResolveMusicMixerGroup();
+        if (musicMixerGroup != null)
+            source.outputAudioMixerGroup = musicMixerGroup;
     }
 
     private void OnEnable()
@@ -136,6 +162,7 @@ public class MusicCrossfadeController : Singleton<MusicCrossfadeController>
         incoming.clip = clip;
         incoming.loop = loop;
         incoming.volume = 0f;
+        AssignMusicOutput(incoming);
         if (!incoming.isPlaying)
             incoming.Play();
 

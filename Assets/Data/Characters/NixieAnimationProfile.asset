@@ -24,6 +24,8 @@ MonoBehaviour:
   isDashingParameter: IsDashing
   onTakeDamageTrigger: OnDamage
   onDieTrigger: OnDie
+  attackAnimatorStateName: 
+  meleeAttackAnimatorStateName: Hitting
   attackAnimClipLength: 0.333
   deathDestroyDelay: 4
   deathAnimatorStateName: Dying

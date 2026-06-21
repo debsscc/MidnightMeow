@@ -64,7 +64,7 @@ public class PlayerAudioController : MonoBehaviour
     private void OnEnable()
     {
         if (playerShooting != null)
-            playerShooting.OnShoot += HandleShoot;
+            playerShooting.OnProjectileInstantiated += HandleProjectileInstantiated;
 
         if (playerDash != null)
         {
@@ -76,7 +76,7 @@ public class PlayerAudioController : MonoBehaviour
     private void OnDisable()
     {
         if (playerShooting != null)
-            playerShooting.OnShoot -= HandleShoot;
+            playerShooting.OnProjectileInstantiated -= HandleProjectileInstantiated;
 
         if (playerDash != null)
         {
@@ -121,7 +121,7 @@ public class PlayerAudioController : MonoBehaviour
         loopSource.PlayOneShot(movementClip, footstepVolume);
     }
 
-    private void HandleShoot()
+    private void HandleProjectileInstantiated(GameObject _, Vector3 __, Quaternion ___, Vector2 ____)
     {
         if (sfxSource != null && shootClip != null)
             sfxSource.PlayOneShot(shootClip);

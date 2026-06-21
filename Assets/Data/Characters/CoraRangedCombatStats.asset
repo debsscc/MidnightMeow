@@ -14,5 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RangedCombatStats
   fireRate: 1.5
   damageMultiplier: 1
-  attackRange: 4
-  attackAnimClipLength: 0.333
+  attackRange: 0.5
+  attackAnimClipLength: 0.517

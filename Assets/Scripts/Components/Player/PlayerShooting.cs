@@ -65,7 +65,11 @@ public class PlayerShooting : MonoBehaviour
     private PlayerAim _aim;
     private PlayerAbilityHandler _abilityHandler;
     private PlayerPassiveHandler _passiveHandler;
+    private PlayerAnimationHandler _animationHandler;
     private Camera _mainCamera;
+
+    private bool _awaitingFireRelease;
+    private bool _fireReleaseTriggered;
 
     public event Action OnShoot;
     // Evento emitido quando um projétil é instanciado com a pose calculada no cliente dono.
@@ -83,6 +87,8 @@ public class PlayerShooting : MonoBehaviour
     private Coroutine _fireCoroutine;
 
     public float BaseFireRate => baseFireRate;
+
+    public bool IsFiring => _fireCoroutine != null;
 
     public void ApplyRuntimeStats(RangedCombatStats rangedStats)
     {
@@ -119,8 +125,18 @@ public class PlayerShooting : MonoBehaviour
         _aim = GetComponent<PlayerAim>();
         _abilityHandler = GetComponent<PlayerAbilityHandler>();
         _passiveHandler = GetComponent<PlayerPassiveHandler>();
+        _animationHandler = GetComponent<PlayerAnimationHandler>();
         _mainCamera = Camera.main;
         CurrentFireRate = baseFireRate;
+    }
+
+    /// <summary>Chamado pelo Animation Event via <see cref="PlayerAnimationHandler.PerformFire"/>.</summary>
+    internal void NotifyPerformFireFromAnimation()
+    {
+        if (!_awaitingFireRelease)
+            return;
+
+        _fireReleaseTriggered = true;
     }
 
     // Assina e desassina eventos de input
@@ -159,6 +175,20 @@ public class PlayerShooting : MonoBehaviour
             StopCoroutine(_fireCoroutine);
             _fireCoroutine = null;
         }
+
+        FlushPendingFireRelease();
+    }
+
+    private void FlushPendingFireRelease()
+    {
+        if (!_awaitingFireRelease)
+            return;
+
+        _awaitingFireRelease = false;
+        _fireReleaseTriggered = false;
+
+        if (_ammo.HasAmmo())
+            ExecuteShot();
     }
 
     private IEnumerator FireContinuously()
@@ -171,62 +201,7 @@ public class PlayerShooting : MonoBehaviour
                 continue;
             }
 
-            bool hasAmmo = _ammo.HasAmmo();
-            if (hasAmmo)
-            {
-                bool consumedAmmoLocally = ShouldConsumeAmmoLocally();
-                if (consumedAmmoLocally)
-                    _ammo.UseAmmo(1);
-                bool usedFirePointDirection;
-                Vector3 spawnPosition;
-                Quaternion fireRotation;
-                Vector2 fireDirection = GetFirePose(out spawnPosition, out fireRotation, out usedFirePointDirection);
-                EmitShootingPipeline(
-                    "AfterFirePose",
-                    true,
-                    consumedAmmoLocally,
-                    spawnPosition,
-                    Vector3.zero,
-                    Vector3.zero,
-                    fireDirection,
-                    fireRotation.eulerAngles.z
-                );
-                OnFireDirectionComputed?.Invoke(fireDirection, usedFirePointDirection, _ammo.CurrentAmmo);
-
-                if (firePoint != null)
-                    firePoint.SetPositionAndRotation(spawnPosition, fireRotation);
-
-                GameObject projectileInstance = Instantiate(projectilePrefab, spawnPosition, fireRotation);
-                EmitShootingPipeline(
-                    "AfterLocalInstantiate",
-                    true,
-                    consumedAmmoLocally,
-                    spawnPosition,
-                    projectileInstance.transform.position,
-                    projectileInstance.transform.eulerAngles,
-                    fireDirection,
-                    fireRotation.eulerAngles.z
-                );
-
-                if (projectileInstance.TryGetComponent<Projectile>(out Projectile projectile))
-                {
-                    projectile.InitializeDirection(fireDirection);
-                    projectile.SetDamageMultiplier(DamageMultiplier);
-                    int bonusBounces = 0;
-                    if (_adrenaline != null && _adrenaline.IsFrenzyActive)
-                        bonusBounces += _adrenaline.GetBonusBounces();
-                    if (_passiveHandler != null)
-                        bonusBounces += _passiveHandler.BonusProjectileBounces;
-                    if (bonusBounces > 0)
-                        projectile.AddBonusBounces(bonusBounces);
-                }
-
-                // Notifica listeners sobre a instância do projétil e a mira (autoritativa no cliente dono)
-                OnProjectileInstantiated?.Invoke(projectileInstance, spawnPosition, fireRotation, fireDirection);
-
-                OnShoot?.Invoke();
-            }
-            else
+            if (!_ammo.HasAmmo())
             {
                 EmitShootingPipeline(
                     "OutOfAmmo",
@@ -238,14 +213,106 @@ public class PlayerShooting : MonoBehaviour
                     firePoint != null ? (Vector2)firePoint.up : Vector2.up,
                     firePoint != null ? firePoint.eulerAngles.z : 0f
                 );
-                OnOutOfAmmo?.Invoke();  // Emitir som de clique vazio ou similar
+                OnOutOfAmmo?.Invoke();
                 Debug.Log("Sem Munição!");
                 yield break;
             }
 
-            float delay = CurrentFireRate > 0f ? 1f / CurrentFireRate : 0.2f;
-            yield return new WaitForSeconds(delay);
+            float cycleStart = Time.time;
+            float cycleInterval = CurrentFireRate > 0f ? 1f / CurrentFireRate : 0.2f;
+
+            _awaitingFireRelease = true;
+            _fireReleaseTriggered = false;
+            OnShoot?.Invoke();
+
+            float maxWait = _animationHandler != null
+                ? _animationHandler.GetRangedAttackMaxWaitSeconds()
+                : 0.517f;
+            float releaseWallTime = _animationHandler != null
+                ? _animationHandler.GetRangedFireReleaseWallSeconds()
+                : 0.3f;
+            float elapsed = 0f;
+            while (_awaitingFireRelease)
+            {
+                if (_fireReleaseTriggered)
+                    break;
+
+                elapsed += Time.deltaTime;
+
+                // Fallback só após o frame PerformFire do clip (evento tem prioridade).
+                if (elapsed >= releaseWallTime
+                    && _animationHandler != null
+                    && _animationHandler.IsRangedFireReleaseReady())
+                    break;
+
+                if (elapsed >= maxWait)
+                    break;
+
+                yield return null;
+            }
+
+            _awaitingFireRelease = false;
+
+            if (_ammo.HasAmmo())
+                ExecuteShot();
+
+            float remaining = cycleStart + cycleInterval - Time.time;
+            if (remaining > 0f)
+                yield return new WaitForSeconds(remaining);
         }
+    }
+
+    private void ExecuteShot()
+    {
+        bool consumedAmmoLocally = ShouldConsumeAmmoLocally();
+        if (consumedAmmoLocally)
+            _ammo.UseAmmo(1);
+
+        bool usedFirePointDirection;
+        Vector3 spawnPosition;
+        Quaternion fireRotation;
+        Vector2 fireDirection = GetFirePose(out spawnPosition, out fireRotation, out usedFirePointDirection);
+        EmitShootingPipeline(
+            "AfterFirePose",
+            true,
+            consumedAmmoLocally,
+            spawnPosition,
+            Vector3.zero,
+            Vector3.zero,
+            fireDirection,
+            fireRotation.eulerAngles.z
+        );
+        OnFireDirectionComputed?.Invoke(fireDirection, usedFirePointDirection, _ammo.CurrentAmmo);
+
+        if (firePoint != null)
+            firePoint.SetPositionAndRotation(spawnPosition, fireRotation);
+
+        GameObject projectileInstance = Instantiate(projectilePrefab, spawnPosition, fireRotation);
+        EmitShootingPipeline(
+            "AfterLocalInstantiate",
+            true,
+            consumedAmmoLocally,
+            spawnPosition,
+            projectileInstance.transform.position,
+            projectileInstance.transform.eulerAngles,
+            fireDirection,
+            fireRotation.eulerAngles.z
+        );
+
+        if (projectileInstance.TryGetComponent<Projectile>(out Projectile projectile))
+        {
+            projectile.InitializeDirection(fireDirection);
+            projectile.SetDamageMultiplier(DamageMultiplier);
+            int bonusBounces = 0;
+            if (_adrenaline != null && _adrenaline.IsFrenzyActive)
+                bonusBounces += _adrenaline.GetBonusBounces();
+            if (_passiveHandler != null)
+                bonusBounces += _passiveHandler.BonusProjectileBounces;
+            if (bonusBounces > 0)
+                projectile.AddBonusBounces(bonusBounces);
+        }
+
+        OnProjectileInstantiated?.Invoke(projectileInstance, spawnPosition, fireRotation, fireDirection);
     }
 
     private void EmitShootingPipeline(

@@ -5540,6 +5540,7 @@ MonoBehaviour:
   shadowSpriteRenderer: {fileID: 0}
   _attackAnimClipLength: 0.12
   _deathDestroyDelay: 4
+  deadSortingOrderBoost: 50
 --- !u!114 &4338388805264836550
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5780,7 +5781,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
-  GlobalObjectIdHash: 1626128580
+  GlobalObjectIdHash: 3197444296
   InScenePlacedSourceGlobalObjectIdHash: 1626128580
   DeferredDespawnTick: 0
   Ownership: 1
@@ -6220,6 +6221,7 @@ MonoBehaviour:
   installRevivePromptUI: 1
   installMeleeDebugVisual: 1
   installAbilityDebugVisual: 1
+  installRatHoleSealInteraction: 1
 --- !u!114 &910002001001001001
 MonoBehaviour:
   m_ObjectHideFlags: 0

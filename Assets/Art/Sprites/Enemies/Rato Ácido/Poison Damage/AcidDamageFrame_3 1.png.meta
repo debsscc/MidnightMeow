@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 15d01c6c174ed9c4d941c5eb41231c6b
+guid: ee99430467bff8b42b188943eb42c797
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -4548528525168850921
-    second: AcidDamageFrame_4_0
+      213: 439885810669026546
+    second: AcidDamageFrame_3 1_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -126,23 +126,23 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: AcidDamageFrame_4_0
+      name: AcidDamageFrame_3 1_0
       rect:
         serializedVersion: 2
-        x: 123
+        x: 179
         y: 44
-        width: 502
-        height: 232
+        width: 450
+        height: 230
       alignment: 0
-      pivot: {x: 0.5, y: 0.5}
+      pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 718449ec76160e0c0800000000000000
-      internalID: -4548528525168850921
+      spriteID: 2fc79ae60d9ca1600800000000000000
+      internalID: 439885810669026546
       vertices: []
       indices: 
       edges: []
@@ -152,7 +152,7 @@ TextureImporter:
     physicsShape: []
     bones: []
     spriteID: 5e97eb03825dee720800000000000000
-    internalID: 1537655665
+    internalID: 0
     vertices: []
     indices: 
     edges: []
@@ -161,7 +161,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      AcidDamageFrame_4_0: -4548528525168850921
+      AcidDamageFrame_3 1_0: 439885810669026546
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

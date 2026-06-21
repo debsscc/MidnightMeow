@@ -42,8 +42,12 @@ public class PlayerAnimationHandler : MonoBehaviour
     private int _hashOnDash;
     private int _hashOnDashAttack;
     private int _hashIsDashing;
+    private int _shootingStateHash;
+    private int _meleeAttackStateHash;
 
     private NetworkPlayerAbilityRelay _abilityRelay;
+
+    private float _defaultAnimatorSpeed = 1f;
 
     private float _lastAttackTriggerTime = float.NegativeInfinity;
     private bool _loggedOnce;
@@ -53,6 +57,7 @@ public class PlayerAnimationHandler : MonoBehaviour
     private Vector3 _dustBaseLocalScale;
     private NetworkPlayerHealth _networkHealth;
     private bool _deathPresentationActive;
+    private float _rangedFireReleaseNormalizedTime = 0.45f;
 
     private void Awake()
     {
@@ -71,6 +76,9 @@ public class PlayerAnimationHandler : MonoBehaviour
         _abilityRelay = GetComponent<NetworkPlayerAbilityRelay>();
         _networkHealth = GetComponent<NetworkPlayerHealth>();
 
+        if (_animator != null)
+            _defaultAnimatorSpeed = _animator.speed;
+
         if (playerMovement != null && playerMovement.dustParticle != null)
         {
             _dustFacingTransform = playerMovement.dustParticle.transform;
@@ -78,6 +86,20 @@ public class PlayerAnimationHandler : MonoBehaviour
         }
 
         ResolveAnimationHashes();
+        ResolveRangedFireReleaseFromClip();
+    }
+
+    private void ResolveRangedFireReleaseFromClip()
+    {
+        AnimationClip attackClip = animationBinder != null && animationBinder.Profile != null
+            ? animationBinder.Profile.attackClip
+            : null;
+
+        if (attackClip != null && attackClip.length > 0f)
+            _attackAnimClipLength = attackClip.length;
+
+        if (AnimationClipFireReleaseUtility.TryGetReleaseNormalizedTime(attackClip, out float normalizedTime))
+            _rangedFireReleaseNormalizedTime = normalizedTime;
     }
 
     private void ResolveAnimationHashes()
@@ -101,10 +123,23 @@ public class PlayerAnimationHandler : MonoBehaviour
             {
                 sortingOrderOffset = animationBinder.Profile.sortingOrderOffset;
                 sortingPrecision = animationBinder.Profile.sortingPrecision;
+
+                string attackStateName = animationBinder.Profile.attackAnimatorStateName;
+                _shootingStateHash = string.IsNullOrEmpty(attackStateName)
+                    ? Animator.StringToHash("Shooting")
+                    : Animator.StringToHash(attackStateName);
+
+                string meleeStateName = animationBinder.Profile.meleeAttackAnimatorStateName;
+                _meleeAttackStateHash = string.IsNullOrEmpty(meleeStateName)
+                    ? 0
+                    : Animator.StringToHash(meleeStateName);
             }
 
             return;
         }
+
+        _shootingStateHash = Animator.StringToHash("Shooting");
+        _meleeAttackStateHash = Animator.StringToHash("Hitting");
 
         _hashMoveSpeed = Animator.StringToHash("MoveSpeed");
         _hashOnShoot = Animator.StringToHash("OnShoot");
@@ -150,7 +185,13 @@ public class PlayerAnimationHandler : MonoBehaviour
 
     public void ApplyNetworkMoveSpeed(float speed) => _networkMoveSpeed = speed;
 
-    public void PlayRemoteAttackAnimation() => TriggerAttackAnimation();
+    public void PlayRemoteAttackAnimation()
+    {
+        if (playerShooting != null)
+            TriggerRangedAttackAnimation();
+        else
+            TriggerAttackAnimation();
+    }
 
     public void PlayRemoteDashAttackAnimation() => TriggerDashAttackAnimation();
 
@@ -182,6 +223,66 @@ public class PlayerAnimationHandler : MonoBehaviour
             GetMeleeAttackSpeedMultiplier());
     }
 
+    /// <summary>True enquanto o clip de ataque principal (Shooting / Hitting) está ativo.</summary>
+    public bool IsPrimaryAttackAnimationPlaying()
+    {
+        return IsInRangedAttackAnimation() || IsInMeleeAttackAnimation();
+    }
+
+    public bool IsInRangedAttackAnimation() => TryGetShootingNormalizedTime(out _);
+
+    public bool IsInMeleeAttackAnimation()
+    {
+        if (_animator == null || _meleeAttackStateHash == 0)
+            return false;
+
+        return _animator.GetCurrentAnimatorStateInfo(0).shortNameHash == _meleeAttackStateHash;
+    }
+
+    /// <summary>True quando o estado de ataque ranged atingiu o frame PerformFire do clip.</summary>
+    public bool IsRangedFireReleaseReady()
+    {
+        if (_animator == null || _shootingStateHash == 0)
+            return false;
+
+        AnimatorStateInfo state = _animator.GetCurrentAnimatorStateInfo(0);
+        if (state.shortNameHash != _shootingStateHash)
+            return false;
+
+        return state.normalizedTime >= _rangedFireReleaseNormalizedTime;
+    }
+
+    /// <summary>Timeout de segurança: duração real do clip com AttackSpeed aplicado.</summary>
+    public float GetRangedAttackMaxWaitSeconds()
+    {
+        float clipLength = _attackAnimClipLength > 0f ? _attackAnimClipLength : 0.517f;
+        return clipLength / GetRangedClipSpeedMultiplier();
+    }
+
+    /// <summary>Tempo em segundos (wall clock) até o frame PerformFire do clip.</summary>
+    public float GetRangedFireReleaseWallSeconds()
+    {
+        float clipLength = _attackAnimClipLength > 0f ? _attackAnimClipLength : 0.517f;
+        return clipLength * _rangedFireReleaseNormalizedTime / GetRangedClipSpeedMultiplier();
+    }
+
+    /// <summary>Animation Event no clip — repassa para <see cref="PlayerShooting"/>.</summary>
+    public void PerformFire()
+    {
+        if (playerShooting != null)
+            playerShooting.NotifyPerformFireFromAnimation();
+    }
+
+    private float GetRangedClipSpeedMultiplier()
+    {
+        if (playerShooting != null && playerShooting.CurrentFireRate > 0f)
+            return Mathf.Max(0.1f, _attackAnimClipLength * playerShooting.CurrentFireRate);
+
+        return 1f;
+    }
+
+    private float GetMeleeClipSpeedMultiplier() => GetMeleeAttackSpeedMultiplier();
+
     private float GetMeleeAttackSpeedMultiplier()
     {
         if (playerMeleeCombat == null || playerMeleeCombat.CombatStats == null)
@@ -202,13 +303,34 @@ public class PlayerAnimationHandler : MonoBehaviour
             _animator.SetBool(_hashIsDashing, isDashing);
         }
 
-        float attackSpeedMult = 1f;
-        if (playerShooting != null && playerShooting.BaseFireRate > 0f)
-            attackSpeedMult = _attackAnimClipLength * playerShooting.CurrentFireRate;
-        else if (playerMeleeCombat != null && playerMeleeCombat.CombatStats != null)
-            attackSpeedMult = GetMeleeAttackSpeedMultiplier();
+        ApplyPrimaryAttackClipSpeed();
+    }
 
-        _animator.SetFloat(_hashAttackSpeed, Mathf.Max(0.1f, attackSpeedMult));
+    /// <summary>Acelera o playback do clip de ataque via Animator.speed (não o float AttackSpeed).</summary>
+    private void ApplyPrimaryAttackClipSpeed()
+    {
+        if (_animator == null)
+            return;
+
+        if (IsInRangedAttackAnimation())
+        {
+            _animator.speed = _defaultAnimatorSpeed * GetRangedClipSpeedMultiplier();
+            return;
+        }
+
+        if (IsInMeleeAttackAnimation())
+        {
+            _animator.speed = _defaultAnimatorSpeed * GetMeleeClipSpeedMultiplier();
+            return;
+        }
+
+        _animator.speed = _defaultAnimatorSpeed;
+
+        // DashAttack / legado: estados que ainda usam o parâmetro AttackSpeed no controller.
+        if (_hashAttackSpeed != 0 && playerMeleeCombat != null && playerMeleeCombat.CombatStats != null)
+            _animator.SetFloat(_hashAttackSpeed, GetMeleeAttackSpeedMultiplier());
+        else if (_hashAttackSpeed != 0)
+            _animator.SetFloat(_hashAttackSpeed, 1f);
     }
 
     private void LateUpdate() => UpdateSortingOrder();
@@ -270,9 +392,57 @@ public class PlayerAnimationHandler : MonoBehaviour
         return false;
     }
 
-    private void HandleShoot() => TriggerAttackAnimation();
+    private bool HasAnimatorState(int stateHash)
+    {
+        if (_animator == null)
+            return false;
+
+        return _animator.HasState(0, stateHash);
+    }
+
+    private void HandleShoot() => TriggerRangedAttackAnimation();
 
     private void HandleMeleeAttackStarted() => TriggerMeleeAttackAnimation();
+
+    public void TriggerRangedAttackAnimation()
+    {
+        if (_animator == null || _animator.layerCount == 0)
+            return;
+
+        _lastAttackTriggerTime = Time.time;
+
+        if (TryGetShootingNormalizedTime(out float normalizedTime))
+        {
+            // Windup ainda rolando — deixa o clip acelerar via Animator.speed (não corta).
+            if (normalizedTime < _rangedFireReleaseNormalizedTime)
+                return;
+
+            if (HasAnimatorState(_shootingStateHash))
+            {
+                _animator.Play(_shootingStateHash, 0, 0f);
+                return;
+            }
+        }
+
+        if (HasAnimatorState(_shootingStateHash))
+            _animator.Play(_shootingStateHash, 0, 0f);
+        else
+            TrySetTrigger(_hashOnShoot);
+    }
+
+    private bool TryGetShootingNormalizedTime(out float normalizedTime)
+    {
+        normalizedTime = 0f;
+        if (_animator == null || _shootingStateHash == 0)
+            return false;
+
+        AnimatorStateInfo state = _animator.GetCurrentAnimatorStateInfo(0);
+        if (state.shortNameHash != _shootingStateHash)
+            return false;
+
+        normalizedTime = state.normalizedTime;
+        return true;
+    }
 
     private void TriggerAttackAnimation()
     {

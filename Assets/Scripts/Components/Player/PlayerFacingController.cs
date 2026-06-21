@@ -3,7 +3,8 @@ using Unity.Netcode;
 using UnityEngine;
 
 /// <summary>
-/// Orientação híbrida do sprite: parado = mouse (eixo X); andando = direção horizontal do movimento.
+/// Orientação do sprite: parado = mira; andando = movimento.
+/// Durante o clip de ataque: trava no flip da mira (snap no início); libera ao terminar a anim.
 /// </summary>
 [DisallowMultipleComponent]
 [DefaultExecutionOrder(50)]
@@ -12,6 +13,7 @@ public class PlayerFacingController : MonoBehaviour
     [SerializeField] private PlayerMovement playerMovement;
     [SerializeField] private PlayerAim playerAim;
     [SerializeField] private PlayerMeleeCombat playerMeleeCombat;
+    [SerializeField] private PlayerShooting playerShooting;
     [SerializeField] private PlayerDash playerDash;
     [SerializeField] private NixChargeAbilityExecutor chargeExecutor;
     [SerializeField] private PlayerAnimationHandler animationHandler;
@@ -36,12 +38,29 @@ public class PlayerFacingController : MonoBehaviour
         if (playerMovement == null) playerMovement = GetComponent<PlayerMovement>();
         if (playerAim == null) playerAim = GetComponent<PlayerAim>();
         if (playerMeleeCombat == null) playerMeleeCombat = GetComponent<PlayerMeleeCombat>();
+        if (playerShooting == null) playerShooting = GetComponent<PlayerShooting>();
         if (playerDash == null) playerDash = GetComponent<PlayerDash>();
         if (chargeExecutor == null) chargeExecutor = GetComponent<NixChargeAbilityExecutor>();
         if (animationHandler == null) animationHandler = GetComponent<PlayerAnimationHandler>();
         _networkObject = GetComponent<NetworkObject>();
         _networkHealth = GetComponent<NetworkPlayerHealth>();
         _healthComponent = GetComponent<HealthComponent>();
+    }
+
+    private void OnEnable()
+    {
+        if (playerShooting != null)
+            playerShooting.OnShoot += SnapFacingToAimAtAttackStart;
+        if (playerMeleeCombat != null)
+            playerMeleeCombat.OnMeleeAttackStarted += SnapFacingToAimAtAttackStart;
+    }
+
+    private void OnDisable()
+    {
+        if (playerShooting != null)
+            playerShooting.OnShoot -= SnapFacingToAimAtAttackStart;
+        if (playerMeleeCombat != null)
+            playerMeleeCombat.OnMeleeAttackStarted -= SnapFacingToAimAtAttackStart;
     }
 
     private void LateUpdate()
@@ -52,7 +71,7 @@ public class PlayerFacingController : MonoBehaviour
         if (IsFacingLocked())
             return;
 
-        if (playerMeleeCombat != null && playerMeleeCombat.IsAttacking)
+        if (animationHandler != null && animationHandler.IsPrimaryAttackAnimationPlaying())
             return;
 
         bool? desiredFacing = ResolveDesiredFacing();
@@ -60,6 +79,14 @@ public class PlayerFacingController : MonoBehaviour
             return;
 
         PublishFacing(desiredFacing.Value);
+    }
+
+    private void SnapFacingToAimAtAttackStart()
+    {
+        if (IsFacingLocked())
+            return;
+
+        TryPublishAimFacing();
     }
 
     private bool IsFacingLocked()
@@ -93,6 +120,11 @@ public class PlayerFacingController : MonoBehaviour
                 return move.x > 0f;
         }
 
+        return ResolveAimFacing();
+    }
+
+    private bool? ResolveAimFacing()
+    {
         if (playerAim != null && playerAim.TryGetAimDirection(out Vector2 aim, out _))
         {
             if (Mathf.Abs(aim.x) < aimDeadZoneX)
@@ -101,6 +133,13 @@ public class PlayerFacingController : MonoBehaviour
         }
 
         return null;
+    }
+
+    private void TryPublishAimFacing()
+    {
+        bool? aimFacing = ResolveAimFacing();
+        if (aimFacing.HasValue)
+            PublishFacing(aimFacing.Value);
     }
 
     private void PublishFacing(bool facingRight)

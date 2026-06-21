@@ -36,14 +36,27 @@ public class MainMenuController : MonoBehaviour
     [SerializeField] private TMP_Text savesListText;
     [SerializeField] private Button savesBackButton;
     [SerializeField] private Button[] saveSlotButtons;
+    [SerializeField] private Button[] saveDeleteSlotButtons;
+    [SerializeField] private Button deleteAllSavesButton;
+
+    [Header("Saves — confirmação de exclusão")]
+    [SerializeField] private GameObject deleteConfirmationRoot;
+    [SerializeField] private TMP_Text deleteConfirmationText;
+    [SerializeField] private Button deleteConfirmButton;
+    [SerializeField] private Button deleteCancelButton;
 
     [Header("Opções")]
     [SerializeField] private Button optionsBackButton;
-    [SerializeField] private TMP_Text optionsInfoText;
+    [SerializeField] private Slider masterVolumeSlider;
+    [SerializeField] private Slider musicVolumeSlider;
+    [SerializeField] private Slider sfxVolumeSlider;
+    [SerializeField] private Button resetAudioDefaultsButton;
 
     [SerializeField] private bool buildPlaceholderIfMissing = true;
 
     private readonly List<int> _hostSaveSlots = new List<int>();
+    private int? _pendingDeleteSlot;
+    private bool _pendingDeleteAll;
 
     private void Awake()
     {
@@ -51,7 +64,12 @@ public class MainMenuController : MonoBehaviour
             BuildPlaceholderUI();
 
         EnsureCreditsButtonIfMissing();
+        EnsureSaveDeleteUiIfMissing();
+        EnsureAudioVolumeSlidersIfMissing();
+        EnsureResetAudioDefaultsButtonIfMissing();
         WireButtons();
+        InitializeAudioVolumeSliders();
+        HideDeleteConfirmation();
         RefreshContinueState();
 
         SaveProfileStore save = SaveProfileStore.Instance;
@@ -124,6 +142,8 @@ public class MainMenuController : MonoBehaviour
         if (quitButton != null) quitButton.onClick.AddListener(OnQuit);
         if (savesBackButton != null) savesBackButton.onClick.AddListener(ShowMainMenu);
         if (optionsBackButton != null) optionsBackButton.onClick.AddListener(ShowMainMenu);
+        if (resetAudioDefaultsButton != null)
+            resetAudioDefaultsButton.onClick.AddListener(OnResetAudioDefaultsRequested);
 
         if (saveSlotButtons != null)
         {
@@ -134,10 +154,28 @@ public class MainMenuController : MonoBehaviour
                     saveSlotButtons[i].onClick.AddListener(() => OnSaveSlotSelected(slot));
             }
         }
+
+        if (saveDeleteSlotButtons != null)
+        {
+            for (int i = 0; i < saveDeleteSlotButtons.Length; i++)
+            {
+                int slot = i;
+                if (saveDeleteSlotButtons[i] != null)
+                    saveDeleteSlotButtons[i].onClick.AddListener(() => OnDeleteSaveSlotRequested(slot));
+            }
+        }
+
+        if (deleteConfirmButton != null)
+            deleteConfirmButton.onClick.AddListener(ExecutePendingDelete);
+        if (deleteCancelButton != null)
+            deleteCancelButton.onClick.AddListener(HideDeleteConfirmation);
+        if (deleteAllSavesButton != null)
+            deleteAllSavesButton.onClick.AddListener(OnDeleteAllSavesRequested);
     }
 
     public void ShowMainMenu()
     {
+        HideDeleteConfirmation();
         HideLegacyMenuContent();
         navigator?.ShowPanel(PanelMain);
         if (mainMenuPanel != null) mainMenuPanel.SetActive(true);
@@ -194,16 +232,149 @@ public class MainMenuController : MonoBehaviour
     public void OnOptions()
     {
         MidnightMeowAnalyticsTracker.NotifyUiClick("main_menu", "options");
-        if (optionsInfoText != null)
-            optionsInfoText.text = "Gráficos, áudio, controles e geral — placeholders para implementação futura.";
-
+        RefreshAudioVolumeSlidersUi();
         navigator?.ShowPanel(PanelOptions);
+    }
+
+    private void OnResetAudioDefaultsRequested()
+    {
+        MidnightMeowAnalyticsTracker.NotifyUiClick("main_menu", "reset_audio_defaults");
+        GameAudioSettings.EnsureExists();
+        GameAudioSettings.Instance?.ResetToDefaults();
+        RefreshAudioVolumeSlidersUi();
     }
 
     public void OnCredits()
     {
         MidnightMeowAnalyticsTracker.NotifyUiClick("main_menu", "credits");
         CreditsOverlayController.Open();
+    }
+
+    private void OnDeleteSaveSlotRequested(int slot)
+    {
+        if (!CanRequestSaveDeletion())
+            return;
+
+        SaveProfileStore save = SaveProfileStore.Instance;
+        if (save == null || !save.CanContinue(slot))
+            return;
+
+        GameSaveData data = save.PeekSlot(slot);
+        if (data == null)
+            return;
+
+        _pendingDeleteAll = false;
+        _pendingDeleteSlot = slot;
+        ShowDeleteConfirmation(BuildDeleteSlotMessage(slot, data));
+        MidnightMeowAnalyticsTracker.NotifyUiClick("main_menu", $"delete_save_prompt_slot_{slot + 1}");
+    }
+
+    private void OnDeleteAllSavesRequested()
+    {
+        if (!CanRequestSaveDeletion())
+            return;
+
+        SaveProfileStore save = SaveProfileStore.Instance;
+        if (save == null || !save.HasAnySave())
+            return;
+
+        _pendingDeleteAll = true;
+        _pendingDeleteSlot = null;
+        ShowDeleteConfirmation(BuildDeleteAllMessage(save));
+        MidnightMeowAnalyticsTracker.NotifyUiClick("main_menu", "delete_all_saves_prompt");
+    }
+
+    private void ExecutePendingDelete()
+    {
+        if (!CanRequestSaveDeletion())
+        {
+            HideDeleteConfirmation();
+            return;
+        }
+
+        SaveProfileStore save = SaveProfileStore.Instance;
+        if (save == null)
+        {
+            HideDeleteConfirmation();
+            return;
+        }
+
+        if (_pendingDeleteAll)
+        {
+            int deleted = save.DeleteAllSlots();
+            MidnightMeowAnalyticsTracker.NotifyUiClick("main_menu", $"delete_all_saves_confirmed_{deleted}");
+        }
+        else if (_pendingDeleteSlot.HasValue)
+        {
+            int slot = _pendingDeleteSlot.Value;
+            save.DeleteSlot(slot);
+            MidnightMeowAnalyticsTracker.NotifyUiClick("main_menu", $"delete_save_confirmed_slot_{slot + 1}");
+        }
+
+        HideDeleteConfirmation();
+        RefreshContinueState();
+    }
+
+    private void HideDeleteConfirmation()
+    {
+        _pendingDeleteAll = false;
+        _pendingDeleteSlot = null;
+
+        if (deleteConfirmationRoot != null)
+            deleteConfirmationRoot.SetActive(false);
+    }
+
+    private void ShowDeleteConfirmation(string message)
+    {
+        if (deleteConfirmationText != null)
+            deleteConfirmationText.text = message;
+
+        if (deleteConfirmationRoot != null)
+        {
+            deleteConfirmationRoot.transform.SetAsLastSibling();
+            deleteConfirmationRoot.SetActive(true);
+        }
+    }
+
+    private static bool CanRequestSaveDeletion()
+    {
+        if (GameFlowOrchestrator.Instance != null && !GameFlowOrchestrator.Instance.CanRequestTransition())
+            return false;
+
+        return true;
+    }
+
+    private static string BuildDeleteSlotMessage(int slot, GameSaveData data)
+    {
+        DateTime played = new DateTime(data.lastPlayedUtcTicks, DateTimeKind.Utc).ToLocalTime();
+        var builder = new StringBuilder();
+        builder.AppendLine($"Apagar Save {slot + 1}?");
+        builder.AppendLine();
+        builder.AppendLine($"Data: {played:dd/MM/yyyy HH:mm}");
+        builder.AppendLine($"Magículas: {data.magiculas}");
+        builder.AppendLine();
+        builder.AppendLine("Esta ação não pode ser desfeita.");
+        builder.AppendLine("(Save local — não afeta outros jogadores.)");
+        return builder.ToString();
+    }
+
+    private static string BuildDeleteAllMessage(SaveProfileStore save)
+    {
+        int count = 0;
+        for (int i = 0; i < GameSaveData.MaxSlots; i++)
+        {
+            if (save.HasSave(i))
+                count++;
+        }
+
+        var builder = new StringBuilder();
+        builder.AppendLine("Apagar TODOS os saves?");
+        builder.AppendLine();
+        builder.AppendLine($"Serão removidos {count} arquivo(s) local(is).");
+        builder.AppendLine();
+        builder.AppendLine("Esta ação não pode ser desfeita.");
+        builder.AppendLine("(Save local — não afeta outros jogadores.)");
+        return builder.ToString();
     }
 
     private void OnSaveSlotSelected(int slot)
@@ -249,13 +420,27 @@ public class MainMenuController : MonoBehaviour
 
     private void RefreshContinueState()
     {
-        if (continueButton == null)
+        SaveProfileStore save = SaveProfileStore.Instance;
+        bool canContinue = save != null && save.HasAnyHostSave();
+
+        if (continueButton != null)
+        {
+            continueButton.gameObject.SetActive(true);
+            continueButton.interactable = canContinue;
+        }
+
+        RefreshSavesPanel();
+    }
+
+    private void RefreshDeleteAllSavesButton()
+    {
+        if (deleteAllSavesButton == null)
             return;
 
         SaveProfileStore save = SaveProfileStore.Instance;
-        bool canContinue = save != null && save.HasAnyHostSave();
-        continueButton.gameObject.SetActive(true);
-        continueButton.interactable = canContinue;
+        bool hasAny = save != null && save.HasAnySave();
+        deleteAllSavesButton.gameObject.SetActive(true);
+        deleteAllSavesButton.interactable = hasAny;
     }
 
     private void RefreshSavesPanel()
@@ -298,6 +483,21 @@ public class MainMenuController : MonoBehaviour
                 saveSlotButtons[i].interactable = save.CanContinue(i);
             }
         }
+
+        if (saveDeleteSlotButtons != null)
+        {
+            for (int i = 0; i < saveDeleteSlotButtons.Length; i++)
+            {
+                if (saveDeleteSlotButtons[i] == null)
+                    continue;
+
+                bool visible = _hostSaveSlots.Contains(i);
+                saveDeleteSlotButtons[i].gameObject.SetActive(visible);
+                saveDeleteSlotButtons[i].interactable = save.CanContinue(i);
+            }
+        }
+
+        RefreshDeleteAllSavesButton();
     }
 
     private void BuildPlaceholderUI()
@@ -314,6 +514,8 @@ public class MainMenuController : MonoBehaviour
         navigator.RegisterPanel(PanelSaves, savesPanel);
         navigator.RegisterPanel(PanelOptions, optionsPanel);
         navigator.ShowPanel(PanelMain);
+
+        BuildDeleteConfirmationOverlay(canvas.transform);
     }
 
     private GameObject BuildMainMenuPanel(Transform parent)
@@ -440,16 +642,24 @@ public class MainMenuController : MonoBehaviour
             new Vector2(0.1f, 0.55f), new Vector2(0.9f, 0.85f), Vector2.zero, Vector2.zero);
 
         saveSlotButtons = new Button[GameSaveData.MaxSlots];
+        saveDeleteSlotButtons = new Button[GameSaveData.MaxSlots];
         for (int i = 0; i < saveSlotButtons.Length; i++)
         {
             float rowY = 0.45f - i * 0.1f;
             saveSlotButtons[i] = ScreenFlowPlaceholderFactory.CreateButton(panel.transform, $"Continuar Save {i + 1}",
-                new Vector2(0.5f, rowY), new Vector2(0.5f, rowY), new Vector2(-220f, -30f), new Vector2(220f, 30f));
+                new Vector2(0.5f, rowY), new Vector2(0.5f, rowY), new Vector2(-320f, -30f), new Vector2(-20f, 30f));
             saveSlotButtons[i].gameObject.SetActive(false);
+
+            saveDeleteSlotButtons[i] = ScreenFlowPlaceholderFactory.CreateButton(panel.transform, $"Apagar Save {i + 1}",
+                new Vector2(0.5f, rowY), new Vector2(0.5f, rowY), new Vector2(20f, -30f), new Vector2(320f, 30f));
+            saveDeleteSlotButtons[i].gameObject.SetActive(false);
         }
 
         savesBackButton = ScreenFlowPlaceholderFactory.CreateButton(panel.transform, "Voltar",
             new Vector2(0.08f, 0.08f), new Vector2(0.08f, 0.08f), new Vector2(-100f, -35f), new Vector2(100f, 35f));
+
+        deleteAllSavesButton = ScreenFlowPlaceholderFactory.CreateButton(panel.transform, "Apagar todos os saves",
+            new Vector2(0.5f, 0.14f), new Vector2(0.5f, 0.14f), new Vector2(-260f, -32f), new Vector2(260f, 32f));
 
         return panel;
     }
@@ -462,13 +672,194 @@ public class MainMenuController : MonoBehaviour
             TextAlignmentOptions.Top, Color.white,
             new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(-300f, -90f), new Vector2(300f, -10f));
 
-        optionsInfoText = ScreenFlowPlaceholderFactory.CreateText(panel.transform, "", 24,
-            TextAlignmentOptions.Center, Color.white,
-            new Vector2(0.1f, 0.3f), new Vector2(0.9f, 0.7f), Vector2.zero, Vector2.zero);
+        ScreenFlowPlaceholderFactory.CreateText(panel.transform, "Áudio", 32,
+            TextAlignmentOptions.TopLeft, Color.white,
+            new Vector2(0.12f, 0.72f), new Vector2(0.88f, 0.72f), new Vector2(0f, -20f), new Vector2(0f, 20f));
+
+        masterVolumeSlider = ScreenFlowPlaceholderFactory.CreateLabeledSlider(panel.transform, "Volume geral", 0.62f,
+            GameAudioSettings.GetSavedLinear(GameAudioSettings.PrefMasterVolume));
+        musicVolumeSlider = ScreenFlowPlaceholderFactory.CreateLabeledSlider(panel.transform, "Música", 0.52f,
+            GameAudioSettings.GetSavedLinear(GameAudioSettings.PrefMusicVolume));
+        sfxVolumeSlider = ScreenFlowPlaceholderFactory.CreateLabeledSlider(panel.transform, "SFX", 0.42f,
+            GameAudioSettings.GetSavedLinear(GameAudioSettings.PrefSfxVolume));
+
+        resetAudioDefaultsButton = ScreenFlowPlaceholderFactory.CreateButton(panel.transform, "Restaurar padrões de áudio",
+            new Vector2(0.5f, 0.30f), new Vector2(0.5f, 0.30f), new Vector2(-280f, -32f), new Vector2(280f, 32f));
 
         optionsBackButton = ScreenFlowPlaceholderFactory.CreateButton(panel.transform, "Voltar",
             new Vector2(0.08f, 0.08f), new Vector2(0.08f, 0.08f), new Vector2(-100f, -35f), new Vector2(100f, 35f));
 
         return panel;
+    }
+
+    private void EnsureAudioVolumeSlidersIfMissing()
+    {
+        if (masterVolumeSlider != null && musicVolumeSlider != null && sfxVolumeSlider != null)
+            return;
+
+        if (!buildPlaceholderIfMissing)
+            return;
+
+        Transform optionsRoot = transform.Find(PanelOptions);
+        if (optionsRoot == null)
+        {
+            Canvas canvas = GetComponentInChildren<Canvas>(true);
+            if (canvas != null)
+                optionsRoot = canvas.transform.Find(PanelOptions);
+        }
+
+        if (optionsRoot == null)
+            return;
+
+        if (masterVolumeSlider == null)
+            masterVolumeSlider = ScreenFlowPlaceholderFactory.CreateLabeledSlider(optionsRoot, "Volume geral", 0.62f,
+                GameAudioSettings.GetSavedLinear(GameAudioSettings.PrefMasterVolume));
+
+        if (musicVolumeSlider == null)
+            musicVolumeSlider = ScreenFlowPlaceholderFactory.CreateLabeledSlider(optionsRoot, "Música", 0.52f,
+                GameAudioSettings.GetSavedLinear(GameAudioSettings.PrefMusicVolume));
+
+        if (sfxVolumeSlider == null)
+            sfxVolumeSlider = ScreenFlowPlaceholderFactory.CreateLabeledSlider(optionsRoot, "SFX", 0.42f,
+                GameAudioSettings.GetSavedLinear(GameAudioSettings.PrefSfxVolume));
+    }
+
+    private void EnsureResetAudioDefaultsButtonIfMissing()
+    {
+        if (resetAudioDefaultsButton != null || !buildPlaceholderIfMissing)
+            return;
+
+        Transform optionsRoot = transform.Find(PanelOptions);
+        if (optionsRoot == null)
+        {
+            Canvas canvas = GetComponentInChildren<Canvas>(true);
+            if (canvas != null)
+                optionsRoot = canvas.transform.Find(PanelOptions);
+        }
+
+        if (optionsRoot == null)
+            return;
+
+        resetAudioDefaultsButton = ScreenFlowPlaceholderFactory.CreateButton(optionsRoot, "Restaurar padrões de áudio",
+            new Vector2(0.5f, 0.30f), new Vector2(0.5f, 0.30f), new Vector2(-280f, -32f), new Vector2(280f, 32f));
+    }
+
+    private void InitializeAudioVolumeSliders()
+    {
+        GameAudioSettings.EnsureExists();
+        GameAudioSettings settings = GameAudioSettings.Instance;
+        settings?.ApplySavedVolumes();
+
+        BindVolumeSlider(masterVolumeSlider, settings?.GetMasterVolume() ?? GameAudioSettings.DefaultLinearVolume,
+            value => settings?.SetMasterVolume(value));
+        BindVolumeSlider(musicVolumeSlider, settings?.GetMusicVolume() ?? GameAudioSettings.DefaultLinearVolume,
+            value => settings?.SetMusicVolume(value));
+        BindVolumeSlider(sfxVolumeSlider, settings?.GetSfxVolume() ?? GameAudioSettings.DefaultLinearVolume,
+            value => settings?.SetSfxVolume(value));
+    }
+
+    private static void BindVolumeSlider(Slider slider, float initialValue, System.Action<float> onChanged)
+    {
+        if (slider == null || onChanged == null)
+            return;
+
+        slider.SetValueWithoutNotify(initialValue);
+        slider.onValueChanged.AddListener(value => onChanged(value));
+    }
+
+    private void RefreshAudioVolumeSlidersUi()
+    {
+        GameAudioSettings settings = GameAudioSettings.Instance;
+        if (settings == null)
+            return;
+
+        if (masterVolumeSlider != null)
+            masterVolumeSlider.SetValueWithoutNotify(settings.GetMasterVolume());
+        if (musicVolumeSlider != null)
+            musicVolumeSlider.SetValueWithoutNotify(settings.GetMusicVolume());
+        if (sfxVolumeSlider != null)
+            sfxVolumeSlider.SetValueWithoutNotify(settings.GetSfxVolume());
+    }
+
+    private void EnsureSaveDeleteUiIfMissing()
+    {
+        if (deleteConfirmationRoot == null)
+            deleteConfirmationRoot = transform.Find("SaveDeleteConfirmation")?.gameObject;
+
+        if (deleteConfirmationRoot == null && buildPlaceholderIfMissing)
+        {
+            Canvas canvas = GetComponentInChildren<Canvas>(true);
+            if (canvas != null)
+                BuildDeleteConfirmationOverlay(canvas.transform);
+        }
+
+        if ((saveDeleteSlotButtons == null || saveDeleteSlotButtons.Length == 0) && buildPlaceholderIfMissing)
+            TryCreateSaveDeleteSlotButtons();
+
+        if (deleteAllSavesButton == null && buildPlaceholderIfMissing)
+            TryCreateDeleteAllSavesButton();
+    }
+
+    private void TryCreateDeleteAllSavesButton()
+    {
+        Transform savesRoot = transform.Find(PanelSaves);
+        if (savesRoot == null)
+        {
+            Canvas canvas = GetComponentInChildren<Canvas>(true);
+            if (canvas != null)
+                savesRoot = canvas.transform.Find(PanelSaves);
+        }
+
+        if (savesRoot == null)
+            return;
+
+        deleteAllSavesButton = ScreenFlowPlaceholderFactory.CreateButton(savesRoot, "Apagar todos os saves",
+            new Vector2(0.5f, 0.14f), new Vector2(0.5f, 0.14f), new Vector2(-260f, -32f), new Vector2(260f, 32f));
+    }
+
+    private void BuildDeleteConfirmationOverlay(Transform parent)
+    {
+        if (deleteConfirmationRoot != null)
+            return;
+
+        deleteConfirmationRoot = ScreenFlowPlaceholderFactory.CreateModalOverlay(
+            parent,
+            "SaveDeleteConfirmation",
+            new Color(0f, 0f, 0f, 0.94f),
+            new Color(0.04f, 0.04f, 0.06f, 1f),
+            new Vector2(920f, 520f),
+            out RectTransform card);
+
+        deleteConfirmationText = ScreenFlowPlaceholderFactory.CreateText(card,
+            "Confirmar exclusão?", 26, TextAlignmentOptions.Center, Color.white,
+            new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(-400f, -40f), new Vector2(400f, 180f));
+
+        deleteConfirmButton = ScreenFlowPlaceholderFactory.CreateButton(card, "Apagar",
+            new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(-420f, 48f), new Vector2(-220f, 108f));
+
+        deleteCancelButton = ScreenFlowPlaceholderFactory.CreateButton(card, "Cancelar",
+            new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(220f, 48f), new Vector2(420f, 108f));
+
+        deleteConfirmationRoot.SetActive(false);
+    }
+
+    private void TryCreateSaveDeleteSlotButtons()
+    {
+        if (saveSlotButtons == null || saveSlotButtons.Length == 0)
+            return;
+
+        saveDeleteSlotButtons = new Button[saveSlotButtons.Length];
+        for (int i = 0; i < saveSlotButtons.Length; i++)
+        {
+            if (saveSlotButtons[i] == null)
+                continue;
+
+            RectTransform continueRt = saveSlotButtons[i].GetComponent<RectTransform>();
+            saveDeleteSlotButtons[i] = ScreenFlowPlaceholderFactory.CreateButton(continueRt.parent, $"Apagar Save {i + 1}",
+                continueRt.anchorMin, continueRt.anchorMax,
+                new Vector2(continueRt.offsetMax.x + 8f, continueRt.offsetMin.y),
+                new Vector2(continueRt.offsetMax.x + 300f, continueRt.offsetMax.y));
+            saveDeleteSlotButtons[i].gameObject.SetActive(false);
+        }
     }
 }

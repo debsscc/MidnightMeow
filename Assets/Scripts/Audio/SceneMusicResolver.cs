@@ -103,13 +103,19 @@ public static class SceneMusicResolver
 
     private static bool TryReadClip(AudioSource source, out AudioClip clip, out bool loop)
     {
-        clip = source != null ? source.clip : null;
-        loop = source == null || source.loop;
+        clip = null;
+        loop = true;
 
-        if (clip == null)
+        if (source == null)
             return false;
 
-        return true;
+        loop = source.loop;
+        clip = source.clip;
+
+        if (clip == null && source.resource is AudioClip resourceClip)
+            clip = resourceClip;
+
+        return clip != null;
     }
 
     private static void SuppressSource(AudioSource source)
@@ -124,5 +130,5 @@ public static class SceneMusicResolver
     private static bool IsSceneWithoutMusic(string sceneName) => IsSilentHubScene(sceneName);
 
     public static bool IsSilentHubScene(string sceneName) =>
-        sceneName is "Loading1" or "Loading2" or "Preparation" or "Characters" or "Lobby" or "Menu2";
+        sceneName is "Loading1" or "Loading2" or "Preparation" or "Characters" or "Lobby";
 }

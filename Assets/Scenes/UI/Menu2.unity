@@ -12356,7 +12356,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!82 &845555863
 AudioSource:
   m_ObjectHideFlags: 0
@@ -12650,8 +12650,16 @@ MonoBehaviour:
   savesListText: {fileID: 0}
   savesBackButton: {fileID: 0}
   saveSlotButtons: []
+  saveDeleteSlotButtons: []
+  deleteAllSavesButton: {fileID: 0}
+  deleteConfirmationRoot: {fileID: 0}
+  deleteConfirmationText: {fileID: 0}
+  deleteConfirmButton: {fileID: 0}
+  deleteCancelButton: {fileID: 0}
   optionsBackButton: {fileID: 0}
-  optionsInfoText: {fileID: 0}
+  masterVolumeSlider: {fileID: 0}
+  musicVolumeSlider: {fileID: 0}
+  sfxVolumeSlider: {fileID: 0}
   buildPlaceholderIfMissing: 1
 --- !u!1 &881157100
 GameObject:

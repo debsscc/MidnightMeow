@@ -14,6 +14,8 @@
 | Feedback Playtest | Abre o [formulário de playtest](https://docs.google.com/forms/d/e/1FAIpQLScqrERAjHtXbsp-kTXYh86otM1uvqKOICOwL0JFGYLe5203aw/viewform) no navegador (`Application.OpenURL`) |
 | Sair | `Application.Quit()` |
 
+**Música:** objeto raiz `Sound Track` (`menu.wav`, grupo **Music**). O `MusicCrossfadeController` lê o clip, desliga o `AudioSource` da cena e toca via crossfade persistente **no mesmo grupo Music**, controlável pelo slider Música (`GameAudioSettings` → `MusicVolume`).
+
 Layout: botões canto inferior esquerdo com offset (ref. `docs/reference_imgs/menu.png`).
 
 ## Lobby
@@ -66,7 +68,7 @@ Em runtime, se refs faltarem, `ScreenFlowUiLookup` resolve por nome (`Host`, `Jo
 
 Cenas copiadas do template de fim de jogo traziam o prefab `Defeat` e `Sound Track` (`game over.wav`) ativos em Loading, Preparation e Characters. Isso fazia a tela/música de derrota aparecer no meio do fluxo.
 
-- **Runtime:** `ScreenFlowLegacySceneCleanup` desativa `Defeat` e `Sound Track` fora de `GameOver`.
+- **Runtime:** `ScreenFlowLegacySceneCleanup` desativa `Defeat` e `Sound Track` em Loading, Preparation e Characters (não em **Menu2** — trilha do menu via crossfade).
 - **Editor:** o setup de Screen Flow também desativa esses objetos nas cenas afetadas.
 - **Transições:** `ScreenFlowController` usa overlay persistente (fade + loading) para o menu não ficar visível por cima do carregamento.
 

@@ -44,6 +44,7 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
     public static void EnsureExists()
     {
         TransitionFadeOverlay.EnsureExists();
+        GameAudioSettings.EnsureExists();
         MusicCrossfadeController.EnsureExists();
 
         if (Instance != null)

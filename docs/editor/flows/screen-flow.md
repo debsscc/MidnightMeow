@@ -111,6 +111,10 @@ Fase-1 → [vitória/derrota] → VictoryScene / GameOver
 
 - Arquivo: `{persistentDataPath}/MidnightMeow/saves/save_slot_{N}.json` (N = 0..2)
 - Magículas e tiers por personagem via `CharacterSaveData`
+- **Apagar save (slot):** painel Saves → botão **Apagar Save N** → confirmação (data, magículas)
+- **Apagar todos:** painel Saves (Continuar) → **Apagar todos os saves** → confirmação
+- **Áudio (placeholder):** Opções → sliders Volume geral / Música / SFX → `GameAudioSettings` + `NewAudioMixer`; botão **Restaurar padrões de áudio** (75% em cada canal).
+- API: `SaveProfileStore.DeleteSlot(int)`, `DeleteAllSlots()` — só no menu (`GameFlowOrchestrator.CanRequestTransition`)
 
 ## Contratos
 

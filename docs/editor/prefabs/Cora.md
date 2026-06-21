@@ -74,7 +74,25 @@ Cora
 | **`CharacterProfileApplier.profile`** | `Assets/Data/Characters/CoraGameplayProfile.asset` |
 | `AnimatorProfileBinder.profile` | `Assets/Data/Characters/CoraAnimationProfile.asset` → `AC_CORA.controller` |
 | `stats` / `baseStats` (legado, espelhado pelo profile) | `Assets/Data/Stats/Player/PlayerCoreStats.asset` |
-| `CoraRangedCombatStats` (via profile) | `Assets/Data/Characters/CoraRangedCombatStats.asset` — **attackRange**, fireRate |
+| `CoraRangedCombatStats` (via profile) | `Assets/Data/Characters/CoraRangedCombatStats.asset` — **attackRange**, fireRate, **attackAnimClipLength** (0,517) |
+
+## Timing do tiro (sync com animação)
+
+| Item | Função |
+|------|--------|
+| `CoraAnimationProfile.attackClip` | `Cora_Base_Attack` — **fonte única** do timing via evento `PerformFire` |
+| `attackAnimClipLength` | **0,517** — espelha duração do clip; alimenta `AttackSpeed` |
+| Animation Event `PerformFire()` | No clip (~0,233 s) em **`PlayerAnimationHandler`** (mesmo GO do Animator) |
+| Fallback | Só após o frame do evento, via `normalizedTime`; timeout = fim do clip |
+
+**Cadência vs animação:** `Animator.speed = clipLength × fireRate` no estado `Shooting` — acelera o clip (não o float `AttackSpeed`).
+
+**Facing ao atacar:** snap para a mira no início; flip **travado até o clip terminar**; depois mouse/movimento.
+
+**Ajustar sync:** mover o evento `PerformFire` na timeline de `Cora_Base_Attack` (função no `PlayerAnimationHandler`).
+
+| Campo | Asset |
+|-------|--------|
 | `PlayerAbilityHandler.abilitySet` | `Assets/Data/Abilities/CoraAbilitySet.asset` |
 | `barrierPrefab` | `CoraBarrier.prefab` — `NetworkCoraBarrier`, `BoxCollider2D` sólido, `NavMeshObstacle.carveOnlyStationary: 0`, rotação Z via `NetworkTransform` |
 | `poolPrefab` | `Assets/Prefabs/Combat/CoraDamagePool.prefab` |
@@ -99,7 +117,7 @@ Cora
 
 | Data | Alteração |
 |------|-----------|
-| 2026-06-12 | Fluxo de morte B: presentation + dissolve MP |
+| 2026-06-21 | Tiro sincronizado via Animation Event `PerformFire` em `Cora_Base_Attack`; `attackAnimClipLength` 0,517 |
 | 2026-06-14 | Animador dedicado `AC_CORA.controller` + clips em `Assets/Art/Sprites/Animations/Cora/` via `CoraAnimationProfile` |
 | 2026-06-14 | `CharacterProfileApplier` + `AnimatorProfileBinder`; SOs em `Assets/Data/Characters/` |
 | 2026-05-22 | Doc criada a partir do YAML (substitui Player.prefab legado) |

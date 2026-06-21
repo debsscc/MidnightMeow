@@ -22,7 +22,10 @@ MonoBehaviour:
   onDashTrigger: OnDash
   onTakeDamageTrigger: OnDamage
   onDieTrigger: OnDie
-  attackAnimClipLength: 0.333
+  attackClip: {fileID: 7400000, guid: 493c3a4412065d740a8999295b40b1d3, type: 2}
+  attackAnimatorStateName: Shooting
+  meleeAttackAnimatorStateName: 
+  attackAnimClipLength: 0.517
   deathDestroyDelay: 4
   sortingOrderOffset: 5000
   sortingPrecision: 100

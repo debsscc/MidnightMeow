@@ -75,6 +75,17 @@ public class SaveProfileStore : MonoBehaviour
         return false;
     }
 
+    public bool HasAnySave()
+    {
+        for (int i = 0; i < GameSaveData.MaxSlots; i++)
+        {
+            if (HasSave(i))
+                return true;
+        }
+
+        return false;
+    }
+
     public void GetHostSaveSlots(List<int> results)
     {
         results.Clear();
@@ -110,6 +121,43 @@ public class SaveProfileStore : MonoBehaviour
     {
         _active = CreateFresh(_active?.slotIndex ?? defaultSlot);
         SaveActive();
+    }
+
+    /// <summary>Remove o arquivo JSON do slot. Se for o perfil ativo, recarrega um save fresco em memória.</summary>
+    public bool DeleteSlot(int slot)
+    {
+        if (slot < 0 || slot >= GameSaveData.MaxSlots)
+            return false;
+
+        string path = GetPath(slot);
+        if (File.Exists(path))
+            File.Delete(path);
+
+        if (_active != null && _active.slotIndex == slot)
+            LoadOrCreate(slot);
+        else
+            OnProfileChanged?.Invoke();
+
+        return true;
+    }
+
+    /// <summary>Apaga todos os arquivos de save locais (0..MaxSlots-1) e recarrega o slot ativo.</summary>
+    public int DeleteAllSlots()
+    {
+        int deleted = 0;
+        for (int i = 0; i < GameSaveData.MaxSlots; i++)
+        {
+            string path = GetPath(i);
+            if (!File.Exists(path))
+                continue;
+
+            File.Delete(path);
+            deleted++;
+        }
+
+        int reloadSlot = _active?.slotIndex ?? defaultSlot;
+        LoadOrCreate(reloadSlot);
+        return deleted;
     }
 
     public bool TrySpendMagiculas(int cost)

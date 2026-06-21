@@ -41,8 +41,18 @@ public class CharacterAnimationProfile : ScriptableObject
     public string onTakeDamageTrigger = "OnDamage";
     public string onDieTrigger = "OnDie";
 
+    [Header("Ataque Ranged")]
+    [Tooltip("Clip com Animation Event PerformFire (ex.: Cora_Base_Attack). Fonte única do timing de soltura.")]
+    public AnimationClip attackClip;
+
+    [Tooltip("Nome do estado no Animator que reproduz attackClip (ex.: Shooting).")]
+    public string attackAnimatorStateName = "Shooting";
+
+    [Tooltip("Estado de ataque melee (ex.: Hitting). Vazio = personagem ranged.")]
+    public string meleeAttackAnimatorStateName = "Hitting";
+
     [Header("Configurações Avançadas")]
-    [Tooltip("Duração do clipe de ataque para cálculo de AttackSpeed.")]
+    [Tooltip("Duração do clipe de ataque para cálculo de AttackSpeed. Ignorado se attackClip estiver atribuído.")]
     public float attackAnimClipLength = 0.333f;
 
     [Tooltip("Delay antes de destruir o objeto após morte.")]

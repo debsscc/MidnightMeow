@@ -26,8 +26,12 @@ public class MenuAudioManager : MonoBehaviour
     private void Awake()
     {
         _sfxSource = GetComponent<AudioSource>();
-        
-        // Configurações de segurança para garantir o comportamento correto do AudioSource
+
+        GameAudioSettings.EnsureExists();
+        GameAudioSettings settings = GameAudioSettings.Instance;
+        if (settings != null && settings.SfxGroup != null)
+            _sfxSource.outputAudioMixerGroup = settings.SfxGroup;
+
         _sfxSource.playOnAwake = false;
         _sfxSource.loop = false;
         _sfxSource.spatialBlend = 0f; // 2D sound
