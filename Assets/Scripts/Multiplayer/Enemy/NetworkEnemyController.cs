@@ -303,16 +303,22 @@ public class NetworkEnemyController : NetworkBehaviour
         _deathPresentationCompleted = true;
         CancelDeathDespawnRoutine();
         HideAllVisualsLocal();
-        HideVisualsClientRpc();
         DespawnEnemy();
     }
 
     private void HideAllVisualsLocal()
     {
         if (_dissolveEffect != null)
+        {
+            if (_dissolveEffect.IsPlaying)
+                return;
+
             _dissolveEffect.HideVisuals();
+        }
         else
+        {
             DeathVisualHider.Hide(transform);
+        }
     }
 
     private void CancelDeathDespawnRoutine()
@@ -586,12 +592,6 @@ public class NetworkEnemyController : NetworkBehaviour
     private void PlayDeathVisualClientRpc()
     {
         PlayDeathVisuals();
-    }
-
-    [ClientRpc]
-    private void HideVisualsClientRpc()
-    {
-        HideAllVisualsLocal();
     }
 
     public void BroadcastTelegraphToClients(

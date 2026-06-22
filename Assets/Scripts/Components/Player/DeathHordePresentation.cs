@@ -4,15 +4,13 @@ using Unity.Netcode;
 using UnityEngine;
 
 /// <summary>
-/// Combo de derrota (opção 5): para spawn, slow-mo leve, fade dos ratos, vinheta + zoom no corpo.
+/// Combo de derrota (opção 5): para spawn, slow-mo leve, vinheta + zoom no corpo.
 /// </summary>
 public class DeathHordePresentation : MonoBehaviour
 {
     [Header("Timing (segundos reais)")]
     [SerializeField] private float slowMoDuration = 2f;
     [SerializeField] private float slowMoTimeScale = 0.65f;
-    [Tooltip("Fade dos ratos só nos últimos segundos antes da UI de derrota.")]
-    [SerializeField] private float defeatTransitionFadeDuration = 1.25f;
 
     [Header("Spectator Death")]
     [SerializeField] private float spectatorAmbienceDuration = 2.5f;
@@ -105,9 +103,6 @@ public class DeathHordePresentation : MonoBehaviour
     {
         float elapsed = 0f;
         ApplySlowMo(true);
-        CacheEnemySprites();
-
-        float fadeStart = Mathf.Max(0f, _ambienceDuration - defeatTransitionFadeDuration);
 
         while (elapsed < _ambienceDuration)
         {
@@ -120,12 +115,6 @@ public class DeathHordePresentation : MonoBehaviour
 
             float focusT = Mathf.Clamp01(elapsed / slowMoDuration);
             UpdateDeathFocus(focusT);
-
-            if (elapsed >= fadeStart)
-            {
-                float fadeT = Mathf.InverseLerp(fadeStart, _ambienceDuration, elapsed);
-                ApplyEnemyFade(fadeT);
-            }
 
             yield return null;
         }

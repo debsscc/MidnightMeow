@@ -75,7 +75,7 @@ Nixie
 
 ## Debug / combate
 
-- `MeleeAttackDebugVisual` — trapézio após cada golpe (auto via installer)
+- `MeleeAttackVisual` — onda shader do hit melee (`NixieMeleeHitVisual.asset` via `NixieMeleeCombatStats.hitVisual`)
 - Knockback: `NetworkEnemyController.ApplyKnockbackRpc` no servidor
 - Ver [Player_Melee.md](Player_Melee.md) (guia de setup) e [diagnostics.md](../diagnostics.md)
 

@@ -78,6 +78,9 @@ public class CharacterProfileApplier : MonoBehaviour
         {
             if (TryGetComponent(out PlayerMeleeCombat melee))
                 melee.ApplyRuntimeStats(profile.meleeAttack);
+
+            if (profile.meleeAttack.hitVisual != null && TryGetComponent(out MeleeAttackVisual meleeVisual))
+                meleeVisual.Configure(profile.meleeAttack.hitVisual);
         }
     }
 

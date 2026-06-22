@@ -14,6 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CharacterAnimationProfile
   baseController: {fileID: 9100000, guid: e7f8a9b0c1d2436578091a2b3c4d5e6f, type: 2}
   clipOverrides: []
+  ability1Clip: {fileID: 7400000, guid: 77db51f6a9663f245ad0703e04eecaa1, type: 2}
+  ability1AnimatorStateName: Ability1
+  ability2Clip: {fileID: 7400000, guid: 8defe74ef89747f47bcd77e7d0dfbd49, type: 2}
+  ability2AnimatorStateName: Ability2
   moveSpeedParameter: MoveSpeed
   attackSpeedParameter: AttackSpeed
   onShootTrigger: OnShoot

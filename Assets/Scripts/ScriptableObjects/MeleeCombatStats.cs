@@ -23,8 +23,13 @@ public class MeleeCombatStats : ScriptableObject
     public float knockbackDuration = 0.25f;
     public float knockbackDistance = 0.65f;
 
+    [Header("Visual")]
+    [Tooltip("Efeito de onda do hit melee (Nixie). Range/cores configuráveis aqui.")]
+    public MeleeHitVisualConfig hitVisual;
+
     [Header("Debug")]
-    public bool drawDebugGizmos = true;
+    [Tooltip("Legado — prefira hitVisual.drawDebugGizmos.")]
+    public bool drawDebugGizmos;
 
     [Header("Animação")]
     [Tooltip("Multiplicador da velocidade da animação de ataque (1 = padrão).")]

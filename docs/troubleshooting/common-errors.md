@@ -148,6 +148,9 @@ margin = halfViewport * (1 - edgeDeadZone * 2)
 | Inverter Fade VOiD1 (50→0) | Dissolve invisível ou invertido |
 | `void1HideAtLinearTime` muito baixo (0.62) | Some abrupto antes do dissolve terminar |
 | Zerar `sharedMaterial` antes do swap | Flash / sprite “reconstruído” |
+| `HideVisualsClientRpc` antes do dissolve local terminar | Cliente some e “reconstrói” com dissolve |
+
+**Correção (2026-06-22):** removido `HideVisualsClientRpc` de `FinalizeDeathPresentation`. Cada peer conclui dissolve localmente; `HideAllVisualsLocal` no servidor ignora interrupção enquanto `DissolveEffect.IsPlaying`.
 
 **Arquivos:** `DissolveEffect.cs`, `DissolveMaterialBinding.cs`, `NetworkEnemyController.PlayDeathVisuals`.
 

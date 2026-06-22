@@ -300,18 +300,12 @@ public class MultiplayerGameManager : NetworkBehaviour
         }
 
         if (IsServer && (newState == GameState.Victory || newState == GameState.Defeat))
-            StartCoroutine(ReturnToPreparationRoutine(newState));
+            ReturnToPreparationOnServer(newState);
     }
 
-    private IEnumerator ReturnToPreparationRoutine(GameState endState)
+    private void ReturnToPreparationOnServer(GameState endState)
     {
         Time.timeScale = 1f;
-
-        float delay = endState == GameState.Victory
-            ? (gameConfig != null ? gameConfig.victoryDelay : 2f)
-            : 0f;
-        if (delay > 0f)
-            yield return new WaitForSecondsRealtime(delay);
 
         SaveProfileStore save = SaveProfileStore.Instance;
         if (save?.Active != null)
@@ -324,6 +318,12 @@ public class MultiplayerGameManager : NetworkBehaviour
 
         GameSessionContext.ResetContractRound();
 
+        BeginEndGameScreenTransitionClientRpc(endState);
+    }
+
+    [ClientRpc]
+    private void BeginEndGameScreenTransitionClientRpc(GameState endState)
+    {
         if (endState == GameState.Victory)
             ScreenFlowStateMachine.ShowVictoryScreen();
         else

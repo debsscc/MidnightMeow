@@ -59,6 +59,7 @@ public static class NetworkSceneLoadingFeedback
             return true;
 
         return sceneName.StartsWith("Fase-", System.StringComparison.Ordinal)
-               || sceneName is "Preparation" or "Loading1" or "Loading2";
+               || sceneName is "Preparation" or "Loading1" or "Loading2"
+               || sceneName is "VictoryScene" or "GameOver";
     }
 }

@@ -10,7 +10,7 @@ public class PlayerGameplayModuleInstaller : MonoBehaviour
     [SerializeField] private bool installDownedUI = false;
     [SerializeField] private bool installReviveZoneVisual = true;
     [SerializeField] private bool installRevivePromptUI = true;
-    [SerializeField] private bool installMeleeDebugVisual = true;
+    [SerializeField] private bool installMeleeHitVisual = true;
     [SerializeField] private bool installAbilityDebugVisual = true;
     [SerializeField] private bool installRatHoleSealInteraction = true;
 
@@ -38,9 +38,9 @@ public class PlayerGameplayModuleInstaller : MonoBehaviour
             GetComponent<RevivePromptWorldUI>() == null)
             gameObject.AddComponent<RevivePromptWorldUI>();
 
-        if (installMeleeDebugVisual && GetComponent<PlayerMeleeCombat>() != null &&
-            GetComponent<MeleeAttackDebugVisual>() == null)
-            gameObject.AddComponent<MeleeAttackDebugVisual>();
+        if (installMeleeHitVisual && GetComponent<PlayerMeleeCombat>() != null &&
+            GetComponent<MeleeAttackVisual>() == null)
+            gameObject.AddComponent<MeleeAttackVisual>();
 
         if (GetComponent<PlayerMeleeCombat>() != null && GetComponent<PlayerMeleeHitFeedback>() == null)
             gameObject.AddComponent<PlayerMeleeHitFeedback>();

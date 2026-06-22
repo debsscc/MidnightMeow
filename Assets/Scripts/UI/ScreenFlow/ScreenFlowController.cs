@@ -527,6 +527,7 @@ public class TransitionFadeOverlay : Singleton<TransitionFadeOverlay>
 {
     public bool IsLoadingVisible { get; private set; }
     public float LoadingProgress { get; private set; }
+    public bool IsFadeOpaque => _fadeImage != null && _fadeImage.color.a >= 0.98f;
 
     public event Action<bool> OnLoadingVisibilityChanged;
 

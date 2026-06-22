@@ -30,3 +30,17 @@
 **Não** congelar o animator antes do fim de `Dying` — isso deixava o sprite parado.
 
 Ver [common-errors.md](../../troubleshooting/common-errors.md#gameplay--dissolve-de-inimigos-void1).
+
+**Revisão 4 (2026-06-22):** sem `HideVisualsClientRpc` — dissolve local em cada peer antes do despawn.
+
+## Vitória/derrota — entidades somem antes da transição
+
+**Implementação:** `GameplayEndTransitionCoordinator` + `BeginEndGameScreenTransitionClientRpc` (fade em todos os peers); `GameplayTransitionCover` + `PlayerSpawnManager` aguardam overlay opaco antes de despawn; `DeathHordePresentation` sem fade de ratos pré-transição; `GameManager2` ignora fim de jogo quando NGO ativo.
+
+## Hit melee da Nixie (onda shader)
+
+**Implementação:** `MeleeHitWave.shader`, `MeleeAttackVisual`, `MeleeHitVisualConfig` (`Assets/Data/Combat/NixieMeleeHitVisual.asset`) referenciado em `NixieMeleeCombatStats.hitVisual`. Cores mudam com passiva via `PlayerPassiveHandler`. Gizmos desligados (`drawDebugGizmos: 0`).
+
+## Animações Q/R (Nixie e Cora)
+
+**Implementação:** estados `Ability1`/`Ability2` + triggers `OnAbility1`/`OnAbility2` em `AC_NIXIE` e `AC_CORA`; clips em `NixieAnimationProfile` / `CoraAnimationProfile` (`ability1Clip`, `ability2Clip`). `PlayerAnimationHandler.PlayAbilityAnimation` dispara os triggers.

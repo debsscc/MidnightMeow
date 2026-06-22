@@ -110,7 +110,7 @@ public class PlayerSpawnManager : NetworkBehaviour
         if (sceneEvent.SceneEventType == SceneEventType.Load
             && !ShouldReconcilePlayersForScene(sceneEvent.SceneName))
         {
-            DespawnAllPlayers();
+            StartCoroutine(DespawnPlayersWhenTransitionCovered());
             return;
         }
 
@@ -170,6 +170,12 @@ public class PlayerSpawnManager : NetworkBehaviour
         }
 
         ReconcilePlayerAfterSceneLoad(clientId, forceRespawn);
+    }
+
+    private System.Collections.IEnumerator DespawnPlayersWhenTransitionCovered()
+    {
+        yield return GameplayTransitionCover.WaitUntilOpaque();
+        DespawnAllPlayers();
     }
 
     private void DespawnAllPlayers()

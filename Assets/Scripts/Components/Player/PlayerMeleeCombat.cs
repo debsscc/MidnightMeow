@@ -58,9 +58,12 @@ public class PlayerMeleeCombat : MonoBehaviour
                 enemyLayers = 1 << enemyLayer;
         }
 
-        if (combatStats != null && combatStats.drawDebugGizmos &&
-            GetComponent<MeleeAttackDebugVisual>() == null)
-            gameObject.AddComponent<MeleeAttackDebugVisual>();
+        if (combatStats != null && GetComponent<MeleeAttackVisual>() == null)
+        {
+            var visual = gameObject.AddComponent<MeleeAttackVisual>();
+            if (combatStats.hitVisual != null)
+                visual.Configure(combatStats.hitVisual);
+        }
     }
 
     private void OnEnable()

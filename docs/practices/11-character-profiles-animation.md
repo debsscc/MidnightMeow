@@ -58,7 +58,16 @@ Controllers dedicados (clips já ligados nos estados):
 
 Template inimigo: `Assets/Data/Characters/EnemyDefaultAnimationProfile.asset` (controller `AC_Enemy`).
 
-Triggers e floats (`MoveSpeed`, `OnShoot`, `OnAbility1`, etc.) podem ser renomeados no SO se o Animator usar nomes diferentes.
+Triggers e floats (`MoveSpeed`, `OnShoot`, `OnAbility1`, `OnAbility2`, etc.) podem ser renomeados no SO se o Animator usar nomes diferentes.
+
+### Habilidades ativas (Q / R)
+
+| Personagem | Q (`OnAbility1` → `Ability1`) | R (`OnAbility2` → `Ability2`) |
+|------------|-------------------------------|-------------------------------|
+| Nixie | `Hitting_shieldAttack.anim` | `dash_attack_nix.anim` |
+| Cora | `Cora_Barrier.anim` | `Cora_DamagePool.anim` |
+
+Campos no SO: `ability1Clip`, `ability2Clip`, `ability1AnimatorStateName`, `ability2AnimatorStateName`.
 
 ## Checklist ao criar personagem novo
 

@@ -223,12 +223,27 @@ public class GameManager2 : MonoBehaviour
 
     private void HandleNightEnded()
     {
+        if (!ShouldHandleLocalEndGameSequence())
+            return;
+
         StartCoroutine(HandleEndGameSequence(true));
     }
 
     private void HandlePlayerDefeated()
     {
+        if (!ShouldHandleLocalEndGameSequence())
+            return;
+
         StartCoroutine(HandleEndGameSequence(false));
+    }
+
+    private static bool ShouldHandleLocalEndGameSequence()
+    {
+        if (MultiplayerGameManager.Instance == null)
+            return true;
+
+        Unity.Netcode.NetworkManager net = Unity.Netcode.NetworkManager.Singleton;
+        return net == null || !net.IsListening;
     }
 
     private IEnumerator HandleEndGameSequence(bool isVictory)

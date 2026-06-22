@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 736bfc64cdbd60f40800acc8f2fe88aa, type: 3}
+  m_Name: NixieMeleeHitVisual
+  m_EditorClassIdentifier: Assembly-CSharp::MeleeHitVisualConfig
+  displayDuration: 0.38
+  waveSpeed: 1.15
+  waveEdgeWidth: 0.08
+  rangeVisualMultiplier: 1
+  fillColor: {r: 1, g: 0.42, b: 0.12, a: 0.28}
+  waveEdgeColor: {r: 1, g: 0.88, b: 0.35, a: 0.92}
+  outlineColor: {r: 1, g: 0.72, b: 0.2, a: 0.55}
+  passiveFillColor: {r: 0.35, g: 0.85, b: 1, a: 0.38}
+  passiveWaveEdgeColor: {r: 0.75, g: 1, b: 1, a: 0.98}
+  passiveOutlineColor: {r: 0.5, g: 0.95, b: 1, a: 0.72}
+  sortingOrder: 48
+  drawDebugGizmos: 0

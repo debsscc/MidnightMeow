@@ -41,6 +41,19 @@ public class CharacterAnimationProfile : ScriptableObject
     public string onTakeDamageTrigger = "OnDamage";
     public string onDieTrigger = "OnDie";
 
+    [Header("Habilidades ativas")]
+    [Tooltip("Clip do estado Ability1 (Q) no Animator.")]
+    public AnimationClip ability1Clip;
+
+    [Tooltip("Nome do estado Ability1 no controller base.")]
+    public string ability1AnimatorStateName = "Ability1";
+
+    [Tooltip("Clip do estado Ability2 (R) no Animator.")]
+    public AnimationClip ability2Clip;
+
+    [Tooltip("Nome do estado Ability2 no controller base.")]
+    public string ability2AnimatorStateName = "Ability2";
+
     [Header("Ataque Ranged")]
     [Tooltip("Clip com Animation Event PerformFire (ex.: Cora_Base_Attack). Fonte única do timing de soltura.")]
     public AnimationClip attackClip;

@@ -44,6 +44,9 @@ public class DissolveEffect : MonoBehaviour
     private bool _visualsHidden;
     private Animator _animator;
     private int _deathStateHash;
+    private Coroutine _presentationRoutine;
+
+    public bool IsPlaying => _isPlaying;
 
     public float Duration => EstimatedTotalDuration;
 
@@ -68,6 +71,9 @@ public class DissolveEffect : MonoBehaviour
     {
         if (_visualsHidden)
             return;
+
+        if (_isPlaying)
+            StopPresentationRoutine();
 
         _visualsHidden = true;
         ReleaseMaterials();
@@ -111,7 +117,18 @@ public class DissolveEffect : MonoBehaviour
             _animator.speed = 1f;
         }
 
-        StartCoroutine(DeathPresentationRoutine());
+        StopPresentationRoutine();
+        _presentationRoutine = StartCoroutine(DeathPresentationRoutine());
+    }
+
+    private void StopPresentationRoutine()
+    {
+        if (_presentationRoutine == null)
+            return;
+
+        StopCoroutine(_presentationRoutine);
+        _presentationRoutine = null;
+        _isPlaying = false;
     }
 
     private IEnumerator DeathPresentationRoutine()
@@ -127,6 +144,7 @@ public class DissolveEffect : MonoBehaviour
                 _animator.speed = 0f;
 
             ApplyDissolveMaterials();
+            EnsureRenderersVisibleForDissolve();
 
             if (playSparkleParticles)
                 DissolveSparkleVfx.Attach(transform, GetCombinedBounds(), duration, edgeColor);
@@ -155,6 +173,20 @@ public class DissolveEffect : MonoBehaviour
         finally
         {
             _isPlaying = false;
+            _presentationRoutine = null;
+        }
+    }
+
+    private void EnsureRenderersVisibleForDissolve()
+    {
+        for (int i = 0; i < _targets.Count; i++)
+        {
+            SpriteRenderer renderer = _targets[i];
+            if (renderer == null)
+                continue;
+
+            renderer.enabled = true;
+            renderer.forceRenderingOff = false;
         }
     }
 
