@@ -57,6 +57,7 @@ public class MainMenuController : MonoBehaviour
     private readonly List<int> _hostSaveSlots = new List<int>();
     private int? _pendingDeleteSlot;
     private bool _pendingDeleteAll;
+    private bool _hiddenForLoading;
 
     private void Awake()
     {
@@ -107,10 +108,18 @@ public class MainMenuController : MonoBehaviour
 
     private void HandleLoadingScreenVisibilityChanged(bool visible)
     {
-        if (!visible)
+        if (visible)
+        {
+            _hiddenForLoading = true;
+            HideMenuVisuals();
+            return;
+        }
+
+        if (!_hiddenForLoading)
             return;
 
-        HideMenuVisuals();
+        _hiddenForLoading = false;
+        ShowMainMenu();
     }
 
     private void HideMenuVisuals()
@@ -120,10 +129,6 @@ public class MainMenuController : MonoBehaviour
 
         if (legacyHubPanel != null)
             legacyHubPanel.SetActive(false);
-
-        Canvas ownedCanvas = GetComponentInChildren<Canvas>(true);
-        if (ownedCanvas != null)
-            ownedCanvas.gameObject.SetActive(false);
     }
 
     private void Start()
@@ -190,12 +195,16 @@ public class MainMenuController : MonoBehaviour
         {
             Canvas canvas = canvases[i];
             if (canvas.gameObject.name is "FadeManager" or "CreditsOverlay")
+            {
+                canvas.gameObject.SetActive(false);
                 continue;
+            }
 
             if (canvas.GetComponentInParent<CreditsOverlayController>(true) != null)
                 continue;
 
-            if (mainMenuPanel != null && mainMenuPanel.transform.IsChildOf(canvas.transform))
+            if (mainMenuPanel != null
+                && (mainMenuPanel == canvas.gameObject || mainMenuPanel.transform.IsChildOf(canvas.transform)))
                 continue;
 
             canvas.gameObject.SetActive(false);

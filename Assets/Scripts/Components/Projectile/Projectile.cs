@@ -31,7 +31,6 @@ public class Projectile : MonoBehaviour
     private static int _enemyLayer = -1;
     private static int _wallLayer = -1;
     private static int _structureLayer = -1;
-    private static bool _projectileLayerCollisionConfigured;
 
     private enum ProjectileState { Fired, Seeking }
     private ProjectileState _currentState = ProjectileState.Fired;
@@ -50,8 +49,8 @@ public class Projectile : MonoBehaviour
         _rb = GetComponent<Rigidbody2D>();
         _spriteRenderer = GetComponent<SpriteRenderer>();
         _maxBounces = stats.maxBounces;
-        EnsureProjectileLayerCollisions();
-        ConfigureCombatColliders();
+        CombatLayerCollision.Apply();
+        CacheLayerIndices();
         if (_rb != null)
             _rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
         EnsureVisibleSprite();
@@ -59,7 +58,7 @@ public class Projectile : MonoBehaviour
 
     public void ConfigureCombatColliders()
     {
-        EnsureProjectileLayerCollisions();
+        CombatLayerCollision.Apply();
         foreach (var col in GetComponents<Collider2D>())
         {
             if (col != null)
@@ -67,27 +66,16 @@ public class Projectile : MonoBehaviour
         }
     }
 
-    private static void EnsureProjectileLayerCollisions()
+    private static void CacheLayerIndices()
     {
-        if (_projectileLayerCollisionConfigured) return;
+        if (_enemyLayer < 0)
+            _enemyLayer = LayerMask.NameToLayer("Enemy");
 
-        int projectileLayer = LayerMask.NameToLayer("Projectile");
-        if (projectileLayer < 0) return;
+        if (_wallLayer < 0)
+            _wallLayer = LayerMask.NameToLayer("Wall");
 
-        Physics2D.IgnoreLayerCollision(projectileLayer, projectileLayer, true);
-
-        int playerLayer = LayerMask.NameToLayer("Player");
-        if (playerLayer >= 0)
-            Physics2D.IgnoreLayerCollision(projectileLayer, playerLayer, true);
-
-        int enemyLayer = LayerMask.NameToLayer("Enemy");
-        if (enemyLayer >= 0)
-            Physics2D.IgnoreLayerCollision(projectileLayer, enemyLayer, false);
-
-        _enemyLayer = enemyLayer;
-        _wallLayer = LayerMask.NameToLayer("Wall");
-        _structureLayer = LayerMask.NameToLayer("Structure");
-        _projectileLayerCollisionConfigured = true;
+        if (_structureLayer < 0)
+            _structureLayer = LayerMask.NameToLayer("Structure");
     }
 
     private void Start()

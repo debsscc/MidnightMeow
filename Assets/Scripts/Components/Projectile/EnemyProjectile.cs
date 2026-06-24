@@ -30,6 +30,7 @@ public class EnemyProjectile : MonoBehaviour
     private void Awake()
     {
         _rb = GetComponent<Rigidbody2D>();
+        CombatLayerCollision.Apply();
     }
 
     private void Start()

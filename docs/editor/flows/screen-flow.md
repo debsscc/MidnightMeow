@@ -36,7 +36,7 @@
 
 ```
 BootstrapScene → Menu2
-  ├─ Novo Jogo → Lobby
+  ├─ Novo Jogo → Loading2 → Lobby
   ├─ Continuar (se host) → Painel Saves → Lobby (auto-host)
   ├─ Opções → Painel Opções (na mesma cena)
   └─ Personagens (via Lobby) → Characters (somente consulta)
@@ -61,7 +61,8 @@ Fase-1 → [vitória/derrota] → VictoryScene / GameOver
 | ID | Cena | Load |
 |----|------|------|
 | `bootstrap_menu` | Menu2 | Single |
-| `menu_lobby` | Lobby | Single + loading |
+| `menu_lobby` | Loading2 | Single + fade |
+| `loading2_lobby` | Lobby | Single + fade |
 | `lobby_loading1` | Loading1 | NetcodeHost / Single |
 | `loading1_preparation` | Preparation | NetcodeHost / Single |
 | `lobby_characters` | Characters | Single |

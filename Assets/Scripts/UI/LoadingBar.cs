@@ -23,7 +23,7 @@ public class LoadingBar : MonoBehaviour
 
     private void Awake()
     {
-        if (loadingBar == null)
+        if (loadingBar == null && GetComponent<SceneTransition>() == null)
             loadingBar = GetComponentInChildren<Image>(true);
 
         if (loadingBar != null)

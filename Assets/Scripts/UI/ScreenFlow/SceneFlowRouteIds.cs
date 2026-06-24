@@ -19,6 +19,7 @@ public static class SceneFlowRouteIds
     public const string PreparationToCharacters = "preparation_characters";
     public const string PreparationToHub = "preparation_hub";
     public const string PreparationToLoading2 = "preparation_loading2";
+    public const string Loading2ToLobby = "loading2_lobby";
     public const string Loading2ToGameplay = "loading2_gameplay";
     public const string GameplayToPreparation = "gameplay_preparation";
     public const string GameplayToVictory = "gameplay_victory";

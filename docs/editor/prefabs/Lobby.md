@@ -1,6 +1,6 @@
 # Prefab: Lobby
 
-Última revisão: 2026-05-22  
+Última revisão: 2026-06-23  
 **Caminho:** `Assets/Prefabs/Multiplayer/Lobby.prefab`
 
 ## Resumo
@@ -29,9 +29,19 @@ UI da partida multiplayer em jogo: HUD, lobby in-game, sliders, indicadores. Con
 | MultiplayerLobbyUI | *(listar refs de botões, textos, painéis)* | | |
 | MultiplayerHUD | *(cards de jogador, etc.)* | | |
 | Nested PauseMenu | Ativo por padrão? | | |
-| Canvas | Render Mode / Sort Order | | |
+| Canvas (`Lobby` raiz) | Render Mode | **Screen Space - Camera** (override na `Lobby.unity` → Main Camera) | |
+| Panel (fundo) | Image Material | **Sprite Lit Default** (`Assets/Art/Materials/Sprite Lit Default.mat`) | |
+| `Lobby.unity` (cena) | Light + ParticleSystem | Na **raiz da cena** (não no prefab) | |
+| `Lobby.unity` | Main Camera | Post Processing **ligado** (Global Volume nos filhos de `Light`) | |
 
-## Notas
+## Ambience (luz + partículas)
+
+Igual ao Menu2: `Light` e `ParticleSystem` ficam na **cena** `Lobby.unity`, não dentro do prefab.
+
+- Fundo do `Panel` precisa de **Sprite Lit Default** para as `Light2D` aparecerem.
+- Canvas do lobby em **Screen Space - Camera** (não Overlay), senão o UI cobre partículas e ignora profundidade da cena.
+- `TorchLight` na layer **UI** (não Collectable).
+
 
 - Prefab muito grande (muitos elementos TMP/UI). Priorize validar referências quebradas no Inspector após reimport.
 - Histórico: erro de GUID do PauseMenu corrigido restaurando `.meta` original.

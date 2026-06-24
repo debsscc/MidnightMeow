@@ -1,21 +1,21 @@
-// ----------------------------------------------------------------------------
-// FEITO POR: DEBS CARVALHO
-// ÚLTIMA ATUALIZAÇÃO: 2026-06-18
-// DESCRIÇÃO: Overlay global de créditos (DDOL). UI em código; fim configurável
-// ----------------------------------------------------------------------------
+/* ----------------------------------------------------------------
+AUTOR: Débora Carvalho
+DATA: 2026-06-23
+DESCRIÇÃO: Overlay global de créditos — rolagem automática, trilha e fundo opaco.
+---------------------------------------------------------------- */
 
 using System.Collections;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-
-/// Overlay global de créditos (DDOL). UI em código; fim configurável
 
 [DisallowMultipleComponent]
 [DefaultExecutionOrder(-150)]
 public class CreditsOverlayController : Singleton<CreditsOverlayController>
 {
     private const string CreditsBodyResourcePath = "CreditsBody";
+    private const string CreditsMusicResourcePath = "CreditsMusicClip";
 
     [Header("Rolagem")]
     [SerializeField] private float scrollSpeedPixelsPerSecond = 55f;
@@ -33,12 +33,12 @@ public class CreditsOverlayController : Singleton<CreditsOverlayController>
     private RectTransform _topSpacer;
     private RectTransform _bottomSpacer;
     private TMP_Text _bodyText;
-    private AudioSource _musicSource;
     private bool _overlayBuilt;
     private bool _isScrolling;
     private float _endNormalizedScroll = 0f;
     private CreditsPresentationConfig _activePresentation;
     private Coroutine _endSequence;
+    private Coroutine _scrollStartRoutine;
     private bool _restorePauseOnClose;
 
     public bool IsVisible => _panel != null && _panel.activeSelf;
@@ -136,16 +136,16 @@ public class CreditsOverlayController : Singleton<CreditsOverlayController>
 
         ResetPanelAlpha();
         _panel.SetActive(true);
-        RefreshScrollLayout(resetToStart: true);
-        _isScrolling = true;
-        PlayMusic();
+        BeginScrollWhenReady();
+        PlayCreditsMusic();
     }
 
     public void Hide()
     {
         CancelEndSequence();
+        CancelScrollStart();
         _isScrolling = false;
-        StopMusic();
+        RestoreSceneMusic();
         ResetPanelAlpha();
 
         if (_panel != null)
@@ -274,6 +274,31 @@ public class CreditsOverlayController : Singleton<CreditsOverlayController>
         _endSequence = null;
     }
 
+    private void BeginScrollWhenReady()
+    {
+        CancelScrollStart();
+        _isScrolling = false;
+        _scrollStartRoutine = StartCoroutine(StartScrollWhenReady());
+    }
+
+    private void CancelScrollStart()
+    {
+        if (_scrollStartRoutine == null)
+            return;
+
+        StopCoroutine(_scrollStartRoutine);
+        _scrollStartRoutine = null;
+    }
+
+    private IEnumerator StartScrollWhenReady()
+    {
+        yield return null;
+        Canvas.ForceUpdateCanvases();
+        RefreshScrollLayout(resetToStart: true);
+        _isScrolling = true;
+        _scrollStartRoutine = null;
+    }
+
     private void ResetPanelAlpha()
     {
         if (_panelGroup != null)
@@ -296,7 +321,7 @@ public class CreditsOverlayController : Singleton<CreditsOverlayController>
         _canvas.overrideSorting = true;
         _canvas.sortingOrder = 500;
 
-        _panel = ScreenFlowPlaceholderFactory.CreatePanel(_canvas.transform, "Panel", new Color(0.02f, 0.02f, 0.05f, 0.96f));
+        _panel = ScreenFlowPlaceholderFactory.CreatePanel(_canvas.transform, "Panel", new Color(0.02f, 0.02f, 0.05f, 1f));
         if (_panel.TryGetComponent(out Image panelImage))
             panelImage.raycastTarget = false;
 
@@ -310,11 +335,6 @@ public class CreditsOverlayController : Singleton<CreditsOverlayController>
             new Vector2(0.5f, 0f), new Vector2(0.5f, 0f),
             new Vector2(-160f, 40f), new Vector2(160f, 120f));
         close.onClick.AddListener(Hide);
-
-        _musicSource = gameObject.AddComponent<AudioSource>();
-        _musicSource.playOnAwake = false;
-        _musicSource.loop = true;
-        _musicSource.spatialBlend = 0f;
 
         _overlayBuilt = true;
     }
@@ -365,7 +385,7 @@ public class CreditsOverlayController : Singleton<CreditsOverlayController>
         _scrollRect.horizontal = false;
         _scrollRect.vertical = true;
         _scrollRect.movementType = ScrollRect.MovementType.Clamped;
-        _scrollRect.scrollSensitivity = 0f;
+        _scrollRect.scrollSensitivity = 24f;
         _scrollRect.inertia = false;
     }
 
@@ -457,19 +477,38 @@ public class CreditsOverlayController : Singleton<CreditsOverlayController>
         return 1f - (targetScroll / scrollable);
     }
 
-    private void PlayMusic()
+    private AudioClip ResolveCreditsMusic()
     {
-        if (creditsMusic == null || _musicSource == null)
-            return;
+        if (creditsMusic != null)
+            return creditsMusic;
 
-        _musicSource.clip = creditsMusic;
-        _musicSource.Play();
+        CreditsMusicClipReference reference =
+            Resources.Load<CreditsMusicClipReference>(CreditsMusicResourcePath);
+        if (reference != null)
+            creditsMusic = reference.clip;
+
+        return creditsMusic;
     }
 
-    private void StopMusic()
+    private void PlayCreditsMusic()
     {
-        if (_musicSource != null && _musicSource.isPlaying)
-            _musicSource.Stop();
+        AudioClip clip = ResolveCreditsMusic();
+        if (clip == null)
+            return;
+
+        MusicCrossfadeController.EnsureExists();
+        MusicCrossfadeController.Instance?.CrossfadeTo(clip, loop: true, 1f);
+    }
+
+    private void RestoreSceneMusic()
+    {
+        MusicCrossfadeController music = MusicCrossfadeController.Instance;
+        if (music == null)
+            return;
+
+        Scene scene = SceneManager.GetActiveScene();
+        music.PrepareSceneMusic(scene);
+        music.FadeInPending(1f);
     }
 
     private static void Stretch(RectTransform rt)

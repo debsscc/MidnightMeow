@@ -30,7 +30,7 @@ No objeto DDOL `CreditsOverlayController` (criado automaticamente ao rodar):
 | Campo | Uso |
 |-------|-----|
 | `scrollSpeedPixelsPerSecond` | Velocidade da rolagem (~55) |
-| `creditsMusic` | Trilha opcional dos créditos |
+| `creditsMusic` | Trilha opcional (fallback: `Resources/CreditsMusicClip` → `Assets/Audio/Music/.../CreditsMusic.wav`) |
 
 ## Fim da rolagem
 

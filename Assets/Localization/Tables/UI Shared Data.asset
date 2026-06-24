@@ -309,6 +309,58 @@ MonoBehaviour:
     m_Key: lobby.status.network_missing
     m_Metadata:
       m_Items: []
+  - m_Id: 3631377986367488
+    m_Key: btn.settings
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3632135087599616
+    m_Key: btn.new game
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3637488399429632
+    m_Key: btn.resetControls
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3637811499249664
+    m_Key: btn.deleteSave
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3637881665761280
+    m_Key: btn.cancel
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3637932869824512
+    m_Key: btn.deleteALLSaves
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3638029443674112
+    m_Key: btn.continueSave1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3638118362918912
+    m_Key: btn.deleteSave1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3639102707347456
+    m_Key: btn.audio
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3639144948183040
+    m_Key: btn.save
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3641619289747456
+    m_Key: title.controls.mover
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3641676734935040
+    m_Key: title.controls.abilities
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3641813368582144
+    m_Key: title.controls.attack
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

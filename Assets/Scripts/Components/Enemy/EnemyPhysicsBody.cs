@@ -1,7 +1,7 @@
 using UnityEngine;
 
 /// <summary>
-/// Inimigos usam NavMesh para locomoção e Rigidbody2D kinematic para bloquear o player sem serem empurrados.
+/// Inimigos usam NavMesh para locomoção; colisão física com o player fica desligada via <see cref="CombatLayerCollision"/>.
 /// </summary>
 [DisallowMultipleComponent]
 [RequireComponent(typeof(Rigidbody2D))]

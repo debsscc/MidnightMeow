@@ -142,6 +142,12 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
     {
         EnsureCatalogLoaded();
 
+        if (routeId == SceneFlowRouteIds.MenuToLobby)
+        {
+            ScreenFlowStateMachine.EnterPhase(ScreenFlowPhase.Lobby);
+            GameSessionContext.PendingRouteId = SceneFlowRouteIds.Loading2ToLobby;
+        }
+
         if (catalog == null || !catalog.TryGetRoute(routeId, out SceneFlowRouteDefinition route))
         {
             Debug.LogError($"ScreenFlowController: rota '{routeId}' não encontrada no catálogo.");

@@ -179,7 +179,8 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 3411007597846528
-    m_Localized: Choose Host, Join, or Singleplayer. The access code appears when hosting.
+    m_Localized: Choose Host, Join, or Singleplayer. The access code appears when
+      hosting.
     m_Metadata:
       m_Items: []
   - m_Id: 3411017597846528
@@ -191,7 +192,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 3411037597846528
-    m_Localized: "Confirm with Play to start solo. Use Back to cancel."
+    m_Localized: Confirm with Play to start solo. Use Back to cancel.
     m_Metadata:
       m_Items: []
   - m_Id: 3411047597846528
@@ -199,7 +200,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 3411057597846528
-    m_Localized: "Start solo match? Click Play or Back to cancel."
+    m_Localized: Start solo match? Click Play or Back to cancel.
     m_Metadata:
       m_Items: []
   - m_Id: 3411067597846528
@@ -231,7 +232,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 3411137597846528
-    m_Localized: 'Code {0} copied.'
+    m_Localized: Code {0} copied.
     m_Metadata:
       m_Items: []
   - m_Id: 3411147597846528
@@ -263,7 +264,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 3411217597846528
-    m_Localized: 'Waiting for {0} connected players.'
+    m_Localized: Waiting for {0} connected players.
     m_Metadata:
       m_Items: []
   - m_Id: 3411227597846528
@@ -288,6 +289,60 @@ MonoBehaviour:
       m_Items: []
   - m_Id: 3411277597846528
     m_Localized: NetworkManager not found in the scene.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3631377986367488
+    m_Localized: Settings
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3632135087599616
+    m_Localized: New game
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3637488399429632
+    m_Localized: Restore audio defaults
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3637811499249664
+    m_Localized: Delete
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3637881665761280
+    m_Localized: Cancelar
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3637932869824512
+    m_Localized: Delete all saves
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3638029443674112
+    m_Localized: Continue save 1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3638118362918912
+    m_Localized: Delete save 1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3639102707347456
+    m_Localized: Audio
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3639144948183040
+    m_Localized: 'Saves
+
+'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3641619289747456
+    m_Localized: MOVE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3641676734935040
+    m_Localized: ABILITY
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3641813368582144
+    m_Localized: CONTROLS
     m_Metadata:
       m_Items: []
   references:

@@ -179,11 +179,13 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 3411007597846528
-    m_Localized: "Escolha Host, Entrar ou Singleplayer. O c\xF3digo de acesso aparece ao hospedar."
+    m_Localized: "Escolha Host, Entrar ou Singleplayer. O c\xF3digo de acesso aparece
+      ao hospedar."
     m_Metadata:
       m_Items: []
   - m_Id: 3411017597846528
-    m_Localized: "Compartilhe o c\xF3digo com o outro player. Quando estiverem 2/2, clique em Pronto."
+    m_Localized: "Compartilhe o c\xF3digo com o outro player. Quando estiverem 2/2,
+      clique em Pronto."
     m_Metadata:
       m_Items: []
   - m_Id: 3411027597846528
@@ -191,7 +193,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 3411037597846528
-    m_Localized: "Confirme com Jogar para iniciar sozinha. Use Voltar para cancelar."
+    m_Localized: Confirme com Jogar para iniciar sozinha. Use Voltar para cancelar.
     m_Metadata:
       m_Items: []
   - m_Id: 3411047597846528
@@ -199,7 +201,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 3411057597846528
-    m_Localized: "Iniciar partida solo? Clique em Jogar ou Voltar para cancelar."
+    m_Localized: Iniciar partida solo? Clique em Jogar ou Voltar para cancelar.
     m_Metadata:
       m_Items: []
   - m_Id: 3411067597846528
@@ -215,7 +217,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 3411097597846528
-    m_Localized: "Jogadoras conectadas! Clique em Pronto para iniciar."
+    m_Localized: Jogadoras conectadas! Clique em Pronto para iniciar.
     m_Metadata:
       m_Items: []
   - m_Id: 3411107597846528
@@ -235,7 +237,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 3411147597846528
-    m_Localized: "Apenas a host pode iniciar a partida."
+    m_Localized: Apenas a host pode iniciar a partida.
     m_Metadata:
       m_Items: []
   - m_Id: 3411157597846528
@@ -255,7 +257,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 3411197597846528
-    m_Localized: "Erro: ConnectionManager ausente."
+    m_Localized: 'Erro: ConnectionManager ausente.'
     m_Metadata:
       m_Items: []
   - m_Id: 3411207597846528
@@ -263,7 +265,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 3411217597846528
-    m_Localized: "Aguardando {0} players conectados."
+    m_Localized: Aguardando {0} players conectados.
     m_Metadata:
       m_Items: []
   - m_Id: 3411227597846528
@@ -279,15 +281,67 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 3411257597846528
-    m_Localized: "Erro ao hospedar a partida."
+    m_Localized: Erro ao hospedar a partida.
     m_Metadata:
       m_Items: []
   - m_Id: 3411267597846528
-    m_Localized: RelayManager n\xE3o encontrado na cena.
+    m_Localized: "RelayManager n\xE3o encontrado na cena."
     m_Metadata:
       m_Items: []
   - m_Id: 3411277597846528
-    m_Localized: NetworkManager n\xE3o encontrado na cena.
+    m_Localized: "NetworkManager n\xE3o encontrado na cena."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3631377986367488
+    m_Localized: "Configura\xE7\xF5es"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3632135087599616
+    m_Localized: Novo jogo
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3637488399429632
+    m_Localized: "Restaurar padr\xF5es de \xE1udio"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3637811499249664
+    m_Localized: Apagar
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3637881665761280
+    m_Localized: Cancelar
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3637932869824512
+    m_Localized: Apagar todos os saves
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3638029443674112
+    m_Localized: Continuar save 1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3638118362918912
+    m_Localized: Apagar save 1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3639102707347456
+    m_Localized: Audio
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3639144948183040
+    m_Localized: Saves
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3641619289747456
+    m_Localized: SE MOVER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3641676734935040
+    m_Localized: HABILIDADES
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3641813368582144
+    m_Localized: CONTROLES
     m_Metadata:
       m_Items: []
   references:
