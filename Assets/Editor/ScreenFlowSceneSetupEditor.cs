@@ -43,6 +43,9 @@ public static class ScreenFlowSceneSetupEditor
                 WireLobbyScene();
                 break;
             case "Loading1":
+                EnsureController<LoadingScreenController>(root);
+                Loading1SceneSetupEditor.ApplySetup();
+                break;
             case "Loading2":
                 EnsureController<LoadingScreenController>(root);
                 break;
@@ -202,8 +205,12 @@ public static class ScreenFlowSceneSetupEditor
         SerializedObject so = new SerializedObject(controller);
 
         so.FindProperty("isVictory").boolValue = sceneName != "GameOver";
-        AssignButton(so, "continueButton", "Button_Continue", "Continue");
-        AssignButton(so, "exitButton", "Button_Menu", "Sair");
+        AssignButton(so, "continueButton",
+            sceneName == "GameOver" ? "Button_Reininciar" : "Button_Prosseguir",
+            "Button_Continue", "Continue");
+        AssignButton(so, "exitButton", "Button_Abandonar", "Button_Menu", "Sair");
+        AssignButton(so, "creditsButton", "Button_Credits");
+        AssignButton(so, "feedbackButton", "Button_Feedback");
 
         so.ApplyModifiedPropertiesWithoutUndo();
 

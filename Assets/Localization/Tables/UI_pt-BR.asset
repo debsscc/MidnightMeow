@@ -17,7 +17,279 @@ MonoBehaviour:
   m_SharedData: {fileID: 11400000, guid: da2895712265ed0499f3cae10d3b7d2e, type: 2}
   m_Metadata:
     m_Items: []
-  m_TableData: []
+  m_TableData:
+  - m_Id: 3338880269692928
+    m_Localized: MENU
+    m_Metadata:
+      m_Items: []
+  - m_Id: 988344496128
+    m_Localized: SAIR
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3339150479339520
+    m_Localized: Abandonar
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3339196251779072
+    m_Localized: Prosseguir
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3339225712570368
+    m_Localized: "Cr\xE9ditos"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3339255542460416
+    m_Localized: Deixe seu feedback aqui
+    m_Metadata:
+      m_Items: []
+  - m_Id: 961106685952
+    m_Localized: Continuar
+    m_Metadata:
+      m_Items: []
+  - m_Id: 923710271488
+    m_Localized: Jogar
+    m_Metadata:
+      m_Items: []
+  - m_Id: 244514041856
+    m_Localized: Voltar
+    m_Metadata:
+      m_Items: []
+  - m_Id: 199798566912
+    m_Localized: SFX
+    m_Metadata:
+      m_Items: []
+  - m_Id: 96538996736
+    m_Localized: Musicas
+    m_Metadata:
+      m_Items: []
+  - m_Id: 75911409664
+    m_Localized: Volume Geral
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3350216718430208
+    m_Localized: 'Reiniciar '
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3352649809014784
+    m_Localized: Retomar
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3352739361599488
+    m_Localized: "Op\xE7\xF5es"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3353003166543872
+    m_Localized: Pause Menu
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3355296800714752
+    m_Localized: Controles
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3361570351230976
+    m_Localized: Carregando
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3361570351230977
+    m_Localized: Aguardando host iniciar partida...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3361570351230978
+    m_Localized: Iniciando partida...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3361570351230979
+    m_Localized: Aguardando host...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3368641771614208
+    m_Localized: Hospedar
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3368731496165376
+    m_Localized: Entrar
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3368869300023296
+    m_Localized: Singleplayer
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3369164050542592
+    m_Localized: "C\xF3digo"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3369230119219200
+    m_Localized: Jogadores
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3369347362598912
+    m_Localized: Aguardando segundo player...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3369571665588224
+    m_Localized: Insira o codigo
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3369714355810304
+    m_Localized: Escolher personagem
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3369857067003904
+    m_Localized: Pronto
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3369898104074240
+    m_Localized: Fase 1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3370050776739840
+    m_Localized: Fase 2
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3370062424322048
+    m_Localized: Fase 3
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3370162689159168
+    m_Localized: Upgrade
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3370228690726912
+    m_Localized: "Descri\xE7\xE3o"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3388852344205312
+    m_Localized: Lobby
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3402579537833984
+    m_Localized: "Colar c\xF3digo aqui..."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3404843723796480
+    m_Localized: Desconectar
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3407343822581760
+    m_Localized: Pronto
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3410087597846528
+    m_Localized: "Inserir c\xF3digo:"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411007597846528
+    m_Localized: "Escolha Host, Entrar ou Singleplayer. O c\xF3digo de acesso aparece ao hospedar."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411017597846528
+    m_Localized: "Compartilhe o c\xF3digo com o outro player. Quando estiverem 2/2, clique em Pronto."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411027597846528
+    m_Localized: "Digite o c\xF3digo de 6 letras e clique em Pronto para conectar."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411037597846528
+    m_Localized: "Confirme com Jogar para iniciar sozinha. Use Voltar para cancelar."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411047597846528
+    m_Localized: "C\xF3digo"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411057597846528
+    m_Localized: "Iniciar partida solo? Clique em Jogar ou Voltar para cancelar."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411067597846528
+    m_Localized: Desconectada do lobby.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411077597846528
+    m_Localized: A host saiu da partida.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411087597846528
+    m_Localized: Aguardando segundo player...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411097597846528
+    m_Localized: "Jogadoras conectadas! Clique em Pronto para iniciar."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411107597846528
+    m_Localized: Conectando ao host...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411117597846528
+    m_Localized: Conectada com sucesso!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411127597846528
+    m_Localized: "Digite o c\xF3digo de 6 caracteres e clique em Pronto."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411137597846528
+    m_Localized: "C\xF3digo {0} copiado."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411147597846528
+    m_Localized: "Apenas a host pode iniciar a partida."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411157597846528
+    m_Localized: Inicializando host...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411167597846528
+    m_Localized: Carregando prepara\xE7\xE3o...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411177597846528
+    m_Localized: "Fluxo indispon\xEDvel. Inicie pelo BootstrapScene."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411187597846528
+    m_Localized: Retomando sess\xE3o como host...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411197597846528
+    m_Localized: "Erro: ConnectionManager ausente."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411207597846528
+    m_Localized: Iniciando partida solo...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411217597846528
+    m_Localized: "Aguardando {0} players conectados."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411227597846528
+    m_Localized: "Digite um c\xF3digo para entrar."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411237597846528
+    m_Localized: "Tempo esgotado. Verifique o c\xF3digo e a internet."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411247597846528
+    m_Localized: "N\xE3o foi poss\xEDvel entrar. Verifique o c\xF3digo."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411257597846528
+    m_Localized: "Erro ao hospedar a partida."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411267597846528
+    m_Localized: RelayManager n\xE3o encontrado na cena.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411277597846528
+    m_Localized: NetworkManager n\xE3o encontrado na cena.
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

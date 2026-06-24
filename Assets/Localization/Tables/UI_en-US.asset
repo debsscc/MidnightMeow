@@ -17,7 +17,279 @@ MonoBehaviour:
   m_SharedData: {fileID: 11400000, guid: da2895712265ed0499f3cae10d3b7d2e, type: 2}
   m_Metadata:
     m_Items: []
-  m_TableData: []
+  m_TableData:
+  - m_Id: 3338880269692928
+    m_Localized: MENU
+    m_Metadata:
+      m_Items: []
+  - m_Id: 988344496128
+    m_Localized: QUIT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3339225712570368
+    m_Localized: Credits
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3339255542460416
+    m_Localized: Give your feedback here
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3339196251779072
+    m_Localized: Proceed
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3339150479339520
+    m_Localized: Leave
+    m_Metadata:
+      m_Items: []
+  - m_Id: 961106685952
+    m_Localized: Continue
+    m_Metadata:
+      m_Items: []
+  - m_Id: 923710271488
+    m_Localized: Play
+    m_Metadata:
+      m_Items: []
+  - m_Id: 244514041856
+    m_Localized: Back
+    m_Metadata:
+      m_Items: []
+  - m_Id: 199798566912
+    m_Localized: SFX
+    m_Metadata:
+      m_Items: []
+  - m_Id: 96538996736
+    m_Localized: Soundtrack
+    m_Metadata:
+      m_Items: []
+  - m_Id: 75911409664
+    m_Localized: 'General Volume '
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3350216718430208
+    m_Localized: Restart
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3352649809014784
+    m_Localized: Resume
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3352739361599488
+    m_Localized: Options
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3353003166543872
+    m_Localized: Pause Menu
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3355296800714752
+    m_Localized: Controls
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3361570351230976
+    m_Localized: Loading
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3361570351230977
+    m_Localized: Waiting for host to start the match...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3361570351230978
+    m_Localized: Starting match...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3361570351230979
+    m_Localized: Waiting for host...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3368641771614208
+    m_Localized: Host
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3368731496165376
+    m_Localized: Join
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3368869300023296
+    m_Localized: Singleplayer
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3369164050542592
+    m_Localized: Code
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3369230119219200
+    m_Localized: Players
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3369347362598912
+    m_Localized: Waiting for the second player...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3369571665588224
+    m_Localized: Enter the code
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3369714355810304
+    m_Localized: Choose character
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3369857067003904
+    m_Localized: Ready
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3369898104074240
+    m_Localized: Level 1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3370050776739840
+    m_Localized: Level 2
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3370062424322048
+    m_Localized: Level 3
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3370162689159168
+    m_Localized: Upgrade
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3370228690726912
+    m_Localized: Description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3388852344205312
+    m_Localized: Lobby
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3402579537833984
+    m_Localized: Paste code here...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3404843723796480
+    m_Localized: Disconnect
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3407343822581760
+    m_Localized: Ready
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3410087597846528
+    m_Localized: 'Insert code:'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411007597846528
+    m_Localized: Choose Host, Join, or Singleplayer. The access code appears when hosting.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411017597846528
+    m_Localized: Share the code with the other player. When you are 2/2, click Ready.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411027597846528
+    m_Localized: Enter the 6-character code and click Ready to connect.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411037597846528
+    m_Localized: "Confirm with Play to start solo. Use Back to cancel."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411047597846528
+    m_Localized: Code
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411057597846528
+    m_Localized: "Start solo match? Click Play or Back to cancel."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411067597846528
+    m_Localized: Disconnected from the lobby.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411077597846528
+    m_Localized: The host left the match.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411087597846528
+    m_Localized: Waiting for the second player...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411097597846528
+    m_Localized: Players connected! Click Ready to start.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411107597846528
+    m_Localized: Connecting to host...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411117597846528
+    m_Localized: Connected successfully!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411127597846528
+    m_Localized: Enter the 6-character code and click Ready.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411137597846528
+    m_Localized: 'Code {0} copied.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411147597846528
+    m_Localized: Only the host can start the match.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411157597846528
+    m_Localized: Initializing host...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411167597846528
+    m_Localized: Loading preparation...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411177597846528
+    m_Localized: Flow unavailable. Start from BootstrapScene.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411187597846528
+    m_Localized: Resuming session as host...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411197597846528
+    m_Localized: 'Error: ConnectionManager missing.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411207597846528
+    m_Localized: Starting solo match...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411217597846528
+    m_Localized: 'Waiting for {0} connected players.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411227597846528
+    m_Localized: Enter a code to join.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411237597846528
+    m_Localized: Connection timed out. Check the code and your internet.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411247597846528
+    m_Localized: Could not join. Check the code.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411257597846528
+    m_Localized: Failed to host the match.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411267597846528
+    m_Localized: RelayManager not found in the scene.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411277597846528
+    m_Localized: NetworkManager not found in the scene.
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

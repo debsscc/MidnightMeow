@@ -15,6 +15,6 @@ MonoBehaviour:
   routeId: return_lobby
   sceneName: Lobby
   transitionMode: 2
-  loadKind: 0
+  loadKind: 1
   fadeTime: 1
-  minLoadingTime: 0
+  minLoadingTime: 2

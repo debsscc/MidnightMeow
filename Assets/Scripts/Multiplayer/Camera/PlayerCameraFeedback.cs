@@ -1,8 +1,11 @@
+/* ----------------------------------------------------------------
+AUTOR: Débora Carvalho
+DATA: 2026-06-23
+DESCRIÇÃO: Feedback de câmera do jogador local (shake ao dano, acerto melee, flash de vinheta).
+---------------------------------------------------------------- */
+
 using UnityEngine;
 
-/// <summary>
-/// Feedback de câmera para o jogador local (shake ao tomar dano, acerto melee, etc.).
-/// </summary>
 public static class PlayerCameraFeedback
 {
     private const float MeleeHitShakeSuppressionSeconds = 0.15f;
@@ -19,6 +22,7 @@ public static class PlayerCameraFeedback
     public static void ShakeOnLocalPlayerDamage(CameraShakePreset preset = CameraShakePreset.Medium)
     {
         RegisterLocalDamageShake();
+        GameplayVignetteController.TriggerDamagePulse();
 
         MultiplayerCameraController controller = MultiplayerCameraController.Resolve();
         if (controller != null)

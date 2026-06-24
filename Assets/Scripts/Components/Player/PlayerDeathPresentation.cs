@@ -114,8 +114,6 @@ public class PlayerDeathPresentation : MonoBehaviour
         if (dissolveAfterHold)
             MultiplayerCameraController.Resolve()?.EndDeathFocus();
 
-        GameplayVignetteController.ClearIfActive();
-
         TryRebindCameraToAliveTeammate();
 
         onComplete?.Invoke();
@@ -155,7 +153,7 @@ public class PlayerDeathPresentation : MonoBehaviour
     }
 
     private static float ResolveDeathVignettePeak() =>
-        GameSessionContext.IsSinglePlayer ? 0.72f : 0.62f;
+        GameSessionContext.IsSinglePlayer ? 0.58f : 0.5f;
 
     private bool ShouldRunLocalDeathAmbience()
     {

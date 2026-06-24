@@ -1,3 +1,9 @@
+/* ----------------------------------------------------------------
+AUTOR: Débora Carvalho
+DATA: 2026-06-23
+DESCRIÇÃO: Orquestra transições do fluxo de telas e reseta estado volátil entre fases.
+---------------------------------------------------------------- */
+
 using Unity.Netcode;
 
 using UnityEngine;
@@ -5,12 +11,6 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 
 
-
-/// <summary>
-
-/// Orquestra transições do fluxo de telas e reseta estado volátil entre fases.
-
-/// </summary>
 
 public static class ScreenFlowStateMachine
 
@@ -56,8 +56,6 @@ public static class ScreenFlowStateMachine
 
 
 
-    /// <summary>Lobby (solo ou MP sincronizado) → Loading1 → Preparation.</summary>
-
     public static bool BeginPreparationFromLobby()
 
     {
@@ -81,8 +79,6 @@ public static class ScreenFlowStateMachine
     }
 
 
-
-    /// <summary>Lobby → Characters (somente consulta de skills).</summary>
 
     public static bool OpenCharactersFromLobby()
 
@@ -108,8 +104,6 @@ public static class ScreenFlowStateMachine
 
 
 
-    /// <summary>Preparation → Characters (seleção + upgrades).</summary>
-
     public static bool OpenCharactersFromPreparation()
 
     {
@@ -134,8 +128,6 @@ public static class ScreenFlowStateMachine
 
 
 
-    /// <summary>Preparation → Loading2 → Gameplay.</summary>
-
     public static bool BeginGameplayLoading()
 
     {
@@ -158,8 +150,6 @@ public static class ScreenFlowStateMachine
 
 
 
-    /// <summary>Gameplay → tela de vitória.</summary>
-
     public static bool ShowVictoryScreen()
 
     {
@@ -177,8 +167,6 @@ public static class ScreenFlowStateMachine
     }
 
 
-
-    /// <summary>Gameplay → tela de derrota.</summary>
 
     public static bool ShowDefeatScreen()
 
@@ -199,8 +187,6 @@ public static class ScreenFlowStateMachine
     }
 
 
-
-    /// <summary>Vitória/Derrota → Preparation (mantém sincronização MP).</summary>
 
     public static bool ContinueAfterEndGame()
 
@@ -234,11 +220,11 @@ public static class ScreenFlowStateMachine
 
 
 
-    /// <summary>Desconecta e retorna ao menu principal.</summary>
-
     public static bool ExitToMainMenu()
 
     {
+
+        RoundMagiculaTracker.Instance?.CommitToSave();
 
         ConnectionManager.Instance?.Disconnect();
 
@@ -260,7 +246,33 @@ public static class ScreenFlowStateMachine
 
 
 
-    /// <summary>Reinicia a fase atual (somente solo). Reseta progresso da rodada.</summary>
+    public static bool ReturnToLobbyFromEndGame()
+
+    {
+
+        Time.timeScale = 1f;
+
+        EnterPhase(ScreenFlowPhase.Lobby);
+
+        GameSessionContext.PendingRouteId = string.Empty;
+
+        GameSessionContext.ResetContractRound();
+
+        PreparationSessionManager.Instance?.ResetRound();
+
+
+
+        if (TryTransition(SceneFlowRouteIds.ReturnToLobby))
+
+            return true;
+
+
+
+        return LoadSceneFallback("Lobby");
+
+    }
+
+
 
     public static bool RestartCurrentGameplay()
 
@@ -274,7 +286,7 @@ public static class ScreenFlowStateMachine
 
         Time.timeScale = 1f;
 
-        EnterPhase(ScreenFlowPhase.Gameplay);
+        GameplayVignetteController.ClearIfActive();
 
         GameSessionContext.ResetContractRound();
 
@@ -284,51 +296,37 @@ public static class ScreenFlowStateMachine
 
 
 
-        string scene = string.IsNullOrEmpty(GameSessionContext.ActiveGameplaySceneName)
+        if (string.IsNullOrEmpty(GameSessionContext.ActiveGameplaySceneName))
 
-            ? SceneManager.GetActiveScene().name
-
-            : GameSessionContext.ActiveGameplaySceneName;
+            GameSessionContext.ActiveGameplaySceneName = "Fase-1";
 
 
 
-        NetworkManager networkManager = NetworkManager.Singleton;
-
-        if (networkManager != null && networkManager.IsServer)
-
-        {
-
-            networkManager.SceneManager.LoadScene(scene, LoadSceneMode.Single);
-
-            return true;
-
-        }
+        PlayerSpawnManager.Instance?.DespawnAllPlayersForRestart();
 
 
 
-        if (ScreenFlowController.Instance != null
+        EnterPhase(ScreenFlowPhase.LoadingToGameplay);
 
-            && ScreenFlowController.Instance.TryBeginTransition(scene))
+        GameSessionContext.PendingRouteId = SceneFlowRouteIds.Loading2ToGameplay;
+
+
+
+        if (TryTransition(SceneFlowRouteIds.PreparationToLoading2))
 
             return true;
 
 
 
-        SceneManager.LoadScene(scene);
-
-        return true;
+        return LoadSceneFallback("Loading2");
 
     }
 
 
 
-    /// <summary>Legado — redireciona para ContinueAfterEndGame.</summary>
-
     public static bool ReturnToContractSelect() => ContinueAfterEndGame();
 
 
-
-    /// <summary>Loading2 → cena de gameplay do contrato ativo.</summary>
 
     public static bool EnterGameplay()
 

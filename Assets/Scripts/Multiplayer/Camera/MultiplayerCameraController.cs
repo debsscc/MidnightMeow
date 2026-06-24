@@ -897,7 +897,6 @@ public class MultiplayerCameraController : MonoBehaviour
     public void EndDeathFocus()
     {
         _deathFocusActive = false;
-        GameplayVignetteController.ClearIfActive();
 
         if (_savedOrthographicSize > 0f)
         {
@@ -920,8 +919,7 @@ public class MultiplayerCameraController : MonoBehaviour
     /// </summary>
     public void TriggerDamageEffect()
     {
-        Debug.Log("[MultiplayerCameraController] TriggerDamageEffect chamado (aguardando implementação URP).");
-        // TODO: Usar volume.profile.TryGet<Vignette>(out var vignette) e animar intensity
+        GameplayVignetteController.TriggerDamagePulse();
     }
 
     /// <summary>

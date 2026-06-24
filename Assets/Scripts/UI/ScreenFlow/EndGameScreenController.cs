@@ -1,17 +1,25 @@
+/* ----------------------------------------------------------------
+AUTOR: Débora Carvalho
+DATA: 2026-06-23
+DESCRIÇÃO: Telas de vitória/derrota — prosseguir, reiniciar, abandonar e créditos.
+---------------------------------------------------------------- */
+
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// Telas de vitória e derrota: continuar para Preparation ou sair ao menu.
-/// </summary>
 [DisallowMultipleComponent]
 public class EndGameScreenController : MonoBehaviour
 {
+    private const string DefaultPlaytestFormUrl =
+        "https://docs.google.com/forms/d/e/1FAIpQLScqrERAjHtXbsp-kTXYh86otM1uvqKOICOwL0JFGYLe5203aw/viewform?usp=sharing&ouid=104196659444550947531";
+
     [SerializeField] private bool isVictory = true;
-    [SerializeField] private TMP_Text titleText;
     [SerializeField] private Button continueButton;
     [SerializeField] private Button exitButton;
+    [SerializeField] private Button creditsButton;
+    [SerializeField] private Button feedbackButton;
+    [SerializeField] private string playtestFormUrl = DefaultPlaytestFormUrl;
     [SerializeField] private bool buildPlaceholderIfMissing = true;
 
     private void Awake()
@@ -20,60 +28,122 @@ public class EndGameScreenController : MonoBehaviour
         if (scene == "GameOver")
             isVictory = false;
 
-        if (buildPlaceholderIfMissing && titleText == null)
+        if (buildPlaceholderIfMissing && continueButton == null && exitButton == null)
             BuildPlaceholderUI();
 
         TryAutoResolveReferences();
         RewireLegacyMenuButton();
-
-        if (continueButton != null) continueButton.onClick.AddListener(OnContinue);
-        if (exitButton != null) exitButton.onClick.AddListener(OnExit);
+        WireButtons();
     }
 
     private void Start()
     {
-        if (titleText != null)
-            titleText.text = isVictory ? "Vitória!" : "Derrota";
-
         ScreenFlowPlaceholderFactory.ApplyMenuCursor();
+        RefreshPrimaryActionLabel();
     }
 
     private void TryAutoResolveReferences()
     {
         if (continueButton == null)
-            continueButton = ScreenFlowUiLookup.FindButton("Button_Continue") ?? ScreenFlowUiLookup.FindButton("Continue");
+        {
+            continueButton = ScreenFlowUiLookup.FindButton("Button_Prosseguir")
+                             ?? ScreenFlowUiLookup.FindButton("Button_Continue")
+                             ?? ScreenFlowUiLookup.FindButton("Continue")
+                             ?? FindButtonByNamePrefix("Button_Reininciar");
+        }
+
         if (exitButton == null)
-            exitButton = ScreenFlowUiLookup.FindButton("Button_Menu") ?? ScreenFlowUiLookup.FindButton("Sair");
+            exitButton = ScreenFlowUiLookup.FindButton("Button_Abandonar")
+                         ?? ScreenFlowUiLookup.FindButton("Button_Menu")
+                         ?? ScreenFlowUiLookup.FindButton("Sair");
+
+        if (creditsButton == null)
+            creditsButton = ScreenFlowUiLookup.FindButton("Button_Credits")
+                            ?? FindButtonByLabelKeyword("crédito");
+
+        if (feedbackButton == null)
+            feedbackButton = ScreenFlowUiLookup.FindButton("Button_Feedback")
+                             ?? FindButtonByLabelKeyword("feedback");
     }
 
     private void RewireLegacyMenuButton()
     {
-        Button legacyMenu = ScreenFlowUiLookup.FindButton("Button_Menu");
-        if (legacyMenu == null)
+        if (exitButton != null)
             return;
 
-        legacyMenu.onClick.RemoveAllListeners();
-        legacyMenu.onClick.AddListener(OnExit);
+        Button legacyMenu = ScreenFlowUiLookup.FindButton("Button_Menu");
+        if (legacyMenu == null || legacyMenu == feedbackButton)
+            return;
 
-        if (exitButton == null)
-            exitButton = legacyMenu;
+        Bind(legacyMenu, OnAbandon);
+        exitButton = legacyMenu;
     }
 
-    private void OnContinue()
+    private void WireButtons()
+    {
+        Bind(continueButton, OnPrimaryAction);
+        Bind(exitButton, OnAbandon);
+        Bind(creditsButton, OnCredits);
+        Bind(feedbackButton, OnOpenPlaytestForm);
+    }
+
+    private void RefreshPrimaryActionLabel()
+    {
+        if (continueButton == null)
+            return;
+
+        SetButtonLabel(continueButton, isVictory ? "Prosseguir" : "Reiniciar fase");
+    }
+
+    private void OnPrimaryAction()
     {
         if (GameFlowOrchestrator.Instance != null && !GameFlowOrchestrator.Instance.CanRequestTransition())
             return;
 
-        PreparationSessionManager.Instance?.ResetRound();
-        ScreenFlowStateMachine.ContinueAfterEndGame();
+        if (isVictory)
+        {
+            PreparationSessionManager.Instance?.ResetRound();
+            ScreenFlowStateMachine.ContinueAfterEndGame();
+            return;
+        }
+
+        if (GameSessionContext.IsSinglePlayer)
+        {
+            ScreenFlowStateMachine.RestartCurrentGameplay();
+            return;
+        }
+
+        if (!IsLocalHost())
+        {
+            Debug.Log("[EndGameScreenController] Aguardando o host reiniciar (volta ao lobby).");
+            return;
+        }
+
+        ScreenFlowStateMachine.ReturnToLobbyFromEndGame();
     }
 
-    private void OnExit()
+    private void OnAbandon()
     {
         if (GameFlowOrchestrator.Instance != null && !GameFlowOrchestrator.Instance.CanRequestTransition())
             return;
 
         ScreenFlowStateMachine.ExitToMainMenu();
+    }
+
+    private void OnCredits()
+    {
+        CreditsOverlayController.Open();
+    }
+
+    private void OnOpenPlaytestForm()
+    {
+        if (string.IsNullOrWhiteSpace(playtestFormUrl))
+        {
+            Debug.LogWarning("[EndGameScreenController] URL do formulário de playtest não configurada.");
+            return;
+        }
+
+        Application.OpenURL(playtestFormUrl);
     }
 
     private void BuildPlaceholderUI()
@@ -82,15 +152,86 @@ public class EndGameScreenController : MonoBehaviour
         Color bg = isVictory ? new Color(0.05f, 0.12f, 0.08f, 0.96f) : new Color(0.12f, 0.05f, 0.05f, 0.96f);
         GameObject panel = ScreenFlowPlaceholderFactory.CreatePanel(canvas.transform, "EndGamePanel", bg);
 
-        titleText = ScreenFlowPlaceholderFactory.CreateText(panel.transform,
-            isVictory ? "Vitória!" : "Derrota", 72,
-            TextAlignmentOptions.Center, Color.white,
-            new Vector2(0.5f, 0.7f), new Vector2(0.5f, 0.7f), new Vector2(-400f, -60f), new Vector2(400f, 60f));
-
-        continueButton = ScreenFlowPlaceholderFactory.CreateButton(panel.transform, "Continuar",
+        continueButton = ScreenFlowPlaceholderFactory.CreateButton(panel.transform,
+            isVictory ? "Prosseguir" : "Reiniciar fase",
             new Vector2(0.4f, 0.35f), new Vector2(0.4f, 0.35f), new Vector2(-160f, -40f), new Vector2(160f, 40f));
 
-        exitButton = ScreenFlowPlaceholderFactory.CreateButton(panel.transform, "Sair",
+        exitButton = ScreenFlowPlaceholderFactory.CreateButton(panel.transform, "Abandonar",
             new Vector2(0.6f, 0.35f), new Vector2(0.6f, 0.35f), new Vector2(-160f, -40f), new Vector2(160f, 40f));
+
+        creditsButton = ScreenFlowPlaceholderFactory.CreateButton(panel.transform, "Créditos",
+            new Vector2(0.35f, 0.2f), new Vector2(0.35f, 0.2f), new Vector2(-160f, -40f), new Vector2(160f, 40f));
+
+        feedbackButton = ScreenFlowPlaceholderFactory.CreateButton(panel.transform, "Feedback Playtest",
+            new Vector2(0.65f, 0.2f), new Vector2(0.65f, 0.2f), new Vector2(-160f, -40f), new Vector2(160f, 40f));
+    }
+
+    private static Button FindButtonByNamePrefix(string prefix)
+    {
+        if (string.IsNullOrEmpty(prefix))
+            return null;
+
+        Button[] buttons = Object.FindObjectsByType<Button>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        for (int i = 0; i < buttons.Length; i++)
+        {
+            Button button = buttons[i];
+            if (button == null)
+                continue;
+
+            string name = button.gameObject.name;
+            if (name.StartsWith(prefix, System.StringComparison.OrdinalIgnoreCase))
+                return button;
+        }
+
+        return null;
+    }
+
+    private static Button FindButtonByLabelKeyword(string keyword)
+    {
+        if (string.IsNullOrEmpty(keyword))
+            return null;
+
+        Button[] buttons = Object.FindObjectsByType<Button>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        for (int i = 0; i < buttons.Length; i++)
+        {
+            Button button = buttons[i];
+            if (button == null)
+                continue;
+
+            TMP_Text label = button.GetComponentInChildren<TMP_Text>(true);
+            if (label != null
+                && label.text.IndexOf(keyword, System.StringComparison.OrdinalIgnoreCase) >= 0)
+                return button;
+        }
+
+        return null;
+    }
+
+    private static void Bind(Button button, UnityEngine.Events.UnityAction action)
+    {
+        if (button == null || action == null)
+            return;
+
+        button.onClick.RemoveAllListeners();
+        button.onClick.AddListener(action);
+    }
+
+    private static bool IsLocalHost()
+    {
+        if (GameSessionContext.IsSinglePlayer)
+            return true;
+
+        Unity.Netcode.NetworkManager net = Unity.Netcode.NetworkManager.Singleton;
+        return net == null || net.IsServer;
+    }
+
+    private static void SetButtonLabel(Button button, string label)
+    {
+        if (button == null || string.IsNullOrEmpty(label))
+            return;
+
+        TMP_Text tmp = button.GetComponentInChildren<TMP_Text>(true);
+        if (tmp != null)
+            tmp.text = label;
     }
 }

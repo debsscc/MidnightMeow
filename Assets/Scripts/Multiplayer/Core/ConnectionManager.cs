@@ -1,9 +1,8 @@
-/// <summary>
-/// ConnectionManager.cs
-/// Orquestra o ciclo de vida completo de uma sessão multiplayer.
-/// Coordena RelayManager + NetworkManager para hospedar ou entrar em partidas.
-/// Expõe eventos para que a UI e outros sistemas reajam a mudanças de conexão
-/// </summary>
+/* ----------------------------------------------------------------
+AUTOR: Débora Carvalho
+DATA: 2026-06-23
+DESCRIÇÃO: Ciclo de vida da sessão multiplayer (Relay + NetworkManager, host e cliente).
+---------------------------------------------------------------- */
 
 using System;
 using System.Collections;
@@ -24,6 +23,7 @@ public class ConnectionManager : MonoBehaviour
     public event Action<string>  OnJoinCodeObtained;
     public event Action          OnHostStarted;
     public event Action          OnClientConnected;
+    public static event Action   OnHostLeftSession;
     public event Action<ulong>   OnClientJoined;
     public event Action<ulong>   OnClientLeft;
     public event Action<string>  OnConnectionFailed;
@@ -39,6 +39,7 @@ public class ConnectionManager : MonoBehaviour
     // ── Estado Interno ─────────────────────────────────────────────────────────
     private bool _networkEventsSubscribed = false;
     private bool _lobbyRecoveryScheduled;
+    private bool _hostStartInProgress;
     private Coroutine _connectionTimeoutCoroutine;
 
     private void Awake()
@@ -62,9 +63,6 @@ public class ConnectionManager : MonoBehaviour
 
     // ── Host ───────────────────────────────────────────────────────────────────
 
-    /// <summary>
-    /// Host local sem Relay — usado no modo solo (1 jogador) antes de entrar em Fase-1.
-    /// </summary>
     public bool TryStartLocalSoloHost()
     {
         if (NetworkManager.Singleton == null)
@@ -97,14 +95,22 @@ public class ConnectionManager : MonoBehaviour
         return true;
     }
 
-    /// <summary>
-    /// Inicia uma sessão como host. Cria alocação Relay, configura o transporte e
-    /// inicia o NetworkManager como host.
-    /// </summary>
     public async Task StartHostAsync()
     {
+        if (_hostStartInProgress)
+            return;
+
+        if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsHost)
+        {
+            if (!string.IsNullOrEmpty(CurrentJoinCode))
+                OnJoinCodeObtained?.Invoke(CurrentJoinCode);
+            OnHostStarted?.Invoke();
+            return;
+        }
+
         if (!ValidatePrerequisites()) return;
 
+        _hostStartInProgress = true;
         try
         {
             int maxConnections = config != null ? config.maxPlayers - 1 : 3;
@@ -139,14 +145,14 @@ public class ConnectionManager : MonoBehaviour
             Debug.LogError($"[ConnectionManager] StartHostAsync falhou: {e.GetType().Name}: {e.Message}\n{e.StackTrace}");
             OnConnectionFailed?.Invoke(err);
         }
+        finally
+        {
+            _hostStartInProgress = false;
+        }
     }
 
     // ── Cliente ────────────────────────────────────────────────────────────────
 
-    /// <summary>
-    /// Entra em uma sessão existente usando o join code do host.
-    /// Inicia um timeout configurável para detectar falha de conexão silenciosa.
-    /// </summary>
     public async Task StartClientAsync(string joinCode)
     {
         if (string.IsNullOrWhiteSpace(joinCode))
@@ -199,12 +205,44 @@ public class ConnectionManager : MonoBehaviour
 
     // ── Desconexão ─────────────────────────────────────────────────────────────
 
-    /// <summary>Desconecta da sessão atual. Funciona para host e cliente.</summary>
     public void Disconnect()
+    {
+        PerformDisconnect();
+    }
+
+    public void DisconnectAsHost()
+    {
+        if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsHost)
+        {
+            Disconnect();
+            return;
+        }
+
+        if (LobbySessionManager.Instance != null && LobbySessionManager.Instance.IsSpawned)
+            LobbySessionManager.Instance.NotifyHostLeavingClients();
+
+        StartCoroutine(DisconnectAsHostRoutine());
+    }
+
+    private IEnumerator DisconnectAsHostRoutine()
+    {
+        yield return null;
+        PerformDisconnect();
+    }
+
+    internal static void RaiseHostLeftSession()
+    {
+        OnHostLeftSession?.Invoke();
+    }
+
+    private void PerformDisconnect()
     {
         if (NetworkManager.Singleton == null)
         {
             Debug.LogWarning("[ConnectionManager] Disconnect chamado mas NetworkManager.Singleton é null.");
+            CurrentJoinCode = string.Empty;
+            UnsubscribeNetworkManagerEvents();
+            OnDisconnected?.Invoke();
             return;
         }
 
@@ -340,9 +378,6 @@ public class ConnectionManager : MonoBehaviour
             BeginLobbyRecoveryAfterNetworkFailure(err);
     }
 
-    /// <summary>
-    /// Volta ao Lobby após falha de Relay/transporte ou carga NetcodeHost impossível.
-    /// </summary>
     public void BeginLobbyRecoveryAfterNetworkFailure(string userMessage)
     {
         if (_lobbyRecoveryScheduled)

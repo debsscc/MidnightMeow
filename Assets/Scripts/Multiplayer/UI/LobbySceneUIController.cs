@@ -1,9 +1,10 @@
-/// <summary>
-/// Controla a UI da cena de Lobby no fluxo principal.
-/// Liga botões do prefab Lobby e dispara transições via <see cref="ScreenFlowStateMachine"/>.
-/// </summary>
+/* ----------------------------------------------------------------
+AUTOR: Débora Carvalho
+DATA: 2026-06-23
+DESCRIÇÃO: UI da cena Lobby — modos host/entrar/solo, pronto e transições de fluxo.
+---------------------------------------------------------------- */
+
 using System.Collections;
-using System.Text;
 using TMPro;
 using Unity.Netcode;
 using UnityEngine;
@@ -12,6 +13,16 @@ using UnityEngine.UI;
 [DisallowMultipleComponent]
 public class LobbySceneUIController : MonoBehaviour
 {
+    private enum LobbyUiMode
+    {
+        ModeSelect,
+        HostWaiting,
+        ClientJoin,
+        SoloConfirm
+    }
+
+    private const int JoinCodeLength = 6;
+
     [Header("Conexao")]
     [SerializeField] private Button hostButton;
     [SerializeField] private Button joinButton;
@@ -19,35 +30,63 @@ public class LobbySceneUIController : MonoBehaviour
     [SerializeField] private Button charactersButton;
     [SerializeField] private TMP_InputField joinCodeInput;
     [SerializeField] private TMP_Text joinCodeText;
+    [SerializeField] private TMP_Text instructionText;
     [SerializeField] private TMP_Text statusText;
     [SerializeField] private TMP_Text playersText;
+    [SerializeField] private TMP_Text insertCodeTitle;
+    [SerializeField] private TMP_Text codeTitle;
     [SerializeField] private Button copyCodeButton;
     [SerializeField] private Button disconnectButton;
-    [SerializeField] private Button startGameButton;
+    [SerializeField] private Toggle readyToggle;
 
     [Header("Fluxo")]
     [SerializeField] private int requiredPlayersForLoading = 2;
+    [SerializeField] private float readyShowDelaySeconds = 1.5f;
     [SerializeField] private bool autoResolveMissingRefs = true;
 
-    private readonly StringBuilder _playersBuilder = new StringBuilder(256);
+    [Header("Layout solo (painel direito)")]
+    [SerializeField] private Vector2 soloStatusAnchoredPos = new Vector2(318f, -250f);
+    [SerializeField] private Vector2 soloReadyAnchoredPos = new Vector2(409f, 40f);
+    [SerializeField] private Vector2 soloDisconnectAnchoredPos = new Vector2(409f, -90f);
+
+    private LobbyUiMode _mode = LobbyUiMode.ModeSelect;
     private bool _matchTransitionStarted;
+    private bool _clientConnectInProgress;
+    private bool _hostLeftReceived;
+    private bool _hostStartInProgress;
+    private Coroutine _readyDelayCoroutine;
+    private Vector2 _defaultStatusAnchoredPos;
+    private Vector2 _defaultReadyAnchoredPos;
+    private Vector2 _defaultDisconnectAnchoredPos;
+    private bool _defaultLayoutCaptured;
 
     private void Awake()
     {
         if (autoResolveMissingRefs)
             TryAutoResolveReferences();
 
-        if (hostButton != null) hostButton.onClick.AddListener(StartHost);
-        if (joinButton != null) joinButton.onClick.AddListener(StartClient);
-        if (soloButton != null) soloButton.onClick.AddListener(StartSolo);
-        if (charactersButton != null) charactersButton.onClick.AddListener(OpenCharacters);
+        ConfigureJoinCodeInput();
+
+        if (hostButton != null) hostButton.onClick.AddListener(EnterHostMode);
+        if (joinButton != null) joinButton.onClick.AddListener(EnterJoinMode);
+        if (soloButton != null) soloButton.onClick.AddListener(EnterSoloMode);
+        if (charactersButton != null) charactersButton.onClick.AddListener(OnBackOrCharactersClicked);
         if (copyCodeButton != null) copyCodeButton.onClick.AddListener(CopyJoinCode);
         if (disconnectButton != null) disconnectButton.onClick.AddListener(Disconnect);
-        if (startGameButton != null) startGameButton.onClick.AddListener(StartGame);
+        if (readyToggle != null)
+        {
+            readyToggle.transition = Selectable.Transition.None;
+            readyToggle.toggleTransition = Toggle.ToggleTransition.None;
+            readyToggle.onValueChanged.AddListener(OnReadyToggleChanged);
+        }
+
+        if (instructionText != null)
+            instructionText.gameObject.SetActive(false);
     }
 
     private void OnEnable()
     {
+        ConnectionManager.OnHostLeftSession += HandleHostLeftSession;
         StartCoroutine(BindManagersRoutine());
     }
 
@@ -57,28 +96,56 @@ public class LobbySceneUIController : MonoBehaviour
             StartCoroutine(AutoContinueRoutine());
 
         HandleJoinCodeUpdated(ConnectionManager.Instance != null ? ConnectionManager.Instance.CurrentJoinCode : string.Empty);
-        RefreshPlayersView();
+        ApplyViewMode();
+        RefreshPlayerCount();
         ScreenFlowSceneReadiness.MarkReadyIfPending("Lobby");
     }
 
     private void OnDisable()
     {
+        ConnectionManager.OnHostLeftSession -= HandleHostLeftSession;
         StopAllCoroutines();
+        _readyDelayCoroutine = null;
         UnbindManagers();
+    }
+
+    private void ConfigureJoinCodeInput()
+    {
+        if (joinCodeInput == null)
+            return;
+
+        joinCodeInput.characterLimit = JoinCodeLength;
+        joinCodeInput.onValueChanged.AddListener(OnJoinCodeInputChanged);
     }
 
     private void TryAutoResolveReferences()
     {
         if (hostButton == null) hostButton = ScreenFlowUiLookup.FindButton("Host");
         if (joinButton == null) joinButton = ScreenFlowUiLookup.FindButton("Join");
-        if (startGameButton == null) startGameButton = ScreenFlowUiLookup.FindButton("StartGame");
+        if (soloButton == null) soloButton = ScreenFlowUiLookup.FindButton("Solo_StartGame");
         if (disconnectButton == null) disconnectButton = ScreenFlowUiLookup.FindButton("Disconnect");
         if (copyCodeButton == null) copyCodeButton = ScreenFlowUiLookup.FindButton("CopyCode");
         if (charactersButton == null) charactersButton = ScreenFlowUiLookup.FindButton("Back");
-        if (joinCodeText == null) joinCodeText = ScreenFlowUiLookup.FindText("JoinCode");
-        if (statusText == null) statusText = ScreenFlowUiLookup.FindText("Status") ?? ScreenFlowUiLookup.FindText("ERROCODE");
-        if (playersText == null) playersText = ScreenFlowUiLookup.FindText("Texts");
+        if (joinCodeText == null) joinCodeText = ScreenFlowUiLookup.FindText("JoinCodeDisplay");
+        if (instructionText == null) instructionText = ScreenFlowUiLookup.FindText("ERROCODE");
+        if (statusText == null) statusText = ScreenFlowUiLookup.FindText("Status");
+        if (playersText == null) playersText = ScreenFlowUiLookup.FindText("PlayerCount");
+        if (insertCodeTitle == null) insertCodeTitle = ScreenFlowUiLookup.FindText("Insert_code");
+        if (codeTitle == null) codeTitle = ScreenFlowUiLookup.FindText("Code_Title");
         if (joinCodeInput == null) joinCodeInput = ScreenFlowUiLookup.FindInputField();
+        if (readyToggle == null) readyToggle = FindReadyToggle();
+    }
+
+    private static Toggle FindReadyToggle()
+    {
+        Toggle[] toggles = Object.FindObjectsByType<Toggle>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        for (int i = 0; i < toggles.Length; i++)
+        {
+            if (toggles[i] != null && toggles[i].gameObject.name == "Toggle")
+                return toggles[i];
+        }
+
+        return null;
     }
 
     private IEnumerator BindManagersRoutine()
@@ -97,19 +164,19 @@ public class LobbySceneUIController : MonoBehaviour
         {
             ConnectionManager cm = ConnectionManager.Instance;
             cm.OnJoinCodeObtained += HandleJoinCodeUpdated;
-            cm.OnConnectionProgress += SetStatus;
-            cm.OnConnectionFailed += SetStatus;
+            cm.OnConnectionProgress += HandleConnectionProgress;
+            cm.OnConnectionFailed += HandleConnectionFailed;
             cm.OnDisconnected += HandleDisconnected;
             cm.OnClientJoined += HandleClientJoined;
             cm.OnHostStarted += HandleHostStarted;
+            cm.OnClientConnected += HandleClientConnected;
         }
 
         if (LobbySessionManager.Instance != null)
         {
-            LobbySessionManager.Instance.OnLobbyPlayersChanged += RefreshPlayersView;
-            LobbySessionManager.Instance.OnLobbyPlayersChanged += TryAutoStartWhenReady;
+            LobbySessionManager.Instance.OnLobbyPlayersChanged += RefreshPlayerCount;
             LobbySessionManager.Instance.OnJoinCodeChanged += HandleJoinCodeUpdated;
-            LobbySessionManager.Instance.OnLobbyError += SetStatus;
+            LobbySessionManager.Instance.OnLobbyError += HandleLobbyError;
         }
     }
 
@@ -119,25 +186,25 @@ public class LobbySceneUIController : MonoBehaviour
         {
             ConnectionManager cm = ConnectionManager.Instance;
             cm.OnJoinCodeObtained -= HandleJoinCodeUpdated;
-            cm.OnConnectionProgress -= SetStatus;
-            cm.OnConnectionFailed -= SetStatus;
+            cm.OnConnectionProgress -= HandleConnectionProgress;
+            cm.OnConnectionFailed -= HandleConnectionFailed;
             cm.OnDisconnected -= HandleDisconnected;
             cm.OnClientJoined -= HandleClientJoined;
             cm.OnHostStarted -= HandleHostStarted;
+            cm.OnClientConnected -= HandleClientConnected;
         }
 
         if (LobbySessionManager.Instance != null)
         {
-            LobbySessionManager.Instance.OnLobbyPlayersChanged -= RefreshPlayersView;
-            LobbySessionManager.Instance.OnLobbyPlayersChanged -= TryAutoStartWhenReady;
+            LobbySessionManager.Instance.OnLobbyPlayersChanged -= RefreshPlayerCount;
             LobbySessionManager.Instance.OnJoinCodeChanged -= HandleJoinCodeUpdated;
-            LobbySessionManager.Instance.OnLobbyError -= SetStatus;
+            LobbySessionManager.Instance.OnLobbyError -= HandleLobbyError;
         }
     }
 
     private IEnumerator AutoContinueRoutine()
     {
-        SetStatus("Retomando sessão como host...");
+        SetStatusKey("lobby.status.resuming_host");
         float timeout = 8f;
         while (ConnectionManager.Instance == null && timeout > 0f)
         {
@@ -147,42 +214,115 @@ public class LobbySceneUIController : MonoBehaviour
 
         if (ConnectionManager.Instance == null)
         {
-            SetStatus("Erro: ConnectionManager ausente.");
+            SetStatusKey("lobby.status.no_connection_manager");
             yield break;
         }
+
+        _mode = LobbyUiMode.HostWaiting;
+        ApplyViewMode();
 
         var hostTask = ConnectionManager.Instance.StartHostAsync();
         while (!hostTask.IsCompleted)
             yield return null;
     }
 
-    private async void StartHost()
+    private void EnterHostMode()
     {
-        if (ConnectionManager.Instance == null) return;
-        GameSessionContext.BeginMultiplayer();
-        SetStatus("Inicializando host...");
-        await ConnectionManager.Instance.StartHostAsync();
-        RefreshPlayersView();
-    }
-
-    private async void StartClient()
-    {
-        if (ConnectionManager.Instance == null) return;
-        GameSessionContext.BeginMultiplayer();
-        string joinCode = joinCodeInput != null ? joinCodeInput.text : string.Empty;
-        if (string.IsNullOrWhiteSpace(joinCode))
+        if (_hostStartInProgress || (IsNetworkConnected() && NetworkManager.Singleton != null && NetworkManager.Singleton.IsHost))
         {
-            SetStatus("Digite um codigo para entrar.");
+            ApplyViewMode();
             return;
         }
 
-        SetStatus("Conectando ao host...");
-        await ConnectionManager.Instance.StartClientAsync(joinCode);
+        _mode = LobbyUiMode.HostWaiting;
+        ApplyViewMode();
+        StartHost();
     }
 
-    private void StartSolo()
+    private void EnterJoinMode()
+    {
+        _mode = LobbyUiMode.ClientJoin;
+        _clientConnectInProgress = false;
+        if (joinCodeInput != null)
+            joinCodeInput.text = string.Empty;
+
+        ApplyViewMode();
+        SetStatusKey("lobby.status.enter_code");
+    }
+
+    private void EnterSoloMode()
+    {
+        _mode = LobbyUiMode.SoloConfirm;
+        ApplyViewMode();
+        SetStatusKey("lobby.solo.prompt");
+    }
+
+    private void CancelCurrentMode()
+    {
+        if (IsNetworkConnected())
+        {
+            Disconnect();
+            return;
+        }
+
+        ReturnToModeSelect();
+    }
+
+    private void OnBackOrCharactersClicked()
+    {
+        if (_mode != LobbyUiMode.ModeSelect)
+            CancelCurrentMode();
+        else
+            OpenCharacters();
+    }
+
+    private async void StartHost()
+    {
+        if (_hostStartInProgress || ConnectionManager.Instance == null)
+            return;
+
+        if (IsNetworkConnected() && NetworkManager.Singleton != null && NetworkManager.Singleton.IsHost)
+            return;
+
+        _hostStartInProgress = true;
+        GameSessionContext.BeginMultiplayer();
+        SetStatusKey("lobby.status.initializing_host");
+
+        try
+        {
+            await ConnectionManager.Instance.StartHostAsync();
+            RefreshPlayerCount();
+        }
+        finally
+        {
+            _hostStartInProgress = false;
+        }
+    }
+
+    private async void TryConnectClient()
+    {
+        if (ConnectionManager.Instance == null || _clientConnectInProgress || IsNetworkConnected())
+            return;
+
+        string joinCode = joinCodeInput != null ? joinCodeInput.text.Trim().ToUpper() : string.Empty;
+        if (joinCode.Length != JoinCodeLength)
+        {
+            SetStatusKey("lobby.status.enter_code");
+            return;
+        }
+
+        GameSessionContext.BeginMultiplayer();
+        _clientConnectInProgress = true;
+        SetReadyVisible(false);
+        SetStatusKey("lobby.status.connecting");
+        await ConnectionManager.Instance.StartClientAsync(joinCode);
+        _clientConnectInProgress = false;
+    }
+
+    private void ConfirmSolo()
     {
         GameSessionContext.BeginSinglePlayer();
+        SetStatusKey("lobby.status.starting_solo");
         StartCoroutine(BeginPreparationWhenReadyRoutine());
     }
 
@@ -201,31 +341,48 @@ public class LobbySceneUIController : MonoBehaviour
         ScreenFlowStateMachine.OpenCharactersFromLobby();
     }
 
-    private void StartGame()
+    private void OnReadyToggleChanged(bool isOn)
     {
-        bool connected = NetworkManager.Singleton != null
-                         && (NetworkManager.Singleton.IsClient || NetworkManager.Singleton.IsHost);
+        if (!isOn)
+            return;
 
-        if (connected && NetworkManager.Singleton.IsClient && !NetworkManager.Singleton.IsHost)
+        if (readyToggle != null)
+            readyToggle.SetIsOnWithoutNotify(false);
+
+        switch (_mode)
         {
-            SetStatus("Apenas o host pode iniciar o jogo.");
+            case LobbyUiMode.SoloConfirm:
+                ConfirmSolo();
+                break;
+            case LobbyUiMode.HostWaiting:
+                HostStartGame();
+                break;
+            case LobbyUiMode.ClientJoin:
+                TryConnectClient();
+                break;
+        }
+    }
+
+    private void HostStartGame()
+    {
+        if (!IsNetworkConnected() || NetworkManager.Singleton == null || !NetworkManager.Singleton.IsHost)
+            return;
+
+        if (GetConnectedPlayerCount() < requiredPlayersForLoading)
+        {
+            SetStatusKey("lobby.status.waiting_players", requiredPlayersForLoading);
             return;
         }
 
-        if (connected && NetworkManager.Singleton.IsHost)
-        {
-            if (LobbySessionManager.Instance != null && !LobbySessionManager.Instance.CanStartMatch)
-            {
-                SetStatus($"Aguardando {requiredPlayersForLoading} jogadores conectados.");
-                return;
-            }
+        GameSessionContext.BeginMultiplayer();
 
-            GameSessionContext.BeginMultiplayer();
+        if (LobbySessionManager.Instance != null && LobbySessionManager.Instance.IsSpawned)
+        {
+            _matchTransitionStarted = true;
+            LobbySessionManager.Instance.RequestStartGameRpc();
+        }
+        else
             TryBeginPreparation();
-            return;
-        }
-
-        StartSolo();
     }
 
     private void TryBeginPreparation()
@@ -235,121 +392,381 @@ public class LobbySceneUIController : MonoBehaviour
 
         _matchTransitionStarted = true;
         if (LobbyMatchFlow.TryBeginMatchFromLobby())
-            SetStatus("Carregando preparação...");
+            SetStatusKey("lobby.status.loading_prep");
         else
         {
             _matchTransitionStarted = false;
-            SetStatus("Fluxo indisponível. Inicie pelo BootstrapScene.");
+            SetStatusKey("lobby.status.flow_unavailable");
         }
     }
 
     private void HandleHostStarted()
     {
-        SetStatus("Aguardando segundo jogador...");
-        RefreshPlayersView();
+        SetStatusKey("lobby.status.waiting_second");
+        RefreshPlayerCount();
+        ApplyViewMode();
     }
 
     private void HandleClientJoined(ulong _)
     {
-        RefreshPlayersView();
-        TryAutoStartWhenReady();
+        RefreshPlayerCount();
+        ScheduleHostReadyIfNeeded();
     }
 
-    private void TryAutoStartWhenReady()
+    private void HandleClientConnected()
     {
-        if (_matchTransitionStarted || GameSessionContext.IsSinglePlayer)
-            return;
-
-        if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsHost)
-            return;
-
-        int count = NetworkManager.Singleton.ConnectedClientsIds.Count;
-        if (count < requiredPlayersForLoading)
-            return;
-
-        SetStatus("Jogadores conectados! Carregando preparação...");
-        TryBeginPreparation();
+        _mode = LobbyUiMode.ClientJoin;
+        SetStatusKey("lobby.status.connected");
+        ApplyViewMode();
+        RefreshPlayerCount();
     }
 
     private void Disconnect()
     {
-        ConnectionManager.Instance?.Disconnect();
         _matchTransitionStarted = false;
+        _clientConnectInProgress = false;
+        StopReadyDelay();
+
+        if (!IsNetworkConnected())
+        {
+            ReturnToModeSelect();
+            return;
+        }
+
+        bool wasHost = NetworkManager.Singleton != null && NetworkManager.Singleton.IsHost;
+        if (wasHost && ConnectionManager.Instance != null)
+            ConnectionManager.Instance.DisconnectAsHost();
+        else
+            ConnectionManager.Instance?.Disconnect();
+    }
+
+    private void ReturnToModeSelect()
+    {
+        _mode = LobbyUiMode.ModeSelect;
+        ApplyViewMode();
+        ClearStatus();
+        RefreshPlayerCount();
     }
 
     private void CopyJoinCode()
     {
         string code = ConnectionManager.Instance != null ? ConnectionManager.Instance.CurrentJoinCode : string.Empty;
-        if (string.IsNullOrWhiteSpace(code)) return;
+        if (string.IsNullOrWhiteSpace(code))
+            return;
+
         GUIUtility.systemCopyBuffer = code;
-        SetStatus($"Codigo {code} copiado.");
+        SetStatusKey("lobby.status.code_copied", code);
     }
 
     private void HandleDisconnected()
     {
         _matchTransitionStarted = false;
-        SetStatus("Desconectado do lobby.");
-        RefreshPlayersView();
+        _clientConnectInProgress = false;
+        ReturnToModeSelect();
+
+        if (_hostLeftReceived)
+        {
+            _hostLeftReceived = false;
+            return;
+        }
+
+        SetStatusKey("lobby.status.disconnected");
+    }
+
+    private void HandleHostLeftSession()
+    {
+        _hostLeftReceived = true;
+        _matchTransitionStarted = false;
+        _clientConnectInProgress = false;
+        ReturnToModeSelect();
+        SetStatusKey("lobby.status.host_left");
+    }
+
+    private void HandleConnectionProgress(string message)
+    {
+        SetStatus(UiLocalization.TranslateLobbyConnectionMessage(message));
+    }
+
+    private void HandleConnectionFailed(string message)
+    {
+        _clientConnectInProgress = false;
+        SetStatus(UiLocalization.TranslateLobbyConnectionMessage(message));
+        UpdateJoinReadyVisibility();
+        ApplyViewMode();
+    }
+
+    private void HandleLobbyError(string message)
+    {
+        _matchTransitionStarted = false;
+        SetStatus(UiLocalization.TranslateLobbyConnectionMessage(message));
     }
 
     private void HandleJoinCodeUpdated(string code)
     {
-        if (joinCodeText == null) return;
-        joinCodeText.text = string.IsNullOrWhiteSpace(code) ? "Codigo: --" : $"Codigo: <b>{code}</b>";
+        if (joinCodeText == null)
+            return;
+
+        joinCodeText.text = UiLocalization.FormatLobbyCode(code);
     }
 
-    private void RefreshPlayersView()
+    private void OnJoinCodeInputChanged(string _)
     {
-        bool connected = NetworkManager.Singleton != null && (NetworkManager.Singleton.IsClient || NetworkManager.Singleton.IsHost);
+        if (joinCodeInput == null)
+            return;
 
-        if (hostButton != null) hostButton.gameObject.SetActive(!connected);
-        if (joinButton != null) joinButton.gameObject.SetActive(!connected);
-        if (joinCodeInput != null) joinCodeInput.gameObject.SetActive(!connected);
-        if (disconnectButton != null) disconnectButton.gameObject.SetActive(connected);
+        string normalized = joinCodeInput.text.Trim().ToUpper();
+        if (joinCodeInput.text != normalized)
+        {
+            joinCodeInput.SetTextWithoutNotify(normalized);
+        }
+
+        UpdateJoinReadyVisibility();
+    }
+
+    private void RefreshPlayerCount()
+    {
+        if (playersText == null)
+            return;
+
+        int count = GetConnectedPlayerCount();
+        playersText.text = UiLocalization.FormatLobbyPlayerCount(count, requiredPlayersForLoading);
+        ScheduleHostReadyIfNeeded();
+    }
+
+    private int GetConnectedPlayerCount()
+    {
+        if (NetworkManager.Singleton != null && IsNetworkConnected())
+            return NetworkManager.Singleton.ConnectedClientsIds.Count;
+
+        return 0;
+    }
+
+    private void ScheduleHostReadyIfNeeded()
+    {
+        if (_mode != LobbyUiMode.HostWaiting || !IsHostWithEnoughPlayers())
+        {
+            StopReadyDelay();
+            SetReadyVisible(false);
+            return;
+        }
+
+        if (_readyDelayCoroutine != null)
+            return;
+
+        SetReadyVisible(false);
+        _readyDelayCoroutine = StartCoroutine(ShowHostReadyAfterDelayRoutine());
+    }
+
+    private IEnumerator ShowHostReadyAfterDelayRoutine()
+    {
+        yield return new WaitForSeconds(readyShowDelaySeconds);
+
+        _readyDelayCoroutine = null;
+
+        if (_mode == LobbyUiMode.HostWaiting && IsHostWithEnoughPlayers())
+        {
+            SetReadyVisible(true);
+            SetStatusKey("lobby.status.players_connected");
+        }
+    }
+
+    private void StopReadyDelay()
+    {
+        if (_readyDelayCoroutine != null)
+        {
+            StopCoroutine(_readyDelayCoroutine);
+            _readyDelayCoroutine = null;
+        }
+    }
+
+    private void UpdateJoinReadyVisibility()
+    {
+        if (_mode != LobbyUiMode.ClientJoin)
+            return;
+
+        if (IsNetworkConnected() || _clientConnectInProgress)
+        {
+            SetReadyVisible(false);
+            return;
+        }
+
+        string code = joinCodeInput != null ? joinCodeInput.text.Trim() : string.Empty;
+        SetReadyVisible(code.Length == JoinCodeLength);
+    }
+
+    private void ApplyViewMode()
+    {
+        bool connected = IsNetworkConnected();
+        bool isHost = connected && NetworkManager.Singleton != null && NetworkManager.Singleton.IsHost;
+
+        bool showHostPanel = _mode == LobbyUiMode.HostWaiting;
+        bool showJoinPanel = _mode == LobbyUiMode.ClientJoin;
+        bool showSoloPanel = _mode == LobbyUiMode.SoloConfirm;
+        bool showRightPanel = showHostPanel || showJoinPanel || showSoloPanel;
+
+        if (hostButton != null) hostButton.gameObject.SetActive(true);
+        if (joinButton != null) joinButton.gameObject.SetActive(true);
+        if (soloButton != null) soloButton.gameObject.SetActive(true);
+
+        if (joinCodeText != null)
+            joinCodeText.gameObject.SetActive(showHostPanel && connected);
+
         if (copyCodeButton != null)
-            copyCodeButton.gameObject.SetActive(connected && NetworkManager.Singleton != null && NetworkManager.Singleton.IsHost);
+            copyCodeButton.gameObject.SetActive(showHostPanel && connected && isHost);
 
+        if (joinCodeInput != null)
+            joinCodeInput.gameObject.SetActive(showJoinPanel && !connected);
+
+        if (insertCodeTitle != null)
+            insertCodeTitle.gameObject.SetActive(showJoinPanel && !connected);
+
+        if (codeTitle != null)
+            codeTitle.gameObject.SetActive(false);
+
+        bool showPlayerCount = (showHostPanel && connected) || (showJoinPanel && connected);
         if (playersText != null)
-        {
-            _playersBuilder.Clear();
-            var lobby = LobbySessionManager.Instance;
-            if (lobby == null)
-            {
-                playersText.text = "Aguardando LobbySessionManager...";
-            }
-            else
-            {
-                for (int i = 0; i < lobby.Players.Count; i++)
-                {
-                    LobbyPlayerState player = lobby.Players[i];
-                    bool isLocal = NetworkManager.Singleton != null && player.ClientId == NetworkManager.Singleton.LocalClientId;
-                    _playersBuilder.Append("- ").Append(player.DisplayName);
-                    if (isLocal) _playersBuilder.Append(" (voce)");
-                    _playersBuilder.AppendLine();
-                }
+            playersText.gameObject.SetActive(showPlayerCount);
 
-                playersText.text = _playersBuilder.ToString();
-            }
+        if (statusText != null)
+            statusText.gameObject.SetActive(showRightPanel);
+
+        if (disconnectButton != null)
+            disconnectButton.gameObject.SetActive(showRightPanel);
+
+        if (charactersButton != null)
+            charactersButton.gameObject.SetActive(false);
+
+        if (instructionText != null)
+            instructionText.gameObject.SetActive(false);
+
+        UpdateDisconnectLabel();
+        ApplyRightPanelLayout(showSoloPanel);
+        UpdateReadyToggleForMode();
+        UpdateJoinReadyVisibility();
+    }
+
+    private void CaptureDefaultPanelLayout()
+    {
+        if (_defaultLayoutCaptured)
+            return;
+
+        if (statusText != null)
+            _defaultStatusAnchoredPos = statusText.rectTransform.anchoredPosition;
+
+        if (readyToggle != null)
+            _defaultReadyAnchoredPos = readyToggle.GetComponent<RectTransform>().anchoredPosition;
+
+        if (disconnectButton != null)
+            _defaultDisconnectAnchoredPos = disconnectButton.GetComponent<RectTransform>().anchoredPosition;
+
+        _defaultLayoutCaptured = true;
+    }
+
+    private void ApplyRightPanelLayout(bool soloPanel)
+    {
+        CaptureDefaultPanelLayout();
+
+        if (statusText != null)
+        {
+            statusText.rectTransform.anchoredPosition = soloPanel
+                ? soloStatusAnchoredPos
+                : _defaultStatusAnchoredPos;
         }
 
-        if (startGameButton != null)
+        if (readyToggle != null)
         {
-            TMP_Text label = startGameButton.GetComponentInChildren<TMP_Text>();
-            if (!connected)
-            {
-                startGameButton.gameObject.SetActive(true);
-                startGameButton.interactable = true;
-                if (label != null) label.text = "Jogar Solo";
-            }
-            else
-            {
-                bool host = NetworkManager.Singleton.IsHost;
-                bool canStart = LobbySessionManager.Instance != null && LobbySessionManager.Instance.CanStartMatch;
-                startGameButton.gameObject.SetActive(host);
-                startGameButton.interactable = host && canStart;
-                if (label != null) label.text = "Iniciar Partida";
-            }
+            readyToggle.GetComponent<RectTransform>().anchoredPosition = soloPanel
+                ? soloReadyAnchoredPos
+                : _defaultReadyAnchoredPos;
         }
+
+        if (disconnectButton != null)
+        {
+            disconnectButton.GetComponent<RectTransform>().anchoredPosition = soloPanel
+                ? soloDisconnectAnchoredPos
+                : _defaultDisconnectAnchoredPos;
+        }
+    }
+
+    private void UpdateDisconnectLabel()
+    {
+        if (disconnectButton == null)
+            return;
+
+        TMP_Text label = disconnectButton.GetComponentInChildren<TMP_Text>(true);
+        if (label == null)
+            return;
+
+        bool connected = IsNetworkConnected();
+        label.text = connected
+            ? UiLocalization.Get("btn.lobby.disconect", "Desconectar")
+            : UiLocalization.Get("btn.back", "Voltar");
+
+        label.enableAutoSizing = false;
+        label.overflowMode = TMPro.TextOverflowModes.Ellipsis;
+    }
+
+    private void UpdateReadyToggleForMode()
+    {
+        if (readyToggle == null)
+            return;
+
+        if (_mode == LobbyUiMode.SoloConfirm)
+        {
+            SetReadyVisible(true);
+            SetReadyLabel("btn.play");
+            return;
+        }
+
+        if (_mode == LobbyUiMode.HostWaiting)
+        {
+            SetReadyLabel("btn.ready");
+            if (!IsHostWithEnoughPlayers())
+                SetReadyVisible(false);
+            return;
+        }
+
+        if (_mode == LobbyUiMode.ClientJoin)
+        {
+            SetReadyLabel("btn.ready");
+            return;
+        }
+
+        SetReadyVisible(false);
+    }
+
+    private void SetReadyLabel(string localizationKey)
+    {
+        if (readyToggle == null)
+            return;
+
+        TMP_Text label = readyToggle.GetComponentInChildren<TMP_Text>(true);
+        if (label != null)
+            label.text = UiLocalization.Get(localizationKey, label.text);
+    }
+
+    private void SetReadyVisible(bool visible)
+    {
+        if (readyToggle != null)
+            readyToggle.gameObject.SetActive(visible);
+    }
+
+    private bool IsNetworkConnected()
+    {
+        return NetworkManager.Singleton != null
+               && (NetworkManager.Singleton.IsClient || NetworkManager.Singleton.IsHost);
+    }
+
+    private bool IsHostWithEnoughPlayers()
+    {
+        return NetworkManager.Singleton != null
+               && NetworkManager.Singleton.IsHost
+               && GetConnectedPlayerCount() >= requiredPlayersForLoading;
+    }
+
+    private void SetStatusKey(string key, params object[] args)
+    {
+        SetStatus(UiLocalization.Format(key, key, args));
     }
 
     private void SetStatus(string message)
@@ -357,5 +774,10 @@ public class LobbySceneUIController : MonoBehaviour
         if (statusText != null)
             statusText.text = message;
     }
+
+    private void ClearStatus()
+    {
+        if (statusText != null)
+            statusText.text = string.Empty;
+    }
 }
-

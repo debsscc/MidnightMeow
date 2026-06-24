@@ -1,18 +1,19 @@
+/* ----------------------------------------------------------------
+AUTOR: Débora Carvalho
+DATA: 2026-06-23
+DESCRIÇÃO: Barra de loading da cena sincronizada com ScreenFlowController.LoadingProgress.
+---------------------------------------------------------------- */
+
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// Sincroniza a barra de loading da cena com <see cref="ScreenFlowController.LoadingProgress"/>.
-/// Reinicia sempre que a tela de loading é exibida.
-/// </summary>
 [DisallowMultipleComponent]
 public class LoadingBar : MonoBehaviour
 {
     [SerializeField] private Image loadingBar;
     [SerializeField] private float fillSpeed = 2.5f;
 
-    /// <summary>Avanço mínimo por segundo enquanto o loading está visível e o alvo ainda é baixo.</summary>
     [SerializeField] private float idleCreepPerSecond = 0.07f;
 
     [SerializeField] private float maxIdleCreep = 0.88f;
@@ -96,20 +97,15 @@ public class LoadingBar : MonoBehaviour
     }
 }
 
-/// <summary>
-/// Barras de loading: trilho (vermelho) + fill filho (branco) com largura via âncoras.
-/// </summary>
 public static class LoadingProgressUtility
 {
     public static readonly Color DefaultTrackColor = new Color(0.75f, 0.12f, 0.12f, 1f);
     public static readonly Color DefaultFillColor = Color.white;
     public static readonly Vector2 DefaultBarSize = new Vector2(640f, 24f);
 
-    /// <summary>Faixa do texto de status ancorada na base (ref. 1920×1080).</summary>
     public const float BottomStatusTextMinY = 56f;
     public const float BottomStatusTextMaxY = 120f;
 
-    /// <summary>Centro vertical da barra; fica acima do texto com folga de 20 px.</summary>
     public const float BottomBarCenterY = 152f;
 
     private static Sprite _solidSprite;
@@ -295,5 +291,17 @@ public static class LoadingProgressUtility
     public static void ResetProgress(Image fill)
     {
         SetProgress(fill, 0f);
+    }
+
+    /// Posiciona um ícone ao longo do trilho, na borda direita do preenchimento.</summary>
+    public static void SetFollowerAlongTrack(RectTransform track, RectTransform follower, float progress, float yOffset = 0f)
+    {
+        if (track == null || follower == null)
+            return;
+
+        progress = Mathf.Clamp01(progress);
+        float width = track.rect.width;
+        float x = (-width * 0.5f) + (width * progress);
+        follower.anchoredPosition = new Vector2(x, yOffset);
     }
 }

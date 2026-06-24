@@ -26,13 +26,13 @@ Documentação completa em **[docs/README.md](docs/README.md)**:
 - Project name: MidnightMeow
 - Unity version: Unity 6000.3.13f1
 - Active scene:
-  - Name: Menu2
+  - Name: GameOver
   - Tags:
     - Untagged, Respawn, Finish, EditorOnly, MainCamera, Player, GameController, Structure, Enemy, Drop
   - Layers:
-    - Default, TransparentFX, Ignore Raycast, Player, Water, UI, Wall, Projectile, ProjectileEnemy, Structure, Enemy, Collectable, DashableWall, Shadow
+    - Default, TransparentFX, Ignore Raycast, Water, UI
 - Active game object:
-  - Name: Light
+  - Name: EndGameScreenController
   - Tag: Untagged
-  - Layer: UI
+  - Layer: Default
 <!-- UNITY CODE ASSIST INSTRUCTIONS END -->

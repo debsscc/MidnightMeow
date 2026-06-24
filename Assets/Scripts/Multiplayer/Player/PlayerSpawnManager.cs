@@ -1,18 +1,8 @@
-/// <summary>
-/// PlayerSpawnManager.cs
-/// NetworkBehaviour server-autoritativo responsável por spawnar o prefab de jogador
-/// em SpawnPoints designados para cada cliente que se conecta.
-/// Separa completamente a lógica de spawn do ConnectionManager e do NetworkManager,
-/// permitindo configuração visual dos pontos de spawn diretamente no Editor.
-///
-/// CONFIGURAÇÃO NO EDITOR:
-///   1. Desmarque "Auto Spawn Player" no NetworkManager (ou deixe Player Prefab vazio).
-///   2. Adicione o prefab do jogador na lista NetworkPrefabs do NetworkManager.
-///   3. Arraste o prefab e os SpawnPoints para os campos deste componente.
-///   4. Este GameObject PRECISA de NetworkObject para funcionar como NetworkBehaviour.
-///
-/// SRP: exclusivamente gerencia o spawning de jogadores na rede.
-/// </summary>
+/* ----------------------------------------------------------------
+AUTOR: Débora Carvalho
+DATA: 2026-06-23
+DESCRIÇÃO: Spawn autoritativo de jogadores em SpawnPoints (NGO).
+---------------------------------------------------------------- */
 
 using System.Collections.Generic;
 using Unity.Netcode;
@@ -193,6 +183,27 @@ public class PlayerSpawnManager : NetworkBehaviour
         _spawnedPlayers.Clear();
     }
 
+    public void DespawnAllPlayersForRestart()
+    {
+        if (!IsServer)
+            return;
+
+        DespawnAllPlayers();
+
+        NetworkObject[] networkObjects = Object.FindObjectsByType<NetworkObject>(
+            FindObjectsInactive.Include,
+            FindObjectsSortMode.None);
+
+        for (int i = 0; i < networkObjects.Length; i++)
+        {
+            NetworkObject networkObject = networkObjects[i];
+            if (networkObject == null || !networkObject.IsSpawned || !networkObject.IsPlayerObject)
+                continue;
+
+            networkObject.Despawn(true);
+        }
+    }
+
     private System.Collections.IEnumerator ReplaceAutoSpawnedPlayersOnceRoutine()
     {
         yield return null;
@@ -294,10 +305,6 @@ public class PlayerSpawnManager : NetworkBehaviour
         }
     }
 
-    /// <summary>
-    /// Spawna o prefab do jogador para o cliente especificado num SpawnPoint disponível.
-    /// Executado apenas no servidor.
-    /// </summary>
     private void SpawnPlayerForClient(ulong clientId)
     {
         if (!IsServer) return;
@@ -391,10 +398,6 @@ public class PlayerSpawnManager : NetworkBehaviour
         }
     }
 
-    /// <summary>
-    /// Remove o registro do jogador ao desconectar.
-    /// O NetworkObject é destruído automaticamente pelo NGO ao desconectar com destroyWithScene=true.
-    /// </summary>
     private void HandleClientDisconnected(ulong clientId)
     {
         if (_spawnedPlayers.ContainsKey(clientId))
@@ -404,10 +407,6 @@ public class PlayerSpawnManager : NetworkBehaviour
         }
     }
 
-    /// <summary>
-    /// Retorna o SpawnPoint atribuído a um cliente. Distribui por ordem de chegada,
-    /// com fallback para round-robin se houver mais clientes que spawn points.
-    /// </summary>
     private int GetSpawnIndexForClient(ulong clientId)
     {
         if (_clientSpawnIndex.TryGetValue(clientId, out int existingIndex))
@@ -525,10 +524,8 @@ public class PlayerSpawnManager : NetworkBehaviour
 
     // ── API Pública ────────────────────────────────────────────────────────────
 
-    /// <summary>Retorna o NetworkObject do jogador de um cliente específico.</summary>
     public NetworkObject GetPlayerForClient(ulong clientId) =>
         _spawnedPlayers.TryGetValue(clientId, out var obj) ? obj : null;
 
-    /// <summary>Retorna todos os jogadores spawnados atualmente.</summary>
     public IReadOnlyDictionary<ulong, NetworkObject> GetAllSpawnedPlayers() => _spawnedPlayers;
 }

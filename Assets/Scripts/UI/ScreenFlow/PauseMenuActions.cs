@@ -1,12 +1,14 @@
+/* ----------------------------------------------------------------
+AUTOR: Débora Carvalho
+DATA: 2026-06-23
+DESCRIÇÃO: Ações do menu de pause — reiniciar (solo), abandonar e sair do app.
+---------------------------------------------------------------- */
+
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// Ações do menu de pause. Solo: reiniciar fase. MP: reiniciar desabilitado.
-/// Abandonar usa o mesmo fluxo de vitória/derrota (ExitToMainMenu).
-/// </summary>
 [DisallowMultipleComponent]
 public class PauseMenuActions : MonoBehaviour
 {
@@ -87,6 +89,7 @@ public class PauseMenuActions : MonoBehaviour
 
         Time.timeScale = 1f;
         GameFlowOrchestrator.Instance?.NotifyPauseChanged(false);
+        RoundMagiculaTracker.Instance?.CommitToSave();
         ScreenFlowStateMachine.ExitToMainMenu();
     }
 
@@ -132,10 +135,8 @@ public class PauseMenuActions : MonoBehaviour
         SetPauseMainContentVisible(true);
     }
 
-    /// <summary>Legado — redireciona para <see cref="RestartCurrentPhase"/>.</summary>
     public void ReloadCurrentScene() => RestartCurrentPhase();
 
-    /// <summary>Legado — redireciona para <see cref="QuitApplication"/>.</summary>
     public void QuitGame() => ShowQuitConfirmation();
 
     private void ResolveButtons()

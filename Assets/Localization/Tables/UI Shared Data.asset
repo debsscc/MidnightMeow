@@ -16,41 +16,297 @@ MonoBehaviour:
   m_TableCollectionNameGuidString: da2895712265ed0499f3cae10d3b7d2e
   m_Entries:
   - m_Id: 75911409664
-    m_Key: 'settings.volume
+    m_Key: 'btn.volume
 
 '
     m_Metadata:
       m_Items: []
   - m_Id: 96538996736
-    m_Key: settings.music
+    m_Key: btn.music
     m_Metadata:
       m_Items: []
   - m_Id: 199798566912
-    m_Key: settings.sfx
+    m_Key: btn.sfx
     m_Metadata:
       m_Items: []
   - m_Id: 219406938112
-    m_Key: settings.language
+    m_Key: btn.language
     m_Metadata:
       m_Items: []
   - m_Id: 243578712064
-    m_Key: settings.restore_defaults
+    m_Key: btn.restore_defaults
     m_Metadata:
       m_Items: []
   - m_Id: 244514041856
-    m_Key: "settings.back\r\n "
+    m_Key: btn.back
     m_Metadata:
       m_Items: []
   - m_Id: 923710271488
-    m_Key: menu.play
+    m_Key: btn.play
     m_Metadata:
       m_Items: []
   - m_Id: 961106685952
-    m_Key: menu.continue
+    m_Key: btn.continue
     m_Metadata:
       m_Items: []
   - m_Id: 988344496128
-    m_Key: menu.quit
+    m_Key: btn.quit
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3338880269692928
+    m_Key: btn.menu
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3339150479339520
+    m_Key: btn.abandonar
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3339196251779072
+    m_Key: btn.prosseguir
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3339225712570368
+    m_Key: btn.credits
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3339255542460416
+    m_Key: btn.feedbackBIG
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3350216718430208
+    m_Key: btn.reiniciar
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3352649809014784
+    m_Key: btn.pause.resume
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3352739361599488
+    m_Key: btn.options
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3352841169940480
+    m_Key: 'btn.language
+
+'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3353003166543872
+    m_Key: btn.pause.titleText
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3355296800714752
+    m_Key: btn.controls
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3361570351230976
+    m_Key: title.loading
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3361570351230977
+    m_Key: loading.wait_host
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3361570351230978
+    m_Key: loading.starting
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3361570351230979
+    m_Key: loading.wait_host_sync
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3368641771614208
+    m_Key: 'btn.lobby.host
+
+'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3368731496165376
+    m_Key: 'btn.lobby.entrar
+
+'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3368869300023296
+    m_Key: 'btn.lobby.SINGLEplayer
+
+'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3369164050542592
+    m_Key: title.lobby.code
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3369230119219200
+    m_Key: title.lobby.players
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3369347362598912
+    m_Key: title.lobby.waiting
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3369571665588224
+    m_Key: title.lobby.enterCode
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3369714355810304
+    m_Key: title.chooseCharacter
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3369857067003904
+    m_Key: btn.ready
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3369898104074240
+    m_Key: btn.fase1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3370050776739840
+    m_Key: btn.fase2
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3370062424322048
+    m_Key: btn.fase3
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3370162689159168
+    m_Key: btn.upgrade
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3370228690726912
+    m_Key: title.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3388852344205312
+    m_Key: title.lobby
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3402579537833984
+    m_Key: title.lobby.placeholderCode
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3404843723796480
+    m_Key: btn.lobby.disconect
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3407343822581760
+    m_Key: btn.read
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3410087597846528
+    m_Key: title.insertCode
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411007597846528
+    m_Key: lobby.instruction
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411017597846528
+    m_Key: lobby.instruction.host
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411027597846528
+    m_Key: lobby.instruction.join
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411037597846528
+    m_Key: lobby.instruction.solo
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411047597846528
+    m_Key: lobby.code.label
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411057597846528
+    m_Key: lobby.solo.prompt
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411067597846528
+    m_Key: lobby.status.disconnected
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411077597846528
+    m_Key: lobby.status.host_left
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411087597846528
+    m_Key: lobby.status.waiting_second
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411097597846528
+    m_Key: lobby.status.players_connected
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411107597846528
+    m_Key: lobby.status.connecting
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411117597846528
+    m_Key: lobby.status.connected
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411127597846528
+    m_Key: lobby.status.enter_code
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411137597846528
+    m_Key: lobby.status.code_copied
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411147597846528
+    m_Key: lobby.status.only_host_starts
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411157597846528
+    m_Key: lobby.status.initializing_host
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411167597846528
+    m_Key: lobby.status.loading_prep
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411177597846528
+    m_Key: lobby.status.flow_unavailable
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411187597846528
+    m_Key: lobby.status.resuming_host
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411197597846528
+    m_Key: lobby.status.no_connection_manager
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411207597846528
+    m_Key: lobby.status.starting_solo
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411217597846528
+    m_Key: lobby.status.waiting_players
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411227597846528
+    m_Key: lobby.status.empty_code
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411237597846528
+    m_Key: lobby.status.connection_timeout
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411247597846528
+    m_Key: lobby.status.join_failed
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411257597846528
+    m_Key: lobby.status.host_failed
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411267597846528
+    m_Key: lobby.status.relay_missing
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3411277597846528
+    m_Key: lobby.status.network_missing
     m_Metadata:
       m_Items: []
   m_Metadata:

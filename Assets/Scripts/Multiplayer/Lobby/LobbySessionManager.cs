@@ -1,7 +1,9 @@
-/// <summary>
-/// Gerencia o estado do lobby em rede (jogadores conectados, seleção de personagem,
-/// status de pronto e início da partida). O servidor é autoritativo.
-/// </summary>
+/* ----------------------------------------------------------------
+AUTOR: Débora Carvalho
+DATA: 2026-06-23
+DESCRIÇÃO: Estado do lobby em rede — jogadores, pronto e início de partida (servidor).
+---------------------------------------------------------------- */
+
 using System;
 using System.Collections.Generic;
 using Unity.Collections;
@@ -101,6 +103,23 @@ public class LobbySessionManager : NetworkBehaviour
     {
         ulong callerId = rpcParams.Receive.SenderClientId;
         SetPlayerReady(callerId, isReady);
+    }
+
+    public void NotifyHostLeavingClients()
+    {
+        if (!IsServer)
+            return;
+
+        NotifyHostLeavingClientRpc();
+    }
+
+    [ClientRpc]
+    private void NotifyHostLeavingClientRpc()
+    {
+        if (IsServer)
+            return;
+
+        ConnectionManager.RaiseHostLeftSession();
     }
 
     [Rpc(SendTo.Server)]

@@ -17,7 +17,27 @@ MonoBehaviour:
   m_SharedData: {fileID: 11400000, guid: da2895712265ed0499f3cae10d3b7d2e, type: 2}
   m_Metadata:
     m_Items: []
-  m_TableData: []
+  m_TableData:
+  - m_Id: 3338880269692928
+    m_Localized: 
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3361570351230976
+    m_Localized: 加载中
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3361570351230977
+    m_Localized: 等待主机开始游戏...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3361570351230978
+    m_Localized: 正在开始游戏...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3361570351230979
+    m_Localized: 等待主机...
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []
