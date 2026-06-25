@@ -33,6 +33,7 @@ public static class GameSessionContext
     public static string PendingRouteId { get; set; } = string.Empty;
     public static string ReturnRouteId { get; set; } = string.Empty;
     public static string ActiveGameplaySceneName { get; set; } = "Fase-1";
+    public static int ActiveContractIndex { get; set; } = -1;
     public static int ActiveSaveSlot { get; set; }
     public static bool AutoHostOnLobbyEnter { get; set; }
     public static bool IsSinglePlayer { get; set; }
@@ -81,6 +82,7 @@ public static class GameSessionContext
         PendingRouteId = string.Empty;
         ReturnRouteId = string.Empty;
         ActiveGameplaySceneName = "Fase-1";
+        ActiveContractIndex = -1;
         AutoHostOnLobbyEnter = false;
         IsSinglePlayer = false;
     }

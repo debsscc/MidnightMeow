@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6a7b8c9d0e1417095861728394a5b71, type: 3}
+  m_Name: PhaseWaveSettingsCatalog
+  m_EditorClassIdentifier: Assembly-CSharp::PhaseWaveSettingsCatalog
+  phases:
+  - sceneName: Fase-1
+    waveSettings: {fileID: 11400000, guid: 68b57c6ad8b3cc540bf04cefe9e65055, type: 2}
+    enableRatHoleSealing: 1
+    enableCarriage: 0
+    useWaveSpawning: 0
+    useHoleSpawning: 1
+    holeSpawnInterval: 4
+    maxEnemiesAlive: 35
+    firstSpawnDelay: 3
+    winCondition: 0
+  - sceneName: Fase-2
+    waveSettings: {fileID: 11400000, guid: ae3eb761d45e11f45b15bdb458c36700, type: 2}
+    enableRatHoleSealing: 1
+    enableCarriage: 1
+    useWaveSpawning: 0
+    useHoleSpawning: 1
+    holeSpawnInterval: 3.5
+    maxEnemiesAlive: 40
+    firstSpawnDelay: 3
+    winCondition: 1
+  - sceneName: Fase-3
+    waveSettings: {fileID: 11400000, guid: c3d4e5f6a7b8497095861728394a5b6d, type: 2}
+    enableRatHoleSealing: 0
+    enableCarriage: 0
+    useWaveSpawning: 0
+    useHoleSpawning: 0
+    holeSpawnInterval: 4
+    maxEnemiesAlive: 1
+    firstSpawnDelay: 2
+    winCondition: 2

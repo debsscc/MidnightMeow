@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// Posiciona círculos cooperativos ao redor de um ponto âncora sem sobreposição.
+/// Posiciona círculos cooperativos ao redor de um ponto âncora, visíveis na câmera.
 /// </summary>
 public static class CooperativeZonePlacementUtility
 {
@@ -21,52 +21,41 @@ public static class CooperativeZonePlacementUtility
         float minSeparation)
     {
         zoneCount = Mathf.Clamp(zoneCount, 1, 2);
-        var positions = new Vector2[zoneCount];
+        Vector2 biasDir = ResolveCameraBiasDirection(anchor);
+        float distance = Mathf.Clamp(Mathf.Lerp(minDistance, maxDistance, 0.7f), minDistance, maxDistance);
 
         if (zoneCount == 1)
         {
-            if (TryPlaceSingle(anchor, zoneRadius, minDistance, maxDistance, out Vector2 single))
-                return new PlacementResult { Success = true, Positions = new[] { single } };
-
-            return new PlacementResult { Success = false, Positions = System.Array.Empty<Vector2>() };
+            Vector2 single = anchor + biasDir * distance;
+            return new PlacementResult { Success = true, Positions = new[] { single } };
         }
 
-        const int maxAttempts = 24;
-        for (int attempt = 0; attempt < maxAttempts; attempt++)
+        Vector2 perpendicular = new Vector2(-biasDir.y, biasDir.x);
+        float lateral = Mathf.Max(minSeparation * 0.5f, zoneRadius * 0.9f);
+        Vector2 center = anchor + biasDir * distance;
+        Vector2 first = center + perpendicular * lateral;
+        Vector2 second = center - perpendicular * lateral;
+
+        if (Vector2.Distance(first, second) < minSeparation)
         {
-            if (!TryPlaceSingle(anchor, zoneRadius, minDistance, maxDistance, out Vector2 first))
-                continue;
-
-            if (!TryPlaceSingle(anchor, zoneRadius, minDistance, maxDistance, out Vector2 second))
-                continue;
-
-            if (Vector2.Distance(first, second) < minSeparation)
-                continue;
-
-            positions[0] = first;
-            positions[1] = second;
-            return new PlacementResult { Success = true, Positions = positions };
+            first = center + perpendicular * minSeparation;
+            second = center - perpendicular * minSeparation;
         }
 
-        if (TryPlaceSingle(anchor, zoneRadius, minDistance, maxDistance, out Vector2 fallback))
-            return new PlacementResult { Success = true, Positions = new[] { fallback } };
-
-        return new PlacementResult { Success = false, Positions = System.Array.Empty<Vector2>() };
+        return new PlacementResult { Success = true, Positions = new[] { first, second } };
     }
 
-    private static bool TryPlaceSingle(
-        Vector2 anchor,
-        float zoneRadius,
-        float minDistance,
-        float maxDistance,
-        out Vector2 position)
+    private static Vector2 ResolveCameraBiasDirection(Vector2 anchor)
     {
-        float minDist = Mathf.Max(0.1f, minDistance);
-        float maxDist = Mathf.Max(minDist, maxDistance);
-        float angle = Random.Range(0f, Mathf.PI * 2f);
-        float distance = Random.Range(minDist, maxDist);
-        position = anchor + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * distance;
-        return true;
+        Camera cam = Camera.main;
+        if (cam == null)
+            return Vector2.up;
+
+        Vector2 toCamera = (Vector2)cam.transform.position - anchor;
+        if (toCamera.sqrMagnitude < 0.0001f)
+            return Vector2.up;
+
+        return toCamera.normalized;
     }
 
     public static bool IsInsideZone(Vector2 worldPosition, Vector2 zoneCenter, float radius) =>

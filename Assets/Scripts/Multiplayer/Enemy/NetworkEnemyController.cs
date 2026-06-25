@@ -101,6 +101,9 @@ public class NetworkEnemyController : NetworkBehaviour
         _health.SetAllowDestroyOnDeath(false);
         _health.OnDied.AddListener(HandleDied);
 
+        if (GetComponent<EnemyHealthBarDisplay>() == null)
+            gameObject.AddComponent<EnemyHealthBarDisplay>();
+
         if (GetComponent<EnemySlowEffect>() == null)
             gameObject.AddComponent<EnemySlowEffect>();
 

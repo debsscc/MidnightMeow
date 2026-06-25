@@ -1,12 +1,5 @@
 /// <summary>
-/// NetworkWaveManager.cs
-/// NetworkBehaviour server-autoritativo que substitui NightManager no contexto multiplayer.
-/// Apenas o servidor/host executa a lógica de spawn de ondas, instanciando inimigos como
-/// NetworkObjects via NetworkObject.Spawn() para replicação automática a todos os clientes.
-/// IMPORTANTE NO EDITOR: Este componente DEVE estar num GameObject que também tenha NetworkObject.
-/// Pode ser iniciado via evento estático do MultiplayerGameManager OU via StartWavesRpc()
-/// diretamente do lobby (StartGameButton → ambos chamados no mesmo fluxo).
-/// SRP: exclusivamente gerencia spawning e progresso de ondas na rede.
+/// Gerencia spawn de inimigos na rede: ondas legadas, spawn por buracos ou boss único.
 /// </summary>
 
 using System.Collections;
@@ -16,6 +9,13 @@ using UnityEngine;
 
 public class NetworkWaveManager : NetworkBehaviour
 {
+    public enum SpawnMode
+    {
+        Waves,
+        RatHoles,
+        SingleBoss
+    }
+
     public static NetworkWaveManager Instance { get; private set; }
 
     [Header("Configuração")]
@@ -26,14 +26,21 @@ public class NetworkWaveManager : NetworkBehaviour
     [Header("Prefab de Ciência para drops de rede")]
     [SerializeField] private GameObject networkCienciaPrefab;
 
-    private int _currentWaveIndex = 0;
-    private int _enemiesAlive = 0;
-    private int _totalEnemiesInCurrentWave = 0;
-    private int _totalKilledInPhase = 0;
-    private bool _isSpawning = false;
-    private bool _hasStarted = false;
+    private int _currentWaveIndex;
+    private int _enemiesAlive;
+    private int _totalEnemiesInCurrentWave;
+    private int _totalKilledInPhase;
+    private bool _isSpawning;
+    private bool _hasStarted;
+    private SpawnMode _spawnMode = SpawnMode.Waves;
+    private float _holeSpawnInterval = 4f;
+    private int _maxEnemiesAlive = 35;
+    private float _firstSpawnDelay = 3f;
+    private readonly List<GameObject> _holeSpawnPrefabs = new List<GameObject>();
 
     private readonly List<NetworkObject> _spawnedEnemies = new List<NetworkObject>();
+
+    public int EnemiesAlive => _enemiesAlive;
 
     private void Awake()
     {
@@ -44,32 +51,34 @@ public class NetworkWaveManager : NetworkBehaviour
             gameObject.AddComponent<NetworkRatHoleSealManager>();
     }
 
+    private void Start()
+    {
+        NetworkRatHoleSealManager sealManager = GetComponent<NetworkRatHoleSealManager>();
+        if (sealManager != null)
+            RatHoleSealZoneVisual.EnsureAttached(sealManager);
+    }
+
     public override void OnNetworkSpawn()
     {
         if (!IsServer) return;
 
         MultiplayerGameManager.OnGameStateChanged += HandleGameStateChanged;
 
-        Debug.Log("[NetworkWaveManager] Pronto. Aguardando início do jogo.");
-
         if (waveSettings == null)
             Debug.LogError("[NetworkWaveManager] WaveSettings não atribuído no Inspector!");
         if (spawnPoints == null || spawnPoints.Length == 0)
             Debug.LogError("[NetworkWaveManager] Nenhum SpawnPoint atribuído no Inspector!");
 
-        TryStartWavesIfGameplayAlreadyActive();
+        TryStartSpawningIfGameplayAlreadyActive();
     }
 
-    /// <summary>
-    /// Se o GameManager já estiver em Playing quando este objeto spawna (ordem de spawn NGO).
-    /// </summary>
-    private void TryStartWavesIfGameplayAlreadyActive()
+    private void TryStartSpawningIfGameplayAlreadyActive()
     {
         if (!IsServer) return;
 
-        var gm = MultiplayerGameManager.Instance;
+        MultiplayerGameManager gm = MultiplayerGameManager.Instance;
         if (gm != null && gm.CurrentState == GameState.Playing)
-            TryStartWaves();
+            TryStartSpawning();
     }
 
     public override void OnNetworkDespawn()
@@ -82,33 +91,83 @@ public class NetworkWaveManager : NetworkBehaviour
     private void HandleGameStateChanged(GameState newState)
     {
         if (newState == GameState.Playing)
-            TryStartWaves();
+            TryStartSpawning();
     }
 
-    /// <summary>
-    /// Rpc de fallback que pode ser chamado diretamente pelo lobby
-    /// sem depender da cadeia de eventos do GameState.
-    /// </summary>
     [Rpc(SendTo.Server)]
-    public void StartWavesRpc()
-    {
-        TryStartWaves();
-    }
+    public void StartWavesRpc() => TryStartSpawning();
 
-    private void TryStartWaves()
+    private void TryStartSpawning()
     {
         if (!IsServer || _hasStarted) return;
         _hasStarted = true;
-        Debug.Log("[NetworkWaveManager] Iniciando ondas!");
-        StartCoroutine(FirstWaveDelayRoutine());
+
+        switch (_spawnMode)
+        {
+            case SpawnMode.RatHoles:
+                Debug.Log("[NetworkWaveManager] Iniciando spawn por buracos.");
+                StartCoroutine(HoleSpawnLoopRoutine());
+                break;
+            case SpawnMode.SingleBoss:
+                Debug.Log("[NetworkWaveManager] Spawnando boss.");
+                StartCoroutine(SpawnBossRoutine());
+                break;
+            default:
+                Debug.Log("[NetworkWaveManager] Iniciando ondas.");
+                StartCoroutine(FirstWaveDelayRoutine());
+                break;
+        }
     }
 
     private IEnumerator FirstWaveDelayRoutine()
     {
-        float delay = waveSettings != null ? waveSettings.firstWaveDelay : 3f;
-        Debug.Log($"[NetworkWaveManager] Primeira onda em {delay}s...");
+        float delay = waveSettings != null ? waveSettings.firstWaveDelay : _firstSpawnDelay;
         yield return new WaitForSeconds(delay);
         StartCoroutine(SpawnWaveRoutine());
+    }
+
+    private IEnumerator HoleSpawnLoopRoutine()
+    {
+        yield return new WaitForSeconds(_firstSpawnDelay);
+
+        while (true)
+        {
+            if (_enemiesAlive < _maxEnemiesAlive && _holeSpawnPrefabs.Count > 0)
+            {
+                GameObject prefab = _holeSpawnPrefabs[Random.Range(0, _holeSpawnPrefabs.Count)];
+                if (prefab != null)
+                    SpawnNetworkEnemy(prefab);
+            }
+
+            BroadcastObjectiveStatusClientRpc(_enemiesAlive);
+            yield return new WaitForSeconds(_holeSpawnInterval);
+        }
+    }
+
+    private IEnumerator SpawnBossRoutine()
+    {
+        yield return new WaitForSeconds(_firstSpawnDelay);
+
+        GameObject bossPrefab = ResolveBossPrefab();
+        if (bossPrefab != null)
+            SpawnNetworkEnemy(bossPrefab, useHoleSelection: false);
+
+        BroadcastObjectiveStatusClientRpc(_enemiesAlive);
+    }
+
+    private GameObject ResolveBossPrefab()
+    {
+        if (_holeSpawnPrefabs.Count > 0)
+            return _holeSpawnPrefabs[0];
+
+        if (waveSettings == null || waveSettings.waves == null || waveSettings.waves.Count == 0)
+            return null;
+
+        WaveData wave = waveSettings.waves[0];
+        if (wave.enemies == null || wave.enemies.Count == 0)
+            return null;
+
+        return wave.enemies[0].enemyPrefab;
     }
 
     private IEnumerator SpawnWaveRoutine()
@@ -121,10 +180,9 @@ public class NetworkWaveManager : NetworkBehaviour
 
         _isSpawning = true;
         WaveData wave = waveSettings.waves[_currentWaveIndex];
-        Debug.Log($"[NetworkWaveManager] Iniciando Wave {_currentWaveIndex + 1}/{waveSettings.waves.Count}");
 
         List<GameObject> enemyPool = new List<GameObject>();
-        foreach (var enemyData in wave.enemies)
+        foreach (EnemySpawnData enemyData in wave.enemies)
         {
             for (int i = 0; i < enemyData.count; i++)
                 enemyPool.Add(enemyData.enemyPrefab);
@@ -145,15 +203,26 @@ public class NetworkWaveManager : NetworkBehaviour
         }
 
         _isSpawning = false;
-        Debug.Log($"[NetworkWaveManager] Wave {_currentWaveIndex + 1} totalmente spawnada. Inimigos vivos: {_enemiesAlive}");
     }
 
-    private void SpawnNetworkEnemy(GameObject prefab)
+    private void SpawnNetworkEnemy(GameObject prefab, bool useHoleSelection = true)
     {
-        if (!RatHoleSpawnSelectionUtility.TryPickSpawnPoint(spawnPoints, out Transform spawnPoint, out Vector3 spawnPosition))
+        Vector3 spawnPosition;
+        if (useHoleSelection)
         {
-            Debug.LogWarning("[NetworkWaveManager] Nenhum spawn point ativo disponível.");
-            return;
+            if (!RatHoleSpawnSelectionUtility.TryPickSpawnPoint(spawnPoints, out _, out spawnPosition))
+            {
+                Debug.LogWarning("[NetworkWaveManager] Nenhum spawn point ativo disponível.");
+                return;
+            }
+        }
+        else if (spawnPoints != null && spawnPoints.Length > 0 && spawnPoints[0] != null)
+        {
+            spawnPosition = spawnPoints[0].position;
+        }
+        else
+        {
+            spawnPosition = Vector3.zero;
         }
 
         GameObject enemyObj = Instantiate(prefab, spawnPosition, Quaternion.identity);
@@ -161,7 +230,7 @@ public class NetworkWaveManager : NetworkBehaviour
         NetworkObject netObj = enemyObj.GetComponent<NetworkObject>();
         if (netObj == null)
         {
-            Debug.LogError($"[NetworkWaveManager] Prefab '{prefab.name}' não tem NetworkObject! Adicione NetworkObject + NetworkEnemyController.");
+            Debug.LogError($"[NetworkWaveManager] Prefab '{prefab.name}' não tem NetworkObject.");
             Destroy(enemyObj);
             return;
         }
@@ -170,19 +239,23 @@ public class NetworkWaveManager : NetworkBehaviour
         _spawnedEnemies.Add(netObj);
         _enemiesAlive++;
 
-        Debug.Log($"[NetworkWaveManager] Inimigo spawnado: {enemyObj.name} netId={netObj.NetworkObjectId} IsSpawned={netObj.IsSpawned}");
+        if (_spawnMode == SpawnMode.Waves && waveSettings != null)
+        {
+            BroadcastWaveStatusClientRpc(
+                Mathf.Min(_currentWaveIndex + 1, waveSettings.waves.Count),
+                waveSettings.waves.Count,
+                _enemiesAlive,
+                _totalKilledInPhase);
+        }
+        else
+        {
+            BroadcastObjectiveStatusClientRpc(_enemiesAlive);
+        }
 
-        BroadcastWaveStatusClientRpc(
-            Mathf.Min(_currentWaveIndex + 1, waveSettings.waves.Count),
-            waveSettings.waves.Count,
-            _enemiesAlive,
-            _totalKilledInPhase
-        );
-
-        if (enemyObj.TryGetComponent<HealthComponent>(out var health))
+        if (enemyObj.TryGetComponent<HealthComponent>(out HealthComponent health))
             health.OnDied.AddListener(() => HandleEnemyDeath(netObj));
 
-        if (enemyObj.TryGetComponent<EnemyDropHandler>(out var dropHandler))
+        if (enemyObj.TryGetComponent<EnemyDropHandler>(out EnemyDropHandler dropHandler))
             dropHandler.SpawnDelegate = SpawnNetworkCiencia;
     }
 
@@ -195,32 +268,40 @@ public class NetworkWaveManager : NetworkBehaviour
         _totalKilledInPhase++;
         _spawnedEnemies.Remove(enemyNetObj);
 
-        BroadcastWaveStatusClientRpc(
-            Mathf.Min(_currentWaveIndex + 1, waveSettings.waves.Count),
-            waveSettings.waves.Count,
-            _enemiesAlive,
-            _totalKilledInPhase
-        );
+        if (enemyNetObj != null && enemyNetObj.GetComponent<BossEnemyMarker>() != null)
+            PhaseObjectiveManager.Instance?.NotifyBossDefeated();
 
-        if (!_isSpawning && _currentWaveIndex < waveSettings.waves.Count)
+        if (_spawnMode == SpawnMode.Waves && waveSettings != null)
         {
-            float pct = _totalEnemiesInCurrentWave > 0
-                ? 1f - ((float)_enemiesAlive / _totalEnemiesInCurrentWave)
-                : 1f;
+            BroadcastWaveStatusClientRpc(
+                Mathf.Min(_currentWaveIndex + 1, waveSettings.waves.Count),
+                waveSettings.waves.Count,
+                _enemiesAlive,
+                _totalKilledInPhase);
 
-            if (pct >= waveSettings.percentageToNextWave)
+            if (!_isSpawning && _currentWaveIndex < waveSettings.waves.Count)
             {
-                _currentWaveIndex++;
-                if (_currentWaveIndex < waveSettings.waves.Count)
-                    StartCoroutine(SpawnWaveRoutine());
+                float pct = _totalEnemiesInCurrentWave > 0
+                    ? 1f - ((float)_enemiesAlive / _totalEnemiesInCurrentWave)
+                    : 1f;
+
+                if (pct >= waveSettings.percentageToNextWave)
+                {
+                    _currentWaveIndex++;
+                    if (_currentWaveIndex < waveSettings.waves.Count)
+                        StartCoroutine(SpawnWaveRoutine());
+                }
+            }
+
+            if (_currentWaveIndex >= waveSettings.waves.Count && _enemiesAlive <= 0)
+            {
+                AllWavesClearedClientRpc();
+                GameEvents.InvokeNightEnded();
             }
         }
-
-        if (_currentWaveIndex >= waveSettings.waves.Count && _enemiesAlive <= 0)
+        else
         {
-            Debug.Log("[NetworkWaveManager] Todas as ondas eliminadas! Vitória.");
-            AllWavesClearedClientRpc();
-            GameEvents.InvokeNightEnded();
+            BroadcastObjectiveStatusClientRpc(_enemiesAlive);
         }
     }
 
@@ -251,12 +332,17 @@ public class NetworkWaveManager : NetworkBehaviour
     }
 
     [ClientRpc]
+    private void BroadcastObjectiveStatusClientRpc(int enemiesAlive)
+    {
+        PhaseObjectiveStatusUtility.BroadcastCurrentStatus(enemiesAlive);
+    }
+
+    [ClientRpc]
     private void AllWavesClearedClientRpc()
     {
         Debug.Log("[NetworkWaveManager] ClientRpc: todas as ondas eliminadas.");
     }
 
-    /// <summary>Para spawn de novas ondas (ex.: apresentação de derrota).</summary>
     public void StopSpawning()
     {
         if (!IsServer)
@@ -264,12 +350,61 @@ public class NetworkWaveManager : NetworkBehaviour
 
         StopAllCoroutines();
         _isSpawning = false;
-        Debug.Log("[NetworkWaveManager] Spawn de ondas interrompido.");
     }
 
     [Rpc(SendTo.Server)]
-    public void RequestStopSpawningRpc()
+    public void RequestStopSpawningRpc() => StopSpawning();
+
+    public void ConfigureWaveSettings(WaveSettings settings)
     {
-        StopSpawning();
+        if (settings != null)
+            waveSettings = settings;
+    }
+
+    public void ConfigureSpawnPoints(Transform[] points)
+    {
+        if (points != null && points.Length > 0)
+            spawnPoints = points;
+    }
+
+    public void ConfigurePhaseEntry(PhaseWaveSettingsCatalog.PhaseEntry entry)
+    {
+        if (entry == null)
+            return;
+
+        if (entry.waveSettings != null)
+            waveSettings = entry.waveSettings;
+
+        _holeSpawnPrefabs.Clear();
+        CollectHoleSpawnPrefabs(waveSettings);
+        _holeSpawnInterval = Mathf.Max(0.5f, entry.holeSpawnInterval);
+        _maxEnemiesAlive = Mathf.Max(1, entry.maxEnemiesAlive);
+        _firstSpawnDelay = Mathf.Max(0f, entry.firstSpawnDelay);
+
+        if (entry.winCondition == PhaseWaveSettingsCatalog.PhaseWinCondition.KillBoss)
+            _spawnMode = SpawnMode.SingleBoss;
+        else if (!entry.useWaveSpawning && entry.useHoleSpawning)
+            _spawnMode = SpawnMode.RatHoles;
+        else if (entry.useWaveSpawning)
+            _spawnMode = SpawnMode.Waves;
+        else
+            _spawnMode = SpawnMode.RatHoles;
+    }
+
+    private void CollectHoleSpawnPrefabs(WaveSettings settings)
+    {
+        if (settings == null || settings.waves == null || settings.waves.Count == 0)
+            return;
+
+        WaveData firstWave = settings.waves[0];
+        if (firstWave.enemies == null)
+            return;
+
+        for (int i = 0; i < firstWave.enemies.Count; i++)
+        {
+            GameObject prefab = firstWave.enemies[i].enemyPrefab;
+            if (prefab != null && !_holeSpawnPrefabs.Contains(prefab))
+                _holeSpawnPrefabs.Add(prefab);
+        }
     }
 }

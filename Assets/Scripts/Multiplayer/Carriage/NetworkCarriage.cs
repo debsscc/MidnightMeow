@@ -61,6 +61,16 @@ public class NetworkCarriage : NetworkBehaviour
         NetworkVariableReadPermission.Everyone,
         NetworkVariableWritePermission.Server);
 
+    private readonly NetworkVariable<float> _syncHealth = new NetworkVariable<float>(
+        0f,
+        NetworkVariableReadPermission.Everyone,
+        NetworkVariableWritePermission.Server);
+
+    private readonly NetworkVariable<float> _syncMaxHealth = new NetworkVariable<float>(
+        0f,
+        NetworkVariableReadPermission.Everyone,
+        NetworkVariableWritePermission.Server);
+
     public float PathProgress => _pathProgress.Value;
     public bool IsBroken => _isBroken.Value;
     public bool RepairActive => _repairActive.Value;
@@ -90,6 +100,52 @@ public class NetworkCarriage : NetworkBehaviour
         _health.SetAllowDestroyOnDeath(false);
         _health.OnDied.AddListener(HandleBroken);
         _health.OnHealthChanged.AddListener(HandleHealthChanged);
+        EnsureRuntimePresentation();
+    }
+
+    public void EnsureRuntimePresentation()
+    {
+        ApplyVisualScale();
+        EnsureHealthBar();
+    }
+
+    private void ApplyVisualScale()
+    {
+        if (config == null)
+            return;
+
+        Transform visual = transform.Find("Visual");
+        if (visual == null)
+        {
+            SpriteRenderer sprite = GetComponentInChildren<SpriteRenderer>();
+            if (sprite != null)
+                visual = sprite.transform;
+        }
+
+        if (visual == null)
+            return;
+
+        float scale = Mathf.Max(0.5f, config.visualScale);
+        visual.localScale = Vector3.one * scale;
+
+        if (TryGetComponent<BoxCollider2D>(out var box))
+        {
+            SpriteRenderer sr = visual.GetComponent<SpriteRenderer>();
+            if (sr != null)
+            {
+                Bounds b = sr.bounds;
+                box.size = new Vector2(b.size.x * 0.9f, b.size.y * 0.85f);
+                box.offset = transform.InverseTransformPoint(b.center);
+            }
+        }
+    }
+
+    private void EnsureHealthBar()
+    {
+        if (GetComponent<EnemyHealthBarDisplay>() != null)
+            return;
+
+        gameObject.AddComponent<EnemyHealthBarDisplay>();
     }
 
     public override void OnDestroy()
@@ -108,13 +164,58 @@ public class NetworkCarriage : NetworkBehaviour
 
     public override void OnNetworkSpawn()
     {
+        _pathProgress.OnValueChanged += HandlePathProgressChanged;
+        _syncHealth.OnValueChanged += HandleSyncedHealthChanged;
+        _syncMaxHealth.OnValueChanged += HandleSyncedMaxHealthChanged;
+
+        ApplyPathPosition();
+        ApplySyncedHealthToComponent();
+
         if (!IsServer)
             return;
 
         if (config != null)
+        {
             _health.Initialize(config.maxHealth);
+            PublishHealthToNetwork();
+        }
 
         ApplyPathPosition();
+    }
+
+    public override void OnNetworkDespawn()
+    {
+        _pathProgress.OnValueChanged -= HandlePathProgressChanged;
+        _syncHealth.OnValueChanged -= HandleSyncedHealthChanged;
+        _syncMaxHealth.OnValueChanged -= HandleSyncedMaxHealthChanged;
+        base.OnNetworkDespawn();
+    }
+
+    private void HandlePathProgressChanged(float previous, float current)
+    {
+        GameEvents.InvokeCarriagePathProgressChanged(current);
+    }
+
+    private void HandleSyncedHealthChanged(float previous, float current) => ApplySyncedHealthToComponent();
+
+    private void HandleSyncedMaxHealthChanged(float previous, float current) => ApplySyncedHealthToComponent();
+
+    private void ApplySyncedHealthToComponent()
+    {
+        if (_health == null || _syncMaxHealth.Value <= 0f)
+            return;
+
+        bool isDead = _isBroken.Value;
+        _health.ApplyNetworkMirror(_syncHealth.Value, _syncMaxHealth.Value, isDead);
+    }
+
+    private void PublishHealthToNetwork()
+    {
+        if (_health == null)
+            return;
+
+        _syncHealth.Value = _health.CurrentHealth;
+        _syncMaxHealth.Value = _health.MaxHealth;
     }
 
     private void Update()
@@ -135,7 +236,8 @@ public class NetworkCarriage : NetworkBehaviour
         _pathProgress.Value = Mathf.Clamp01(next);
         ApplyPathPosition();
 
-        GameEvents.InvokeCarriagePathProgressChanged(_pathProgress.Value);
+        if (IsServer)
+            GameEvents.InvokeCarriagePathProgressChanged(_pathProgress.Value);
 
         if (_pathProgress.Value >= 1f || Vector2.Distance(transform.position, path.ArrivalPosition) <= config.arrivalZoneRadius)
         {
@@ -187,6 +289,7 @@ public class NetworkCarriage : NetworkBehaviour
         _repairActive.Value = false;
         _repairProgress.Value = 0f;
         _health.Initialize(config.maxHealth * 0.5f);
+        PublishHealthToNetwork();
     }
 
     private void HandleBroken()
@@ -197,10 +300,14 @@ public class NetworkCarriage : NetworkBehaviour
         _isBroken.Value = true;
         _repairActive.Value = false;
         _repairProgress.Value = 0f;
+        PublishHealthToNetwork();
     }
 
     private void HandleHealthChanged(float current, float max)
     {
+        if (IsServer)
+            PublishHealthToNetwork();
+
         if (!IsServer || _isBroken.Value)
             return;
 

@@ -1,6 +1,6 @@
 # Erros e avisos comuns
 
-Última revisão: 2026-06-19
+Última revisão: 2026-06-25
 
 Referência rápida para mensagens frequentes no Console do Unity / compilador C# neste projeto.
 
@@ -74,7 +74,7 @@ warning CS0618: 'TMP_Text.enableWordWrapping' is obsolete. Please use the textWr
 | `tmp.enableWordWrapping = true` | `tmp.textWrappingMode = TextWrappingModes.Normal` |
 | `tmp.enableWordWrapping = false` | `tmp.textWrappingMode = TextWrappingModes.NoWrap` |
 
-**Exemplo no projeto:** `CreditsOverlayController` (corpo dos créditos).
+**Exemplo no projeto:** `CreditsOverlayController` (corpo dos créditos), `RatHoleSealPromptUI`, `RatHoleSealStatusUI`.
 
 ---
 
@@ -99,7 +99,54 @@ _canvas.transform.position = anchor + offset;
 
 Alternativa: manter tudo em 2D com `Vector2` e atribuir com `new Vector3(pos.x, pos.y, transform.position.z)`.
 
-**Exemplo no projeto:** `RatHoleSealPromptUI` (prompt acima do buraco).
+**Exemplo no projeto:** `RatHoleSealPromptUI`, `RatHoleSealStatusUI` (`(Vector3)hole.AnchorPosition + offset`).
+
+### CS0103 — nome não existe no contexto atual
+
+**Mensagem típica:**
+
+```
+error CS0103: The name '_hole' does not exist in the current context
+```
+
+**Causa:** variável ou campo com nome errado — por exemplo, copiar código de `RatHoleSealStatusUI` (que usa o campo `_hole`) para `RatHoleSealPromptUI`, onde o buraco é uma variável local `hole` em `LateUpdate`.
+
+**Solução:** usar o identificador correto no escopo:
+
+```csharp
+// RatHoleSealPromptUI — variável local
+RatHoleSpawnPoint hole = _interaction?.CurrentTargetHole;
+_canvas.transform.position = (Vector3)hole.AnchorPosition + offset;
+
+// RatHoleSealStatusUI — campo de instância
+_canvas.transform.position = (Vector3)_hole.AnchorPosition + offset;
+```
+
+**Exemplo no projeto:** `RatHoleSealPromptUI.cs` (variável local `hole` vs campo `_hole`), `EnemyHealthBarDisplay.cs` (campo `sortingOrder` removido acidentalmente mas ainda usado em `BuildBar`).
+
+---
+
+## TextMesh Pro (UI world-space selamento)
+
+### CS0618 — `enableWordWrapping` em `RatHoleSealPromptUI` / `RatHoleSealStatusUI`
+
+Mesma regra da secção [TMP_Text.enableWordWrapping](#cs0618---tmp_textenablewordwrapping-is-obsolete) acima: usar `textWrappingMode = TextWrappingModes.NoWrap` em prompts de uma linha no world-space.
+
+---
+
+## Zonas de selamento invisíveis (world-space)
+
+### Sintoma: mecânica funciona (progresso sobe) mas o círculo não aparece
+
+**Causa:** `Sprite.Create` com `Rect(0,0,1,1)` e **pixelsPerUnit padrão (100)** gera sprite de ~0,01 uu — invisível mesmo com `localScale` alto.
+
+**Correção:** usar `CooperativeZoneSpriteFactory.GetUnitQuadSprite()` (ppu = largura da textura) ou `SealZoneRingVisual` com sprites procedurais. Tamanho visual: `RatHoleSealConfig.GetZoneVisualDiameter()` (`zoneVisualScaleMultiplier` não altera a hitbox).
+
+**Pipeline:** `RequestStartSealRpc` → `NetworkList` sessão `IsActive` → `NotifySealZoneVisualClientRpc` + `RatHoleSealZoneVisual.ShowSession` → objetos em `_GameLoop/SealZoneVisuals/SealZonePool/SealZone_{holeId}_{n}`.
+
+**Hierarquia:** não procurar sob o buraco — zonas ficam sob **`---- Sistemas ----/_GameLoop/SealZoneVisuals`**. Pool pré-criado (inativo até selar); ativo enquanto `IsActive` (até selar ou `abandonTimeout` sem jogador na área).
+
+**Ordem de desenho:** `zoneSortingOrder` 250 (buracos/mapa ~0–16); Z = -2 nas zonas.
 
 ---
 
@@ -160,6 +207,86 @@ margin = halfViewport * (1 - edgeDeadZone * 2)
 |----------|-------------|---------------|
 | `DissolveSprite` | `_DissolveAmount` | 0 visível → 1 sumido |
 | VOiD1 Graph | `Vector1_51DDBE76` | 0 visível → 50 sumido |
+
+---
+
+## Unity — GUID inválido em `.meta` / referências YAML
+
+### Sintoma
+
+```
+Could not extract GUID in text file Assets/.../Fase3.asset at line ...
+Broken text PPtr. GUID 00000000000000000000000000000000 fileID ... is invalid!
+```
+
+### Causa
+
+GUIDs no Unity têm **exatamente 32 caracteres hexadecimais** (0–9, a–f). Um `.meta` com 31 ou 33 caracteres quebra referências em SOs, prefabs e `DefaultNetworkPrefabs.asset`.
+
+**Exemplo no projeto (2026-06-25):** `Rato_Boss.prefab.meta` foi criado manualmente com GUID de 31 ou 33 caracteres — inválido. GUID correto: `b8c9d0e1f2a34567901234567890abcd` (32 chars). Valide com `len(guid) == 32` antes de commitar.
+
+### Solução
+
+1. Corrija o `guid:` no `.meta` do asset (32 caracteres).
+2. Atualize todas as referências `{fileID: ..., guid: ..., type: 3}` nos YAML que apontam para esse asset.
+3. No Editor: clique direito na pasta → **Reimport**, ou reinicie o Unity.
+
+**Não** invente GUIDs à mão sem contar os 32 caracteres; prefira deixar o Unity gerar ao criar o asset pelo Editor, ou copie o GUID de um `.meta` existente válido.
+
+---
+
+## C# — variável `out` não atribuída com `?.`
+
+### CS0165 — Use of unassigned local variable
+
+**Causa:** `catalog?.TryGetEntry(scene.name, out entry)` não atribui `entry` quando `catalog` é `null`.
+
+**Solução:**
+
+```csharp
+PhaseEntry entry = null;
+if (catalog != null)
+    catalog.TryGetEntry(scene.name, out entry);
+```
+
+**Exemplo no projeto:** `PhaseSceneSetupEditor.SetupScene`.
+
+---
+
+## C# — CS0414 campo serializado não usado
+
+### warning CS0414 — field is assigned but never used
+
+**Causa:** campo `[SerializeField]` deixado de ser lido após refatoração (ex.: `gameplaySceneName` substituído por `GameplaySceneBootstrap.IsGameplayScene`).
+
+**Solução:** reutilizar o campo como fallback para cenas legadas (`Game`, `Gameplay`) ou remover se não houver prefabs que dependam dele.
+
+**Exemplo no projeto:** `MultiplayerGameManager.IsActiveGameplayScene`, `MultiplayerBootstrapper.IsActiveGameplayScene`.
+
+**Exemplo no projeto:** `RatHoleSpawnPoint.Reset` durante `Undo.AddComponent` no `PhaseSceneSetupEditor` — adicionar `CircleCollider2D` **antes** do `RatHoleSpawnPoint` e usar null-check em `EnsureTriggerCollider`.
+
+---
+
+## Editor — MissingComponentException ao rodar Phase Setup
+
+### Sintoma
+
+```
+MissingComponentException: There is no 'CircleCollider2D' attached to the "SP1" game object
+RatHoleSpawnPoint.Reset () 
+UnityEditor.Undo:AddComponent
+PhaseSceneSetupEditor:InstallRatHoleSpawnPoints
+```
+
+### Causa
+
+`Undo.AddComponent<RatHoleSpawnPoint>` dispara `Reset()` antes do collider existir; `AddComponent<CircleCollider2D>()` dentro de `Reset` pode falhar nesse contexto.
+
+### Solução
+
+1. Em `RatHoleSpawnPoint`, usar `EnsureTriggerCollider()` com null-check.
+2. No `PhaseSceneSetupEditor`, adicionar `CircleCollider2D` **antes** de `RatHoleSpawnPoint`.
+3. Ignorar spawn points de jogador (`---- Spawn Points Jogadores ----`).
 
 ---
 

@@ -181,7 +181,7 @@ public class CharactersScreenController : MonoBehaviour
             }
 
             LobbySelectionStore.CaptureSinglePlayer(selected);
-            ApplySinglePlayerContractScene();
+            ContractSceneResolver.ApplyToSession(ContractSceneResolver.ResolveActiveContractIndex());
             ScreenFlowStateMachine.BeginGameplayLoading();
             return;
         }
@@ -200,21 +200,7 @@ public class CharactersScreenController : MonoBehaviour
 
     private void ApplySinglePlayerContractScene()
     {
-        SaveProfileStore save = SaveProfileStore.Instance;
-        int index = save?.Active?.selectedContractIndex ?? -1;
-        string sceneName = "Fase-1";
-
-        ContractDefinition[] contracts = Resources.FindObjectsOfTypeAll<ContractDefinition>();
-        for (int i = 0; i < contracts.Length; i++)
-        {
-            if (contracts[i] != null && contracts[i].name == $"Contract_{index + 1}")
-            {
-                sceneName = contracts[i].gameplaySceneName;
-                break;
-            }
-        }
-
-        GameSessionContext.ActiveGameplaySceneName = sceneName;
+        ContractSceneResolver.ApplyToSession(ContractSceneResolver.ResolveActiveContractIndex());
     }
 
     private void OnCharacterSelect(LobbyCharacterType type)
@@ -442,6 +428,11 @@ public class CharactersScreenController : MonoBehaviour
         {
             if (LobbySelectionStore.TryGetCharacter(0, out LobbyCharacterType selected))
                 return selected;
+
+            SaveProfileStore save = SaveProfileStore.Instance;
+            if (save != null)
+                return save.GetSelectedCharacter();
+
             return LobbyCharacterType.Default;
         }
 

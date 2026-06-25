@@ -187,10 +187,12 @@ public class SaveProfileStore : MonoBehaviour
         if (_active == null)
             return;
 
+        _active.lastSelectedCharacter = type;
+
         if (type == LobbyCharacterType.CharacterB)
-            _active.cora.characterType = type;
+            _active.cora.characterType = LobbyCharacterType.CharacterB;
         else if (type == LobbyCharacterType.CharacterA)
-            _active.nix.characterType = type;
+            _active.nix.characterType = LobbyCharacterType.CharacterA;
 
         SaveActive();
     }
@@ -227,6 +229,24 @@ public class SaveProfileStore : MonoBehaviour
         saved.ability1Tier = state.ability1Tier;
         saved.ability2Tier = state.ability2Tier;
         SaveActive();
+    }
+
+    public void MarkActiveContractCompleted()
+    {
+        int index = ResolveActiveContractIndex();
+        if (_active == null || index < 0)
+            return;
+
+        _active.MarkContractCompleted(index);
+        SaveActive();
+    }
+
+    public int ResolveActiveContractIndex()
+    {
+        if (GameSessionContext.ActiveContractIndex >= 0)
+            return GameSessionContext.ActiveContractIndex;
+
+        return _active?.selectedContractIndex ?? -1;
     }
 
     private static GameSaveData CreateFresh(int slot)

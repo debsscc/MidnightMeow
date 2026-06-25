@@ -36,7 +36,22 @@ public class RatHoleSealConfig : ScriptableObject
     public float abandonTimeout = 2.5f;
 
     [Header("Visual")]
-    public Color zoneBackgroundColor = new Color(0.45f, 0.65f, 1f, 0.22f);
-    public Color zoneFillColor = new Color(0.55f, 0.85f, 1f, 0.5f);
-    public Color zoneOutlineColor = new Color(0.9f, 0.95f, 1f, 0.9f);
+    [Tooltip("Multiplicador só do desenho (1 = mesmo tamanho da hitbox).")]
+    public float zoneVisualScaleMultiplier = 1.05f;
+
+    [Tooltip("Espessura do anel externo (fração do raio, ex. 0.05 = fino).")]
+    [Range(0.02f, 0.15f)]
+    public float zoneOutlineThickness = 0.055f;
+
+    [Tooltip("Preencher o interior com cor de fundo (além do anel).")]
+    public bool zoneShowInteriorFill;
+
+    public Color zoneBackgroundColor = new Color(0.25f, 0.6f, 1f, 0.28f);
+    public Color zoneFillColor = new Color(0.2f, 0.95f, 0.5f, 0.75f);
+    public Color zoneOutlineColor = new Color(1f, 1f, 1f, 0.95f);
+    [Tooltip("Sorting order do sprite (acima do chão, buracos e decoração).")]
+    public int zoneSortingOrder = 250;
+
+    public float GetZoneVisualDiameter() =>
+        Mathf.Max(0.5f, zoneRadius * 2f * Mathf.Max(0.85f, zoneVisualScaleMultiplier));
 }

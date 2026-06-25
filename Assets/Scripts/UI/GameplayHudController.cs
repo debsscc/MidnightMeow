@@ -15,8 +15,11 @@ public class GameplayHudController : MonoBehaviour
     public const string FeedbackLayerName = "FeedbackHudLayer";
     public const string IndicatorsLayerName = "IndicatorsHudLayer";
 
+    public const string ObjectiveLayerName = "ObjectiveHudLayer";
+
     [Header("Widgets (opcional — cena/prefab)")]
     [SerializeField] private HordeIndicator waveIndicator;
+    [SerializeField] private PhaseObjectiveHud phaseObjectiveHud;
     [SerializeField] private PlayerAbilityHud abilityHud;
     [SerializeField] private PlaytestFeedbackButton feedbackButton;
 
@@ -43,6 +46,7 @@ public class GameplayHudController : MonoBehaviour
             visualTheme = Resources.Load<ScreenVisualTheme>("DefaultScreenVisualTheme");
 
         EnsureWaveIndicator();
+        EnsurePhaseObjectiveHud();
         EnsureAbilityHud(visualTheme != null ? visualTheme.abilityHudTheme : null);
         DisableOffscreenIndicators();
         EnsureFeedbackButton();
@@ -96,16 +100,57 @@ public class GameplayHudController : MonoBehaviour
         if (waveIndicator == null)
             waveIndicator = GetComponentInChildren<HordeIndicator>(true);
 
+        PhaseWaveSettingsCatalog catalog = PhaseWaveSettingsCatalog.LoadCached();
+        string sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+        bool useObjectiveHud = catalog != null &&
+                               catalog.TryGetEntry(sceneName, out PhaseWaveSettingsCatalog.PhaseEntry entry) &&
+                               !entry.useWaveSpawning;
+
         if (waveIndicator != null)
         {
-            waveIndicator.EnsureConfigured();
+            waveIndicator.gameObject.SetActive(!useObjectiveHud);
+            if (!useObjectiveHud)
+                waveIndicator.EnsureConfigured();
             return;
         }
+
+        if (useObjectiveHud)
+            return;
 
         GameObject go = new GameObject("HordeIndicator", typeof(RectTransform), typeof(HordeIndicator));
         go.transform.SetParent(GetLayer(WaveLayerName), false);
         waveIndicator = go.GetComponent<HordeIndicator>();
         waveIndicator.EnsureConfigured();
+    }
+
+    private void EnsurePhaseObjectiveHud()
+    {
+        if (phaseObjectiveHud == null)
+            phaseObjectiveHud = GetComponentInChildren<PhaseObjectiveHud>(true);
+
+        PhaseWaveSettingsCatalog catalog = PhaseWaveSettingsCatalog.LoadCached();
+        string sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+        bool useObjectiveHud = catalog == null ||
+                               !catalog.TryGetEntry(sceneName, out PhaseWaveSettingsCatalog.PhaseEntry entry) ||
+                               !entry.useWaveSpawning;
+
+        if (!useObjectiveHud)
+        {
+            if (phaseObjectiveHud != null)
+                phaseObjectiveHud.gameObject.SetActive(false);
+            return;
+        }
+
+        if (phaseObjectiveHud != null)
+        {
+            phaseObjectiveHud.EnsureConfigured();
+            return;
+        }
+
+        GameObject go = new GameObject("PhaseObjectiveHud", typeof(RectTransform), typeof(PhaseObjectiveHud));
+        go.transform.SetParent(GetLayer(ObjectiveLayerName), false);
+        phaseObjectiveHud = go.GetComponent<PhaseObjectiveHud>();
+        phaseObjectiveHud.EnsureConfigured();
     }
 
     private void EnsureAbilityHud(PlayerAbilityHudTheme theme)

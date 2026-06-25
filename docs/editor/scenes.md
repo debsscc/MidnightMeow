@@ -1,6 +1,6 @@
 # Cenas
 
-Última revisão: 2026-06-10
+Última revisão: 2026-06-25
 
 ## EventSystem
 
@@ -9,6 +9,8 @@ Cenas de UI (Menu2, Lobby, Loading, Preparation, Characters) e Fase-1 mantêm um
 Clientes em rotas `NetcodeHost` aguardam a cena via `NetworkSceneSyncUtility` (NGO Scene Management do host) — não carregam localmente.
 
 Gameplay: `GameplayPrefabCatalog` em `Resources/` instancia `MultiplayerCameraRig` se a Fase-* carregar sem o rig. Jogadores só spawnam em cenas `Fase-*` (após `SynchronizeComplete`).
+
+**Setup de fases (MP + mecânicas):** menu **MidnightMeow → Phases → Setup All Phase Scenes**. Ver [phases-implementation.md](../todo/phases-implementation.md).
 
 ## Bootstrap e fluxo
 
@@ -24,8 +26,9 @@ Gameplay: `GameplayPrefabCatalog` em `Resources/` instancia `MultiplayerCameraRi
 | Loading 2         | `Assets/Scenes/UI/Loading2.unity`                   | Transição para gameplay                 |
 | Jogo (UI wrapper) | `Assets/Scenes/UI/Game.unity`                       | Fluxo de partida com UI                 |
 | Game (legado?)    | `Assets/Scenes/Game.unity`                          | Verificar Build Settings antes de usar  |
-| Fase 1            | `Assets/Scenes/Fases/Fase-1.unity`                  | Level principal                         |
-| Fase 2            | `Assets/Scenes/Fases/Fase-2.unity`                  | Segundo level                           |
+| Fase 1            | `Assets/Scenes/Fases/Fase-1.unity`                  | Ondas + selamento de buracos              |
+| Fase 2            | `Assets/Scenes/Fases/Fase-2.unity`                  | Ondas + selamento + carruagem horizontal. **Sem** prefabs Cora/Nixie na hierarquia — jogador só via `PlayerSpawnManager`. |
+| Fase 3            | `Assets/Scenes/Fases/Fase-3.unity`                  | Boss (`Rato_Boss`)                        |
 | Game Over         | `Assets/Scenes/UI/GameOver.unity`                   | `EndGameScreenController` — derrota (Continuar / Sair) |
 | Vitória           | `Assets/Scenes/UI/VictoryScene.unity`               | `EndGameScreenController` — vitória (Continuar / Sair) |
 

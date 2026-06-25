@@ -58,35 +58,16 @@ public class PreparationScreenController : MonoBehaviour
 
     private void ResolveContracts()
     {
-        if (contracts != null && contracts.Length >= ContractCount && contracts[0] != null)
-            return;
+        if (contracts == null || contracts.Length < ContractCount)
+            contracts = new ContractDefinition[ContractCount];
 
-        contracts = new ContractDefinition[ContractCount];
-        contracts[0] = FindContractAsset("Contract_1");
-        contracts[1] = FindContractAsset("Contract_2");
-        contracts[2] = FindContractAsset("Contract_3");
-
-        for (int i = 0; i < ContractCount; i++)
-        {
-            if (contracts[i] != null)
-                continue;
-
-            contracts[i] = ScriptableObject.CreateInstance<ContractDefinition>();
-            contracts[i].displayName = $"Contrato {i + 1}";
-            contracts[i].description = i == 0 ? "Fase inicial." : "Bloqueado por enquanto.";
-        }
+        ContractSceneResolver.FillMissingSlots(contracts);
     }
 
     private static ContractDefinition FindContractAsset(string assetName)
     {
-        ContractDefinition[] loaded = Resources.FindObjectsOfTypeAll<ContractDefinition>();
-        for (int i = 0; i < loaded.Length; i++)
-        {
-            if (loaded[i] != null && loaded[i].name == assetName)
-                return loaded[i];
-        }
-
-        return null;
+        return ContractSceneResolver.ResolveContract(
+            assetName == "Contract_1" ? 0 : assetName == "Contract_2" ? 1 : assetName == "Contract_3" ? 2 : -1);
     }
 
     public void RefreshFromHubNavigation()
@@ -177,12 +158,16 @@ public class PreparationScreenController : MonoBehaviour
             if (contractButtons[i] == null)
                 continue;
 
-            contractButtons[i].interactable = index == 0;
+            contractButtons[i].interactable = IsContractUnlocked(index) && IsLocalHost();
             contractButtons[i].onClick.AddListener(() =>
             {
-                if (index > 0)
-                    ShowFeedback("Este contrato está bloqueado por enquanto.");
-                else if (!IsLocalHost())
+                if (!IsContractUnlocked(index))
+                {
+                    ShowFeedback(ContractProgressionUtility.GetLockedReason(index, SaveProfileStore.Instance?.Active));
+                    return;
+                }
+
+                if (!IsLocalHost())
                     ShowFeedback("Apenas o host pode escolher o contrato.");
                 else
                     SelectContract(index);
@@ -225,6 +210,7 @@ public class PreparationScreenController : MonoBehaviour
                 return;
             }
 
+            ContractSceneResolver.ApplyToSession(_localSelectedContract);
             ScreenFlowStateMachine.OpenCharactersFromPreparation();
             RefreshView();
             return;
@@ -277,7 +263,7 @@ public class PreparationScreenController : MonoBehaviour
 
     private void SelectContract(int index)
     {
-        if (index > 0 || !IsLocalHost())
+        if (!IsContractUnlocked(index) || !IsLocalHost())
             return;
 
         _localSelectedContract = index;
@@ -306,6 +292,8 @@ public class PreparationScreenController : MonoBehaviour
             save.Active.selectedContractIndex = index;
             save.SaveActive();
         }
+
+        ContractSceneResolver.ApplyToSession(index);
 
         string gameplayScene = contracts != null && index >= 0 && index < contracts.Length && contracts[index] != null
             ? contracts[index].gameplaySceneName
@@ -371,11 +359,13 @@ public class PreparationScreenController : MonoBehaviour
 
     private void ApplyContractScene(int index)
     {
-        string sceneName = "Fase-1";
-        if (contracts != null && index >= 0 && index < contracts.Length && contracts[index] != null)
-            sceneName = contracts[index].gameplaySceneName;
+        ContractSceneResolver.ApplyToSession(index);
+    }
 
-        GameSessionContext.ActiveGameplaySceneName = sceneName;
+    private static bool IsContractUnlocked(int index)
+    {
+        SaveProfileStore save = SaveProfileStore.Instance;
+        return ContractProgressionUtility.IsContractUnlocked(index, save?.Active);
     }
 
     private void ShowTooltip(int index)
@@ -385,15 +375,14 @@ public class PreparationScreenController : MonoBehaviour
 
         PositionTooltipBelowContract(index);
 
-        if (index > 0)
+        if (!IsContractUnlocked(index))
         {
-            tooltipText.text = $"{contracts[index].displayName}\n\nBloqueado por enquanto.";
+            tooltipText.text = $"{contracts[index].displayName}\n\n{ContractProgressionUtility.GetLockedReason(index, SaveProfileStore.Instance?.Active)}";
             return;
         }
 
         ContractDefinition contract = contracts[index];
-        tooltipText.text =
-            $"{contract.displayName}\nDificuldade: {contract.difficulty}/5\nRecompensa: {contract.magiculaReward} magículas\n\n{contract.description}";
+        tooltipText.text = contract.description;
     }
 
     private void PositionTooltipBelowContract(int index)
@@ -558,12 +547,15 @@ public class PreparationScreenController : MonoBehaviour
             if (label == null)
                 continue;
 
-            if (i == 0)
-                label.text = contracts != null && contracts[0] != null
-                    ? contracts[0].displayName
-                    : "Contrato 1";
+            if (contracts != null && i < contracts.Length && contracts[i] != null)
+            {
+                bool unlocked = IsContractUnlocked(i);
+                label.text = unlocked
+                    ? contracts[i].displayName
+                    : $"{contracts[i].displayName}\n(bloqueado)";
+            }
             else
-                label.text = $"Contrato {i + 1}\n(bloqueado)";
+                label.text = IsContractUnlocked(i) ? $"Contrato {i + 1}" : $"Contrato {i + 1}\n(bloqueado)";
         }
     }
 
@@ -587,7 +579,7 @@ public class PreparationScreenController : MonoBehaviour
 
             if (i == index)
                 image.color = selected;
-            else if (i > 0)
+            else if (!IsContractUnlocked(i))
                 image.color = locked;
             else
                 image.color = normal;

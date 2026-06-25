@@ -12,12 +12,13 @@ public class EnemyHealthBarDisplay : MonoBehaviour
     [SerializeField] private bool buildIfMissing = true;
     [SerializeField] private Sprite backgroundSprite;
     [SerializeField] private Sprite fillSprite;
-    [SerializeField] private float verticalOffset = 0.15f;
-    [SerializeField] private float widthPadding = 0.08f;
-    [SerializeField] private float barHeight = 0.08f;
+    [SerializeField] private float verticalOffset = 0.25f;
+    [SerializeField] private float widthPadding = 0.12f;
+    [SerializeField] private float barHeight = 0.18f;
     [SerializeField] private Color backgroundColor = new(0.12f, 0.12f, 0.12f, 0.9f);
     [SerializeField] private Color fillColor = new(0.85f, 0.2f, 0.2f, 0.95f);
-    [SerializeField] private bool hideWhenFull = true;
+    [SerializeField] private bool hideWhenFull = false;
+    [SerializeField] private int sortingOrder = 200;
 
     private HealthComponent _health;
     private Transform _barRoot;
@@ -27,11 +28,28 @@ public class EnemyHealthBarDisplay : MonoBehaviour
     private void Awake()
     {
         _health = GetComponent<HealthComponent>();
+        ApplyBossOverrides();
+
         if (buildIfMissing && _barRoot == null)
             BuildBar();
 
-        _health.OnHealthChanged.AddListener(HandleHealthChanged);
-        _health.OnDied.AddListener(HandleDied);
+        if (_health != null)
+        {
+            _health.OnHealthChanged.AddListener(HandleHealthChanged);
+            _health.OnDied.AddListener(HandleDied);
+        }
+    }
+
+    private void ApplyBossOverrides()
+    {
+        BossEnemyMarker boss = GetComponent<BossEnemyMarker>();
+        if (boss == null)
+            return;
+
+        hideWhenFull = false;
+        barHeight *= boss.HealthBarHeightMultiplier;
+        widthPadding *= boss.HealthBarWidthMultiplier;
+        verticalOffset *= 1.15f;
     }
 
     private void OnDestroy()
@@ -45,7 +63,8 @@ public class EnemyHealthBarDisplay : MonoBehaviour
 
     private void Start()
     {
-        HandleHealthChanged(_health.CurrentHealth, _health.MaxHealth);
+        if (_health != null)
+            HandleHealthChanged(_health.CurrentHealth, _health.MaxHealth);
     }
 
     private void LateUpdate()
@@ -58,7 +77,7 @@ public class EnemyHealthBarDisplay : MonoBehaviour
             worldUp = Camera.main.transform.up;
 
         _barRoot.rotation = Quaternion.identity;
-        _barRoot.position = GetAnchorPosition() + worldUp * verticalOffset;
+        _barRoot.position = GetAnchorPosition() + worldUp * GetVerticalOffset();
     }
 
     private Vector3 GetAnchorPosition()
@@ -68,6 +87,15 @@ public class EnemyHealthBarDisplay : MonoBehaviour
             return sprite.bounds.center;
 
         return transform.position;
+    }
+
+    private float GetVerticalOffset()
+    {
+        SpriteRenderer sprite = GetComponentInChildren<SpriteRenderer>();
+        if (sprite != null && sprite.sprite != null)
+            return sprite.bounds.extents.y + verticalOffset;
+
+        return verticalOffset;
     }
 
     private void HandleHealthChanged(float current, float max)
@@ -91,9 +119,9 @@ public class EnemyHealthBarDisplay : MonoBehaviour
     private void BuildBar()
     {
         SpriteRenderer sprite = GetComponentInChildren<SpriteRenderer>();
-        _barWidth = 0.8f;
+        _barWidth = 1f;
         if (sprite != null && sprite.sprite != null)
-            _barWidth = Mathf.Max(0.4f, sprite.bounds.size.x + widthPadding);
+            _barWidth = Mathf.Max(0.65f, sprite.bounds.size.x + widthPadding);
 
         GameObject root = new GameObject("HealthBar", typeof(RectTransform));
         root.transform.SetParent(transform, false);
@@ -101,11 +129,12 @@ public class EnemyHealthBarDisplay : MonoBehaviour
 
         Canvas canvas = root.AddComponent<Canvas>();
         canvas.renderMode = RenderMode.WorldSpace;
-        canvas.sortingOrder = 50;
+        canvas.sortingOrder = sortingOrder;
 
         RectTransform canvasRt = root.GetComponent<RectTransform>();
         canvasRt.sizeDelta = new Vector2(_barWidth, barHeight);
-        canvasRt.localScale = Vector3.one * 0.01f;
+        canvasRt.localScale = Vector3.one;
+        canvasRt.pivot = new Vector2(0.5f, 0.5f);
 
         GameObject background = CreateBarImage("Background", root.transform, backgroundSprite, backgroundColor);
         Stretch(background.GetComponent<RectTransform>());

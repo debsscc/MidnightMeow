@@ -216,6 +216,8 @@ public class PlayerSpawnManager : NetworkBehaviour
         if (!IsGameplaySceneLoaded())
             yield break;
 
+        GameplayScenePlayerCleanup.RemoveOrphanScenePlayers();
+
         foreach (ulong clientId in NetworkManager.ConnectedClientsIds)
         {
             if (!NetworkManager.ConnectedClients.TryGetValue(clientId, out var clientData))
@@ -310,6 +312,9 @@ public class PlayerSpawnManager : NetworkBehaviour
         if (!IsServer) return;
         if (!IsGameplaySceneLoaded())
             return;
+
+        GameplayScenePlayerCleanup.RemoveOrphanScenePlayers();
+        DespawnExistingPlayerForClient(clientId);
 
         if (_spawnedPlayers.ContainsKey(clientId))
         {
@@ -472,12 +477,36 @@ public class PlayerSpawnManager : NetworkBehaviour
         {
             selectedType = playerState.CharacterType;
         }
+        else if (GameSessionContext.IsSinglePlayer)
+        {
+            SaveProfileStore save = SaveProfileStore.Instance;
+            if (save != null)
+                selectedType = save.GetSelectedCharacter();
+        }
 
         GameObject resolved = ResolveCharacterPrefab(selectedType);
         if (resolved != null)
             return resolved;
 
         return playerNetworkPrefab;
+    }
+
+    private void DespawnExistingPlayerForClient(ulong clientId)
+    {
+        if (NetworkManager == null || !NetworkManager.ConnectedClients.TryGetValue(clientId, out NetworkClient clientData))
+            return;
+
+        NetworkObject existing = clientData.PlayerObject;
+        if (existing == null || !existing.IsSpawned)
+            return;
+
+        if (enableDiagnosticsLogs)
+        {
+            Debug.Log($"[PlayerSpawnManager][DIAG] Despawnando PlayerObject duplicado para ClientId={clientId} ({existing.name}).");
+        }
+
+        existing.Despawn(true);
+        _spawnedPlayers.Remove(clientId);
     }
 
     private GameObject ResolveCharacterPrefab(LobbyCharacterType selectedType)

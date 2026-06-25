@@ -36,6 +36,13 @@ Documentação para desenvolvedores e **agentes de IA** que trabalham neste proj
 
 - [Reviver por zona](multiplayer/revive-zone.md) — área ao redor do jogador caído (sem botão Interact)
 
+### Gameplay (fases)
+
+- [Selamento de buracos](gameplay/rat-hole-sealing.md)
+- [Carruagem (Fase 2)](gameplay/carriage.md)
+- [Boss (Fase 3)](gameplay/boss-phase.md)
+- [Plano de implementação Fases 1–3](todo/phases-implementation.md)
+
 ### Editor (para agentes sem acesso ao Unity)
 
 - [Contexto do projeto](editor/project-context.md) — Tags, layers, pacotes

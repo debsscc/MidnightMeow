@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
@@ -14,8 +15,15 @@ public class NetworkRatHoleSealManager : NetworkBehaviour
     [SerializeField] private RatHoleSealConfig config;
 
     private readonly NetworkList<RatHoleSealSession> _sessions = new NetworkList<RatHoleSealSession>();
+    private Coroutine _refreshSessionsRoutine;
 
     public RatHoleSealConfig Config => config;
+
+    public void ConfigureSealConfig(RatHoleSealConfig sealConfig)
+    {
+        if (sealConfig != null)
+            config = sealConfig;
+    }
 
     private void Awake()
     {
@@ -26,6 +34,9 @@ public class NetworkRatHoleSealManager : NetworkBehaviour
         }
 
         Instance = this;
+        if (config == null)
+            config = Resources.Load<RatHoleSealConfig>("RatHoleSealConfig");
+
         if (config == null)
         {
             config = ScriptableObject.CreateInstance<RatHoleSealConfig>();
@@ -42,10 +53,38 @@ public class NetworkRatHoleSealManager : NetworkBehaviour
 
     public override void OnNetworkSpawn()
     {
+        _sessions.OnListChanged += HandleSessionsListChanged;
+        RatHoleSealZoneVisual.EnsureAttached(this);
+
         if (!IsServer)
             return;
 
         EnsureSessionsForSceneHoles();
+        _refreshSessionsRoutine = StartCoroutine(RefreshSessionsWhenHolesReadyRoutine());
+    }
+
+    public override void OnNetworkDespawn()
+    {
+        _sessions.OnListChanged -= HandleSessionsListChanged;
+
+        if (_refreshSessionsRoutine != null)
+        {
+            StopCoroutine(_refreshSessionsRoutine);
+            _refreshSessionsRoutine = null;
+        }
+    }
+
+    private IEnumerator RefreshSessionsWhenHolesReadyRoutine()
+    {
+        for (int attempt = 0; attempt < 40; attempt++)
+        {
+            EnsureSessionsForSceneHoles();
+
+            if (RatHoleSpawnPoint.All.Count > 0 && _sessions.Count >= RatHoleSpawnPoint.All.Count)
+                yield break;
+
+            yield return new WaitForSeconds(0.25f);
+        }
     }
 
     private void Update()
@@ -53,13 +92,52 @@ public class NetworkRatHoleSealManager : NetworkBehaviour
         if (!IsServer || !IsSpawned || config == null)
             return;
 
+        bool objectiveDirty = false;
+
         for (int i = 0; i < _sessions.Count; i++)
         {
-            RatHoleSealSession session = _sessions[i];
+            RatHoleSealSession before = _sessions[i];
+            RatHoleSealSession session = before;
             RatHoleSealZoneSystem.TickSession(ref session, config, Time.deltaTime);
-            if (!session.Equals(_sessions[i]))
-                _sessions[i] = session;
+
+            if (session.Equals(before))
+                continue;
+
+            if (!before.IsSealed && session.IsSealed)
+                objectiveDirty = true;
+
+            _sessions[i] = session;
         }
+
+        if (objectiveDirty)
+            BroadcastObjectiveStatus();
+    }
+
+    private void HandleSessionsListChanged(NetworkListEvent<RatHoleSealSession> changeEvent)
+    {
+        if (IsServer)
+        {
+            BroadcastObjectiveStatus();
+            return;
+        }
+
+        PhaseObjectiveStatusUtility.BroadcastCurrentStatus(PhaseObjectiveStatusUtility.CountAliveNetworkEnemies());
+    }
+
+    private void BroadcastObjectiveStatus()
+    {
+        int alive = PhaseObjectiveStatusUtility.CountAliveNetworkEnemies();
+        PhaseObjectiveStatusUtility.BroadcastCurrentStatus(alive);
+        NotifyObjectiveStatusClientRpc(alive);
+    }
+
+    [ClientRpc]
+    private void NotifyObjectiveStatusClientRpc(int enemiesAlive)
+    {
+        if (IsServer)
+            return;
+
+        PhaseObjectiveStatusUtility.BroadcastCurrentStatus(enemiesAlive);
     }
 
     public bool IsHoleSealed(ushort holeId)
@@ -86,11 +164,13 @@ public class NetworkRatHoleSealManager : NetworkBehaviour
 
     public NetworkList<RatHoleSealSession> Sessions => _sessions;
 
-    [Rpc(SendTo.Server)]
+    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
     public void RequestStartSealRpc(ushort holeId, RpcParams rpcParams = default)
     {
         if (!IsServer || config == null)
             return;
+
+        EnsureSessionsForSceneHoles();
 
         RatHoleSpawnPoint hole = RatHoleSpawnPoint.FindById(holeId);
         if (hole == null || hole.IsSealed)
@@ -126,6 +206,43 @@ public class NetworkRatHoleSealManager : NetworkBehaviour
         };
 
         UpsertSession(session);
+        BroadcastObjectiveStatus();
+
+        RatHoleSealSession started = session;
+        RatHoleSealZoneVisual visual = RatHoleSealZoneVisual.EnsureAttached(this);
+        visual?.ShowSession(started);
+
+        NotifySealZoneVisualClientRpc(
+            session.HoleId,
+            session.ZoneA,
+            session.ZoneB,
+            session.ZoneCount,
+            session.Flags,
+            session.Progress);
+    }
+
+    [ClientRpc]
+    private void NotifySealZoneVisualClientRpc(
+        ushort holeId,
+        Vector2 zoneA,
+        Vector2 zoneB,
+        byte zoneCount,
+        byte flags,
+        float progress)
+    {
+        if ((flags & RatHoleSealSession.FlagActive) == 0)
+            return;
+
+        RatHoleSealZoneVisual visual = RatHoleSealZoneVisual.EnsureAttached(this);
+        visual.ShowSession(new RatHoleSealSession
+        {
+            HoleId = holeId,
+            Flags = flags,
+            Progress = progress,
+            ZoneA = zoneA,
+            ZoneB = zoneB,
+            ZoneCount = zoneCount
+        });
     }
 
     private void EnsureSessionsForSceneHoles()

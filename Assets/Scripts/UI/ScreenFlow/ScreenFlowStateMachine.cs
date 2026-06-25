@@ -334,9 +334,13 @@ public static class ScreenFlowStateMachine
 
         EnterPhase(ScreenFlowPhase.Gameplay);
 
+        int contractIndex = ContractSceneResolver.ResolveActiveContractIndex();
+        if (contractIndex >= 0)
+            ContractSceneResolver.ApplyToSession(contractIndex);
+
         string scene = string.IsNullOrEmpty(GameSessionContext.ActiveGameplaySceneName)
 
-            ? "Fase-1"
+            ? ContractSceneResolver.ResolveSceneName(contractIndex)
 
             : GameSessionContext.ActiveGameplaySceneName;
 

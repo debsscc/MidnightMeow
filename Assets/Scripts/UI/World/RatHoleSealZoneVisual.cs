@@ -1,30 +1,133 @@
 using System.Collections.Generic;
+using Unity.Netcode;
 using UnityEngine;
 
 /// <summary>
-/// Desenha áreas circulares de selamento ativas (cliente).
+/// Desenha áreas circulares de selamento. Vive como filho de <see cref="NetworkRatHoleSealManager"/>
+/// para aparecer na hierarquia em _GameLoop/SealZoneVisuals e persistir enquanto a sessão estiver ativa.
 /// </summary>
 [DisallowMultipleComponent]
 public class RatHoleSealZoneVisual : MonoBehaviour
 {
+    public static RatHoleSealZoneVisual Instance { get; private set; }
+
     [SerializeField] private RatHoleSealConfig config;
 
     private readonly Dictionary<ushort, List<GameObject>> _zoneObjects = new Dictionary<ushort, List<GameObject>>();
+    private NetworkRatHoleSealManager _manager;
+    private Transform _poolRoot;
+    private bool _subscribed;
+
+    public static RatHoleSealZoneVisual EnsureAttached(NetworkRatHoleSealManager manager)
+    {
+        if (manager == null)
+            return Instance;
+
+        RatHoleSealZoneVisual existing = manager.GetComponentInChildren<RatHoleSealZoneVisual>(true);
+        if (existing != null)
+        {
+            existing.Bind(manager);
+            return existing;
+        }
+
+        var host = new GameObject("SealZoneVisuals");
+        host.transform.SetParent(manager.transform, false);
+        var visual = host.AddComponent<RatHoleSealZoneVisual>();
+        visual.Bind(manager);
+        return visual;
+    }
 
     private void Awake()
     {
-        if (config == null)
-            config = Resources.Load<RatHoleSealConfig>("RatHoleSealConfig");
-    }
-
-    private void LateUpdate()
-    {
-        NetworkRatHoleSealManager manager = NetworkRatHoleSealManager.Instance;
-        if (manager == null || config == null)
+        if (Instance != null && Instance != this)
         {
-            HideAll();
+            Destroy(this);
             return;
         }
+
+        Instance = this;
+
+        if (config == null)
+            config = Resources.Load<RatHoleSealConfig>("RatHoleSealConfig");
+
+        EnsurePoolRoot();
+    }
+
+    private void OnDestroy()
+    {
+        if (Instance == this)
+            Instance = null;
+
+        Unsubscribe();
+    }
+
+    private void OnEnable()
+    {
+        PrewarmAllHolePools();
+        RefreshAllZones();
+    }
+
+    private void LateUpdate() => RefreshAllZones();
+
+    public void Bind(NetworkRatHoleSealManager manager)
+    {
+        if (manager == null)
+            return;
+
+        if (_manager != manager)
+        {
+            Unsubscribe();
+            _manager = manager;
+            Subscribe();
+        }
+
+        PrewarmAllHolePools();
+        RefreshAllZones();
+    }
+
+    /// <summary>Força exibição imediata (host + ClientRpc ao iniciar selamento).</summary>
+    public void ShowSession(RatHoleSealSession session)
+    {
+        if (!session.IsActive)
+            return;
+
+        RatHoleSealConfig activeConfig = ResolveConfig();
+        if (activeConfig == null)
+            return;
+
+        RenderSession(session, activeConfig);
+    }
+
+    private void Subscribe()
+    {
+        if (_subscribed || _manager == null)
+            return;
+
+        _manager.Sessions.OnListChanged += HandleSessionsChanged;
+        _subscribed = true;
+    }
+
+    private void Unsubscribe()
+    {
+        if (!_subscribed || _manager == null)
+            return;
+
+        _manager.Sessions.OnListChanged -= HandleSessionsChanged;
+        _subscribed = false;
+    }
+
+    private void HandleSessionsChanged(NetworkListEvent<RatHoleSealSession> changeEvent) => RefreshAllZones();
+
+    private void RefreshAllZones()
+    {
+        NetworkRatHoleSealManager manager = _manager != null ? _manager : NetworkRatHoleSealManager.Instance;
+        RatHoleSealConfig activeConfig = ResolveConfig(manager);
+
+        if (manager == null || activeConfig == null)
+            return;
+
+        if (!manager.IsSpawned)
+            return;
 
         var active = new HashSet<ushort>();
         foreach (RatHoleSealSession session in manager.Sessions)
@@ -33,87 +136,134 @@ public class RatHoleSealZoneVisual : MonoBehaviour
                 continue;
 
             active.Add(session.HoleId);
-            RenderSession(session);
+            RenderSession(session, activeConfig);
         }
 
-        foreach (var pair in _zoneObjects)
+        foreach (KeyValuePair<ushort, List<GameObject>> pair in _zoneObjects)
         {
             if (active.Contains(pair.Key))
                 continue;
 
-            for (int i = 0; i < pair.Value.Count; i++)
-            {
-                if (pair.Value[i] != null)
-                    pair.Value[i].SetActive(false);
-            }
+            SetZonesActive(pair.Value, false);
         }
     }
 
-    private void RenderSession(RatHoleSealSession session)
+    private RatHoleSealConfig ResolveConfig(NetworkRatHoleSealManager manager = null)
     {
-        List<GameObject> zones = GetOrCreateZones(session.HoleId, session.ZoneCount);
-        float diameter = config.zoneRadius * 2f;
+        manager ??= _manager != null ? _manager : NetworkRatHoleSealManager.Instance;
+        if (manager != null && manager.Config != null)
+            return manager.Config;
 
-        zones[0].SetActive(true);
-        zones[0].transform.position = session.ZoneA;
-        zones[0].transform.localScale = new Vector3(diameter, diameter, 1f);
-        zones[0].GetComponent<EnemyTelegraphZoneView>()?.SetFill(session.Progress);
+        return config;
+    }
+
+    private void PrewarmAllHolePools()
+    {
+        EnsurePoolRoot();
+
+        foreach (RatHoleSpawnPoint hole in RatHoleSpawnPoint.All)
+        {
+            if (hole == null)
+                continue;
+
+            EnsurePoolForHole(hole.HoleId, ResolveConfig());
+        }
+    }
+
+    private void EnsurePoolRoot()
+    {
+        if (_poolRoot != null)
+            return;
+
+        Transform existing = transform.Find("SealZonePool");
+        if (existing != null)
+        {
+            _poolRoot = existing;
+            return;
+        }
+
+        var pool = new GameObject("SealZonePool");
+        pool.transform.SetParent(transform, false);
+        _poolRoot = pool.transform;
+    }
+
+    private void EnsurePoolForHole(ushort holeId, RatHoleSealConfig activeConfig)
+    {
+        if (activeConfig == null)
+            return;
+
+        if (_zoneObjects.TryGetValue(holeId, out List<GameObject> existing) && existing.Count >= 2)
+            return;
+
+        if (!_zoneObjects.TryGetValue(holeId, out existing))
+        {
+            existing = new List<GameObject>(2);
+            _zoneObjects[holeId] = existing;
+        }
+
+        while (existing.Count < 2)
+        {
+            GameObject zone = CreateZone($"SealZone_{holeId}_{existing.Count}", activeConfig);
+            zone.SetActive(false);
+            existing.Add(zone);
+        }
+    }
+
+    private void RenderSession(RatHoleSealSession session, RatHoleSealConfig activeConfig)
+    {
+        EnsurePoolForHole(session.HoleId, activeConfig);
+        List<GameObject> zones = _zoneObjects[session.HoleId];
+        float diameter = activeConfig.GetZoneVisualDiameter();
+        int sortingOrder = activeConfig.zoneSortingOrder;
+
+        ActivateZone(zones[0], session.ZoneA, activeConfig, diameter, sortingOrder, session.Progress);
 
         if (session.ZoneCount > 1 && zones.Count > 1)
-        {
-            zones[1].SetActive(true);
-            zones[1].transform.position = session.ZoneB;
-            zones[1].transform.localScale = new Vector3(diameter, diameter, 1f);
-            zones[1].GetComponent<EnemyTelegraphZoneView>()?.SetFill(session.Progress);
-        }
+            ActivateZone(zones[1], session.ZoneB, activeConfig, diameter, sortingOrder, session.Progress);
         else if (zones.Count > 1)
-        {
             zones[1].SetActive(false);
-        }
     }
 
-    private List<GameObject> GetOrCreateZones(ushort holeId, int zoneCount)
+    private static void ActivateZone(
+        GameObject zone,
+        Vector2 worldPosition,
+        RatHoleSealConfig activeConfig,
+        float diameter,
+        int sortingOrder,
+        float progress)
     {
-        if (_zoneObjects.TryGetValue(holeId, out List<GameObject> existing))
-            return existing;
+        zone.SetActive(true);
+        zone.transform.position = new Vector3(worldPosition.x, worldPosition.y, -2f);
 
-        var created = new List<GameObject>(2);
-        int count = Mathf.Clamp(zoneCount, 1, 2);
-        for (int i = 0; i < count; i++)
-            created.Add(CreateZone($"SealZone_{holeId}_{i}"));
+        SealZoneRingVisual ring = zone.GetComponent<SealZoneRingVisual>();
+        if (ring == null)
+            return;
 
-        _zoneObjects[holeId] = created;
-        return created;
+        ring.Configure(
+            activeConfig.zoneBackgroundColor,
+            activeConfig.zoneFillColor,
+            activeConfig.zoneOutlineColor,
+            sortingOrder,
+            diameter,
+            activeConfig.zoneOutlineThickness,
+            activeConfig.zoneShowInteriorFill);
+        ring.SetFill(progress);
     }
 
-    private GameObject CreateZone(string name)
+    private GameObject CreateZone(string name, RatHoleSealConfig activeConfig)
     {
         var go = new GameObject(name);
-        go.transform.SetParent(transform, false);
-
-        var sr = go.AddComponent<SpriteRenderer>();
-        sr.sprite = Sprite.Create(Texture2D.whiteTexture, new Rect(0, 0, 1, 1), new Vector2(0.5f, 0.5f));
-        sr.sortingOrder = 35;
-
-        var view = go.AddComponent<EnemyTelegraphZoneView>();
-        var style = ScriptableObject.CreateInstance<EnemyTelegraphVisualStyle>();
-        style.backgroundColor = config.zoneBackgroundColor;
-        style.fillColor = config.zoneFillColor;
-        style.outlineColor = config.zoneOutlineColor;
-        style.sortingOrder = 35;
-        view.ApplyStyle(style, TelegraphShapeType.Circle, TelegraphFillMode.ExpandFromOrigin);
+        go.transform.SetParent(_poolRoot != null ? _poolRoot : transform, false);
+        go.AddComponent<SealZoneRingVisual>();
         return go;
     }
 
-    private void HideAll()
+    private static void SetZonesActive(List<GameObject> zones, bool active)
     {
-        foreach (var pair in _zoneObjects)
+        for (int i = 0; i < zones.Count; i++)
         {
-            for (int i = 0; i < pair.Value.Count; i++)
-            {
-                if (pair.Value[i] != null)
-                    pair.Value[i].SetActive(false);
-            }
+            if (zones[i] != null)
+                zones[i].SetActive(active);
         }
     }
 }

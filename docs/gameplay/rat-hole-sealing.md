@@ -1,25 +1,23 @@
 # Selamento de buracos de spawn
 
-Última revisão: 2026-06-19
+Última revisão: 2026-06-25
 
-## Comportamento
+## Fluxo de selamento (resumo)
 
-1. Jogador aproxima-se de um buraco **não selado** (`RatHoleSpawnPoint`).
-2. Surge prompt **"Aperte F para selar"** (`RatHoleSealPromptUI`).
-3. Host/servidor cria 1 ou 2 áreas circulares (`CooperativeZonePlacementUtility`) conforme jogadores vivos.
-4. Jogadores permanecem nas áreas → barra de progresso sobe (`RatHoleSealZoneSystem`).
-5. Dois jogadores em duas áreas → `dualPlayerSpeedMultiplier`.
-6. Ninguém nas áreas por `abandonTimeout` → cancela.
-7. Concluído → buraco deixa de ser escolhido por `RatHoleSpawnSelectionUtility`.
+1. Aproximar do buraco → prompt **"Aperte E para selar"** (`RatHoleSealPromptUI`).
+2. Pressionar **Interact (E)** → surgem **áreas circulares** grandes e opacas (`SealZoneRingVisual` via `RatHoleSealZoneVisual`), posicionadas em direção à câmera.
+3. Entrar na área → texto **"Fique na Área para selar — X%"** + barra (`RatHoleSealStatusUI`).
+4. 100% → **"Área selada"**; buraco para de spawnar; HUD atualiza (`PhaseObjectiveHud` / win Fase 1).
 
 ## Configuração
 
-`Assets/Data/Gameplay/RatHoleSealConfig.asset` (criar pelo menu do Unity)
+`Assets/Data/Gameplay/RatHoleSealConfig.asset` — instância em produção: `Assets/Resources/RatHoleSealConfig.asset`
 
 ## Código principal
 
 - `RatHoleSpawnPoint`, `NetworkRatHoleSealManager`, `RatHoleSealZoneSystem`
-- `PlayerRatHoleSealInteraction`, `RatHoleSealPromptUI`, `RatHoleSealZoneVisual`
+- `PlayerRatHoleSealInteraction`, `RatHoleSealPromptUI`, `RatHoleSealZoneVisual`, `RatHoleSealStatusUI`
+- Visual das zonas: `SealZoneRingVisual` em `_GameLoop/SealZoneVisuals/SealZonePool/`; tamanho = `zoneRadius × 2 × zoneVisualScaleMultiplier`
 
 ## Cena (Fase-1)
 

@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c7d8e9f0a1b2438590a1b2c3d4e5f810, type: 3}
   m_Name: Contract_2
   m_EditorClassIdentifier: Assembly-CSharp::ContractDefinition
-  displayName: Contrato 2
-  description: Missão intermediária com mais ondas e recompensas maiores.
+  displayName: Proteja a carruagem
+  description: Proteja a Carruagem
   difficulty: 3
   magiculaReward: 2
   gameplaySceneName: Fase-2

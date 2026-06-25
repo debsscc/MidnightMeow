@@ -274,6 +274,9 @@ public class GameManager2 : MonoBehaviour
             tracker.CommitToSave();
         }
 
+        if (isVictory)
+            SaveProfileStore.Instance?.MarkActiveContractCompleted();
+
         GameSessionContext.ResetContractRound();
 
         if (isVictory ? ScreenFlowStateMachine.ShowVictoryScreen() : ScreenFlowStateMachine.ShowDefeatScreen())

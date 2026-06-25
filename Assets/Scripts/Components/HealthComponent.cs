@@ -38,14 +38,17 @@ public class HealthComponent : MonoBehaviour, IDamageable
     public bool IsAlive => !_isDead;
 
 
+    void Awake()
+    {
+        if (gameObject.CompareTag("Enemy") && GetComponent<EnemyHealthBarDisplay>() == null)
+            gameObject.AddComponent<EnemyHealthBarDisplay>();
+    }
+
     void Start()
     {
         // pooling, chama Initialize manualmente
         if (_currentHealth <= 0)
             Initialize(_maxHealth);
-
-        if (gameObject.CompareTag("Enemy") && GetComponent<EnemyHealthBarDisplay>() == null)
-            gameObject.AddComponent<EnemyHealthBarDisplay>();
     }
 
     public void Initialize(float maxHealth)

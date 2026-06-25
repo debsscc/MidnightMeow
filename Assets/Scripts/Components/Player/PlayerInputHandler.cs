@@ -30,45 +30,66 @@ public class PlayerInputHandler : MonoBehaviour
     private void Awake()
     {
         _playerInput = GetComponent<PlayerInput>();
-        if (_playerInput != null)
-        {
-            // Try to find the 'Fire' action in the current action map or asset
-            if (_playerInput.actions != null)
-            {
-                _fireAction = _playerInput.actions.FindAction("Fire");
-                _interactAction = _playerInput.actions.FindAction("Interact");
-            }
-        }
     }
 
     private void OnEnable()
+    {
+        ResolveInputActions();
+        SubscribeInputActions();
+        GameEvents.OnPauseChanged += HandlePauseChanged;
+    }
+
+    private void OnDisable()
+    {
+        UnsubscribeInputActions();
+        GameEvents.OnPauseChanged -= HandlePauseChanged;
+    }
+
+    private void ResolveInputActions()
+    {
+        if (_playerInput == null)
+            _playerInput = GetComponent<PlayerInput>();
+
+        if (_playerInput?.actions == null)
+            return;
+
+        if (!_playerInput.actions.enabled)
+            _playerInput.actions.Enable();
+
+        _fireAction = _playerInput.actions.FindAction("Fire", throwIfNotFound: false);
+        _interactAction = _playerInput.actions.FindAction("Interact", throwIfNotFound: false);
+    }
+
+    private void SubscribeInputActions()
     {
         if (_fireAction != null)
         {
             _fireAction.started += OnFireStarted;
             _fireAction.canceled += OnFireCanceled;
         }
+
         if (_interactAction != null)
         {
             _interactAction.started += OnInteractStarted;
+            _interactAction.performed += OnInteractPerformed;
             _interactAction.canceled += OnInteractCanceled;
         }
-        GameEvents.OnPauseChanged += HandlePauseChanged;
     }
 
-    private void OnDisable()
+    private void UnsubscribeInputActions()
     {
         if (_fireAction != null)
         {
             _fireAction.started -= OnFireStarted;
             _fireAction.canceled -= OnFireCanceled;
         }
+
         if (_interactAction != null)
         {
             _interactAction.started -= OnInteractStarted;
+            _interactAction.performed -= OnInteractPerformed;
             _interactAction.canceled -= OnInteractCanceled;
         }
-        GameEvents.OnPauseChanged -= HandlePauseChanged;
     }
 
     public void OnMove(InputValue value)
@@ -134,6 +155,12 @@ public class PlayerInputHandler : MonoBehaviour
     }
 
     private void OnInteractStarted(InputAction.CallbackContext ctx)
+    {
+        if (_isPaused) return;
+        OnInteractHoldChanged?.Invoke(true);
+    }
+
+    private void OnInteractPerformed(InputAction.CallbackContext ctx)
     {
         if (_isPaused) return;
         OnInteractHoldChanged?.Invoke(true);

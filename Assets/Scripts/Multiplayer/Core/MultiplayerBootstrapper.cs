@@ -16,6 +16,7 @@ public class MultiplayerBootstrapper : MonoBehaviour
 {
     [Header("Validação por cena")]
     [SerializeField] private bool skipGameplayChecksOutsideGameplayScene = true;
+    [Tooltip("Cena de gameplay legada para validação do bootstrapper. Fases Fase-* são detectadas automaticamente.")]
     [SerializeField] private string gameplaySceneName = "Fase-1";
 
     [Header("Referências Obrigatórias (auto-detectadas se nulas)")]
@@ -39,8 +40,7 @@ public class MultiplayerBootstrapper : MonoBehaviour
 
     private void ValidateScene()
     {
-        bool isGameplayScene = !string.IsNullOrWhiteSpace(gameplaySceneName)
-                               && SceneManager.GetActiveScene().name == gameplaySceneName;
+        bool isGameplayScene = IsActiveGameplayScene(SceneManager.GetActiveScene().name);
 
         CheckNetworkManager();
         CheckUnityTransport();
@@ -60,6 +60,10 @@ public class MultiplayerBootstrapper : MonoBehaviour
         }
         CheckProjectSettings();
     }
+
+    private bool IsActiveGameplayScene(string sceneName) =>
+        GameplaySceneBootstrap.IsGameplayScene(sceneName)
+        || (!string.IsNullOrEmpty(gameplaySceneName) && sceneName == gameplaySceneName);
 
     private void CheckNetworkManager()
     {

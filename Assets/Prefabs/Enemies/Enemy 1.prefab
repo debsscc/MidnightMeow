@@ -22,6 +22,7 @@ GameObject:
   - component: {fileID: 974458903785184444}
   - component: {fileID: 5316140801015922341}
   - component: {fileID: 8699465747872324352}
+  - component: {fileID: 5025691674849894648}
   m_Layer: 10
   m_Name: Enemy 1
   m_TagString: Enemy
@@ -46,6 +47,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &2629720616798489814
 SpriteRenderer:
+  serializedVersion: 2
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -91,6 +93,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 2
+  m_MaskInteraction: 0
   m_Sprite: {fileID: -9095717837082945937, guid: 207ee8102dd4143d288186ef0be518ee, type: 3}
   m_Color: {r: 0.6979144, g: 0.745283, b: 0.3058473, a: 1}
   m_FlipX: 0
@@ -100,7 +103,6 @@ SpriteRenderer:
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
-  m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!50 &3253254034255534036
 Rigidbody2D:
@@ -262,6 +264,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyAnimationHandler
   enemyMovement: {fileID: 0}
+  animationBinder: {fileID: 0}
   sortingPrecision: 100
   isMelee: 0
   debugLogs: 0
@@ -279,6 +282,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::HealthComponent
   _maxHealth: 100
   _destroyDelay: 0.1
+  _allowDestroyOnDeath: 1
   OnHealthChanged:
     m_PersistentCalls:
       m_Calls: []
@@ -327,3 +331,25 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyDropHandler
   stats: {fileID: 11400000, guid: f2371fa77c69eb944abdc9b4ce3ecbcd, type: 2}
+--- !u!114 &5025691674849894648
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8336658271261246405}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c2d3e4f5a6b7488990a1b2c3d4e5f021, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MidnightMeow::EnemyHealthBarDisplay
+  buildIfMissing: 1
+  backgroundSprite: {fileID: 0}
+  fillSprite: {fileID: 0}
+  verticalOffset: 0.35
+  widthPadding: 0.15
+  barHeight: 0.12
+  backgroundColor: {r: 0.12, g: 0.12, b: 0.12, a: 0.9}
+  fillColor: {r: 0.85, g: 0.2, b: 0.2, a: 0.95}
+  hideWhenFull: 0
+  sortingOrder: 200

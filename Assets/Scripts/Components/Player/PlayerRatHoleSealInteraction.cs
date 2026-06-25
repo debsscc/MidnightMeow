@@ -1,8 +1,9 @@
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 /// <summary>
-/// Interação local do jogador para iniciar selamento (tecla Interact / F).
+/// Interação local do jogador para iniciar selamento (tecla Interact / E).
 /// </summary>
 [DisallowMultipleComponent]
 [RequireComponent(typeof(PlayerInputHandler))]
@@ -37,13 +38,24 @@ public class PlayerRatHoleSealInteraction : MonoBehaviour
     private void Update()
     {
         _targetHole = FindNearestUnsealedHole();
+
+        if (_targetHole != null && Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame)
+            TryStartSeal();
     }
 
     public RatHoleSpawnPoint CurrentTargetHole => _targetHole;
 
     private void HandleInteract(bool pressed)
     {
-        if (!pressed || _targetHole == null)
+        if (!pressed)
+            return;
+
+        TryStartSeal();
+    }
+
+    private void TryStartSeal()
+    {
+        if (_targetHole == null)
             return;
 
         if (_networkObject != null && _networkObject.IsSpawned && !_networkObject.IsOwner)
@@ -53,7 +65,7 @@ public class PlayerRatHoleSealInteraction : MonoBehaviour
             return;
 
         NetworkRatHoleSealManager manager = NetworkRatHoleSealManager.Instance;
-        if (manager == null)
+        if (manager == null || !manager.IsSpawned)
             return;
 
         manager.RequestStartSealRpc(_targetHole.HoleId);

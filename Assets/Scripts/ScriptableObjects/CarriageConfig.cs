@@ -10,6 +10,10 @@ public class CarriageConfig : ScriptableObject
     [Header("Vitalidade")]
     public float maxHealth = 120f;
 
+    [Header("Visual")]
+    [Tooltip("Escala do filho Visual (sprite da carruagem).")]
+    public float visualScale = 3f;
+
     [Header("Movimento")]
     [Tooltip("Unidades por segundo ao longo do trajeto normalizado (0–1).")]
     public float moveSpeed = 1.8f;

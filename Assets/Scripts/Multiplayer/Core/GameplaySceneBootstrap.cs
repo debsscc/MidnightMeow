@@ -27,12 +27,40 @@ public static class GameplaySceneBootstrap
 
     private static void EnsureCooperativeZoneVisuals()
     {
-        if (Object.FindFirstObjectByType<RatHoleSealZoneVisual>(FindObjectsInactive.Include) != null)
+        NetworkRatHoleSealManager sealManager =
+            Object.FindFirstObjectByType<NetworkRatHoleSealManager>(FindObjectsInactive.Include);
+
+        if (sealManager != null)
+        {
+            RatHoleSealZoneVisual.EnsureAttached(sealManager);
+            EnsureCarriageRepairVisual();
+            return;
+        }
+
+        if (Object.FindFirstObjectByType<CarriageRepairZoneVisual>(FindObjectsInactive.Include) != null)
             return;
 
         var root = new GameObject("CooperativeZoneVisuals");
-        root.AddComponent<RatHoleSealZoneVisual>();
         root.AddComponent<CarriageRepairZoneVisual>();
+    }
+
+    private static void EnsureCarriageRepairVisual()
+    {
+        NetworkRatHoleSealManager sealManager =
+            Object.FindFirstObjectByType<NetworkRatHoleSealManager>(FindObjectsInactive.Include);
+
+        Transform parent = sealManager != null ? sealManager.transform : null;
+        if (parent != null && parent.GetComponentInChildren<CarriageRepairZoneVisual>(true) != null)
+            return;
+
+        GameObject host = parent != null
+            ? new GameObject("CarriageRepairVisuals")
+            : new GameObject("CooperativeZoneVisuals");
+
+        if (parent != null)
+            host.transform.SetParent(parent, false);
+
+        host.AddComponent<CarriageRepairZoneVisual>();
     }
 
     public static void TryEnsureGameplayHud()

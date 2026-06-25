@@ -38,8 +38,10 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Fases/Fase-2.unity
     guid: e255d86a6007fb44ba098001dbe41462
+  - enabled: 1
+    path: Assets/Scenes/Fases/Fase-3.unity
+    guid: f3a8b9c0d1e2467095861728394a5b6c
   - enabled: 0
-    path: Assets/_Sandbox/SampleScene.unity
     guid: 8c9cfa26abfee488c85f1582747f6a02
   - enabled: 0
     path: Assets/_Sandbox/Teste_MultiplayerFase-1.unity

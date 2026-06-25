@@ -28,6 +28,9 @@ public class RatHoleSpawnPoint : MonoBehaviour
     {
         if (!Registry.Contains(this))
             Registry.Add(this);
+
+        if (GetComponent<RatHoleSealStatusUI>() == null)
+            gameObject.AddComponent<RatHoleSealStatusUI>();
     }
 
     private void OnDisable()
@@ -37,12 +40,26 @@ public class RatHoleSpawnPoint : MonoBehaviour
 
     private void Reset()
     {
-        var trigger = GetComponent<CircleCollider2D>() ?? gameObject.AddComponent<CircleCollider2D>();
-        trigger.isTrigger = true;
-        trigger.radius = 2.4f;
+        EnsureTriggerCollider();
 
         if (holeSprite == null)
             holeSprite = GetComponentInChildren<SpriteRenderer>();
+    }
+
+    /// <summary>
+    /// Garante collider de proximidade. Seguro durante Undo.AddComponent no Editor.
+    /// </summary>
+    public void EnsureTriggerCollider(float radius = 2.4f)
+    {
+        CircleCollider2D trigger = GetComponent<CircleCollider2D>();
+        if (trigger == null)
+            trigger = gameObject.AddComponent<CircleCollider2D>();
+
+        if (trigger == null)
+            return;
+
+        trigger.isTrigger = true;
+        trigger.radius = radius;
     }
 
     public Vector3 GetSpawnPosition()

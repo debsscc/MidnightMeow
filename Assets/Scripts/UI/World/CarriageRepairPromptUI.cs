@@ -82,7 +82,7 @@ public class CarriageRepairPromptUI : MonoBehaviour
         var labelRect = labelGo.AddComponent<RectTransform>();
         labelRect.sizeDelta = new Vector2(2.8f, 0.5f);
         _label = labelGo.AddComponent<TextMeshProUGUI>();
-        _label.text = "Aperte F para consertar";
+        _label.text = "Aperte E para consertar";
         _label.fontSize = 2.2f;
         _label.alignment = TextAlignmentOptions.Center;
         _label.color = new Color(1f, 0.9f, 0.55f, 1f);

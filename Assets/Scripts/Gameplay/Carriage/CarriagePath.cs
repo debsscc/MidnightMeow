@@ -29,4 +29,9 @@ public class CarriagePath : MonoBehaviour
         waypoints != null && waypoints.Length > 0
             ? waypoints[waypoints.Length - 1].position
             : transform.position;
+
+    public void ConfigureWaypoints(Transform[] points)
+    {
+        waypoints = points;
+    }
 }

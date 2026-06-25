@@ -15,13 +15,33 @@ public class GameSaveData
     public string lastJoinCode = string.Empty;
     public int magiculas;
     public int selectedContractIndex = -1;
+    public int completedContractMask;
     public string lastSceneName = string.Empty;
+
+    public bool IsContractCompleted(int contractIndex)
+    {
+        if (contractIndex < 0)
+            return false;
+
+        return (completedContractMask & (1 << contractIndex)) != 0;
+    }
+
+    public void MarkContractCompleted(int contractIndex)
+    {
+        if (contractIndex < 0)
+            return;
+
+        completedContractMask |= 1 << contractIndex;
+    }
 
     public CharacterSaveData nix = new CharacterSaveData { characterType = LobbyCharacterType.CharacterA };
     public CharacterSaveData cora = new CharacterSaveData { characterType = LobbyCharacterType.CharacterB };
+    public LobbyCharacterType lastSelectedCharacter = LobbyCharacterType.Default;
 
     public LobbyCharacterType SelectedCharacter =>
-        nix.characterType != LobbyCharacterType.Default ? nix.characterType : LobbyCharacterType.CharacterA;
+        lastSelectedCharacter != LobbyCharacterType.Default
+            ? lastSelectedCharacter
+            : LobbyCharacterType.CharacterA;
 
     public CharacterSaveData GetCharacterData(LobbyCharacterType type)
     {

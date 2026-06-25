@@ -282,6 +282,7 @@ GameObject:
   - component: {fileID: 7354601384133991077}
   - component: {fileID: 6394282566445529578}
   - component: {fileID: 8559975122429534487}
+  - component: {fileID: 4298972540343608419}
   m_Layer: 10
   m_Name: Enemy
   m_TagString: Enemy
@@ -698,6 +699,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::NetworkEnemyController
   ShowTopMostFoldoutHeaderGroup: 1
   deathDespawnDelay: 0.4
+  deathPresentationFallbackSeconds: 8
 --- !u!114 &8559975122429534487
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -711,3 +713,25 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyHitStun
   stats: {fileID: 11400000, guid: f2371fa77c69eb944abdc9b4ce3ecbcd, type: 2}
+--- !u!114 &4298972540343608419
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8336658271261246405}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c2d3e4f5a6b7488990a1b2c3d4e5f021, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MidnightMeow::EnemyHealthBarDisplay
+  buildIfMissing: 1
+  backgroundSprite: {fileID: 0}
+  fillSprite: {fileID: 0}
+  verticalOffset: 0.35
+  widthPadding: 0.15
+  barHeight: 0.12
+  backgroundColor: {r: 0.12, g: 0.12, b: 0.12, a: 0.9}
+  fillColor: {r: 0.85, g: 0.2, b: 0.2, a: 0.95}
+  hideWhenFull: 0
+  sortingOrder: 200

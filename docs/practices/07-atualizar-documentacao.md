@@ -22,6 +22,15 @@ Documentação desatualizada é pior que ausência: agentes e humanos tomam deci
 3. Ajustar tabela de componentes, referências SO e notas.
 4. No cabeçalho do markdown, linha `Última revisão: AAAA-MM-DD`.
 
+## Decisões de design não óbvias
+
+Quando o pedido não detalhar comportamento (ex.: posição da carruagem, HP do boss, flag de teste), documente a decisão em:
+
+- `docs/todo/<tarefa>.md` — tabela **Decisões de design**
+- Ou seção **Notas** no markdown do prefab/cena afetado
+
+Isso evita caixa preta para quem testa no Editor.
+
 ## Para agentes de IA
 
 Inclua no resumo da tarefa: **“Docs atualizados: …”** com caminhos. Se não houver doc do prefab, crie a partir de `docs/editor/_template-prefab.md`.

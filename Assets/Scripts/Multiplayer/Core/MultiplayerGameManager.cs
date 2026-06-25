@@ -21,7 +21,7 @@ public class MultiplayerGameManager : NetworkBehaviour
     [Header("Config")]
     [SerializeField] private MultiplayerConfig multiplayerConfig;
     [SerializeField] private GameConfig gameConfig;
-    [Tooltip("Ao spawnar nesta cena (servidor), inicia Playing automaticamente para o NetworkWaveManager.")]
+    [Tooltip("Cena de gameplay legada (ex.: Game). Fases Fase-* são detectadas automaticamente.")]
     [SerializeField] private string gameplaySceneName = "Fase-1";
 
     private NetworkVariable<GameState> _networkGameState = new NetworkVariable<GameState>(
@@ -104,10 +104,14 @@ public class MultiplayerGameManager : NetworkBehaviour
         if (!IsServer || _networkGameState.Value != GameState.WaitingForPlayers) return;
 
         string activeScene = SceneManager.GetActiveScene().name;
-        if (activeScene != gameplaySceneName) return;
+        if (!IsActiveGameplayScene(activeScene)) return;
 
         ServerBeginGameplaySession();
     }
+
+    private bool IsActiveGameplayScene(string sceneName) =>
+        GameplaySceneBootstrap.IsGameplayScene(sceneName)
+        || (!string.IsNullOrEmpty(gameplaySceneName) && sceneName == gameplaySceneName);
 
     public void RegisterPlayerDowned()
     {
@@ -300,7 +304,12 @@ public class MultiplayerGameManager : NetworkBehaviour
         }
 
         if (IsServer && (newState == GameState.Victory || newState == GameState.Defeat))
+        {
+            if (newState == GameState.Victory)
+                SaveProfileStore.Instance?.MarkActiveContractCompleted();
+
             ReturnToPreparationOnServer(newState);
+        }
     }
 
     private void ReturnToPreparationOnServer(GameState endState)

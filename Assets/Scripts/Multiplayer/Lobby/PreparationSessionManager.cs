@@ -125,6 +125,7 @@ public class PreparationSessionManager : NetworkBehaviour
             return;
 
         _selectedContractIndex.Value = contractIndex;
+        ContractSceneResolver.ApplyToSession(contractIndex);
         _contractConfirmed.Value = false;
         _startCountdown.Value = -1;
         ClearAllReady();
@@ -467,13 +468,11 @@ public class PreparationSessionManager : NetworkBehaviour
     private string ApplySelectedContractToSession()
     {
         int index = _selectedContractIndex.Value;
-        string sceneName = "Fase-1";
+        if (index < 0)
+            index = ContractSceneResolver.ResolveActiveContractIndex();
 
-        if (contracts != null && index >= 0 && index < contracts.Length && contracts[index] != null)
-            sceneName = contracts[index].gameplaySceneName;
-
-        GameSessionContext.ActiveGameplaySceneName = sceneName;
-        return sceneName;
+        ContractSceneResolver.ApplyToSession(index);
+        return GameSessionContext.ActiveGameplaySceneName;
     }
 
     [ClientRpc]
@@ -483,6 +482,7 @@ public class PreparationSessionManager : NetworkBehaviour
             return;
 
         GameSessionContext.ActiveGameplaySceneName = sceneName.ToString();
+        GameSessionContext.ActiveContractIndex = _selectedContractIndex.Value;
     }
 
     private bool AreAllReady()
@@ -515,37 +515,16 @@ public class PreparationSessionManager : NetworkBehaviour
 
     private void ResolveContracts()
     {
-        if (contracts != null && contracts.Length >= 3 && contracts[0] != null)
-            return;
+        if (contracts == null || contracts.Length < 3)
+            contracts = new ContractDefinition[3];
 
-        contracts = new[]
-        {
-            FindContractAsset("Contract_1"),
-            FindContractAsset("Contract_2"),
-            FindContractAsset("Contract_3")
-        };
-
-        for (int i = 0; i < contracts.Length; i++)
-        {
-            if (contracts[i] != null)
-                continue;
-
-            contracts[i] = ScriptableObject.CreateInstance<ContractDefinition>();
-            contracts[i].displayName = $"Contrato {i + 1}";
-            contracts[i].description = i == 0 ? "Fase inicial." : "Bloqueado por enquanto.";
-        }
+        ContractSceneResolver.FillMissingSlots(contracts);
     }
 
     private static ContractDefinition FindContractAsset(string assetName)
     {
-        ContractDefinition[] loaded = Resources.FindObjectsOfTypeAll<ContractDefinition>();
-        for (int i = 0; i < loaded.Length; i++)
-        {
-            if (loaded[i] != null && loaded[i].name == assetName)
-                return loaded[i];
-        }
-
-        return null;
+        return ContractSceneResolver.ResolveContract(
+            assetName == "Contract_1" ? 0 : assetName == "Contract_2" ? 1 : assetName == "Contract_3" ? 2 : -1);
     }
 
     private void SyncConnectedClients()
