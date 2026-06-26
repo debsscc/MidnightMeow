@@ -17,6 +17,8 @@ public class PlayerAnimationHandler : MonoBehaviour
     [SerializeField] private AnimatorProfileBinder animationBinder;
     [SerializeField] private int sortingOrderOffset = 5000;
     [SerializeField] private int sortingPrecision = 100;
+    [Tooltip("Ajuste fino do Y de referência de profundidade (alinhe os pés do player ao mesmo critério dos inimigos).")]
+    [SerializeField] private float sortingReferenceYOffset = 0f;
 
     [SerializeField] private SpriteRenderer shadowSpriteRenderer;
 
@@ -64,7 +66,7 @@ public class PlayerAnimationHandler : MonoBehaviour
         _animator = GetComponent<Animator>();
         _rb = GetComponent<Rigidbody2D>();
         _spriteRenderer = GetComponent<SpriteRenderer>();
-        _collider2D = GetComponent<Collider2D>();
+        _collider2D = ResolveBodyCollider();
 
         if (playerShooting == null) playerShooting = GetComponent<PlayerShooting>();
         if (playerMeleeCombat == null) playerMeleeCombat = GetComponent<PlayerMeleeCombat>();
@@ -560,6 +562,19 @@ public class PlayerAnimationHandler : MonoBehaviour
         return healthComponent != null && healthComponent.IsDead;
     }
 
+    /// <summary>Prefere o collider sólido (não-trigger) como referência; ignora hitboxes em trigger.</summary>
+    private Collider2D ResolveBodyCollider()
+    {
+        var colliders = GetComponents<Collider2D>();
+        for (int i = 0; i < colliders.Length; i++)
+        {
+            if (colliders[i] != null && !colliders[i].isTrigger)
+                return colliders[i];
+        }
+
+        return GetComponent<Collider2D>();
+    }
+
     private float ResolveSortingReferenceY()
     {
         if (IsInDeathPresentation() && _spriteRenderer != null)
@@ -579,7 +594,7 @@ public class PlayerAnimationHandler : MonoBehaviour
         if (_spriteRenderer == null)
             return;
 
-        int newOrder = sortingOrderOffset - Mathf.RoundToInt(ResolveSortingReferenceY() * sortingPrecision);
+        int newOrder = sortingOrderOffset - Mathf.RoundToInt((ResolveSortingReferenceY() + sortingReferenceYOffset) * sortingPrecision);
         if (IsInDeathPresentation())
             newOrder += deadSortingOrderBoost;
 

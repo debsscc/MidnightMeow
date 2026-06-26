@@ -14,6 +14,8 @@ public class EnemyAnimationHandler : MonoBehaviour
     [SerializeField] private AnimatorProfileBinder animationBinder;
     private int sortingOrderOffset = 5000;
     [SerializeField] private int sortingPrecision = 100;
+    [Tooltip("Ajuste fino do Y de referência de profundidade (alinhe os pés do inimigo ao mesmo critério do player).")]
+    [SerializeField] private float sortingReferenceYOffset = 0f;
     private SpriteRenderer _spriteRenderer;
     private EnemyAttack_Melee _attack;
     private EnemyAttack_Ranged _attackRanged;
@@ -44,7 +46,7 @@ public class EnemyAnimationHandler : MonoBehaviour
         if (enemyMovement == null)
             enemyMovement = GetComponent<EnemyMovement>();
         _spriteRenderer = GetComponent<SpriteRenderer>();
-        _collider2D = GetComponent<Collider2D>();
+        _collider2D = ResolveBodyCollider();
         _telegraphedAttacker = GetComponent<EnemyTelegraphedAttacker>();
         if (isMelee)
             _attack = GetComponent<EnemyAttack_Melee>();
@@ -231,6 +233,19 @@ public class EnemyAnimationHandler : MonoBehaviour
             Debug.Log($"EnemyAnimationHandler.HandleHealthChanged - {gameObject.name}: current={current}, max={max}");
     }
 
+    /// <summary>Prefere o collider sólido (não-trigger) como referência; ignora hitboxes em trigger.</summary>
+    private Collider2D ResolveBodyCollider()
+    {
+        var colliders = GetComponents<Collider2D>();
+        for (int i = 0; i < colliders.Length; i++)
+        {
+            if (colliders[i] != null && !colliders[i].isTrigger)
+                return colliders[i];
+        }
+
+        return GetComponent<Collider2D>();
+    }
+
     private void UpdateSortingOrder()
     {
         if (_spriteRenderer == null)
@@ -238,7 +253,10 @@ public class EnemyAnimationHandler : MonoBehaviour
             return;
         }
 
-        float referenceY = _collider2D != null ? _collider2D.bounds.min.y : transform.position.y;
+        float referenceY = _collider2D != null && _collider2D.enabled
+            ? _collider2D.bounds.min.y
+            : _spriteRenderer.bounds.min.y;
+        referenceY += sortingReferenceYOffset;
         _spriteRenderer.sortingOrder = sortingOrderOffset - Mathf.RoundToInt(referenceY * sortingPrecision);
     }
 }

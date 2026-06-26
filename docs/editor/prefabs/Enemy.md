@@ -19,7 +19,7 @@ Template de inimigo rato (ranged). Variantes de produção estão em `Rato_*.pre
 | Script | Responsabilidade |
 |--------|------------------|
 | `EnemyTargetFinder` | Alvo no `targetDetectionRange` |
-| `EnemyMovement` | Perseguição / patrulha |
+| `EnemyMovement` | Perseguição / patrulha (auto-adiciona `EnemyPhysicsBody`) |
 | `EnemyHitStun` | Parada após dano |
 | `NetworkEnemyController` | IA servidor; vida; despawn; knockback RPC |
 | `EnemyHealthConfig` | `stats` → `EnemyStats` SO |
@@ -45,6 +45,13 @@ Template de inimigo rato (ranged). Variantes de produção estão em `Rato_*.pre
 - **Materialização**: dissolve reverso (amount 1→0, ~0,35s) reaproveitando o material do `DissolveEffect` (`DissolveTemplate`). Se não houver material de dissolve, só a poeira toca.
 
 Sem sincronização de rede dedicada: como o prefab é instanciado em cada cliente, o efeito roda localmente. Não há trigger de animação de spawn no Animator — é tudo VFX/shader.
+
+## Colisão e profundidade (2D)
+
+- **Hits (dano)**: detectados pelo collider do inimigo na layer `Enemy` (raycast/colisão do `Projectile`, melee do player).
+- **Empurrão**: Player↔Enemy e Projétil↔Player ficam desligados na matriz via `CombatLayerCollision`, então ninguém empurra ninguém (player atravessa os ratos e vice-versa).
+- **Ratos entre si**: separação resolvida pelo `NavMeshAgent` (avoidance, raio ~0.5).
+- **Sorting de profundidade**: `EnemyAnimationHandler` e `PlayerAnimationHandler` ordenam por `bounds.min.y` do **collider sólido (não-trigger)**. Para alinhar os "pés" de player e inimigo (se um ficar sempre na frente/atrás do outro), use o campo `sortingReferenceYOffset` no Inspector de cada um — ele desloca o Y de referência sem mexer no collider.
 
 ## Multiplayer
 
