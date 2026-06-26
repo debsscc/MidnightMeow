@@ -292,6 +292,10 @@ MonoBehaviour:
     m_Localized: "NetworkManager n\xE3o encontrado na cena."
     m_Metadata:
       m_Items: []
+  - m_Id: 3411287597846528
+    m_Localized: "Conex\xE3o perdida. Tente novamente."
+    m_Metadata:
+      m_Items: []
   - m_Id: 3631377986367488
     m_Localized: "Configura\xE7\xF5es"
     m_Metadata:

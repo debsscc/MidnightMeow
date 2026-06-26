@@ -24,6 +24,17 @@ public class healthBarUi : MonoBehaviour
     [SerializeField] private float damageFlashDuration = 0.16f;
     [SerializeField] private float damageFlashStrength = 0.42f;
 
+    [Header("Brilho do damage trail")]
+    [Tooltip("Velocidade do shimmer (brilho pulsante) enquanto o trail desce.")]
+    [SerializeField] private float trailGlowSpeed = 7f;
+    [Tooltip("Intensidade do brilho somado à cor do trail (0 = sem brilho).")]
+    [SerializeField] private float trailGlowStrength = 0.3f;
+
+    [Header("Fundo da barra")]
+    [Tooltip("Imagem de fundo do slider; se vazio, tenta achar 'Background' filho do slider.")]
+    [SerializeField] private Graphic backgroundGraphic;
+    [SerializeField] private Color backgroundColor = Color.white;
+
     private Graphic _mainFillGraphic;
     private Color _mainFillDefaultColor;
 
@@ -40,6 +51,7 @@ public class healthBarUi : MonoBehaviour
     {
         CacheFillReferences();
         EnsureDamageTrailFill();
+        ResolveAndApplyBackground();
     }
 
     private void OnEnable()
@@ -142,7 +154,7 @@ public class healthBarUi : MonoBehaviour
         {
             _trailNormalized = Mathf.Max(_trailNormalized, _displayNormalized);
             _targetNormalized = clamped;
-            _trailHoldTimer = 0f;
+            _trailHoldTimer = trailDelayAfterMain;
             _damageFlashTimer = damageFlashDuration;
         }
         else if (clamped > _targetNormalized + 0.0001f)
@@ -160,59 +172,51 @@ public class healthBarUi : MonoBehaviour
 
     private void TickHealthAnimation()
     {
+        float dt = Time.deltaTime;
         bool isDamage = _targetNormalized < _displayNormalized - 0.0001f;
         bool isHeal = _targetNormalized > _displayNormalized + 0.0001f;
 
+        // Barra principal: desce rápido no dano, sobe suave na cura.
         if (isDamage)
         {
-            _displayNormalized = Mathf.Lerp(
-                _displayNormalized,
-                _targetNormalized,
-                Time.deltaTime * damageMainLerpSpeed);
-
+            _displayNormalized = Mathf.Lerp(_displayNormalized, _targetNormalized, dt * damageMainLerpSpeed);
             if (Mathf.Abs(_displayNormalized - _targetNormalized) <= 0.001f)
-            {
                 _displayNormalized = _targetNormalized;
-
-                if (_trailHoldTimer <= 0f && _trailNormalized > _targetNormalized + 0.001f)
-                    _trailHoldTimer = trailDelayAfterMain;
-            }
-
-            if (_trailHoldTimer > 0f)
-            {
-                _trailHoldTimer -= Time.deltaTime;
-            }
-            else if (_trailNormalized > _targetNormalized + 0.001f)
-            {
-                _trailNormalized = Mathf.Lerp(
-                    _trailNormalized,
-                    _targetNormalized,
-                    Time.deltaTime * damageTrailLerpSpeed);
-
-                if (Mathf.Abs(_trailNormalized - _targetNormalized) <= 0.001f)
-                    _trailNormalized = _targetNormalized;
-            }
         }
         else if (isHeal)
         {
-            _displayNormalized = Mathf.Lerp(
-                _displayNormalized,
-                _targetNormalized,
-                Time.deltaTime * healLerpSpeed);
-            _trailNormalized = Mathf.Lerp(
-                _trailNormalized,
-                _targetNormalized,
-                Time.deltaTime * healLerpSpeed);
-
+            _displayNormalized = Mathf.Lerp(_displayNormalized, _targetNormalized, dt * healLerpSpeed);
             if (Mathf.Abs(_displayNormalized - _targetNormalized) <= 0.001f)
                 _displayNormalized = _targetNormalized;
+        }
+
+        // Trail (barra clara) desce sozinho — independente de o main já ter assentado —,
+        // segurando um instante e depois deslizando devagar até o HP atual.
+        if (_trailNormalized > _targetNormalized + 0.001f)
+        {
+            if (isHeal)
+            {
+                _trailNormalized = Mathf.Lerp(_trailNormalized, _targetNormalized, dt * healLerpSpeed);
+            }
+            else if (_trailHoldTimer > 0f)
+            {
+                _trailHoldTimer -= dt;
+            }
+            else
+            {
+                _trailNormalized = Mathf.Lerp(_trailNormalized, _targetNormalized, dt * damageTrailLerpSpeed);
+            }
 
             if (Mathf.Abs(_trailNormalized - _targetNormalized) <= 0.001f)
                 _trailNormalized = _targetNormalized;
         }
 
+        // O trail nunca pode ficar atrás da barra principal.
+        if (_trailNormalized < _displayNormalized)
+            _trailNormalized = _displayNormalized;
+
         if (_damageFlashTimer > 0f)
-            _damageFlashTimer -= Time.deltaTime;
+            _damageFlashTimer -= dt;
 
         _needsVisualUpdate =
             isDamage
@@ -232,7 +236,28 @@ public class healthBarUi : MonoBehaviour
         healthSlider.SetValueWithoutNotify(_displayNormalized);
 
         ApplyTrailFill(_trailNormalized);
+        ApplyTrailGlow();
         ApplyDamageFlash();
+    }
+
+    private void ApplyTrailGlow()
+    {
+        if (damageTrailFill == null)
+            return;
+
+        bool trailActive = _trailHoldTimer > 0f || _trailNormalized > _targetNormalized + 0.001f;
+        if (!trailActive || trailGlowStrength <= 0f)
+        {
+            damageTrailFill.color = damageTrailColor;
+            return;
+        }
+
+        float shimmer = (Mathf.Sin(Time.unscaledTime * trailGlowSpeed) * 0.5f + 0.5f) * trailGlowStrength;
+        damageTrailFill.color = new Color(
+            Mathf.Clamp01(damageTrailColor.r + shimmer),
+            Mathf.Clamp01(damageTrailColor.g + shimmer),
+            Mathf.Clamp01(damageTrailColor.b + shimmer),
+            damageTrailColor.a);
     }
 
     private void ApplyTrailFill(float normalized)
@@ -281,6 +306,19 @@ public class healthBarUi : MonoBehaviour
 
         if (_mainFillGraphic != null)
             _mainFillDefaultColor = _mainFillGraphic.color;
+    }
+
+    private void ResolveAndApplyBackground()
+    {
+        if (backgroundGraphic == null && healthSlider != null)
+        {
+            Transform bg = healthSlider.transform.Find("Background");
+            if (bg != null)
+                backgroundGraphic = bg.GetComponent<Graphic>();
+        }
+
+        if (backgroundGraphic != null)
+            backgroundGraphic.color = backgroundColor;
     }
 
     private void EnsureDamageTrailFill()

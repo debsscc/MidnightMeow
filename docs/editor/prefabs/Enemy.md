@@ -33,7 +33,18 @@ Template de inimigo rato (ranged). Variantes de produção estão em `Rato_*.pre
 | `EnemyAttack_Ranged` | Legado — tiro instantâneo |
 | `EnemyAttack_Melee` | Legado — dano instantâneo ao chegar perto |
 | `EnemyAudioController` | SFX dano/morte |
+| `DissolveEffect` | Death: anim `Dying` → dissolve + sparkle |
+| `EnemySpawnPresentation` | Spawn: baforada de poeira + materialização (dissolve reverso). Auto-adicionado pelo `NetworkEnemyController`; roda local em solo e MP |
 | `NetworkObject` + `NetworkTransform` | NGO |
+
+## Apresentação de spawn
+
+`EnemySpawnPresentation` (auto-adicionado em `NetworkEnemyController.Awake`) toca no `Start` de cada instância, em qualquer máquina:
+
+- **Poeira**: `EnemySpawnVfx` — burst procedural no ponto de surgimento (sem prefab de arte).
+- **Materialização**: dissolve reverso (amount 1→0, ~0,35s) reaproveitando o material do `DissolveEffect` (`DissolveTemplate`). Se não houver material de dissolve, só a poeira toca.
+
+Sem sincronização de rede dedicada: como o prefab é instanciado em cada cliente, o efeito roda localmente. Não há trigger de animação de spawn no Animator — é tudo VFX/shader.
 
 ## Multiplayer
 

@@ -40,7 +40,11 @@ public class ConnectionManager : MonoBehaviour
     private bool _networkEventsSubscribed = false;
     private bool _lobbyRecoveryScheduled;
     private bool _hostStartInProgress;
+    private bool _hostStartCancelled;
+    private float _intentionalShutdownUntil;
     private Coroutine _connectionTimeoutCoroutine;
+
+    private const float IntentionalShutdownGraceSeconds = 3f;
 
     private void Awake()
     {
@@ -95,6 +99,17 @@ public class ConnectionManager : MonoBehaviour
         return true;
     }
 
+    /// <summary>
+    /// Cancela um StartHostAsync em andamento (ex.: usuário trocou pra solo enquanto o Relay era
+    /// alocado). Se a alocação ainda não virou host, o host não é iniciado — evita o ciclo
+    /// start->shutdown que gera os erros "allocation invalid"/"allocation ID not found".
+    /// </summary>
+    public void CancelPendingHostStart()
+    {
+        if (_hostStartInProgress)
+            _hostStartCancelled = true;
+    }
+
     public async Task StartHostAsync()
     {
         if (_hostStartInProgress)
@@ -111,6 +126,7 @@ public class ConnectionManager : MonoBehaviour
         if (!ValidatePrerequisites()) return;
 
         _hostStartInProgress = true;
+        _hostStartCancelled = false;
         try
         {
             int maxConnections = config != null ? config.maxPlayers - 1 : 3;
@@ -118,6 +134,16 @@ public class ConnectionManager : MonoBehaviour
             Debug.Log($"[ConnectionManager] StartHostAsync: maxConnections={maxConnections}");
 
             string joinCode = await RelayManager.Instance.CreateRelayAndGetJoinCodeAsync(maxConnections);
+
+            if (_hostStartCancelled)
+            {
+                // Usuário abandonou o modo host durante a alocação do Relay. Não inicia o host
+                // (a alocação não usada expira sozinha no serviço) — evita transport failure.
+                Debug.Log("[ConnectionManager] StartHostAsync cancelado durante alocação do Relay — host não será iniciado.");
+                CurrentJoinCode = string.Empty;
+                return;
+            }
+
             CurrentJoinCode = joinCode;
 
             NotifyProgress("Iniciando NetworkManager como host...");
@@ -148,6 +174,7 @@ public class ConnectionManager : MonoBehaviour
         finally
         {
             _hostStartInProgress = false;
+            _hostStartCancelled = false;
         }
     }
 
@@ -218,10 +245,21 @@ public class ConnectionManager : MonoBehaviour
             return;
         }
 
+        MarkIntentionalShutdown();
+
         if (LobbySessionManager.Instance != null && LobbySessionManager.Instance.IsSpawned)
             LobbySessionManager.Instance.NotifyHostLeavingClients();
 
         StartCoroutine(DisconnectAsHostRoutine());
+    }
+
+    /// <summary>
+    /// Marca uma janela curta em que falhas de transporte são tratadas como esperadas (desligamento
+    /// que nós provocamos), evitando recovery/erro falso ao jogador.
+    /// </summary>
+    private void MarkIntentionalShutdown()
+    {
+        _intentionalShutdownUntil = Time.realtimeSinceStartup + IntentionalShutdownGraceSeconds;
     }
 
     private IEnumerator DisconnectAsHostRoutine()
@@ -237,6 +275,8 @@ public class ConnectionManager : MonoBehaviour
 
     private void PerformDisconnect()
     {
+        MarkIntentionalShutdown();
+
         if (NetworkManager.Singleton == null)
         {
             Debug.LogWarning("[ConnectionManager] Disconnect chamado mas NetworkManager.Singleton é null.");
@@ -367,12 +407,20 @@ public class ConnectionManager : MonoBehaviour
 
     private void HandleTransportFailure()
     {
-        string err = "Conexão perdida (Relay). Voltando ao lobby...";
-        Debug.LogError($"[ConnectionManager] OnTransportFailure disparado! {err}");
-
         StopConnectionTimeout();
         CurrentJoinCode = string.Empty;
         UnsubscribeNetworkManagerEvents();
+
+        if (Time.realtimeSinceStartup <= _intentionalShutdownUntil)
+        {
+            // Falha de transporte logo após um desligamento que nós provocamos (ex.: troca rápida
+            // host->solo). Esperado: não dispara recovery nem mensagem de erro pro jogador.
+            Debug.Log("[ConnectionManager] Transport failure após shutdown intencional — ignorado.");
+            return;
+        }
+
+        string err = UiLocalization.Get("lobby.status.connection_lost", "Conexão perdida. Tente novamente.");
+        Debug.LogError("[ConnectionManager] OnTransportFailure disparado! Relay caiu — recuperando para o lobby.");
 
         if (!_lobbyRecoveryScheduled)
             BeginLobbyRecoveryAfterNetworkFailure(err);
@@ -404,6 +452,8 @@ public class ConnectionManager : MonoBehaviour
 
         if (ShouldReturnToLobbyAfterNetworkFailure())
         {
+            // Vamos sair da cena atual para o lobby: guarda o aviso amigável para o lobby exibir ao abrir.
+            GameSessionContext.PendingConnectionMessage = userMessage;
             GameSessionContext.PendingRouteId = string.Empty;
             ScreenFlowController.Instance?.ClearTransitionOverlay();
 

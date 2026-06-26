@@ -54,6 +54,7 @@ public class LobbySceneUIController : MonoBehaviour
     private bool _clientConnectInProgress;
     private bool _hostLeftReceived;
     private bool _hostStartInProgress;
+    private bool _suppressDisconnectUi;
     private Coroutine _readyDelayCoroutine;
     private Vector2 _defaultStatusAnchoredPos;
     private Vector2 _defaultReadyAnchoredPos;
@@ -98,7 +99,24 @@ public class LobbySceneUIController : MonoBehaviour
         HandleJoinCodeUpdated(ConnectionManager.Instance != null ? ConnectionManager.Instance.CurrentJoinCode : string.Empty);
         ApplyViewMode();
         RefreshPlayerCount();
+        ShowPendingConnectionMessageIfAny();
         ScreenFlowSceneReadiness.MarkReadyIfPending("Lobby");
+    }
+
+    private void ShowPendingConnectionMessageIfAny()
+    {
+        string pending = GameSessionContext.PendingConnectionMessage;
+        if (string.IsNullOrEmpty(pending))
+            return;
+
+        GameSessionContext.PendingConnectionMessage = string.Empty;
+
+        // Mostra o aviso amigável mesmo na seleção de modo (statusText fica oculto por padrão aí).
+        if (statusText != null)
+        {
+            statusText.gameObject.SetActive(true);
+            SetStatus(UiLocalization.TranslateLobbyConnectionMessage(pending));
+        }
     }
 
     private void OnDisable()
@@ -234,6 +252,7 @@ public class LobbySceneUIController : MonoBehaviour
             return;
         }
 
+        AbandonConnectionForModeSwitch();
         _mode = LobbyUiMode.HostWaiting;
         ApplyViewMode();
         StartHost();
@@ -241,6 +260,7 @@ public class LobbySceneUIController : MonoBehaviour
 
     private void EnterJoinMode()
     {
+        AbandonConnectionForModeSwitch();
         _mode = LobbyUiMode.ClientJoin;
         _clientConnectInProgress = false;
         if (joinCodeInput != null)
@@ -252,10 +272,46 @@ public class LobbySceneUIController : MonoBehaviour
 
     private void EnterSoloMode()
     {
+        AbandonConnectionForModeSwitch();
         _mode = LobbyUiMode.SoloConfirm;
         ApplyViewMode();
         SetStatusKey("lobby.solo.prompt");
     }
+
+    /// <summary>
+    /// Cancela qualquer host/cliente em criação ao trocar de modo (ex.: clicou Solo enquanto o
+    /// código multiplayer estava sendo gerado). Se já houver conexão ativa, derruba sem disparar
+    /// a UI de desconexão; se ainda estiver criando, o teardown ocorre quando o host concluir.
+    /// </summary>
+    private void AbandonConnectionForModeSwitch()
+    {
+        StopReadyDelay();
+        _clientConnectInProgress = false;
+        _matchTransitionStarted = false;
+
+        // Cancela um StartHostAsync ainda em alocação de Relay (evita start->shutdown e erros de Relay).
+        ConnectionManager.Instance?.CancelPendingHostStart();
+
+        if (!IsNetworkConnected())
+            return;
+
+        TeardownConnectionSilently();
+    }
+
+    private void TeardownConnectionSilently()
+    {
+        if (!IsNetworkConnected() || ConnectionManager.Instance == null)
+            return;
+
+        _suppressDisconnectUi = true;
+
+        if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsHost)
+            ConnectionManager.Instance.DisconnectAsHost();
+        else
+            ConnectionManager.Instance.Disconnect();
+    }
+
+    private bool IsMultiplayerMode => _mode == LobbyUiMode.HostWaiting || _mode == LobbyUiMode.ClientJoin;
 
     private void CancelCurrentMode()
     {
@@ -402,6 +458,13 @@ public class LobbySceneUIController : MonoBehaviour
 
     private void HandleHostStarted()
     {
+        if (_mode != LobbyUiMode.HostWaiting)
+        {
+            // Usuário saiu do multiplayer enquanto o host era criado: derruba sem mostrar nada.
+            TeardownConnectionSilently();
+            return;
+        }
+
         SetStatusKey("lobby.status.waiting_second");
         RefreshPlayerCount();
         ApplyViewMode();
@@ -409,13 +472,22 @@ public class LobbySceneUIController : MonoBehaviour
 
     private void HandleClientJoined(ulong _)
     {
+        if (!IsMultiplayerMode)
+            return;
+
         RefreshPlayerCount();
         ScheduleHostReadyIfNeeded();
     }
 
     private void HandleClientConnected()
     {
-        _mode = LobbyUiMode.ClientJoin;
+        if (_mode != LobbyUiMode.ClientJoin)
+        {
+            // Usuário trocou de modo enquanto a conexão era estabelecida: desconecta em silêncio.
+            TeardownConnectionSilently();
+            return;
+        }
+
         SetStatusKey("lobby.status.connected");
         ApplyViewMode();
         RefreshPlayerCount();
@@ -462,6 +534,15 @@ public class LobbySceneUIController : MonoBehaviour
     {
         _matchTransitionStarted = false;
         _clientConnectInProgress = false;
+
+        if (_suppressDisconnectUi)
+        {
+            // Teardown intencional ao trocar de modo: mantém a tela atual (ex.: Solo) intacta.
+            _suppressDisconnectUi = false;
+            _hostLeftReceived = false;
+            return;
+        }
+
         ReturnToModeSelect();
 
         if (_hostLeftReceived)
@@ -484,12 +565,19 @@ public class LobbySceneUIController : MonoBehaviour
 
     private void HandleConnectionProgress(string message)
     {
+        if (!IsMultiplayerMode)
+            return;
+
         SetStatus(UiLocalization.TranslateLobbyConnectionMessage(message));
     }
 
     private void HandleConnectionFailed(string message)
     {
         _clientConnectInProgress = false;
+
+        if (!IsMultiplayerMode)
+            return;
+
         SetStatus(UiLocalization.TranslateLobbyConnectionMessage(message));
         UpdateJoinReadyVisibility();
         ApplyViewMode();
@@ -543,7 +631,16 @@ public class LobbySceneUIController : MonoBehaviour
 
     private void ScheduleHostReadyIfNeeded()
     {
-        if (_mode != LobbyUiMode.HostWaiting || !IsHostWithEnoughPlayers())
+        if (_mode != LobbyUiMode.HostWaiting)
+        {
+            // Fora do modo host, quem decide a visibilidade do toggle é UpdateReadyToggleForMode/
+            // UpdateJoinReadyVisibility. Não esconder aqui, senão o botão Jogar do solo some quando
+            // RefreshPlayerCount é disparado durante o teardown do host (troca rápida host->solo).
+            StopReadyDelay();
+            return;
+        }
+
+        if (!IsHostWithEnoughPlayers())
         {
             StopReadyDelay();
             SetReadyVisible(false);

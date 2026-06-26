@@ -68,6 +68,7 @@ public static class DissolveSparkleVfx
         ParticleSystemRenderer renderer = root.GetComponent<ParticleSystemRenderer>();
         renderer.renderMode = ParticleSystemRenderMode.Billboard;
         renderer.sortingOrder = 100;
+        ProceduralParticleAsset.Apply(renderer);
 
         ps.Play();
         Object.Destroy(root, duration + 0.75f);

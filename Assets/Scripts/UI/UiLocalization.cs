@@ -72,6 +72,8 @@ public static class UiLocalization
             return Get("lobby.status.empty_code", message);
         if (lower.Contains("timeout"))
             return Get("lobby.status.connection_timeout", message);
+        if (lower.Contains("perdida") || lower.Contains("connection lost"))
+            return Get("lobby.status.connection_lost", message);
         if (lower.Contains("erro ao entrar") || lower.Contains("falha ao entrar"))
             return Get("lobby.status.join_failed", message);
         if (lower.Contains("erro ao hospedar"))

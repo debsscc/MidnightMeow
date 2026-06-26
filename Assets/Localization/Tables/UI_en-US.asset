@@ -291,6 +291,10 @@ MonoBehaviour:
     m_Localized: NetworkManager not found in the scene.
     m_Metadata:
       m_Items: []
+  - m_Id: 3411287597846528
+    m_Localized: Connection lost. Please try again.
+    m_Metadata:
+      m_Items: []
   - m_Id: 3631377986367488
     m_Localized: Settings
     m_Metadata:

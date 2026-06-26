@@ -109,6 +109,9 @@ public class NetworkEnemyController : NetworkBehaviour
 
         if (GetComponent<EnemyPhysicsBody>() == null)
             gameObject.AddComponent<EnemyPhysicsBody>();
+
+        if (GetComponent<EnemySpawnPresentation>() == null)
+            gameObject.AddComponent<EnemySpawnPresentation>();
     }
 
     public override void OnDestroy()

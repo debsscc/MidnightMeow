@@ -38,6 +38,9 @@ public static class GameSessionContext
     public static bool AutoHostOnLobbyEnter { get; set; }
     public static bool IsSinglePlayer { get; set; }
 
+    /// <summary>Mensagem amigável a exibir ao voltar ao lobby após uma queda de conexão (Relay).</summary>
+    public static string PendingConnectionMessage { get; set; } = string.Empty;
+
     public static void BeginNewGame(int slot = 0)
     {
         StartMode = SessionStartMode.NewGame;
@@ -85,6 +88,7 @@ public static class GameSessionContext
         ActiveContractIndex = -1;
         AutoHostOnLobbyEnter = false;
         IsSinglePlayer = false;
+        PendingConnectionMessage = string.Empty;
     }
 
     public static void ResetContractRound()

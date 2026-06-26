@@ -48,6 +48,9 @@ public class DissolveEffect : MonoBehaviour
 
     public bool IsPlaying => _isPlaying;
 
+    /// <summary>Material de dissolve usado no death; reaproveitado pelo spawn (materialização).</summary>
+    public Material DissolveTemplate => dissolveMaterial;
+
     public float Duration => EstimatedTotalDuration;
 
     /// <summary>Timeout de segurança para despawn no servidor (pior caso de espera + dissolve).</summary>
