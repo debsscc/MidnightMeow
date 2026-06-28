@@ -357,7 +357,28 @@ public class NetworkCarriage : NetworkBehaviour
         {
             GameEvents.InvokeCarriagePathProgressChanged(1f);
             GameEvents.InvokeCarriageArrived();
+            EnsurePhaseObjectiveAndNotifyVictory();
         }
+    }
+
+    private static void EnsurePhaseObjectiveAndNotifyVictory()
+    {
+        if (PhaseObjectiveManager.Instance == null)
+        {
+            string sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+            Debug.LogWarning($"[NetworkCarriage] PhaseObjectiveManager ausente em {sceneName} — reconfigurando fase.");
+            PhaseGameplayContentInstaller.ApplyPhaseContent(sceneName);
+        }
+
+        if (PhaseObjectiveManager.Instance != null)
+        {
+            PhaseObjectiveManager.Instance.NotifyCarriageArrived();
+            return;
+        }
+
+        Debug.LogError("[NetworkCarriage] Falha ao configurar PhaseObjectiveManager — fallback de vitória.");
+        MultiplayerVictoryCoordinator.TryBeginVictoryFromPhaseObjective();
+        PhaseObjectiveManager.Instance?.BeginVictoryScreenFallback();
     }
 
     private void TickRepair()

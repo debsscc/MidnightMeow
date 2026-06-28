@@ -40,6 +40,7 @@ public class MultiplayerGameManager : NetworkBehaviour
     private bool _victorySequenceStarted;
 
     public GameState CurrentState => _networkGameState.Value;
+    public bool HasReachedVictoryState => IsVictoryTransitionComplete();
     public int PlayersFighting => _playersFighting.Value;
     public int PlayersAlive => _playersFighting.Value;
 
@@ -83,15 +84,16 @@ public class MultiplayerGameManager : NetworkBehaviour
         if (net == null || !net.IsServer)
             return;
 
-        if (_victorySequenceStarted || _networkGameState.Value == GameState.Victory)
+        if (IsVictoryTransitionComplete())
             return;
 
-        _victorySequenceStarted = true;
+        if (_victorySequenceStarted)
+        {
+            StartCoroutine(ForceVictoryFallbackRoutine());
+            return;
+        }
 
-        if (IsSpawned)
-            StartCoroutine(TriggerVictoryRoutine());
-        else
-            StartCoroutine(TriggerVictoryWhenSpawnedRoutine());
+        BeginVictoryTransition();
     }
 
     public override void OnNetworkSpawn()
@@ -227,15 +229,38 @@ public class MultiplayerGameManager : NetworkBehaviour
         if (net == null || !net.IsServer)
             return;
 
-        if (_victorySequenceStarted || _networkGameState.Value == GameState.Victory)
+        if (IsVictoryTransitionComplete())
             return;
 
+        if (_victorySequenceStarted)
+            return;
+
+        BeginVictoryTransition();
+    }
+
+    private void BeginVictoryTransition()
+    {
         _victorySequenceStarted = true;
 
         if (IsSpawned)
             StartCoroutine(TriggerVictoryRoutine());
         else
             StartCoroutine(TriggerVictoryWhenSpawnedRoutine());
+    }
+
+    private bool IsVictoryTransitionComplete()
+    {
+        return TryGetSafeGameState(out GameState state) && state == GameState.Victory;
+    }
+
+    private bool TryGetSafeGameState(out GameState state)
+    {
+        state = GameState.WaitingForPlayers;
+        if (!IsSpawned)
+            return false;
+
+        state = _networkGameState.Value;
+        return true;
     }
 
     private IEnumerator TriggerVictoryWhenSpawnedRoutine()
@@ -322,8 +347,36 @@ public class MultiplayerGameManager : NetworkBehaviour
     private IEnumerator TriggerVictoryRoutine()
     {
         float delay = gameConfig != null ? gameConfig.victoryDelay : 2f;
-        yield return new WaitForSeconds(delay);
-        _networkGameState.Value = GameState.Victory;
+        yield return new WaitForSecondsRealtime(delay);
+
+        if (IsSpawned)
+        {
+            _networkGameState.Value = GameState.Victory;
+            yield break;
+        }
+
+        yield return ForceVictoryFallbackRoutine();
+    }
+
+    private IEnumerator ForceVictoryFallbackRoutine()
+    {
+        float delay = gameConfig != null ? gameConfig.victoryDelay : 2f;
+        yield return new WaitForSecondsRealtime(delay);
+
+        if (IsVictoryTransitionComplete())
+            yield break;
+
+        if (IsSpawned)
+        {
+            _networkGameState.Value = GameState.Victory;
+            yield break;
+        }
+
+        Debug.LogWarning("[MultiplayerGameManager] Vitória — fallback direto para tela de vitória.");
+        Time.timeScale = 1f;
+        SaveProfileStore.Instance?.MarkActiveContractCompleted();
+        GameSessionContext.ResetContractRound();
+        ScreenFlowStateMachine.ShowVictoryScreen();
     }
 
     private IEnumerator TriggerDefeatRoutine()

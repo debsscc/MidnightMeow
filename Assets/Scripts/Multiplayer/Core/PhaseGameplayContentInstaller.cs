@@ -7,8 +7,29 @@ using UnityEngine.SceneManagement;
 /// </summary>
 public static class PhaseGameplayContentInstaller
 {
+    private static bool _subscribed;
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+    private static void RegisterSceneHook()
+    {
+        if (_subscribed)
+            return;
+
+        _subscribed = true;
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+        SceneManager.sceneLoaded += OnSceneLoaded;
+    }
+
+    private static void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        if (!GameplaySceneBootstrap.IsGameplayScene(scene.name))
+            return;
+
+        ApplyPhaseContent(scene.name);
+    }
+
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-    private static void AfterSceneLoad()
+    private static void AfterFirstSceneLoad()
     {
         string sceneName = SceneManager.GetActiveScene().name;
         if (!GameplaySceneBootstrap.IsGameplayScene(sceneName))
@@ -61,6 +82,7 @@ public static class PhaseGameplayContentInstaller
         }
 
         manager.Configure(entry);
+        Debug.Log($"[PhaseGameplayContentInstaller] PhaseObjectiveManager configurado para {entry.sceneName} (vitória={entry.winCondition}).");
         EnsureRatHoleSealStatusUi();
     }
 

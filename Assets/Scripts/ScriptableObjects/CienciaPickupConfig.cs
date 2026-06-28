@@ -19,4 +19,15 @@ public class CienciaPickupConfig : ScriptableObject
     [Header("Coleta")]
     [Tooltip("Raio em que a moeda é consumida (servidor). 0 = raio do CircleCollider2D do prefab.")]
     public float collectRadius = 0.55f;
+
+    private static CienciaPickupConfig _cached;
+
+    public static CienciaPickupConfig LoadCached()
+    {
+        if (_cached != null)
+            return _cached;
+
+        _cached = Resources.Load<CienciaPickupConfig>("CienciaPickupConfig");
+        return _cached;
+    }
 }

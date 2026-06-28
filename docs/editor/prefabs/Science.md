@@ -31,7 +31,7 @@ Pickup de ciência **multiplayer** usado em **Fase-1** (`NetworkWaveManager.netw
 
 | Campo | Asset |
 |-------|--------|
-| `pickupConfig` | `Assets/Data/Multiplayer/CienciaPickupConfig.asset` |
+| `pickupConfig` | `Assets/Resources/CienciaPickupConfig.asset` |
 | `config` | `Assets/Data/Multiplayer/MultiplayerConfig.asset` |
 
 ## Comportamento

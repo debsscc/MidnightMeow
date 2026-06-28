@@ -7,6 +7,7 @@ using System.Collections.Generic;
 // ReSharper disable UnusedMember.Global
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 [RequireComponent(typeof(PlayerInputHandler))]
 public class PlayerAbilityHandler : MonoBehaviour
@@ -62,8 +63,22 @@ public class PlayerAbilityHandler : MonoBehaviour
         if (dash == null) dash = GetComponent<PlayerDash>();
 
         ApplySandboxUnlock();
+        ApplyEarlyPhaseAbilityUnlock();
         CacheExecutors();
     }
+
+    private void ApplyEarlyPhaseAbilityUnlock()
+    {
+        if (!IsEarlyPhaseScene(SceneManager.GetActiveScene().name))
+            return;
+
+        _progression.ability1Unlocked = true;
+        _progression.ability2Unlocked = true;
+        _progression.phaseIndex = 3;
+    }
+
+    private static bool IsEarlyPhaseScene(string sceneName) =>
+        sceneName is "Fase-1" or "Fase-2";
 
     private void OnEnable()
     {
@@ -353,6 +368,7 @@ public class PlayerAbilityHandler : MonoBehaviour
     private void HandleWaveStatusChanged(int currentWave, int totalWaves, int enemiesRemaining, int totalKilled)
     {
         if (unlockAllAbilitySlotsOnStart) return;
+        if (IsEarlyPhaseScene(SceneManager.GetActiveScene().name)) return;
         _progression.SyncPhaseFromWaveIndex(currentWave - 1);
     }
 

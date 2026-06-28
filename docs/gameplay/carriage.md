@@ -18,7 +18,7 @@
 
 - Conserto cooperativo (mesmo padrão do selamento).
 
-- Chegada ao fim do trajeto → `GameEvents.OnCarriageArrived` → vitória Fase 2; progresso em `OnCarriagePathProgressChanged` (replicado via `NetworkVariable` para clientes).
+- Chegada ao fim do trajeto → `PhaseObjectiveManager.NotifyCarriageArrived()` + `GameEvents.OnCarriageArrived` → vitória Fase 2; progresso em `OnCarriagePathProgressChanged` (replicado via `NetworkVariable` para clientes).
 
 - **HUD Fase 2:** `PhaseObjectiveHud` mostra `Carruagem: X%` junto com buracos e inimigos.
 

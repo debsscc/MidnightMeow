@@ -9,11 +9,17 @@ public static class MultiplayerVictoryCoordinator
     public static void TryBeginVictoryFromPhaseObjective()
     {
         NetworkManager net = NetworkManager.Singleton;
-        if (net == null || !net.IsServer)
+        if (net != null && !net.IsServer)
             return;
 
         MultiplayerGameManager manager = MultiplayerGameManager.Instance;
         if (manager != null)
+        {
             manager.RequestVictoryFromPhaseObjective();
+            return;
+        }
+
+        Debug.LogWarning("[MultiplayerVictoryCoordinator] MultiplayerGameManager ausente — fallback local.");
+        PhaseObjectiveManager.Instance?.BeginVictoryScreenFallback();
     }
 }

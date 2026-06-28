@@ -1,3 +1,4 @@
+using System.Collections;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -12,6 +13,7 @@ public class PhaseObjectiveManager : MonoBehaviour
     private PhaseWaveSettingsCatalog.PhaseEntry _entry;
     private bool _victoryTriggered;
     private float _statusBroadcastTimer;
+    private Coroutine _victoryFallbackRoutine;
 
     private void Awake()
     {
@@ -82,7 +84,7 @@ public class PhaseObjectiveManager : MonoBehaviour
             TriggerVictory("Boss derrotado.");
     }
 
-    private void HandleCarriageArrived()
+    public void NotifyCarriageArrived()
     {
         if (_victoryTriggered || _entry == null)
             return;
@@ -90,6 +92,8 @@ public class PhaseObjectiveManager : MonoBehaviour
         if (_entry.winCondition == PhaseWaveSettingsCatalog.PhaseWinCondition.CarriageReachEnd)
             TriggerVictory("Carruagem chegou ao destino.");
     }
+
+    private void HandleCarriageArrived() => NotifyCarriageArrived();
 
     private void TriggerVictory(string reason)
     {
@@ -99,8 +103,35 @@ public class PhaseObjectiveManager : MonoBehaviour
         _victoryTriggered = true;
         Debug.Log($"[PhaseObjectiveManager] Vitória: {reason}");
         NetworkWaveManager.Instance?.StopSpawning();
-        GameEvents.InvokeNightEnded();
         MultiplayerVictoryCoordinator.TryBeginVictoryFromPhaseObjective();
+        GameEvents.InvokeNightEnded();
+        BeginVictoryScreenFallback();
+    }
+
+    public void BeginVictoryScreenFallback()
+    {
+        if (_victoryFallbackRoutine != null)
+            StopCoroutine(_victoryFallbackRoutine);
+
+        _victoryFallbackRoutine = StartCoroutine(VictoryScreenFallbackRoutine());
+    }
+
+    private IEnumerator VictoryScreenFallbackRoutine()
+    {
+        const float graceSeconds = 0.75f;
+        const float delaySeconds = 2f;
+        yield return new WaitForSecondsRealtime(delaySeconds + graceSeconds);
+
+        MultiplayerGameManager mp = MultiplayerGameManager.Instance;
+        if (mp != null && mp.HasReachedVictoryState)
+            yield break;
+
+        Debug.LogWarning("[PhaseObjectiveManager] Fallback de vitória — transição MP não completou.");
+        Time.timeScale = 1f;
+        SaveProfileStore.Instance?.MarkActiveContractCompleted();
+        GameSessionContext.ResetContractRound();
+        ScreenFlowStateMachine.ShowVictoryScreen();
+        _victoryFallbackRoutine = null;
     }
 
     private static bool IsServer()

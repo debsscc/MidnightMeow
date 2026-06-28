@@ -6,6 +6,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class NetworkWaveManager : NetworkBehaviour
 {
@@ -63,6 +64,10 @@ public class NetworkWaveManager : NetworkBehaviour
         if (!IsServer) return;
 
         MultiplayerGameManager.OnGameStateChanged += HandleGameStateChanged;
+
+        string sceneName = SceneManager.GetActiveScene().name;
+        if (GameplaySceneBootstrap.IsGameplayScene(sceneName))
+            PhaseGameplayContentInstaller.ApplyPhaseContent(sceneName);
 
         if (waveSettings == null)
             Debug.LogError("[NetworkWaveManager] WaveSettings não atribuído no Inspector!");
@@ -296,7 +301,8 @@ public class NetworkWaveManager : NetworkBehaviour
             if (_currentWaveIndex >= waveSettings.waves.Count && _enemiesAlive <= 0)
             {
                 AllWavesClearedClientRpc();
-                GameEvents.InvokeNightEnded();
+                if (ShouldInvokeLegacyNightEnded())
+                    GameEvents.InvokeNightEnded();
             }
         }
         else
@@ -307,7 +313,7 @@ public class NetworkWaveManager : NetworkBehaviour
 
     private GameObject SpawnNetworkCiencia(GameObject prefab, Vector3 position, int amount)
     {
-        GameObject toSpawn = networkCienciaPrefab != null ? networkCienciaPrefab : prefab;
+        GameObject toSpawn = ResolveCienciaSpawnPrefab(prefab);
         GameObject cienciaObj = Instantiate(toSpawn, position, Quaternion.identity);
 
         if (cienciaObj.TryGetComponent<Ciencia>(out Ciencia ciencia))
@@ -323,6 +329,16 @@ public class NetworkWaveManager : NetworkBehaviour
 
         netObj.Spawn(true);
         return cienciaObj;
+    }
+
+    private GameObject ResolveCienciaSpawnPrefab(GameObject statsPrefab)
+    {
+        if (networkCienciaPrefab != null
+            && networkCienciaPrefab.GetComponent<NetworkCienciaController>() != null
+            && networkCienciaPrefab.GetComponent<CircleCollider2D>() != null)
+            return networkCienciaPrefab;
+
+        return statsPrefab;
     }
 
     [ClientRpc]
@@ -406,5 +422,10 @@ public class NetworkWaveManager : NetworkBehaviour
             if (prefab != null && !_holeSpawnPrefabs.Contains(prefab))
                 _holeSpawnPrefabs.Add(prefab);
         }
+    }
+
+    private static bool ShouldInvokeLegacyNightEnded()
+    {
+        return PhaseObjectiveManager.Instance == null;
     }
 }

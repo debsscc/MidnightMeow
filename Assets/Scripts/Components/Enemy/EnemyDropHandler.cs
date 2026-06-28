@@ -4,6 +4,7 @@
 // DESCRIÇÃO: Componente que gerencia o drop de ciência quando o inimigo morre.
 // ---------------------------------------------------------------- */
 
+using Unity.Netcode;
 using UnityEngine;
 
 [RequireComponent(typeof(HealthComponent))]
@@ -44,6 +45,13 @@ public class EnemyDropHandler : MonoBehaviour
     public void TrySpawnDrop()
     {
         if (_dropProcessed || stats == null || stats.cienciaPrefab == null) return;
+
+        NetworkManager net = NetworkManager.Singleton;
+        if (net != null && net.IsListening && !net.IsServer)
+            return;
+
+        if (net != null && net.IsServer && GetComponent<NetworkObject>() is { IsSpawned: true } && SpawnDelegate == null)
+            return;
 
         float randomValue = Random.Range(0f, 1f);
         if (randomValue > stats.dropChance) return;

@@ -328,7 +328,37 @@ PhaseSceneSetupEditor:InstallRatHoleSpawnPoints
 
 **Validação:** Menu → Contrato 2 → Characters → Loading2 → Fase-2. Console: `[NetworkCarriageSpawner] Carruagem pronta (path + spawn).` Hierarquia Play: `CarriagePath/Waypoint_Start`, `Waypoint_End`.
 
+### Sintoma: carruagem chega ao fim mas não vai para a tela de vitória (solo/host)
+
+**Causa principal (2026-06-28):** `PhaseGameplayContentInstaller` usava `RuntimeInitializeLoadType.AfterSceneLoad`, que só roda na **primeira** cena (Bootstrap). Ao entrar em Fase-2, `PhaseObjectiveManager` nunca era criado — sem logs `[PhaseObjectiveManager]` no Console.
+
+**Solução:** hook em `SceneManager.sceneLoaded` + re-aplicação quando `NetworkWaveManager` faz spawn no servidor. A carruagem também reconfigura a fase ao chegar ao destino se o manager estiver ausente.
+
+**Console esperado ao entrar na fase:** `[PhaseGameplayContentInstaller] PhaseObjectiveManager configurado para Fase-2 (vitória=CarriageReachEnd).`
+
+**Ao vencer:** `[PhaseObjectiveManager] Vitória: Carruagem chegou ao destino.` → após ~2s, tela de vitória.
+
+Outras causas já corrigidas: delay de vitória com `WaitForSecondsRealtime`; fallback de tela de vitória.
+
 Ver também: [gameplay/carriage.md](../gameplay/carriage.md).
+
+---
+
+## Gameplay — magículas (ciência) paradas no chão
+
+### Sintoma: alguns drops de ratos não são coletados (Fase 2)
+
+**Causas comuns:**
+
+| Causa | Efeito |
+|-------|--------|
+| Prefab `NetworkCiencia` sem collider/homing | Coleta só por overlap muito pequeno no servidor |
+| `networkCienciaPrefab` apontando para prefab incompleto | Usar `Science.prefab` (com collider + homing) |
+| Drop duplicado no cliente | Fantasma local sem coleta de rede |
+
+**Solução (2026-06-28):** `NetworkCienciaController` garante collider + RB kinematic + homing em runtime; coleta também busca jogadores conectados; `EnemyDropHandler` só dropa no servidor em sessão NGO; `ResolveCienciaSpawnPrefab` prefere prefab completo (`Science`).
+
+**Config:** `Assets/Resources/CienciaPickupConfig.asset` (`homingRadius`, `collectRadius`).
 
 ---
 
