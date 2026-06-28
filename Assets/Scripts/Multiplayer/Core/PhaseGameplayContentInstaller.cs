@@ -35,10 +35,7 @@ public static class PhaseGameplayContentInstaller
         }
 
         if (entry.enableCarriage && sceneName == "Fase-2")
-        {
-            EnsureCarriagePathFromBounds();
-            EnsureCarriageVisuals();
-        }
+            EnsureCarriageSetup();
     }
 
     private static void ConfigureWaveManager(PhaseWaveSettingsCatalog.PhaseEntry entry)
@@ -97,43 +94,81 @@ public static class PhaseGameplayContentInstaller
             RatHoleSealZoneVisual.EnsureAttached(sealManager);
     }
 
-    private static void EnsureCarriagePathFromBounds()
-    {
-        if (NetworkCarriage.Instance != null)
-            return;
-
-        CarriagePath existingPath = Object.FindFirstObjectByType<CarriagePath>(FindObjectsInactive.Include);
-        if (existingPath != null)
-            return;
-
-        if (!TryGetMapBounds(out Bounds bounds))
-            return;
-
-        float centerY = bounds.center.y;
-        Vector3 left = new Vector3(bounds.min.x, centerY, 0f);
-        Vector3 right = new Vector3(bounds.max.x, centerY, 0f);
-
-        GameObject pathRoot = new GameObject("CarriagePath_Runtime");
-        CarriagePath path = pathRoot.AddComponent<CarriagePath>();
-
-        GameObject wpStart = new GameObject("Waypoint_Start");
-        wpStart.transform.SetParent(pathRoot.transform, false);
-        wpStart.transform.position = left;
-
-        GameObject wpEnd = new GameObject("Waypoint_End");
-        wpEnd.transform.SetParent(pathRoot.transform, false);
-        wpEnd.transform.position = right;
-
-        path.ConfigureWaypoints(new[] { wpStart.transform, wpEnd.transform });
-    }
-
-    private static void EnsureCarriageVisuals()
+    private static void EnsureCarriageSetup()
     {
         NetworkCarriage carriage = Object.FindFirstObjectByType<NetworkCarriage>(FindObjectsInactive.Include);
+        if (carriage != null)
+            ConfigureCarriage(carriage);
+
+        NetworkCarriageSpawner.EnsureCarriageSpawned();
+    }
+
+    public static void ConfigureCarriage(NetworkCarriage carriage)
+    {
         if (carriage == null)
             return;
 
+        CarriageConfig config = carriage.Config;
+        CarriagePath path = EnsureCarriagePath(carriage, config);
+        carriage.ConfigurePath(path);
         carriage.EnsureRuntimePresentation();
+    }
+
+    private static CarriagePath EnsureCarriagePath(NetworkCarriage carriage, CarriageConfig config)
+    {
+        CarriagePath path = carriage.Path;
+        if (path == null)
+            path = Object.FindFirstObjectByType<CarriagePath>(FindObjectsInactive.Include);
+
+        float pathY = ResolveCarriagePathY(config);
+        Vector3 start = new Vector3(config != null ? config.pathStartX : -42f, pathY, 0f);
+        Vector3 end = new Vector3(config != null ? config.pathEndX : 18f, pathY, 0f);
+
+        if (TryGetMapBounds(out Bounds bounds))
+            end.x = Mathf.Min(end.x, bounds.max.x - 2f);
+
+        if (path == null)
+        {
+            GameObject pathRoot = new GameObject("CarriagePath");
+            path = pathRoot.AddComponent<CarriagePath>();
+        }
+
+        Transform pathRootTransform = path.transform;
+        Transform wpStart = pathRootTransform.Find("Waypoint_Start");
+        if (wpStart == null)
+        {
+            GameObject startGo = new GameObject("Waypoint_Start");
+            startGo.transform.SetParent(pathRootTransform, false);
+            wpStart = startGo.transform;
+        }
+
+        Transform wpEnd = pathRootTransform.Find("Waypoint_End");
+        if (wpEnd == null)
+        {
+            GameObject endGo = new GameObject("Waypoint_End");
+            endGo.transform.SetParent(pathRootTransform, false);
+            wpEnd = endGo.transform;
+        }
+
+        wpStart.position = start;
+        wpEnd.position = end;
+        path.ConfigureWaypoints(new[] { wpStart, wpEnd });
+
+        if (carriage != null)
+            carriage.transform.position = start;
+
+        return path;
+    }
+
+    private static float ResolveCarriagePathY(CarriageConfig config)
+    {
+        if (config != null && config.useCustomPathY)
+            return config.pathY;
+
+        if (TryGetMapBounds(out Bounds bounds))
+            return bounds.center.y;
+
+        return 0f;
     }
 
     private static bool TryGetMapBounds(out Bounds bounds)

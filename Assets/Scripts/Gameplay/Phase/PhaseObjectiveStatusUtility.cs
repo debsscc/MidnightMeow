@@ -16,6 +16,19 @@ public static class PhaseObjectiveStatusUtility
         sealedCount = 0;
         totalCount = 0;
 
+        IReadOnlyList<RatHoleSpawnPoint> holes = RatHoleSpawnPoint.All;
+        if (holes.Count > 0)
+        {
+            totalCount = holes.Count;
+            for (int i = 0; i < holes.Count; i++)
+            {
+                if (holes[i] != null && holes[i].IsSealed)
+                    sealedCount++;
+            }
+
+            return;
+        }
+
         NetworkRatHoleSealManager sealManager = NetworkRatHoleSealManager.Instance;
         if (sealManager != null && sealManager.IsSpawned)
         {
@@ -25,17 +38,6 @@ public static class PhaseObjectiveStatusUtility
                 if (session.IsSealed)
                     sealedCount++;
             }
-        }
-
-        if (totalCount > 0)
-            return;
-
-        IReadOnlyList<RatHoleSpawnPoint> holes = RatHoleSpawnPoint.All;
-        totalCount = holes.Count;
-        for (int i = 0; i < holes.Count; i++)
-        {
-            if (holes[i] != null && holes[i].IsSealed)
-                sealedCount++;
         }
     }
 

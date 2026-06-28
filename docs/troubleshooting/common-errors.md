@@ -1,6 +1,6 @@
 # Erros e avisos comuns
 
-Última revisão: 2026-06-25
+Última revisão: 2026-06-28
 
 Referência rápida para mensagens frequentes no Console do Unity / compilador C# neste projeto.
 
@@ -287,6 +287,80 @@ PhaseSceneSetupEditor:InstallRatHoleSpawnPoints
 1. Em `RatHoleSpawnPoint`, usar `EnsureTriggerCollider()` com null-check.
 2. No `PhaseSceneSetupEditor`, adicionar `CircleCollider2D` **antes** de `RatHoleSpawnPoint`.
 3. Ignorar spawn points de jogador (`---- Spawn Points Jogadores ----`).
+
+---
+
+## Gameplay — carruagem (Fase 2)
+
+### Sintoma: carruagem bate na parede antes de completar o trajeto
+
+**Causa:** `pathEndX` ultrapassava o limite walkable do mapa.
+
+**Solução:** ajustar `CarriageConfig.pathEndX` (atual **18**, 2 uu à esquerda do valor anterior 20). Waypoints recriados em runtime por `PhaseGameplayContentInstaller`. O fim X é ainda limitado a `CameraBounds.max.x - 2`.
+
+### Sintoma: carruagem trava em ~97% e não vence a fase
+
+**Causa:** progresso era **temporal** (0→1 por tempo) enquanto a posição real parava antes do fim (parede/colisão). HUD mostrava ~97% mas `OnCarriageArrived` não disparava.
+
+**Solução:** movimento por **distância** ao waypoint final; progresso = projeção no segmento (`CarriagePath.GetNormalizedProgress`). Vitória em `≥98%`, `arrivalZoneRadius`, ou snap no fim (`CompleteArrival`).
+
+---
+
+### Sintoma: carruagem enorme, parada, em (0,0) ou `CarriagePath` vazio no Inspector
+
+**Causas comuns:**
+
+| Causa | Efeito |
+|-------|--------|
+| Sprite de menu/UI no prefab + `visualScale = 3` | Carruagem gigante na tela |
+| `NetworkCarriageSpawner` só configurava no servidor | Solo/host OK às vezes; clientes sem `path` local |
+| Cena sem `CarriagePath` e setup abortado cedo | `path` nulo → `Update` não move |
+| Abrir `Fase-2` direto no Editor sem host | Spawner expira; carruagem in-scene fica em (0,0) sem path |
+| Inspector de `CarriagePath` vazio fora do Play | Normal — waypoints são filhos criados em runtime |
+
+**Correções no projeto (2026-06-28):**
+
+1. Placeholder **sempre** quadrado marrom (~2,4×1,6 uu); prefab `Visual` sem sprite.
+2. `CarriageConfig.visualScale` padrão **1** (multiplicador opcional).
+3. `PhaseGameplayContentInstaller.ConfigureCarriage` roda em **todos os peers**; spawner repete até path + `NetworkObject.Spawn`.
+4. `NetworkCarriage.HandlePathProgressChanged` chama `ApplyPathPosition` nos clientes.
+5. Solo: host em Loading2 via `GameplaySessionStarter` antes de `EnterGameplay`.
+
+**Validação:** Menu → Contrato 2 → Characters → Loading2 → Fase-2. Console: `[NetworkCarriageSpawner] Carruagem pronta (path + spawn).` Hierarquia Play: `CarriagePath/Waypoint_Start`, `Waypoint_End`.
+
+Ver também: [gameplay/carriage.md](../gameplay/carriage.md).
+
+---
+
+## Gameplay — dissolve / morte de inimigos
+
+### Sintoma: rato morre, some, reaparece no último frame com shader e some de novo
+
+**Causa:** material VOiD1 legado + `EnemySpawnPresentation` abortando sem restaurar materiais; `EnsureRenderersVisibleForDissolve` reativava sprites após um hide parcial.
+
+**Solução (2026-06-28):** shader **`MidnightMeow/EnemyDeathFade`** (`Assets/Art/Materials/EnemyDeathFade.mat`) em todos os `Rato_*`. Sequência: animação `Dying` → fade alpha linear → hide. `EnemySpawnPresentation.CancelForDeath()` restaura materiais antes do fade.
+
+---
+
+## Gameplay — telegraph inimigo (forma errada)
+
+### Sintoma: faixa estreita (retângulo) aparece como oval/círculo distorcido
+
+**Causa:** `EnemyTelegraphZoneView.ApplyStyle` retornava cedo quando `visualStyle == null` **antes** de definir `_Shape` no material. O template `TelegraphZoneMaterial` usa `_Shape = 0` (círculo); escala não uniforme (ex.: 0,77×7) vira elipse.
+
+**Padrão afetado:** `Rato_Acido_Lane` (`shape: Rectangle`, `visualStyle` nulo).
+
+**Correção:** `_Shape` e `_FillMode` são aplicados **sempre**; cores padrão quando `visualStyle` é nulo. Retângulos usam contorno nas 4 bordas no shader.
+
+**Validação:** ataque do Rato Ácido = faixa reta fina alinhada ao alvo, não oval.
+
+### Sintoma: retângulo enche do lado errado (ex.: rato acima, fill sobe de baixo)
+
+**Causa:** fill fixo em UV local Y; não considerava posição do atacante.
+
+**Solução:** `EnemyTelegraphZoneView.ConfigureFillOrigin` + `_FillOriginSide` no shader — preenchimento começa no canto mais próximo do `attackOrigin` / spawn do projétil.
+
+Ver: [enemy-telegraph-attacks.md](../combat/enemy-telegraph-attacks.md).
 
 ---
 

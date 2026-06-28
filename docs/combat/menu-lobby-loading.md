@@ -40,7 +40,7 @@ Layout: botões canto inferior esquerdo com offset (ref. `docs/reference_imgs/me
 
 - Arte Nix + Cora (placeholders coloridos)
 - Rota pendente: `loading1_preparation`
-- Tempo mínimo configurável em `LoadingScreenController`
+- Tempo mínimo padrão: **2,5 s** em `LoadingScreenController` (antes 7 s)
 - Barra de progresso usa `LoadingProgressUtility` (sprite UI builtin + `fillAmount`) e reinicia em 0% a cada transição
 
 ## Catálogo

@@ -1,6 +1,6 @@
 # Prefab: PlayerSpawnManager
 
-Última revisão: 2026-06-10  
+Última revisão: 2026-06-28  
 **Caminho:** `Assets/Prefabs/Multiplayer/PlayerSpawnManager.prefab`
 
 ## Resumo
@@ -18,8 +18,8 @@ Spawn de jogadores na rede: pontos no mapa e prefab NGO.
 
 | Campo | Valor atual |
 |-------|-------------|
-| `playerNetworkPrefab` | **Cora** — `guid: b18ed4e45e4d20a4dbdac339b666e689` |
-| `characterPrefabs` | `[]` *(vazio — preencher Cora + Nixie quando Lobby selecionar personagem)* |
+| `playerNetworkPrefab` | **Cora** (fallback legado) — `guid: b18ed4e45e4d20a4dbdac339b666e689` |
+| `characterPrefabs` | **Obrigatório:** Element 0 = Nixie (`CharacterA`), Element 1 = Cora (`CharacterB`) |
 | `spawnPoints` | Array de Transforms na **cena de gameplay** (um por jogador ou mais) |
 
 ## Como configurar spawn em locais diferentes
@@ -51,11 +51,11 @@ Spawn de jogadores na rede: pontos no mapa e prefab NGO.
 
 ## Fluxo esperado
 
-1. Lobby escolhe Cora ou Nixie.
-2. Servidor spawna o prefab correspondente em um `spawnPoint` livre.
-3. Vários clientes no **mesmo** spawn point recebem offset circular (`coSpawnSeparation`).
-4. Pós-carga de cena: **reposiciona** jogadores existentes (`ApplySpawnTransformToPlayer`) em vez de despawn/respawn (evita teleporte visual).
-4. Até `characterPrefabs` estar populado, todos recebem **Cora** por padrão.
+1. Preparação → Characters: jogador escolhe Nixie (`CharacterA`) ou Cora (`CharacterB`).
+2. Seleção persistida em `LobbySelectionStore`, `SaveProfileStore` e (MP) `PreparationSessionManager`.
+3. Servidor spawna o prefab correspondente via `GetPrefabForClient` → `ResolveCharacterPrefab`.
+4. **Todas as cenas Fase-* devem ter `characterPrefabs` preenchido** (Fase-2 estava vazio e sempre spawnava Cora).
+5. Fallback em runtime: `CharacterPrefabLibrary` + menu **Setup All Phase Scenes**.
 
 ## Relacionados
 

@@ -39,6 +39,11 @@ public class EnemyMovement : MonoBehaviour
 
         _agent.updateRotation = false;
         _agent.updateUpAxis = false;
+        _agent.autoBraking = false;
+        _agent.acceleration = 999f;
+        _agent.angularSpeed = 720f;
+        _agent.obstacleAvoidanceType = ObstacleAvoidanceType.NoObstacleAvoidance;
+        _agent.stoppingDistance = 0.05f;
         if (stats != null)
             _agent.speed = stats.moveSpeed;
 

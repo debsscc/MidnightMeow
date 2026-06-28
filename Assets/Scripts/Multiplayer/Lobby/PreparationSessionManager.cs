@@ -460,6 +460,8 @@ public class PreparationSessionManager : NetworkBehaviour
         if (!IsServer)
             return;
 
+        LobbySelectionStore.CaptureFromPreparation(_players);
+
         string gameplayScene = ApplySelectedContractToSession();
         SyncGameplaySceneClientRpc(new FixedString64Bytes(gameplayScene));
         ScreenFlowStateMachine.BeginGameplayLoading();

@@ -48,6 +48,7 @@ Agentes de IA **não veem o Inspector**. Esta pasta descreve prefabs, cenas e as
 
 | Prefab | Doc |
 |--------|-----|
+| Carriage (Fase 2) | [prefabs/Carriage.md](prefabs/Carriage.md) |
 | House | [prefabs/House.md](prefabs/House.md) |
 | NavMesh / Wall / Walkable | [prefabs/Environment.md](prefabs/Environment.md) |
 

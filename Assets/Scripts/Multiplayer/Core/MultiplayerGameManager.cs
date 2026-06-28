@@ -37,6 +37,7 @@ public class MultiplayerGameManager : NetworkBehaviour
     );
 
     private bool _defeatSequenceStarted;
+    private bool _victorySequenceStarted;
 
     public GameState CurrentState => _networkGameState.Value;
     public int PlayersFighting => _playersFighting.Value;
@@ -54,6 +55,43 @@ public class MultiplayerGameManager : NetworkBehaviour
             return;
         }
         Instance = this;
+        GameEvents.OnNightEnded += HandleNightEndedFromEvent;
+    }
+
+    public override void OnDestroy()
+    {
+        GameEvents.OnNightEnded -= HandleNightEndedFromEvent;
+
+        if (Instance == this)
+            Instance = null;
+
+        base.OnDestroy();
+    }
+
+    private void HandleNightEndedFromEvent()
+    {
+        NetworkManager net = NetworkManager.Singleton;
+        if (net == null || !net.IsServer)
+            return;
+
+        HandleNightEnded();
+    }
+
+    public void RequestVictoryFromPhaseObjective()
+    {
+        NetworkManager net = NetworkManager.Singleton;
+        if (net == null || !net.IsServer)
+            return;
+
+        if (_victorySequenceStarted || _networkGameState.Value == GameState.Victory)
+            return;
+
+        _victorySequenceStarted = true;
+
+        if (IsSpawned)
+            StartCoroutine(TriggerVictoryRoutine());
+        else
+            StartCoroutine(TriggerVictoryWhenSpawnedRoutine());
     }
 
     public override void OnNetworkSpawn()
@@ -62,10 +100,7 @@ public class MultiplayerGameManager : NetworkBehaviour
         _playersFighting.OnValueChanged += HandlePlayersFightingChanged;
 
         if (IsServer)
-        {
-            GameEvents.OnNightEnded += HandleNightEnded;
             TryAutoBeginGameplayOnServer();
-        }
 
         Debug.Log($"[MultiplayerGameManager] Spawned. IsServer={IsServer}, IsHost={IsHost}");
     }
@@ -74,9 +109,6 @@ public class MultiplayerGameManager : NetworkBehaviour
     {
         _networkGameState.OnValueChanged -= HandleGameStateChanged;
         _playersFighting.OnValueChanged -= HandlePlayersFightingChanged;
-
-        if (IsServer)
-            GameEvents.OnNightEnded -= HandleNightEnded;
     }
 
     /// <summary>
@@ -191,8 +223,44 @@ public class MultiplayerGameManager : NetworkBehaviour
 
     private void HandleNightEnded()
     {
-        if (!IsServer) return;
-        StartCoroutine(TriggerVictoryRoutine());
+        NetworkManager net = NetworkManager.Singleton;
+        if (net == null || !net.IsServer)
+            return;
+
+        if (_victorySequenceStarted || _networkGameState.Value == GameState.Victory)
+            return;
+
+        _victorySequenceStarted = true;
+
+        if (IsSpawned)
+            StartCoroutine(TriggerVictoryRoutine());
+        else
+            StartCoroutine(TriggerVictoryWhenSpawnedRoutine());
+    }
+
+    private IEnumerator TriggerVictoryWhenSpawnedRoutine()
+    {
+        const float timeout = 5f;
+        float elapsed = 0f;
+
+        while (!IsSpawned && elapsed < timeout)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            yield return null;
+        }
+
+        if (IsSpawned)
+        {
+            yield return TriggerVictoryRoutine();
+            yield break;
+        }
+
+        Debug.LogWarning("[MultiplayerGameManager] Vitória sem NetworkObject spawnado — fallback local.");
+        if (ScreenFlowStateMachine.ShowVictoryScreen())
+            yield break;
+
+        SaveProfileStore.Instance?.MarkActiveContractCompleted();
+        GameSessionContext.ResetContractRound();
     }
 
     private void HandlePlayersFightingChanged(int oldValue, int newValue)

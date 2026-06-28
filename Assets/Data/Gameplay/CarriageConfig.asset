@@ -13,7 +13,11 @@ MonoBehaviour:
   m_Name: CarriageConfig
   m_EditorClassIdentifier: Assembly-CSharp::CarriageConfig
   maxHealth: 120
-  visualScale: 3
+  visualScale: 1
+  pathStartX: -42
+  pathEndX: 18
+  useCustomPathY: 0
+  pathY: 0
   moveSpeed: 1.8
   arrivalZoneRadius: 2
   repairZoneRadius: 1.2

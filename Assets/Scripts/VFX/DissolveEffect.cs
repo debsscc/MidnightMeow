@@ -88,6 +88,9 @@ public class DissolveEffect : MonoBehaviour
         if (_isPlaying)
             return;
 
+        if (TryGetComponent<EnemySpawnPresentation>(out var spawnPresentation))
+            spawnPresentation.CancelForDeath();
+
         if (dissolveMaterial == null)
         {
             Debug.LogWarning("[DissolveEffect] dissolveMaterial não atribuído.");
@@ -146,10 +149,10 @@ public class DissolveEffect : MonoBehaviour
             if (_animator != null)
                 _animator.speed = 0f;
 
+            RestoreOriginalMaterialsBeforeFade();
             ApplyDissolveMaterials();
-            EnsureRenderersVisibleForDissolve();
 
-            if (playSparkleParticles)
+            if (playSparkleParticles && _binding.Driver == DissolveMaterialBinding.Kind.DissolveSprite)
                 DissolveSparkleVfx.Attach(transform, GetCombinedBounds(), duration, edgeColor);
 
             float elapsed = 0f;
@@ -180,8 +183,11 @@ public class DissolveEffect : MonoBehaviour
         }
     }
 
-    private void EnsureRenderersVisibleForDissolve()
+    private void RestoreOriginalMaterialsBeforeFade()
     {
+        ReleaseMaterials();
+        CollectTargets();
+
         for (int i = 0; i < _targets.Count; i++)
         {
             SpriteRenderer renderer = _targets[i];
@@ -190,13 +196,24 @@ public class DissolveEffect : MonoBehaviour
 
             renderer.enabled = true;
             renderer.forceRenderingOff = false;
+
+            if (i < _originalSharedMaterials.Count && _originalSharedMaterials[i] != null)
+                renderer.sharedMaterial = _originalSharedMaterials[i];
         }
+    }
+
+    private static float EvaluateDissolveProgress(float elapsedNormalized)
+    {
+        return Mathf.Clamp01(elapsedNormalized);
     }
 
     private bool ShouldHideNow(float linearNormalized, float shaderNormalized)
     {
         if (_binding.Driver == DissolveMaterialBinding.Kind.Void1Sprite2D)
             return linearNormalized >= void1HideAtLinearTime;
+
+        if (_binding.Driver == DissolveMaterialBinding.Kind.EnemyDeathFade)
+            return shaderNormalized >= 0.995f;
 
         return shaderNormalized >= hideAtDissolveProgress;
     }
@@ -205,12 +222,6 @@ public class DissolveEffect : MonoBehaviour
     {
         HideVisuals();
         _networkEnemyController?.NotifyDeathPresentationFinished();
-    }
-
-    private static float EvaluateDissolveProgress(float elapsedNormalized)
-    {
-        float normalized = Mathf.Clamp01(elapsedNormalized);
-        return normalized * normalized;
     }
 
     private IEnumerator WaitUntilDeathAnimationComplete()

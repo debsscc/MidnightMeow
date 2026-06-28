@@ -15,6 +15,10 @@ public class NetworkCarriage : NetworkBehaviour
     [SerializeField] private CarriagePath path;
 
     private HealthComponent _health;
+    private static Sprite _cachedPlaceholderSprite;
+
+    private const float TargetVisualWidth = 2.4f;
+    private const float TargetVisualHeight = 1.6f;
 
     private readonly NetworkVariable<float> _pathProgress = new NetworkVariable<float>(
         0f,
@@ -77,6 +81,7 @@ public class NetworkCarriage : NetworkBehaviour
     public float RepairProgress => _repairProgress.Value;
     public bool HasArrived => _arrived.Value;
     public CarriageConfig Config => config;
+    public CarriagePath Path => path;
     public Vector2 RepairZoneA => _repairZoneA.Value;
     public Vector2 RepairZoneB => _repairZoneB.Value;
     public byte RepairZoneCount => _repairZoneCount.Value;
@@ -90,7 +95,7 @@ public class NetworkCarriage : NetworkBehaviour
         }
 
         Instance = this;
-        _health = GetComponent<HealthComponent>();
+        ResolveSingleHealthComponent();
         if (config == null)
         {
             config = ScriptableObject.CreateInstance<CarriageConfig>();
@@ -103,17 +108,91 @@ public class NetworkCarriage : NetworkBehaviour
         EnsureRuntimePresentation();
     }
 
+    public void ConfigurePath(CarriagePath carriagePath)
+    {
+        if (carriagePath != null)
+            path = carriagePath;
+    }
+
     public void EnsureRuntimePresentation()
     {
+        EnsurePlaceholderSprite();
         ApplyVisualScale();
         EnsureHealthBar();
     }
 
-    private void ApplyVisualScale()
+    private void ResolveSingleHealthComponent()
     {
-        if (config == null)
+        HealthComponent[] healthComponents = GetComponents<HealthComponent>();
+        if (healthComponents.Length == 0)
+        {
+            _health = gameObject.AddComponent<HealthComponent>();
+            return;
+        }
+
+        _health = healthComponents[0];
+        for (int i = 1; i < healthComponents.Length; i++)
+        {
+            if (healthComponents[i] != null)
+                Destroy(healthComponents[i]);
+        }
+    }
+
+    private void EnsurePlaceholderSprite()
+    {
+        Transform visual = transform.Find("Visual");
+        if (visual == null)
+        {
+            SpriteRenderer rootSprite = GetComponentInChildren<SpriteRenderer>();
+            if (rootSprite != null)
+                visual = rootSprite.transform;
+        }
+
+        if (visual == null)
             return;
 
+        SpriteRenderer spriteRenderer = visual.GetComponent<SpriteRenderer>();
+        if (spriteRenderer == null)
+            return;
+
+        spriteRenderer.sprite = ResolvePlaceholderSprite();
+        spriteRenderer.drawMode = SpriteDrawMode.Simple;
+        spriteRenderer.color = new Color(0.75f, 0.55f, 0.25f, 1f);
+        spriteRenderer.sortingOrder = Mathf.Max(spriteRenderer.sortingOrder, 2);
+    }
+
+    private static Sprite ResolvePlaceholderSprite()
+    {
+        if (_cachedPlaceholderSprite != null)
+            return _cachedPlaceholderSprite;
+
+        Sprite fromResources = Resources.Load<Sprite>("CarriagePlaceholderSprite");
+        if (fromResources != null)
+        {
+            _cachedPlaceholderSprite = fromResources;
+            return _cachedPlaceholderSprite;
+        }
+
+        _cachedPlaceholderSprite = CreateRuntimePlaceholderSprite();
+        return _cachedPlaceholderSprite;
+    }
+
+    private static Sprite CreateRuntimePlaceholderSprite()
+    {
+        Texture2D texture = new Texture2D(4, 4, TextureFormat.RGBA32, false);
+        Color fill = new Color(0.75f, 0.55f, 0.25f, 1f);
+        Color[] pixels = new Color[16];
+        for (int i = 0; i < pixels.Length; i++)
+            pixels[i] = fill;
+
+        texture.SetPixels(pixels);
+        texture.Apply();
+        texture.filterMode = FilterMode.Point;
+        return Sprite.Create(texture, new Rect(0f, 0f, 4f, 4f), new Vector2(0.5f, 0.5f), 4f);
+    }
+
+    private void ApplyVisualScale()
+    {
         Transform visual = transform.Find("Visual");
         if (visual == null)
         {
@@ -125,18 +204,21 @@ public class NetworkCarriage : NetworkBehaviour
         if (visual == null)
             return;
 
-        float scale = Mathf.Max(0.5f, config.visualScale);
-        visual.localScale = Vector3.one * scale;
+        SpriteRenderer spriteRenderer = visual.GetComponent<SpriteRenderer>();
+        if (spriteRenderer == null || spriteRenderer.sprite == null)
+            return;
+
+        Vector2 spriteSize = spriteRenderer.sprite.bounds.size;
+        float scaleX = TargetVisualWidth / Mathf.Max(0.01f, spriteSize.x);
+        float scaleY = TargetVisualHeight / Mathf.Max(0.01f, spriteSize.y);
+        float multiplier = config != null ? Mathf.Max(0.25f, config.visualScale) : 1f;
+        visual.localScale = new Vector3(scaleX * multiplier, scaleY * multiplier, 1f);
 
         if (TryGetComponent<BoxCollider2D>(out var box))
         {
-            SpriteRenderer sr = visual.GetComponent<SpriteRenderer>();
-            if (sr != null)
-            {
-                Bounds b = sr.bounds;
-                box.size = new Vector2(b.size.x * 0.9f, b.size.y * 0.85f);
-                box.offset = transform.InverseTransformPoint(b.center);
-            }
+            Bounds bounds = spriteRenderer.bounds;
+            box.size = new Vector2(bounds.size.x * 0.9f, bounds.size.y * 0.85f);
+            box.offset = transform.InverseTransformPoint(bounds.center);
         }
     }
 
@@ -168,6 +250,9 @@ public class NetworkCarriage : NetworkBehaviour
         _syncHealth.OnValueChanged += HandleSyncedHealthChanged;
         _syncMaxHealth.OnValueChanged += HandleSyncedMaxHealthChanged;
 
+        if (IsServer && (path == null || path.WaypointCount < 2))
+            PhaseGameplayContentInstaller.ConfigureCarriage(this);
+
         ApplyPathPosition();
         ApplySyncedHealthToComponent();
 
@@ -193,6 +278,7 @@ public class NetworkCarriage : NetworkBehaviour
 
     private void HandlePathProgressChanged(float previous, float current)
     {
+        ApplyPathPosition();
         GameEvents.InvokeCarriagePathProgressChanged(current);
     }
 
@@ -232,16 +318,44 @@ public class NetworkCarriage : NetworkBehaviour
             return;
         }
 
-        float next = _pathProgress.Value + config.moveSpeed * Time.deltaTime / Mathf.Max(0.1f, GetPathLengthEstimate());
-        _pathProgress.Value = Mathf.Clamp01(next);
+        Vector3 arrival = path.ArrivalPosition;
+        Vector3 toEnd = arrival - transform.position;
+        float distanceToEnd = toEnd.magnitude;
+        float step = config.moveSpeed * Time.deltaTime;
+
+        if (distanceToEnd <= Mathf.Max(config.arrivalZoneRadius, step))
+        {
+            CompleteArrival(arrival);
+            return;
+        }
+
+        transform.position += toEnd / distanceToEnd * step;
+        _pathProgress.Value = path.GetNormalizedProgress(transform.position);
         ApplyPathPosition();
 
         if (IsServer)
             GameEvents.InvokeCarriagePathProgressChanged(_pathProgress.Value);
 
-        if (_pathProgress.Value >= 1f || Vector2.Distance(transform.position, path.ArrivalPosition) <= config.arrivalZoneRadius)
+        if (_pathProgress.Value >= 0.98f
+            || Vector2.Distance(transform.position, arrival) <= config.arrivalZoneRadius)
         {
-            _arrived.Value = true;
+            CompleteArrival(arrival);
+        }
+    }
+
+    private void CompleteArrival(Vector3 arrival)
+    {
+        if (_arrived.Value)
+            return;
+
+        transform.position = arrival;
+        _pathProgress.Value = 1f;
+        ApplyPathPosition();
+        _arrived.Value = true;
+
+        if (IsServer)
+        {
+            GameEvents.InvokeCarriagePathProgressChanged(1f);
             GameEvents.InvokeCarriageArrived();
         }
     }
@@ -356,14 +470,10 @@ public class NetworkCarriage : NetworkBehaviour
 
     private float GetPathLengthEstimate()
     {
-        if (path == null || path.WaypointCount <= 1)
-            return 10f;
+        if (path == null)
+            return 62f;
 
-        float total = 0f;
-        for (int i = 0; i < path.WaypointCount - 1; i++)
-            total += 1f;
-
-        return Mathf.Max(1f, total * 4f);
+        return path.GetTotalLength();
     }
 
     private static int CountAlivePlayers()

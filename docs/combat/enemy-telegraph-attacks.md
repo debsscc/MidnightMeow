@@ -1,6 +1,6 @@
 # Ataques inimigos com telegraph (estilo Hades)
 
-Última revisão: 2026-06-10
+Última revisão: 2026-06-28
 
 ## Objetivo
 
@@ -101,6 +101,14 @@ Instalador: `EnemyTelegraphModuleInstaller` em cada prefab `Rato_*`.
 3. **`_FillAmount` 0→1:** vermelho cresce **do centro para a borda** até a zona ficar toda vermelha.
 
 Cores em `EnemyTelegraphVisualStyle`: `backgroundColor` = amarelo, `fillColor` / `outlineColor` = vermelho.
+
+**Importante:** `_Shape` e `_FillMode` devem ser aplicados **mesmo quando `visualStyle` é nulo** (ex.: `Rato_Acido_Lane`). Caso contrário o material template fica em modo círculo e retângulos estreitos viram ovais distorcidos. `EnemyTelegraphZoneView` usa cores padrão nesse caso.
+
+Retângulos: contorno nas **4 bordas** (shader); preenchimento começa no canto mais próximo do atacante (`ConfigureFillOrigin` + `_FillOriginSide`).
+
+## Morte visual (inimigos)
+
+Material: **`Assets/Art/Materials/EnemyDeathFade.mat`** (`MidnightMeow/EnemyDeathFade`). Sequência em `DissolveEffect`: animação de morte → fade alpha → `DeathVisualHider`. Não usar VOiD1 nos prefabs `Rato_*` (causava flash/reaparecer).
 
 ## Rotação do visual em `ProjectileToZone`
 

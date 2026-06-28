@@ -11,6 +11,7 @@ Shader "MidnightMeow/TelegraphFill"
         _OutlineWidth ("Outline Width", Range(0.001, 0.2)) = 0.06
         _Shape ("Shape 0=Circle 1=Rect", Float) = 0
         _FillMode ("Fill Mode", Float) = 0
+        _FillOriginSide ("Fill Origin Side 0=LowY 1=HighY", Float) = 0
     }
 
     SubShader
@@ -60,6 +61,7 @@ Shader "MidnightMeow/TelegraphFill"
             float _OutlineWidth;
             float _Shape;
             float _FillMode;
+            float _FillOriginSide;
 
             v2f vert(appdata_t v)
             {
@@ -78,7 +80,7 @@ Shader "MidnightMeow/TelegraphFill"
             float rectFillMetric(float2 uv)
             {
                 float along = uv.y;
-                if (_FillMode > 0.5)
+                if (_FillOriginSide > 0.5)
                     along = 1.0 - along;
                 return along;
             }
@@ -106,10 +108,11 @@ Shader "MidnightMeow/TelegraphFill"
                 if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0)
                     discard;
 
-                fillMetric = rectFillMetric(uv);
-
-                if (fillMetric >= 1.0 - _OutlineWidth || fillMetric <= _OutlineWidth)
+                float edgeDist = min(min(uv.x, 1.0 - uv.x), min(uv.y, 1.0 - uv.y));
+                if (edgeDist < _OutlineWidth)
                     return _OutlineColor;
+
+                fillMetric = rectFillMetric(uv);
 
                 if (fillMetric <= _FillAmount)
                     return _FillColor;

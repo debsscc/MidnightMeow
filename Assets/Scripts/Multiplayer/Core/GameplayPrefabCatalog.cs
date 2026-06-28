@@ -6,6 +6,8 @@ public class GameplayPrefabCatalog : ScriptableObject
     public GameObject multiplayerCameraRigPrefab;
     [Tooltip("Visual de voo dos ataques inimigos ProjectileToZone (clientes MP).")]
     public GameObject enemyTelegraphTravelPrefab;
+    [Tooltip("Carruagem da Fase 2 (spawn dinâmico no servidor).")]
+    public GameObject carriagePrefab;
 
     private static GameplayPrefabCatalog _cached;
 

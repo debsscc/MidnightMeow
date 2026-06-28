@@ -1,6 +1,6 @@
 # Prefab: Enemy
 
-Última revisão: 2026-05-22  
+Última revisão: 2026-06-28  
 **Caminho:** `Assets/Prefabs/Enemies/Enemy.prefab`
 
 ## Resumo
@@ -12,14 +12,16 @@ Template de inimigo rato (ranged). Variantes de produção estão em `Rato_*.pre
 | Propriedade | Valor |
 |-------------|--------|
 | Tag | `Enemy` |
-| Layer | `Enemy` (11) |
+| Layer | `Enemy` (10) |
 
 ## Scripts principais
 
 | Script | Responsabilidade |
 |--------|------------------|
 | `EnemyTargetFinder` | Alvo no `targetDetectionRange` |
-| `EnemyMovement` | Perseguição / patrulha (auto-adiciona `EnemyPhysicsBody`) |
+| `EnemyMovement` | Perseguição / patrulha (NavMesh rígido; auto-adiciona `EnemyPhysicsBody`) |
+| `EnemyPhysicsBody` | RB kinematic; **não colide com Player** (`excludeLayers`) |
+| `EnemySwordHitFlash` | Flash dourado no hit melee (shader `MidnightMeow/EnemySwordHitFlash`) |
 | `EnemyHitStun` | Parada após dano |
 | `NetworkEnemyController` | IA servidor; vida; despawn; knockback RPC |
 | `EnemyHealthConfig` | `stats` → `EnemyStats` SO |

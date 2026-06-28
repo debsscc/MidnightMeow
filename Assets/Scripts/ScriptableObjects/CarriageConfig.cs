@@ -11,8 +11,20 @@ public class CarriageConfig : ScriptableObject
     public float maxHealth = 120f;
 
     [Header("Visual")]
-    [Tooltip("Escala do filho Visual (sprite da carruagem).")]
-    public float visualScale = 3f;
+    [Tooltip("Multiplicador opcional sobre o tamanho alvo do placeholder (~2,4×1,6 uu). Mantenha 1 até ter arte final.")]
+    public float visualScale = 1f;
+
+    [Header("Trajeto (Fase 2)")]
+    [Tooltip("Posição X inicial da carruagem (waypoint de partida).")]
+    public float pathStartX = -42f;
+
+    [Tooltip("Posição X final da carruagem (waypoint de chegada).")]
+    public float pathEndX = 18f;
+
+    [Tooltip("Quando desligado, usa o Y do centro do mapa (CameraBounds).")]
+    public bool useCustomPathY;
+
+    public float pathY;
 
     [Header("Movimento")]
     [Tooltip("Unidades por segundo ao longo do trajeto normalizado (0–1).")]

@@ -112,6 +112,9 @@ public class NetworkEnemyController : NetworkBehaviour
 
         if (GetComponent<EnemySpawnPresentation>() == null)
             gameObject.AddComponent<EnemySpawnPresentation>();
+
+        if (GetComponent<EnemySwordHitFlash>() == null)
+            gameObject.AddComponent<EnemySwordHitFlash>();
     }
 
     public override void OnDestroy()
@@ -496,7 +499,7 @@ public class NetworkEnemyController : NetworkBehaviour
         if (!_health.IsDead)
         {
             _hitStun?.ApplyStun();
-            PlayTakeDamageVisualClientRpc();
+            PlayTakeDamageVisualClientRpc(damageType);
         }
 
         EmitDamageDiagnostic(amount, before, _health.CurrentHealth, _health.IsDead,
@@ -585,12 +588,14 @@ public class NetworkEnemyController : NetworkBehaviour
     }
 
     [ClientRpc]
-    private void PlayTakeDamageVisualClientRpc()
+    private void PlayTakeDamageVisualClientRpc(DamageType damageType)
     {
         if (_animationHandler != null)
             _animationHandler.PlayTakeDamageAnimation();
 
-        if (TryGetComponent<SpriteBlink>(out var blink))
+        if (damageType == DamageType.Melee && TryGetComponent<EnemySwordHitFlash>(out var swordFlash))
+            swordFlash.PlayFlash();
+        else if (TryGetComponent<SpriteBlink>(out var blink))
             blink.Blink();
     }
 

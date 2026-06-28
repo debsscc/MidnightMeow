@@ -746,7 +746,7 @@ MonoBehaviour:
   animationBinder: {fileID: 0}
   visualRoot: {fileID: 0}
   includeChildRenderers: 1
-  dissolveMaterial: {fileID: 2100000, guid: fccf762bfb69edf4f966569172c84ca9, type: 2}
+  dissolveMaterial: {fileID: 2100000, guid: 8d5f0b3c2a1e9f8476b5c4d3e2f1a0b9, type: 2}
   duration: 3
   hideAtDissolveProgress: 0.82
   void1HideAtLinearTime: 0.62

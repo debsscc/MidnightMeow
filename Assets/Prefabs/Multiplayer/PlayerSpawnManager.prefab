@@ -72,7 +72,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerSpawnManager
   ShowTopMostFoldoutHeaderGroup: 1
   playerNetworkPrefab: {fileID: 3845447005448380479, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
-  characterPrefabs: []
+  characterPrefabs:
+  - characterType: 1
+    prefab: {fileID: 3845447005448380479, guid: 7b87bef79bcba89408883a628d686c78, type: 3}
+  - characterType: 2
+    prefab: {fileID: 3845447005448380479, guid: b18ed4e45e4d20a4dbdac339b666e689, type: 3}
   spawnPoints:
   - {fileID: 0}
   respawnAtOriginalPoint: 1

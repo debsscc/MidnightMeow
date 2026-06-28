@@ -51,6 +51,49 @@ public class PlayerSpawnManager : NetworkBehaviour
     {
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
+        EnsureCharacterPrefabsConfigured();
+    }
+
+    private void EnsureCharacterPrefabsConfigured()
+    {
+        if (HasValidCharacterPrefabs())
+            return;
+
+        GameObject nixie = CharacterPrefabLibrary.GetNixiePrefab();
+        GameObject cora = CharacterPrefabLibrary.GetCoraPrefab();
+        if (nixie == null || cora == null)
+        {
+            Debug.LogWarning("[PlayerSpawnManager] characterPrefabs vazio e prefabs Nixie/Cora não encontrados.");
+            return;
+        }
+
+        characterPrefabs = new CharacterPrefabEntry[]
+        {
+            new() { characterType = LobbyCharacterType.CharacterA, prefab = nixie },
+            new() { characterType = LobbyCharacterType.CharacterB, prefab = cora }
+        };
+    }
+
+    private bool HasValidCharacterPrefabs()
+    {
+        if (characterPrefabs == null || characterPrefabs.Length == 0)
+            return false;
+
+        bool hasNixie = false;
+        bool hasCora = false;
+
+        for (int i = 0; i < characterPrefabs.Length; i++)
+        {
+            if (characterPrefabs[i].prefab == null)
+                continue;
+
+            if (characterPrefabs[i].characterType == LobbyCharacterType.CharacterA)
+                hasNixie = true;
+            else if (characterPrefabs[i].characterType == LobbyCharacterType.CharacterB)
+                hasCora = true;
+        }
+
+        return hasNixie && hasCora;
     }
 
     public override void OnNetworkSpawn()
@@ -467,28 +510,57 @@ public class PlayerSpawnManager : NetworkBehaviour
 
     private GameObject GetPrefabForClient(ulong clientId)
     {
-        LobbyCharacterType selectedType = LobbyCharacterType.Default;
-        if (LobbySelectionStore.TryGetCharacter(clientId, out var savedType))
-        {
-            selectedType = savedType;
-        }
-        else if (LobbySessionManager.Instance != null
-            && LobbySessionManager.Instance.TryGetPlayerState(clientId, out var playerState))
-        {
-            selectedType = playerState.CharacterType;
-        }
-        else if (GameSessionContext.IsSinglePlayer)
-        {
-            SaveProfileStore save = SaveProfileStore.Instance;
-            if (save != null)
-                selectedType = save.GetSelectedCharacter();
-        }
-
+        LobbyCharacterType selectedType = ResolveCharacterTypeForClient(clientId);
         GameObject resolved = ResolveCharacterPrefab(selectedType);
         if (resolved != null)
             return resolved;
 
+        if (selectedType != LobbyCharacterType.Default)
+        {
+            GameObject fallback = CharacterPrefabLibrary.GetPrefab(selectedType);
+            if (fallback != null)
+            {
+                if (enableDiagnosticsLogs)
+                    Debug.LogWarning($"[PlayerSpawnManager] Usando fallback de prefab para {selectedType} (ClientId={clientId}).");
+                return fallback;
+            }
+
+            Debug.LogWarning($"[PlayerSpawnManager] Prefab não resolvido para {selectedType} (ClientId={clientId}). Usando playerNetworkPrefab.");
+        }
+
         return playerNetworkPrefab;
+    }
+
+    private LobbyCharacterType ResolveCharacterTypeForClient(ulong clientId)
+    {
+        if (LobbySelectionStore.TryGetCharacter(clientId, out LobbyCharacterType storedType)
+            && storedType != LobbyCharacterType.Default)
+            return storedType;
+
+        if (LobbySessionManager.Instance != null
+            && LobbySessionManager.Instance.TryGetPlayerState(clientId, out LobbyPlayerState playerState)
+            && playerState.CharacterType != LobbyCharacterType.Default)
+            return playerState.CharacterType;
+
+        PreparationSessionManager preparation = PreparationSessionManager.Instance;
+        if (preparation != null)
+        {
+            for (int i = 0; i < preparation.Players.Count; i++)
+            {
+                PreparationPlayerState player = preparation.Players[i];
+                if (player.ClientId == clientId && player.CharacterType != LobbyCharacterType.Default)
+                    return player.CharacterType;
+            }
+        }
+
+        if (GameSessionContext.IsSinglePlayer || (NetworkManager.Singleton != null && clientId == NetworkManager.Singleton.LocalClientId))
+        {
+            SaveProfileStore save = SaveProfileStore.Instance;
+            if (save != null)
+                return save.GetSelectedCharacter();
+        }
+
+        return LobbyCharacterType.Default;
     }
 
     private void DespawnExistingPlayerForClient(ulong clientId)

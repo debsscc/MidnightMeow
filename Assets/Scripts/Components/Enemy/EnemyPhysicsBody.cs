@@ -17,6 +17,30 @@ public class EnemyPhysicsBody : MonoBehaviour
         _rb.gravityScale = 0f;
         _rb.constraints = RigidbodyConstraints2D.FreezeRotation;
         _rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
+        _rb.interpolation = RigidbodyInterpolation2D.None;
+    }
+
+    private void Start()
+    {
+        ExcludePlayerLayerFromColliders();
+    }
+
+    private void ExcludePlayerLayerFromColliders()
+    {
+        int playerLayer = LayerMask.NameToLayer("Player");
+        if (playerLayer < 0)
+            return;
+
+        int playerMask = 1 << playerLayer;
+        Collider2D[] colliders = GetComponentsInChildren<Collider2D>(true);
+        for (int i = 0; i < colliders.Length; i++)
+        {
+            Collider2D col = colliders[i];
+            if (col == null || col.isTrigger)
+                continue;
+
+            col.excludeLayers |= playerMask;
+        }
     }
 
     private void FixedUpdate()

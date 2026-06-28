@@ -35,10 +35,26 @@ public class PhaseObjectiveManager : MonoBehaviour
     public void Configure(PhaseWaveSettingsCatalog.PhaseEntry entry)
     {
         _entry = entry;
+        _victoryTriggered = false;
         GameEvents.OnCarriageArrived -= HandleCarriageArrived;
 
         if (_entry != null && _entry.winCondition == PhaseWaveSettingsCatalog.PhaseWinCondition.CarriageReachEnd)
             GameEvents.OnCarriageArrived += HandleCarriageArrived;
+
+        TryEvaluateSealVictory();
+    }
+
+    public void TryEvaluateSealVictory()
+    {
+        if (_entry == null || _victoryTriggered || !IsServer())
+            return;
+
+        if (_entry.winCondition != PhaseWaveSettingsCatalog.PhaseWinCondition.SealAllHoles)
+            return;
+
+        PhaseObjectiveStatusUtility.CountSealedHoles(out int sealedCount, out int totalCount);
+        if (totalCount > 0 && sealedCount >= totalCount)
+            TriggerVictory("Todos os buracos selados.");
     }
 
     private void Update()
@@ -54,12 +70,7 @@ public class PhaseObjectiveManager : MonoBehaviour
             PhaseObjectiveStatusUtility.BroadcastCurrentStatus(alive);
         }
 
-        if (_entry.winCondition != PhaseWaveSettingsCatalog.PhaseWinCondition.SealAllHoles)
-            return;
-
-        PhaseObjectiveStatusUtility.CountSealedHoles(out int sealedCount, out int totalCount);
-        if (totalCount > 0 && sealedCount >= totalCount)
-            TriggerVictory("Todos os buracos selados.");
+        TryEvaluateSealVictory();
     }
 
     public void NotifyBossDefeated()
@@ -89,6 +100,7 @@ public class PhaseObjectiveManager : MonoBehaviour
         Debug.Log($"[PhaseObjectiveManager] Vitória: {reason}");
         NetworkWaveManager.Instance?.StopSpawning();
         GameEvents.InvokeNightEnded();
+        MultiplayerVictoryCoordinator.TryBeginVictoryFromPhaseObjective();
     }
 
     private static bool IsServer()

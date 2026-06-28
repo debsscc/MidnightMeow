@@ -14,7 +14,7 @@ using UnityEngine.UI;
 public class LoadingScreenController : MonoBehaviour
 {
     [SerializeField] private string fallbackNextRouteId = SceneFlowRouteIds.Loading1ToPreparation;
-    [SerializeField] private float minimumDisplaySeconds = 7f;
+    [SerializeField] private float minimumDisplaySeconds = 2.5f;
     [SerializeField] private TMP_Text statusText;
     [SerializeField] private RectTransform progressTrack;
     [SerializeField] private Image progressFill;

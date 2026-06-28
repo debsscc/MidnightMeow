@@ -1,6 +1,6 @@
 # Implementação Fases 1–3 — plano de trabalho
 
-Última revisão: 2026-06-25
+Última revisão: 2026-06-28
 
 ## Decisões de design (não especificadas pelo pedido)
 
@@ -56,6 +56,44 @@
 
 - [x] `EnemyHealthBarDisplay` em inimigos com tag `Enemy`
 - [x] `BossEnemyMarker` força barra sempre visível e maior
+
+## Correções Fase 1 vitória + Fase 2 carruagem + UX (2026-06-28)
+
+| Tarefa | Diagnóstico | Status |
+|--------|-------------|--------|
+| Fase 1: selar 6 buracos sem vitória | Contagem de buracos desalinhada; `OnNightEnded` só após `OnNetworkSpawn`; carruagem abortava setup se já existia | concluído |
+| Loading lento | `minimumDisplaySeconds = 7` | concluído → 2,5 s |
+| Ratos deslizantes / empurram player | NavMesh suavizado + interpolação NGO; collider sólido vs player | concluído |
+| Hit flash espada Nixie | Sem shader dedicado no inimigo | concluído → `EnemySwordHitFlash` |
+| Carruagem invisível | `SpriteRenderer` sem sprite (`DrawMode` sliced) | concluído |
+| Carruagem parada / sem path | `PhaseGameplayContentInstaller` retornava cedo; `path` nulo na cena | concluído |
+| Dois `HealthComponent` | Prefab + Fase-2.unity duplicados | concluído |
+| Win Fase 2 | Path + chegada já implementados; faltava movimento | concluído |
+
+### O que mudou (código)
+
+- `PhaseObjectiveStatusUtility.CountSealedHoles` — prioriza `RatHoleSpawnPoint.All`
+- `PhaseObjectiveManager.TryEvaluateSealVictory` + `MultiplayerVictoryCoordinator`
+- `MultiplayerGameManager` — escuta `OnNightEnded` no `Awake`; fallback se NGO ainda não spawnou
+- `PhaseGameplayContentInstaller.EnsureCarriageSetup` — path X -42 → 20 via `CarriageConfig`
+- `NetworkCarriage` — remove HP duplicado, placeholder sprite, `ConfigurePath`
+- `EnemyMovement` / `EnemyPhysicsBody` — movimento rígido; `excludeLayers` Player
+- `EnemySwordHitFlash` + shader `MidnightMeow/EnemySwordHitFlash`
+- `LoadingScreenController` + cenas Loading1/2 — 2,5 s
+
+### Carruagem solo — escala, path, movimento (2026-06-28, tarde)
+
+| Tarefa | Diagnóstico | Status |
+|--------|-------------|--------|
+| Escala enorme | Sprite `image (27).png` (menu) + `visualScale = 3` | concluído |
+| Parada / posição errada / path vazio | Setup só no servidor; clientes sem path; Inspector vazio fora do Play | concluído |
+
+- `NetworkCarriage` — placeholder quadrado forçado; escala ~2,4×1,6 uu; `ApplyPathPosition` em `_pathProgress`
+- `NetworkCarriageSpawner` — retry em todos peers; spawn servidor se ausente
+- `PhaseGameplayContentInstaller` — `ConfigureCarriage` imediato para in-scene
+- Prefab `Carriage` — `Visual` sem sprite; `CarriageConfig.visualScale = 1`
+
+---
 
 ## Correções selamento E + spawn Fase 2 + carruagem (2026-06-25 — quarta rodada)
 

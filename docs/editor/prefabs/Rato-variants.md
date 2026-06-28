@@ -1,6 +1,6 @@
 # Prefabs: Variantes de Rato
 
-Última revisão: 2026-06-12
+Última revisão: 2026-06-28
 
 Variantes compartilham a mesma hierarquia base (`Enemy` / ranged): `NetworkObject`, `NetworkEnemyController`, `EnemyMovement`, `EnemyAttack_Ranged` (ou melee em tipos especiais), `EnemyDropHandler`, etc.
 
@@ -15,6 +15,8 @@ Controllers em `Assets/Data/Animacoes/Enemy_AC/` (`AC_Enemy`, `AC_Enemy_Acid`, `
 - **`Attacking` → locomotion:** só quando `IsAttacking == false`
 - Profile: `EnemyDefaultAnimationProfile.asset` → `isAttackingParameter: IsAttacking`
 
+**Morte:** `DissolveEffect` + material `EnemyDeathFade.mat` — animação `Dying` completa, depois fade out (sem reaparecer).
+
 ## Telegraph (MP)
 
 Cada `Rato_*` inclui `EnemyTelegraphModuleInstaller` com pattern SO em `Assets/Data/Combat/Patterns/`. Em runtime o instalador adiciona `EnemyTelegraphedAttacker`, `EnemyTelegraphZoneFactory` e `NetworkEnemyTelegraphRelay`; o `ClientRpc` de visual fica em `NetworkEnemyController` (ver [enemy-telegraph-attacks.md](../../combat/enemy-telegraph-attacks.md)).
@@ -27,6 +29,18 @@ Cada `Rato_*` inclui `EnemyTelegraphModuleInstaller` com pattern SO em `Assets/D
 | Rato_Eletrico | `Assets/Prefabs/Enemies/Rato_Eletrico.prefab` | `Rato_Eletrico.asset` |
 | Rato_Acido | `Assets/Prefabs/Enemies/Rato_Acido.prefab` | `Rato_Acido.asset` |
 | Enemy 1 | `Assets/Prefabs/Enemies/Enemy 1.prefab` | Legado — preferir `Rato_Padrao_Base` |
+
+### Velocidade (`moveSpeed` em EnemyStats)
+
+| Asset | moveSpeed (2026-06-28) |
+|-------|------------------------|
+| Rato_Padrao_Base | 5,5 |
+| Rato_Padrao_Veloz | 7 |
+| Rato_Padrao_Resistente | 6,2 |
+| Rato_Acido | 3,2 |
+| Rato_Eletrico | 8,5 |
+
+Ajuste fino em `Assets/Data/Stats/Enemies/*.asset` — não hardcodar no `EnemyMovement`.
 
 ## Física vs player
 

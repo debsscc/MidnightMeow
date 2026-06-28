@@ -110,7 +110,10 @@ public class NetworkRatHoleSealManager : NetworkBehaviour
         }
 
         if (objectiveDirty)
+        {
             BroadcastObjectiveStatus();
+            PhaseObjectiveManager.Instance?.TryEvaluateSealVictory();
+        }
     }
 
     private void HandleSessionsListChanged(NetworkListEvent<RatHoleSealSession> changeEvent)

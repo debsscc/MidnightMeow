@@ -274,7 +274,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LoadingScreenController
   fallbackNextRouteId: loading1_preparation
-  minimumDisplaySeconds: 7
+  minimumDisplaySeconds: 2.5
   statusText: {fileID: 382965797}
   progressTrack: {fileID: 1780378284}
   progressFill: {fileID: 2039651315}

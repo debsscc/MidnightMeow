@@ -57,6 +57,17 @@ public class EnemySpawnPresentation : MonoBehaviour
         _routine = StartCoroutine(MaterializeRoutine());
     }
 
+    public void CancelForDeath()
+    {
+        if (_routine != null)
+        {
+            StopCoroutine(_routine);
+            _routine = null;
+        }
+
+        RestoreMaterials();
+    }
+
     private IEnumerator MaterializeRoutine()
     {
         // Espera o NetworkTransform aplicar a posição de spawn no cliente antes do puff.
@@ -95,7 +106,11 @@ public class EnemySpawnPresentation : MonoBehaviour
         {
             // Aborta se o death começar (não brigar pelos materiais).
             if (_dissolveEffect != null && _dissolveEffect.IsPlaying)
-                break;
+            {
+                RestoreMaterials();
+                _routine = null;
+                yield break;
+            }
 
             elapsed += Time.deltaTime;
             float linear = Mathf.Clamp01(elapsed / materializeDuration);

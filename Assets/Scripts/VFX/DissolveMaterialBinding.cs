@@ -9,10 +9,12 @@ internal readonly struct DissolveMaterialBinding
     {
         Unsupported,
         DissolveSprite,
-        Void1Sprite2D
+        Void1Sprite2D,
+        EnemyDeathFade
     }
 
     private static readonly int DissolveAmountId = Shader.PropertyToID("_DissolveAmount");
+    private static readonly int FadeAmountId = Shader.PropertyToID("_FadeAmount");
     private static readonly int EdgeColorId = Shader.PropertyToID("_EdgeColor");
     private static readonly int EdgeIntensityId = Shader.PropertyToID("_EdgeIntensity");
     private static readonly int SparkleIntensityId = Shader.PropertyToID("_SparkleIntensity");
@@ -45,6 +47,16 @@ internal readonly struct DissolveMaterialBinding
     {
         if (template == null)
             return new DissolveMaterialBinding(Kind.Unsupported, 0, 0f, 0f, -1);
+
+        if (template.HasProperty(FadeAmountId))
+        {
+            return new DissolveMaterialBinding(
+                Kind.EnemyDeathFade,
+                FadeAmountId,
+                0f,
+                1f,
+                template.HasProperty(EdgeColorId) ? EdgeColorId : -1);
+        }
 
         if (template.HasProperty(Void1FadeId))
         {
@@ -84,12 +96,12 @@ internal readonly struct DissolveMaterialBinding
         SetAmount(instance, 0f);
         ApplyEdgeColor(instance, edgeColor, edgeIntensity);
 
-        if (Driver == Kind.DissolveSprite)
+        if (Driver == Kind.DissolveSprite || Driver == Kind.EnemyDeathFade)
         {
             if (instance.HasProperty(EdgeIntensityId))
                 instance.SetFloat(EdgeIntensityId, edgeIntensity);
 
-            if (instance.HasProperty(SparkleIntensityId))
+            if (Driver == Kind.DissolveSprite && instance.HasProperty(SparkleIntensityId))
                 instance.SetFloat(SparkleIntensityId, sparkleIntensity);
         }
     }

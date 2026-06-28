@@ -117,6 +117,7 @@ public static class PhaseSceneSetupEditor
         Transform enemySpawnsRoot = EnsureEnemySpawnRoot();
         NetworkWaveManager waveManager = EnsureGameLoop(entry, enemySpawnsRoot);
         EnsurePlayerSpawns();
+        EnsurePlayerSpawnCharacterPrefabs();
         RemoveScenePlacedPlayerCharacters();
         EnsureCameraBoundsVolume();
 
@@ -324,6 +325,30 @@ public static class PhaseSceneSetupEditor
         }
     }
 
+    private static void EnsurePlayerSpawnCharacterPrefabs()
+    {
+        PlayerSpawnManager spawnManager = Object.FindFirstObjectByType<PlayerSpawnManager>(FindObjectsInactive.Include);
+        if (spawnManager == null)
+            return;
+
+        GameObject nixie = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Characters/Nixie.prefab");
+        GameObject cora = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Characters/Cora.prefab");
+        if (nixie == null || cora == null)
+            return;
+
+        SerializedObject so = new SerializedObject(spawnManager);
+        SerializedProperty entries = so.FindProperty("characterPrefabs");
+        if (entries == null)
+            return;
+
+        entries.arraySize = 2;
+        entries.GetArrayElementAtIndex(0).FindPropertyRelative("characterType").enumValueIndex = (int)LobbyCharacterType.CharacterA;
+        entries.GetArrayElementAtIndex(0).FindPropertyRelative("prefab").objectReferenceValue = nixie;
+        entries.GetArrayElementAtIndex(1).FindPropertyRelative("characterType").enumValueIndex = (int)LobbyCharacterType.CharacterB;
+        entries.GetArrayElementAtIndex(1).FindPropertyRelative("prefab").objectReferenceValue = cora;
+        so.ApplyModifiedPropertiesWithoutUndo();
+    }
+
     private static void EnsureCameraBoundsVolume()
     {
         CameraBoundsVolume bounds = Object.FindFirstObjectByType<CameraBoundsVolume>(FindObjectsInactive.Include);
@@ -412,48 +437,72 @@ public static class PhaseSceneSetupEditor
 
     private static void InstallCarriage()
     {
-        if (Object.FindFirstObjectByType<NetworkCarriage>(FindObjectsInactive.Include) != null)
-            return;
-
-        GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Gameplay/Carriage.prefab");
+        NetworkCarriage existingCarriage = Object.FindFirstObjectByType<NetworkCarriage>(FindObjectsInactive.Include);
         GameObject carriageGo;
-        if (prefab != null)
+        if (existingCarriage != null)
         {
-            carriageGo = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
-            Undo.RegisterCreatedObjectUndo(carriageGo, "Carriage");
+            carriageGo = existingCarriage.gameObject;
         }
         else
         {
-            carriageGo = CreateCarriageInScene();
+            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Gameplay/Carriage.prefab");
+            if (prefab != null)
+            {
+                carriageGo = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
+                Undo.RegisterCreatedObjectUndo(carriageGo, "Carriage");
+            }
+            else
+            {
+                carriageGo = CreateCarriageInScene();
+            }
         }
 
         if (!TryGetMapBounds(out Bounds bounds))
             return;
 
-        float centerY = bounds.center.y;
-        Vector3 left = new Vector3(bounds.min.x, centerY, 0f);
-        Vector3 right = new Vector3(bounds.max.x, centerY, 0f);
+        CarriageConfig config = AssetDatabase.LoadAssetAtPath<CarriageConfig>(CarriageConfigPath);
+        float pathY = config != null && config.useCustomPathY ? config.pathY : bounds.center.y;
+        Vector3 left = new Vector3(config != null ? config.pathStartX : bounds.min.x, pathY, 0f);
+        Vector3 right = new Vector3(config != null ? config.pathEndX : bounds.max.x, pathY, 0f);
 
-        GameObject pathRoot = new GameObject("CarriagePath");
-        Undo.RegisterCreatedObjectUndo(pathRoot, "Carriage Path");
-        CarriagePath path = pathRoot.AddComponent<CarriagePath>();
+        CarriagePath path = Object.FindFirstObjectByType<CarriagePath>(FindObjectsInactive.Include);
+        GameObject pathRoot;
+        if (path != null)
+        {
+            pathRoot = path.gameObject;
+        }
+        else
+        {
+            pathRoot = new GameObject("CarriagePath");
+            Undo.RegisterCreatedObjectUndo(pathRoot, "Carriage Path");
+            path = pathRoot.AddComponent<CarriagePath>();
+        }
 
-        GameObject wpStart = new GameObject("Waypoint_Start");
-        wpStart.transform.SetParent(pathRoot.transform, false);
-        wpStart.transform.position = left;
+        Transform wpStart = pathRoot.transform.Find("Waypoint_Start");
+        if (wpStart == null)
+        {
+            GameObject startGo = new GameObject("Waypoint_Start");
+            startGo.transform.SetParent(pathRoot.transform, false);
+            wpStart = startGo.transform;
+        }
 
-        GameObject wpEnd = new GameObject("Waypoint_End");
-        wpEnd.transform.SetParent(pathRoot.transform, false);
-        wpEnd.transform.position = right;
+        Transform wpEnd = pathRoot.transform.Find("Waypoint_End");
+        if (wpEnd == null)
+        {
+            GameObject endGo = new GameObject("Waypoint_End");
+            endGo.transform.SetParent(pathRoot.transform, false);
+            wpEnd = endGo.transform;
+        }
 
-        path.ConfigureWaypoints(new[] { wpStart.transform, wpEnd.transform });
+        wpStart.position = left;
+        wpEnd.position = right;
+        path.ConfigureWaypoints(new[] { wpStart, wpEnd });
 
         NetworkCarriage carriage = carriageGo.GetComponent<NetworkCarriage>();
         if (carriage != null)
         {
             SerializedObject carriageSo = new SerializedObject(carriage);
             carriageSo.FindProperty("path").objectReferenceValue = path;
-            CarriageConfig config = AssetDatabase.LoadAssetAtPath<CarriageConfig>(CarriageConfigPath);
             if (config != null)
                 carriageSo.FindProperty("config").objectReferenceValue = config;
             carriageSo.ApplyModifiedPropertiesWithoutUndo();

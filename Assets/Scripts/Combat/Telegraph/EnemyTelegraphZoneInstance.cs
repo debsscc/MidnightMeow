@@ -53,6 +53,7 @@ public class EnemyTelegraphZoneInstance : MonoBehaviour
 
         _view.ApplyStyle(style, strike.shape, strike.fillMode);
         _view.SetWorldPose(worldPosition, rotationDegrees, strike.shape, strike.size);
+        _view.ConfigureFillOrigin(ResolveFillOriginWorldPosition(worldPosition));
         _view.SetFill(0f);
 
         var eventData = BuildEventData(worldPosition, rotationDegrees);
@@ -206,6 +207,20 @@ public class EnemyTelegraphZoneInstance : MonoBehaviour
             return _attackOrigin.position;
 
         return _instigator != null ? (Vector2)_instigator.transform.position : Vector2.zero;
+    }
+
+    private Vector2 ResolveFillOriginWorldPosition(Vector2 zoneWorldPosition)
+    {
+        if (_forceTravelVisual && _travelSpawnPosition != default)
+            return _travelSpawnPosition;
+
+        if (_attackOrigin != null)
+            return _attackOrigin.position;
+
+        if (_instigator != null)
+            return _instigator.transform.position;
+
+        return zoneWorldPosition;
     }
 
     private float ResolveTravelSpeed()
