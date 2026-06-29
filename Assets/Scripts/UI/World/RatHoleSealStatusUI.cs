@@ -1,10 +1,15 @@
+// ----------------------------------------------------------------
+// CRIADO POR: Pedro Caurio
+// DESCRIÇÃO: Barra de progresso e texto de selamento em world-space sobre cada buraco. Traduzido
+// ---------------------------------------------------------------- 
+
 using TMPro;
 using UnityEngine;
+using UnityEngine.Localization;
+using UnityEngine.Localization.Settings;
 using UnityEngine.UI;
 
-/// <summary>
-/// Barra de progresso e texto de selamento em world-space sobre cada buraco.
-/// </summary>
+
 [DisallowMultipleComponent]
 [RequireComponent(typeof(RatHoleSpawnPoint))]
 public class RatHoleSealStatusUI : MonoBehaviour
@@ -65,7 +70,12 @@ public class RatHoleSealStatusUI : MonoBehaviour
         if (_fill != null)
             _fill.fillAmount = session.Progress;
         if (_label != null)
-            _label.text = $"Fique na Área para selar — {Mathf.RoundToInt(session.Progress * 100f)}%";
+        {
+            int pct = Mathf.RoundToInt(session.Progress * 100f);
+            _label.text = IsPortuguese()
+                ? $"Fique na Área para selar — {pct}%"
+                : $"Stay in the Area to seal — {pct}%";
+        }
     }
 
     private void ShowSealed()
@@ -75,7 +85,7 @@ public class RatHoleSealStatusUI : MonoBehaviour
         if (_fill != null)
             _fill.fillAmount = 1f;
         if (_label != null)
-            _label.text = "Área selada";
+            _label.text = IsPortuguese() ? "Área selada" : "Area sealed";
     }
 
     private void SetVisible(bool visible)
@@ -122,6 +132,16 @@ public class RatHoleSealStatusUI : MonoBehaviour
         _label.alignment = TextAlignmentOptions.Center;
         _label.color = Color.white;
         _label.textWrappingMode = TextWrappingModes.NoWrap;
+    }
+
+    private static bool IsPortuguese()
+    {
+        if (!LocalizationSettings.HasSettings)
+            return true;
+
+        Locale locale = LocalizationSettings.SelectedLocale;
+        // Sem locale definido, assume português (idioma base do projeto).
+        return locale == null || locale.Identifier.Code.StartsWith("pt", System.StringComparison.OrdinalIgnoreCase);
     }
 
     private static void Stretch(RectTransform rt, float inset = 0f)

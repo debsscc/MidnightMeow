@@ -1,11 +1,13 @@
 /* ----------------------------------------------------------------
 AUTOR: Débora Carvalho
 DATA: 2026-06-23
-DESCRIÇÃO: Telas de vitória/derrota — prosseguir, reiniciar, abandonar e créditos.
+DESCRIÇÃO: Telas de vitória/derrota — prosseguir, reiniciar, abandonar e créditos. Traduzido
 ---------------------------------------------------------------- */
 
 using TMPro;
 using UnityEngine;
+using UnityEngine.Localization;
+using UnityEngine.Localization.Settings;
 using UnityEngine.UI;
 
 [DisallowMultipleComponent]
@@ -41,6 +43,12 @@ public class EndGameScreenController : MonoBehaviour
         ScreenFlowPlaceholderFactory.ApplyMenuCursor();
         RefreshPrimaryActionLabel();
     }
+
+    private void OnEnable() => LocalizationSettings.SelectedLocaleChanged += HandleLocaleChanged;
+
+    private void OnDisable() => LocalizationSettings.SelectedLocaleChanged -= HandleLocaleChanged;
+
+    private void HandleLocaleChanged(Locale _) => RefreshPrimaryActionLabel();
 
     private void TryAutoResolveReferences()
     {
@@ -92,7 +100,11 @@ public class EndGameScreenController : MonoBehaviour
         if (continueButton == null)
             return;
 
-        SetButtonLabel(continueButton, isVictory ? "Prosseguir" : "Reiniciar fase");
+        bool pt = IsPortuguese();
+        string label = isVictory
+            ? (pt ? "Prosseguir" : "Continue")
+            : (pt ? "Reiniciar fase" : "Restart stage");
+        SetButtonLabel(continueButton, label);
     }
 
     private void OnPrimaryAction()
@@ -152,17 +164,22 @@ public class EndGameScreenController : MonoBehaviour
         Color bg = isVictory ? new Color(0.05f, 0.12f, 0.08f, 0.96f) : new Color(0.12f, 0.05f, 0.05f, 0.96f);
         GameObject panel = ScreenFlowPlaceholderFactory.CreatePanel(canvas.transform, "EndGamePanel", bg);
 
+        bool pt = IsPortuguese();
+        string primaryLabel = isVictory
+            ? (pt ? "Prosseguir" : "Continue")
+            : (pt ? "Reiniciar fase" : "Restart stage");
+
         continueButton = ScreenFlowPlaceholderFactory.CreateButton(panel.transform,
-            isVictory ? "Prosseguir" : "Reiniciar fase",
+            primaryLabel,
             new Vector2(0.4f, 0.35f), new Vector2(0.4f, 0.35f), new Vector2(-160f, -40f), new Vector2(160f, 40f));
 
-        exitButton = ScreenFlowPlaceholderFactory.CreateButton(panel.transform, "Abandonar",
+        exitButton = ScreenFlowPlaceholderFactory.CreateButton(panel.transform, pt ? "Abandonar" : "Quit",
             new Vector2(0.6f, 0.35f), new Vector2(0.6f, 0.35f), new Vector2(-160f, -40f), new Vector2(160f, 40f));
 
-        creditsButton = ScreenFlowPlaceholderFactory.CreateButton(panel.transform, "Créditos",
+        creditsButton = ScreenFlowPlaceholderFactory.CreateButton(panel.transform, pt ? "Créditos" : "Credits",
             new Vector2(0.35f, 0.2f), new Vector2(0.35f, 0.2f), new Vector2(-160f, -40f), new Vector2(160f, 40f));
 
-        feedbackButton = ScreenFlowPlaceholderFactory.CreateButton(panel.transform, "Feedback Playtest",
+        feedbackButton = ScreenFlowPlaceholderFactory.CreateButton(panel.transform, pt ? "Feedback Playtest" : "Playtest Feedback",
             new Vector2(0.65f, 0.2f), new Vector2(0.65f, 0.2f), new Vector2(-160f, -40f), new Vector2(160f, 40f));
     }
 
@@ -223,6 +240,16 @@ public class EndGameScreenController : MonoBehaviour
 
         Unity.Netcode.NetworkManager net = Unity.Netcode.NetworkManager.Singleton;
         return net == null || net.IsServer;
+    }
+
+    private static bool IsPortuguese()
+    {
+        if (!LocalizationSettings.HasSettings)
+            return true;
+
+        Locale locale = LocalizationSettings.SelectedLocale;
+        // Sem locale definido, assume português (idioma base do projeto).
+        return locale == null || locale.Identifier.Code.StartsWith("pt", System.StringComparison.OrdinalIgnoreCase);
     }
 
     private static void SetButtonLabel(Button button, string label)

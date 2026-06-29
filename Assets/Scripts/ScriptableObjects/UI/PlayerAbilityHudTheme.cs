@@ -1,9 +1,10 @@
+// ----------------------------------------------------------------
+// CRIADO POR: Pedro Caurio
+// DESCRIÇÃO: Tema visual do HUD de habilidades (ícones, cores e layout). Placeholders são usados quando campos ficam vazios.
+// ---------------------------------------------------------------- 
+
 using UnityEngine;
 
-/// <summary>
-/// Tema visual do HUD de habilidades (ícones, cores e layout).
-/// Placeholders são usados quando campos ficam vazios.
-/// </summary>
 [CreateAssetMenu(fileName = "PlayerAbilityHudTheme", menuName = "MidnightMeow/UI/Player Ability HUD Theme")]
 public class PlayerAbilityHudTheme : ScriptableObject
 {

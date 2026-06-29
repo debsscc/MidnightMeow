@@ -126,7 +126,9 @@ public class LobbyFlowController : MonoBehaviour
     private IEnumerator AutoContinueRoutine()
     {
         navigator?.ShowPanel(PanelHostWaiting);
-        SetHostFeedback("Retomando sessão como host...");
+        SetHostFeedback(LocaleText.IsPortuguese()
+            ? "Retomando sessão como host..."
+            : "Resuming session as host...");
 
         float timeout = 8f;
         while (ConnectionManager.Instance == null && timeout > 0f)
@@ -137,7 +139,9 @@ public class LobbyFlowController : MonoBehaviour
 
         if (ConnectionManager.Instance == null)
         {
-            SetHostFeedback("Erro: ConnectionManager ausente.");
+            SetHostFeedback(LocaleText.IsPortuguese()
+                ? "Erro: ConnectionManager ausente."
+                : "Error: ConnectionManager missing.");
             yield break;
         }
 
@@ -188,7 +192,9 @@ public class LobbyFlowController : MonoBehaviour
 
         GameSessionContext.BeginMultiplayer();
         navigator?.ShowPanel(PanelHostWaiting);
-        SetHostFeedback("Inicializando host...");
+        SetHostFeedback(LocaleText.IsPortuguese()
+            ? "Inicializando host..."
+            : "Initializing host...");
         await ConnectionManager.Instance.StartHostAsync();
     }
 
@@ -200,24 +206,32 @@ public class LobbyFlowController : MonoBehaviour
         string code = clientJoinCodeInput != null ? clientJoinCodeInput.text.Trim() : string.Empty;
         if (string.IsNullOrEmpty(code))
         {
-            SetClientStatus("Digite o código da sala.");
+            SetClientStatus(LocaleText.IsPortuguese()
+                ? "Digite o código da sala."
+                : "Enter the room code.");
             return;
         }
 
-        SetClientStatus("Conectando...");
+        SetClientStatus(LocaleText.IsPortuguese()
+            ? "Conectando..."
+            : "Connecting...");
         await ConnectionManager.Instance.StartClientAsync(code);
     }
 
     private void HandleJoinCode(string code)
     {
         if (hostJoinCodeText != null)
-            hostJoinCodeText.text = $"Código da Sala: {code}";
+            hostJoinCodeText.text = LocaleText.IsPortuguese()
+                ? $"Código da Sala: {code}"
+                : $"Room Code: {code}";
     }
 
     private void HandleHostStarted()
     {
         navigator?.ShowPanel(PanelHostWaiting);
-        SetHostFeedback("Aguardando segundo jogador...");
+        SetHostFeedback(LocaleText.IsPortuguese()
+            ? "Aguardando segundo jogador..."
+            : "Waiting for a second player...");
         UpdatePlayerCount();
         SaveProfileStore save = SaveProfileStore.Instance;
         save?.Active?.Touch(host: true, ConnectionManager.Instance?.CurrentJoinCode, "Lobby");
@@ -229,7 +243,9 @@ public class LobbyFlowController : MonoBehaviour
         if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsHost)
             return;
 
-        SetClientStatus("Conectado! Aguardando o host iniciar a partida...");
+        SetClientStatus(LocaleText.IsPortuguese()
+            ? "Conectado! Aguardando o host iniciar a partida..."
+            : "Connected! Waiting for the host to start the match...");
     }
 
     private void HandleClientJoined(ulong _)
@@ -250,7 +266,9 @@ public class LobbyFlowController : MonoBehaviour
         if (count < requiredPlayersForLoading)
             return;
 
-        SetHostFeedback("Jogadores conectados! Carregando preparação...");
+        SetHostFeedback(LocaleText.IsPortuguese()
+            ? "Jogadores conectados! Carregando preparação..."
+            : "Players connected! Loading preparation...");
         TryBeginPreparation();
     }
 
@@ -267,10 +285,14 @@ public class LobbyFlowController : MonoBehaviour
 
         int count = NetworkManager.Singleton.ConnectedClientsIds.Count;
         if (hostPlayersText != null)
-            hostPlayersText.text = $"Jogadores {count}/{requiredPlayersForLoading}";
+            hostPlayersText.text = LocaleText.IsPortuguese()
+                ? $"Jogadores {count}/{requiredPlayersForLoading}"
+                : $"Players {count}/{requiredPlayersForLoading}";
 
         if (hostFeedbackText != null && count < requiredPlayersForLoading)
-            hostFeedbackText.text = "Aguardando segundo jogador...";
+            hostFeedbackText.text = LocaleText.IsPortuguese()
+                ? "Aguardando segundo jogador..."
+                : "Waiting for a second player...";
     }
 
     private void SetHostFeedback(string message)

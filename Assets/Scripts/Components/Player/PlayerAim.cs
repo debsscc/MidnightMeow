@@ -1,7 +1,8 @@
 ///* ----------------------------------------------------------------
 // CRIADO EM: 13-11-2025
 // FEITO POR: Pedro Caurio
-// DESCRI��O: Controla a mira do jogador com o mouse, posicionando e rotacionando o ponto de disparo (firePoint).
+// DESCRIÇÃO: Controla a mira do jogador com o mouse, posicionando e rotacionando o ponto de disparo (firePoint).
+// Mira por analógico direito (twin-stick) tem prioridade quando ativa. Não depende da câmera, então é resolvida antes da lógica de mouse.
 // ---------------------------------------------------------------- */
 
 using UnityEngine;
@@ -96,8 +97,11 @@ public class PlayerAim : MonoBehaviour
     // Refer�ncias do Inspector
     [SerializeField] private Transform firePoint;
     [SerializeField] private PlayerStats stats;
+    [Tooltip("Magnitude mínima do analógico direito para assumir a mira (twin-stick).")]
+    [SerializeField] private float gamepadAimDeadzone = 0.15f;
     private float _attackRangeOverride = -1f; 
 
+    private PlayerInputHandler _input;
     private Camera _mainCamera;
     private Vector2 _mousePosition;
     private Vector2 _currentAimDirection = Vector2.up;
@@ -110,7 +114,8 @@ public class PlayerAim : MonoBehaviour
     private void Awake()
     {
         /// Pega a refer�ncia para a c�mera principal
-        _mainCamera = Camera.main; 
+        _mainCamera = Camera.main;
+        _input = GetComponent<PlayerInputHandler>();
         if (firePoint != null)
         {
             _currentFirePointPosition = firePoint.position;
@@ -145,6 +150,18 @@ public class PlayerAim : MonoBehaviour
         Vector3 beforeEuler = firePoint.eulerAngles;
         float radius = ResolveFirePointRadius();
 
+        // Mira por analógico direito (twin-stick) tem prioridade quando ativa.
+        // Não depende da câmera, então é resolvida antes da lógica de mouse.
+        Vector2 stickAim = _input != null ? _input.AimInput : Vector2.zero;
+        if (stickAim.sqrMagnitude >= gamepadAimDeadzone * gamepadAimDeadzone)
+        {
+            _currentAimDirection = stickAim.normalized;
+            ApplyFirePointPose(_currentAimDirection);
+            if (emitDebug)
+                EmitAimPipeline(context, true, "gamepad", _mainCamera, false, default, default, false, transform.position, beforePosition, firePoint.position, beforeEuler, firePoint.eulerAngles, _currentAimDirection, radius);
+            return true;
+        }
+
         // Tenta obter a câmera principal caso não esteja disponível ainda
         // (pode ser nula nos primeiros frames após o spawn em multiplayer)
         if (_mainCamera == null || !_mainCamera.isActiveAndEnabled)
@@ -160,10 +177,11 @@ public class PlayerAim : MonoBehaviour
 
         if (Mouse.current == null)
         {
-            _currentAimDirection = firePoint != null ? (Vector2)firePoint.up : Vector2.up;
+            // Sem mouse e sem stick: mantém a última direção mirada.
+            ApplyFirePointPose(_currentAimDirection);
             if (emitDebug)
-                EmitAimPipeline(context, false, "mouse ausente", _mainCamera, false, default, default, false, transform.position, beforePosition, firePoint.position, beforeEuler, firePoint.eulerAngles, _currentAimDirection, radius);
-            return false;
+                EmitAimPipeline(context, true, "keep-last (sem mouse/stick)", _mainCamera, false, default, default, false, transform.position, beforePosition, firePoint.position, beforeEuler, firePoint.eulerAngles, _currentAimDirection, radius);
+            return true;
         }
 
         // Lê a posição do mouse na tela e converte para o plano 2D do jogador.

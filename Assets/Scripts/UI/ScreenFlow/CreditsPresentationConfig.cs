@@ -7,7 +7,7 @@
 using System;
 using UnityEngine;
 
-/// Comportamento ao fim da rolagem. Passado por chamada para não acoplar menu/pause/fim de jogo.
+// Comportamento ao fim da rolagem. Passado por chamada para não acoplar menu/pause/fim de jogo.
 
 [Serializable]
 public struct CreditsPresentationConfig
@@ -17,10 +17,10 @@ public struct CreditsPresentationConfig
     public float FadeOutSeconds;
     public float EndScrollPadding;
 
-    /// <summary>Padrão menu/pause: para no final, espera, escurece e fecha.</summary>
+    // Padrão menu/pause: para no final, espera, escurece e fecha.
     public static CreditsPresentationConfig DefaultMenu => DefaultPause;
 
-    /// <summary>Igual ao menu — usado ao abrir do pause (solo ou MP).</summary>
+    // Igual ao menu — usado ao abrir do pause (solo ou MP).
     public static CreditsPresentationConfig DefaultPause => new()
     {
         EndBehavior = CreditsEndBehavior.HoldThenFadeClose,
@@ -29,7 +29,7 @@ public struct CreditsPresentationConfig
         EndScrollPadding = 72f,
     };
 
-    /// <summary>Para no final; usuário fecha manualmente (ex.: vitória, reel longo).</summary>
+    // Para no final; usuário fecha manualmente (ex.: vitória, reel longo).
     public static CreditsPresentationConfig ManualClose => new()
     {
         EndBehavior = CreditsEndBehavior.HoldUntilManualClose,

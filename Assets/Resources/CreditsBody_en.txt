@@ -1,0 +1,154 @@
+<size=140%><b>MidnightMeow</b></size>
+
+<size=120%><b>DEVELOPMENT</b></size>
+
+<b>Gameplay & Systems Programming</b>
+Pedro Caurio
+Debs Carvalho
+
+<b>UI, Audio & Infrastructure Programming</b>
+Debs Carvalho
+Pedro Caurio
+
+<b>Multiplayer & Networking Architecture</b>
+Pedro Caurio
+Debs Carvalho
+
+<b>Localization</b>
+Debs Carvalho
+
+<size=120%><b>GAME DESIGN</b></size>
+
+<b>Balancing</b>
+Juliana Acunha
+
+<size=120%><b>ART & ANIMATION</b></size>
+
+<b>Visual Art & Concept</b>
+Vitor Emanoel
+
+<b>Nixie Sprites & Animation</b>
+Vitor Emanoel
+
+<b>Cora Sprites & Animation</b>
+Luiz x
+
+<b>Enemy Sprites & Animation (Rats)</b>
+Luiz x
+
+<b>Enemy Sprites & Animation (Rat Boss)</b>
+Vitor Emanoel
+
+<b>Environment & UI Art</b>
+Luiz x
+Vitor Emanoel
+
+<b>Visual Effects & Shaders</b>
+Debs Carvalho
+
+<b>Dissolve Shader (external asset)</b>
+VOiD1 Gaming
+
+<size=120%><b>AUDIO</b></size>
+
+
+<b>Sound Design & SFX</b>
+Juliana Acunha
+
+<b>In-Game Audio Implementation</b>
+Debs Carvalho 
+Juliana Acunha
+
+
+<size=120%><b>NARRATIVE & LORE</b></size>
+
+<b>Writing & Worldbuilding</b>
+Juliana Acunha
+
+<b>Interface Text</b>
+Debs Carvalho
+Pedro Caurio
+
+<b>Translation</b>
+Debs Carvalho
+
+<b>Proofreading</b>
+Debs Carvalho
+Juliana Acunha
+
+<size=120%><b>TESTING & QUALITY</b></size>
+
+<b>Playtest & Internal Feedback</b>
+Pedro Caurio
+Debs Carvalho
+Juliana Acunha
+
+<b>Multiplayer Testing</b>
+Pedro Caurio
+Debs Carvalho
+Juliana Acunha
+
+
+<b>QA & Bug Reports</b>
+To everyone who sat down to play one more night
+
+
+<size=120%><b>ACADEMIC ADVISING</b></size>
+
+<b>Faculty Advisors</b>
+Bernardo Cortizo de Aguiar | Game Design, Balancing, Narrative, 
+Mônica Lima de Faria | Art, Character Design, Writing, UI, 
+Davi Frederico do Amaral Denardi | 2D Animation, UX, Visual Identity, 
+
+<b>Universidade Federal de Pelotas</b>
+Game Design Undergraduate Program
+Class of 2023/1
+
+
+<size=120%><b>SPECIAL THANKS</b></size>
+
+To our family and friends, for putting up with yet another night of "just a little more."
+
+To the professors who believed in the project from its very first draft, for their patience, guidance, and for pushing us to finish what we started.
+
+To the playtesters, anonymous and not so anonymous — every death against the rat horde helped make the game better.
+
+To the Unity community and the creators of open source tools, for the documentation, forums, and examples that saved entire nights of debugging.
+
+To the real cats that inspired Nixie and Cora, even when they lay down on the keyboard at the most important moment.
+
+And to you, who made it this far — thank you for playing MidnightMeow.
+
+
+<size=120%><b>TECHNOLOGY & TOOLS</b></size>
+
+Unity 6000.3
+Netcode for GameObjects
+Unity Gaming Services, Relay & Lobby
+TextMesh Pro
+DOTween, Demigiant
+Universal Render Pipeline (URP)
+Cursor
+Git & GitHub
+Unity Localization
+
+
+<size=120%><b>THIRD-PARTY LICENSES & ASSETS</b></size>
+
+DOTween, Copyright © Daniele Giardini / Demigiant
+TextMesh Pro, Unity Technologies
+VOiD1 Gaming, 2D Dissolve Shader Graph
+Other Unity packages listed in Packages/manifest.json
+
+
+<size=120%><b>DEDICATION</b></size>
+
+For those who believe that small games can have a big soul,
+and that midnight is when cats grow bravest.
+
+
+<size=140%><b>MidnightMeow</b></size>
+<size=85%>© 2025–2026 MidnightMeow Team
+All rights reserved.</size>
+
+<size=90%><i>Until the next night.</i></size>

@@ -55,7 +55,9 @@ public class MultiplayerLobbyUI : MonoBehaviour
     {
         MultiplayerGameManager.OnGameStateChanged += HandleGameStateChanged;
         ShowLobbyPanel();
-        SetStatus("Pronto. Jogue solo, hospede ou entre em uma partida.");
+        SetStatus(LocaleText.IsPortuguese()
+            ? "Pronto. Jogue solo, hospede ou entre em uma partida."
+            : "Ready. Play solo, host, or join a match.");
         RefreshSoloStartButton();
         StartCoroutine(SubscribeToConnectionManagerRoutine());
     }
@@ -99,7 +101,9 @@ public class MultiplayerLobbyUI : MonoBehaviour
         if (ConnectionManager.Instance == null)
         {
             Debug.LogError("[MultiplayerLobbyUI] ConnectionManager não encontrado na cena após 5 segundos!");
-            SetError("Erro interno: ConnectionManager ausente.");
+            SetError(LocaleText.IsPortuguese()
+                ? "Erro interno: ConnectionManager ausente."
+                : "Internal error: ConnectionManager missing.");
             yield break;
         }
 
@@ -143,13 +147,17 @@ public class MultiplayerLobbyUI : MonoBehaviour
     {
         if (ConnectionManager.Instance == null)
         {
-            SetError("ConnectionManager não encontrado na cena.");
+            SetError(LocaleText.IsPortuguese()
+                ? "ConnectionManager não encontrado na cena."
+                : "ConnectionManager not found in scene.");
             return;
         }
 
         GameSessionContext.BeginMultiplayer();
         SetButtonsInteractable(false);
-        SetStatus("Inicializando Unity Services...");
+        SetStatus(LocaleText.IsPortuguese()
+            ? "Inicializando Unity Services..."
+            : "Initializing Unity Services...");
         HideError();
 
         await ConnectionManager.Instance.StartHostAsync();
@@ -160,18 +168,24 @@ public class MultiplayerLobbyUI : MonoBehaviour
         string code = joinCodeInputField != null ? joinCodeInputField.text.Trim() : "";
         if (string.IsNullOrEmpty(code))
         {
-            SetError("Digite o código de acesso antes de entrar.");
+            SetError(LocaleText.IsPortuguese()
+                ? "Digite o código de acesso antes de entrar."
+                : "Enter the access code before joining.");
             return;
         }
 
         if (ConnectionManager.Instance == null)
         {
-            SetError("ConnectionManager não encontrado na cena.");
+            SetError(LocaleText.IsPortuguese()
+                ? "ConnectionManager não encontrado na cena."
+                : "ConnectionManager not found in scene.");
             return;
         }
 
         SetButtonsInteractable(false);
-        SetStatus($"Entrando na sessão com código: {code.ToUpper()}...");
+        SetStatus(LocaleText.IsPortuguese()
+            ? $"Entrando na sessão com código: {code.ToUpper()}..."
+            : $"Joining session with code: {code.ToUpper()}...");
         HideError();
 
         await ConnectionManager.Instance.StartClientAsync(code);
@@ -183,7 +197,9 @@ public class MultiplayerLobbyUI : MonoBehaviour
         if (!string.IsNullOrEmpty(code))
         {
             GUIUtility.systemCopyBuffer = code;
-            SetStatus($"Código {code} copiado!");
+            SetStatus(LocaleText.IsPortuguese()
+                ? $"Código {code} copiado!"
+                : $"Code {code} copied!");
         }
     }
 
@@ -199,7 +215,9 @@ public class MultiplayerLobbyUI : MonoBehaviour
 
         if (connected && NetworkManager.Singleton.IsClient && !NetworkManager.Singleton.IsHost)
         {
-            SetError("Apenas o host pode iniciar o jogo.");
+            SetError(LocaleText.IsPortuguese()
+                ? "Apenas o host pode iniciar o jogo."
+                : "Only the host can start the game.");
             return;
         }
 
@@ -209,7 +227,9 @@ public class MultiplayerLobbyUI : MonoBehaviour
             if (LobbySessionManager.Instance != null)
             {
                 LobbySessionManager.Instance.RequestStartGameRpc();
-                SetStatus("Carregando seleção de personagens...");
+                SetStatus(LocaleText.IsPortuguese()
+                    ? "Carregando seleção de personagens..."
+                    : "Loading character selection...");
                 return;
             }
         }
@@ -220,11 +240,15 @@ public class MultiplayerLobbyUI : MonoBehaviour
 
         if (LobbyMatchFlow.TryBeginMatchFromLobby())
         {
-            SetStatus("Carregando seleção de personagens...");
+            SetStatus(LocaleText.IsPortuguese()
+            ? "Carregando seleção de personagens..."
+            : "Loading character selection...");
             return;
         }
 
-        SetError("Fluxo de telas indisponível. Inicie pelo BootstrapScene.");
+        SetError(LocaleText.IsPortuguese()
+            ? "Fluxo de telas indisponível. Inicie pelo BootstrapScene."
+            : "Screen flow unavailable. Start from BootstrapScene.");
     }
 
     // --- Handlers de Eventos do ConnectionManager ---
@@ -232,10 +256,14 @@ public class MultiplayerLobbyUI : MonoBehaviour
     private void HandleJoinCodeObtained(string code)
     {
         if (joinCodeDisplayText != null)
-            joinCodeDisplayText.text = $"Código: <b>{code}</b>";
+            joinCodeDisplayText.text = LocaleText.IsPortuguese()
+                ? $"Código: <b>{code}</b>"
+                : $"Code: <b>{code}</b>";
 
         if (copyCodeButton != null) copyCodeButton.gameObject.SetActive(true);
-        SetStatus($"Sessão criada! Código: <b>{code}</b> — Compartilhe com amigos.");
+        SetStatus(LocaleText.IsPortuguese()
+            ? $"Sessão criada! Código: <b>{code}</b> — Compartilhe com amigos."
+            : $"Session created! Code: <b>{code}</b> — Share it with friends.");
         HideError();
     }
 
@@ -258,7 +286,9 @@ public class MultiplayerLobbyUI : MonoBehaviour
         if (joinButton != null) joinButton.gameObject.SetActive(false);
         if (joinCodeInputField != null) joinCodeInputField.gameObject.SetActive(false);
         if (startGameButton != null) startGameButton.gameObject.SetActive(false);
-        SetStatus("Conectado! Aguardando o host iniciar a partida...");
+        SetStatus(LocaleText.IsPortuguese()
+            ? "Conectado! Aguardando o host iniciar a partida..."
+            : "Connected! Waiting for the host to start the match...");
         HideError();
         UpdatePlayerCount();
     }
@@ -266,13 +296,17 @@ public class MultiplayerLobbyUI : MonoBehaviour
     private void HandleClientJoined(ulong clientId)
     {
         UpdatePlayerCount();
-        SetStatus($"Jogador {clientId + 1} entrou na partida.");
+        SetStatus(LocaleText.IsPortuguese()
+            ? $"Jogador {clientId + 1} entrou na partida."
+            : $"Player {clientId + 1} joined the match.");
     }
 
     private void HandleClientLeft(ulong clientId)
     {
         UpdatePlayerCount();
-        SetStatus($"Jogador {clientId + 1} saiu da partida.");
+        SetStatus(LocaleText.IsPortuguese()
+            ? $"Jogador {clientId + 1} saiu da partida."
+            : $"Player {clientId + 1} left the match.");
     }
 
     private void HandleConnectionFailed(string message)
@@ -283,7 +317,9 @@ public class MultiplayerLobbyUI : MonoBehaviour
         if (joinButton != null) joinButton.gameObject.SetActive(true);
         if (joinCodeInputField != null) joinCodeInputField.gameObject.SetActive(true);
         SetError(message);
-        SetStatus("Falha na conexão. Tente novamente.");
+        SetStatus(LocaleText.IsPortuguese()
+            ? "Falha na conexão. Tente novamente."
+            : "Connection failed. Try again.");
     }
 
     private void HandleDisconnected()
@@ -295,7 +331,9 @@ public class MultiplayerLobbyUI : MonoBehaviour
         if (joinCodeInputField != null) joinCodeInputField.gameObject.SetActive(true);
         if (joinCodeDisplayText != null) joinCodeDisplayText.text = "";
         SetButtonsInteractable(true);
-        SetStatus("Desconectado. Hospede ou entre em uma partida.");
+        SetStatus(LocaleText.IsPortuguese()
+            ? "Desconectado. Hospede ou entre em uma partida."
+            : "Disconnected. Host or join a match.");
         HideError();
     }
 
@@ -308,12 +346,16 @@ public class MultiplayerLobbyUI : MonoBehaviour
                 break;
             case GameState.Victory:
                 ShowLobbyPanel();
-                SetStatus("Vitória! Parabéns!");
+                SetStatus(LocaleText.IsPortuguese()
+                    ? "Vitória! Parabéns!"
+                    : "Victory! Congratulations!");
                 SetGameButtonsVisible(false);
                 break;
             case GameState.Defeat:
                 ShowLobbyPanel();
-                SetStatus("Derrota! Tente novamente.");
+                SetStatus(LocaleText.IsPortuguese()
+                    ? "Derrota! Tente novamente."
+                    : "Defeat! Try again.");
                 SetGameButtonsVisible(false);
                 break;
         }
@@ -372,7 +414,9 @@ public class MultiplayerLobbyUI : MonoBehaviour
     {
         if (playerCountText == null || NetworkManager.Singleton == null) return;
         int count = NetworkManager.Singleton.ConnectedClientsIds.Count;
-        playerCountText.text = $"Jogadores: {count}/4";
+        playerCountText.text = LocaleText.IsPortuguese()
+            ? $"Jogadores: {count}/4"
+            : $"Players: {count}/4";
         Debug.Log($"[MultiplayerLobbyUI] Jogadores conectados: {count}");
     }
 }

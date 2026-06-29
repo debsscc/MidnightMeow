@@ -1,10 +1,11 @@
 using UnityEngine;
+using UnityEngine.Localization;
+using UnityEngine.Localization.Settings;
 using UnityEngine.UI;
 
-/// <summary>
-/// HUD de gameplay (canto inferior esquerdo): Passiva, Dash, Q e R com cooldowns.
-/// Sprites opcionais por slot; fallback procedural quando ausentes.
-/// </summary>
+// HUD de gameplay (canto inferior esquerdo): Passiva, Dash, Q e R com cooldowns.
+// Sprites opcionais por slot; fallback procedural quando ausentes.
+// Textos traduzidos direto no script (pt-BR / en-US) conforme o idioma ativo.
 [DisallowMultipleComponent]
 public class PlayerAbilityHud : MonoBehaviour
 {
@@ -241,7 +242,10 @@ public class PlayerAbilityHud : MonoBehaviour
             if (slot.Timer != null)
             {
                 slot.Timer.gameObject.SetActive(true);
-                slot.Timer.text = unlockWave > 1 ? $"W{unlockWave}" : "Bloq";
+                slot.Timer.text = unlockWave > 1
+                    ? $"W{unlockWave}"
+                    //tradução maneira
+                    : (IsPortuguese() ? "Bloq" : "Lock");
             }
             return;
         }
@@ -273,6 +277,8 @@ public class PlayerAbilityHud : MonoBehaviour
         if (slot == null)
             return;
 
+        //tradução maneira
+        string passiveLabel = IsPortuguese() ? "Passiva" : "Passive";
         bool hasPassive = _passive != null && _passive.PassiveKillsRequired > 0;
         if (slot.LockOverlay != null)
             slot.LockOverlay.gameObject.SetActive(!hasPassive);
@@ -290,7 +296,7 @@ public class PlayerAbilityHud : MonoBehaviour
                 slot.Timer.text = string.Empty;
             }
             if (slot.Label != null)
-                slot.Label.text = "Passiva";
+                slot.Label.text = passiveLabel;
             return;
         }
 
@@ -311,7 +317,7 @@ public class PlayerAbilityHud : MonoBehaviour
             }
 
             if (slot.Label != null)
-                slot.Label.text = "Passiva";
+                slot.Label.text = passiveLabel;
             return;
         }
 
@@ -330,7 +336,18 @@ public class PlayerAbilityHud : MonoBehaviour
         }
 
         if (slot.Label != null)
-            slot.Label.text = "Passiva";
+            slot.Label.text = passiveLabel;
+    }
+
+    //tradução maneira
+    private static bool IsPortuguese()
+    {
+        if (!LocalizationSettings.HasSettings)
+            return true;
+
+        Locale locale = LocalizationSettings.SelectedLocale;
+        // Sem locale definido, assume português (idioma base do projeto).
+        return locale == null || locale.Identifier.Code.StartsWith("pt", System.StringComparison.OrdinalIgnoreCase);
     }
 
     private void BuildUi()

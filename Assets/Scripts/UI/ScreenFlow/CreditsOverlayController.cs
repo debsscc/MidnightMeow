@@ -7,6 +7,8 @@ DESCRIÇÃO: Overlay global de créditos — rolagem automática, trilha e fundo
 using System.Collections;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Localization;
+using UnityEngine.Localization.Settings;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
@@ -15,6 +17,7 @@ using UnityEngine.UI;
 public class CreditsOverlayController : Singleton<CreditsOverlayController>
 {
     private const string CreditsBodyResourcePath = "CreditsBody";
+    private const string CreditsBodyResourcePathEn = "CreditsBody_en";
     private const string CreditsMusicResourcePath = "CreditsMusicClip";
 
     [Header("Rolagem")]
@@ -423,7 +426,12 @@ public class CreditsOverlayController : Singleton<CreditsOverlayController>
         if (_bodyText == null)
             return;
 
-        TextAsset source = Resources.Load<TextAsset>(CreditsBodyResourcePath);
+        // Escolhe o arquivo pelo idioma ativo; cai para o PT se a versão EN não existir.
+        string path = IsPortuguese() ? CreditsBodyResourcePath : CreditsBodyResourcePathEn;
+        TextAsset source = Resources.Load<TextAsset>(path);
+        if (source == null && path != CreditsBodyResourcePath)
+            source = Resources.Load<TextAsset>(CreditsBodyResourcePath);
+
         if (source == null)
         {
             Debug.LogError("[CreditsOverlay] Assets/Resources/CreditsBody.txt não encontrado.");
@@ -432,6 +440,16 @@ public class CreditsOverlayController : Singleton<CreditsOverlayController>
         }
 
         _bodyText.text = source.text;
+    }
+
+    private static bool IsPortuguese()
+    {
+        if (!LocalizationSettings.HasSettings)
+            return true;
+
+        Locale locale = LocalizationSettings.SelectedLocale;
+        // Sem locale definido, assume português (idioma base do projeto).
+        return locale == null || locale.Identifier.Code.StartsWith("pt", System.StringComparison.OrdinalIgnoreCase);
     }
 
     private void RefreshScrollLayout(bool resetToStart)

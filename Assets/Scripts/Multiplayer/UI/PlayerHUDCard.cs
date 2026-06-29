@@ -1,14 +1,14 @@
-/// <summary>
-/// PlayerHUDCard.cs
-/// Componente de UI que exibe o status de um único jogador no HUD multiplayer.
-/// Mostra nome, barra de saúde e barra de adrenalina/frenesi. Muda de aparência
-/// ao jogador morrer (cor escura) e ao reviver. É criado/destruído dinamicamente
-/// pelo MultiplayerHUD conforme jogadores entram e saem da partida.
-/// SRP: exclusivamente responsável pela representação visual de um jogador no HUD.
-/// </summary>
+// ----------------------------------------------------------------
+// CRIADO POR: Pedro Caurio
+// DESCRIÇÃO: Componente de UI que exibe o status de um único jogador no HUD multiplayer.
+// Mostra nome, barra de saúde e barra de adrenalina/frenesi. Muda de aparência ao jogador morrer (cor escura) e ao reviver. 
+// É criado/destruído dinamicamente pelo MultiplayerHUD conforme jogadores entram e saem da partida.
+// ---------------------------------------------------------------- 
 
 using TMPro;
 using UnityEngine;
+using UnityEngine.Localization;
+using UnityEngine.Localization.Settings;
 using UnityEngine.UI;
 
 public class PlayerHUDCard : MonoBehaviour
@@ -30,9 +30,6 @@ public class PlayerHUDCard : MonoBehaviour
 
     private ulong _clientId;
 
-    /// <summary>
-    /// Inicializa o card com dados do jogador. Chamado pelo MultiplayerHUD ao criar o card.
-    /// </summary>
     public void Initialize(ulong clientId, string playerName, Color cardColor, Color playerColor)
     {
         _clientId = clientId;
@@ -56,10 +53,6 @@ public class PlayerHUDCard : MonoBehaviour
         UpdateHealth(1f, 1f);
         UpdateAdrenaline(1f, 1f, false);
     }
-
-    /// <summary>
-    /// Atualiza a barra de saúde do jogador.
-    /// </summary>
     public void UpdateHealth(float current, float max)
     {
         if (healthSlider == null) return;
@@ -67,9 +60,6 @@ public class PlayerHUDCard : MonoBehaviour
         healthSlider.value = current;
     }
 
-    /// <summary>
-    /// Atualiza a barra de adrenalina e muda a cor conforme o estado de frenesi.
-    /// </summary>
     public void UpdateAdrenaline(float current, float max, bool isFrenzy)
     {
         if (adrenalineSlider == null) return;
@@ -80,9 +70,6 @@ public class PlayerHUDCard : MonoBehaviour
             adrenalineFill.color = isFrenzy ? frenzyAdrenalineColor : normalAdrenalineColor;
     }
 
-    /// <summary>
-    /// Muda o visual do card para o estado morto.
-    /// </summary>
     public void SetDeadState(Color deadColor)
     {
         if (cardBackground != null)
@@ -92,12 +79,9 @@ public class PlayerHUDCard : MonoBehaviour
             deadOverlay.SetActive(true);
 
         if (statusText != null)
-            statusText.text = "INCONSCIENTE";
+            statusText.text = IsPortuguese() ? "INCONSCIENTE" : "DOWNED";
     }
 
-    /// <summary>
-    /// Restaura o visual do card para o estado vivo após respawn.
-    /// </summary>
     public void SetAliveState(Color aliveColor)
     {
         if (cardBackground != null)
@@ -108,5 +92,15 @@ public class PlayerHUDCard : MonoBehaviour
 
         if (statusText != null)
             statusText.text = "";
+    }
+
+    private static bool IsPortuguese()
+    {
+        if (!LocalizationSettings.HasSettings)
+            return true;
+
+        Locale locale = LocalizationSettings.SelectedLocale;
+        // Sem locale definido, assume português (idioma base do projeto).
+        return locale == null || locale.Identifier.Code.StartsWith("pt", System.StringComparison.OrdinalIgnoreCase);
     }
 }

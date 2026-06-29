@@ -1,9 +1,8 @@
 using Unity.Netcode;
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 /// <summary>
-/// Interação local do jogador para iniciar selamento (tecla Interact / E).
+/// Interação local do jogador para iniciar selamento (ação Interact: tecla E ou gamepad).
 /// </summary>
 [DisallowMultipleComponent]
 [RequireComponent(typeof(PlayerInputHandler))]
@@ -37,10 +36,8 @@ public class PlayerRatHoleSealInteraction : MonoBehaviour
 
     private void Update()
     {
+        // Mantem o alvo atualizado para o prompt; o gatilho vem da acao Interact (E / gamepad).
         _targetHole = FindNearestUnsealedHole();
-
-        if (_targetHole != null && Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame)
-            TryStartSeal();
     }
 
     public RatHoleSpawnPoint CurrentTargetHole => _targetHole;

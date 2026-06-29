@@ -20,6 +20,9 @@ public class PlayerInputHandler : MonoBehaviour
     public event Action OnFrenzyInput;
     public event Action<bool> OnInteractHoldChanged;
 
+    /// <summary>Direção bruta da mira por analógico direito (zero quando solto/neutro).</summary>
+    public Vector2 AimInput { get; private set; }
+
     // Methods called by PlayerInput are not relied on for fire state anymore.
     // We subscribe directly to the underlying InputAction to reliably detect started/canceled.
     private PlayerInput _playerInput;
@@ -96,6 +99,12 @@ public class PlayerInputHandler : MonoBehaviour
     {
         if (_isPaused) return;
         OnMoveInput?.Invoke(value.Get<Vector2>());
+    }
+
+    public void OnAim(InputValue value)
+    {
+        // Sempre atualiza (inclusive quando volta a zero) para o PlayerAim decidir entre stick e mouse.
+        AimInput = value.Get<Vector2>();
     }
 
     private void OnFireStarted(InputAction.CallbackContext ctx)

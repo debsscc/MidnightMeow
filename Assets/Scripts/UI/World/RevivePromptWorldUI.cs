@@ -1,10 +1,14 @@
+// ----------------------------------------------------------------
+// CRIADO POR: Pedro Caurio
+// DESCRIÇÃO: Indicação para aliado vivo: permanecer na zona de reviver (sem botão de interação). Traduzido
+// ---------------------------------------------------------------- 
+
 using TMPro;
 using UnityEngine;
+using UnityEngine.Localization;
+using UnityEngine.Localization.Settings;
 using UnityEngine.UI;
 
-/// <summary>
-/// Indicação para aliado vivo: permanecer na zona de reviver (sem botão de interação).
-/// </summary>
 [RequireComponent(typeof(NetworkPlayerRevive), typeof(NetworkPlayerHealth))]
 public class RevivePromptWorldUI : MonoBehaviour
 {
@@ -107,7 +111,7 @@ public class RevivePromptWorldUI : MonoBehaviour
         labelRect.sizeDelta = new Vector2(2.4f, 0.3f);
         labelRect.anchoredPosition = new Vector2(0f, 0.15f);
         _promptLabel = labelGo.AddComponent<TextMeshProUGUI>();
-        _promptLabel.text = "Entre na área verde para reviver";
+        _promptLabel.text = IsPortuguese() ? "Entre na área verde para reviver" : "Enter the green area to revive";
         _promptLabel.fontSize = 2f;
         _promptLabel.alignment = TextAlignmentOptions.Center;
         _promptLabel.color = new Color(0.85f, 1f, 0.9f, 1f);
@@ -131,5 +135,15 @@ public class RevivePromptWorldUI : MonoBehaviour
         _progressFill.type = Image.Type.Filled;
         _progressFill.fillMethod = Image.FillMethod.Horizontal;
         _progressFill.fillOrigin = (int)Image.OriginHorizontal.Left;
+    }
+
+    private static bool IsPortuguese()
+    {
+        if (!LocalizationSettings.HasSettings)
+            return true;
+
+        Locale locale = LocalizationSettings.SelectedLocale;
+        // Sem locale definido, assume português (idioma base do projeto).
+        return locale == null || locale.Identifier.Code.StartsWith("pt", System.StringComparison.OrdinalIgnoreCase);
     }
 }

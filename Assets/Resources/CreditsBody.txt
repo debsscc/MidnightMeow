@@ -1,62 +1,56 @@
 <size=140%><b>MidnightMeow</b></size>
 
-
 <size=120%><b>DESENVOLVIMENTO</b></size>
-
-<b>Direção e Produção</b>
-Debs Carvalho
 
 <b>Programação de Gameplay e Sistemas</b>
 Pedro Caurio
+Debs Carvalho
 
 <b>Programação de UI, Áudio e Infraestrutura</b>
 Debs Carvalho
+Pedro Caurio
 
 <b>Arquitetura Multiplayer e Rede</b>
 Pedro Caurio
 Debs Carvalho
 
-
-<size=120%><b>DESIGN DE JOGO</b></size>
-
-<b>Game Design e Balanceamento</b>
-Juliana Acunha
-Pedro Caurio
+<b>Localization</b>
 Debs Carvalho
 
+<size=120%><b>GAME DESIGN</b></size>
+
+<b>Balanceamento</b>
+Juliana Acunha
 
 <size=120%><b>ARTE E ANIMAÇÃO</b></size>
 
 <b>Arte Visual e Concept</b>
-x
+Vitor Emanoel
 
 <b>Sprites e Animação Nixie</b>
-x
+Vitor Emanoel
 
 <b>Sprites e Animação Cora</b>
-x
+Luiz x
 
 <b>Sprites e Animação Inimigos (Ratos)</b>
-x
+Luiz x
+
+<b>Sprites e Animação Inimigos (BossRato)</b>
+Vitor Emanoel
 
 <b>Arte de Ambiente e UI</b>
-x
+Luiz x
+Vitor Emanoel
 
 <b>Efeitos Visuais e Shaders</b>
 Debs Carvalho
-Pedro Caurio
 
 <b>Shader de Dissolve (asset externo)</b>
 VOiD1 Gaming
 
-
 <size=120%><b>ÁUDIO</b></size>
 
-<b>Trilha Sonora Original</b>
-[Nome do(a) Compositor(a)]
-
-<b>Música de Menu, Gameplay e Créditos</b>
-[Nome do(a) Compositor(a)]
 
 <b>Design de Som e SFX</b>
 Juliana Acunha
@@ -69,21 +63,31 @@ Juliana Acunha
 <size=120%><b>NARRATIVA E LORE</b></size>
 
 <b>Roteiro e Mundo</b>
-[Nome]
+Juliana Acunha
 
 <b>Textos de Interface</b>
 Debs Carvalho
 Pedro Caurio
 
+<b>Tradução</b>
+Debs Carvalho
+
+<b>Revisão</b>
+Debs Carvalho
+Juliana Acunha
 
 <size=120%><b>TESTES E QUALIDADE</b></size>
 
 <b>Playtest e Feedback Interno</b>
 Pedro Caurio
 Debs Carvalho
+Juliana Acunha
 
 <b>Testes Multiplayer</b>
-[Nomes dos playtesters]
+Pedro Caurio
+Debs Carvalho
+Juliana Acunha
+
 
 <b>QA e Relatos de Bug</b>
 A todos que sentaram para jogar uma noite a mais
@@ -91,27 +95,19 @@ A todos que sentaram para jogar uma noite a mais
 
 <size=120%><b>ORIENTAÇÃO ACADÊMICA</b></size>
 
-<b>Professor(a) Orientador(a)</b>
-[Nome completo, titulação]
-[Instituição / Curso / Disciplina]
+<b>Professores Orientadores</b>
+Bernardo Cortizo de Aguiar | Game Design, Balanceamento, Narrativa, 
+Mônica Lima de Faria | Arte, Design de Personagnes, Roteiro, UI, 
+Davi Frederico do Amaral Denardi | Animação 2D, UX, Identidade Visual, 
 
-<b>Professor(a) Co-orientador(a)</b>
-[Nome completo, titulação]
-
-<b>Banca Examinadora</b>
-[Nome, titulação]
-[Nome, titulação]
-[Nome, titulação]
-
-<b>Instituição de Ensino</b>
-[Nome da Faculdade / Universidade]
-[Nome do Curso, ex.: Jogos Digitais, Design, Ciência da Computação]
-Turma [Ano / Período]
+<b>Universidade Federal de Pelotas</b>
+Graduação em Design de Jogos
+Turma 2023/1
 
 
 <size=120%><b>AGRADECIMENTOS ESPECIAIS</b></size>
 
-À nossa família e amigos, por suportarem mais uma noite de “só mais um commit”.
+À nossa família e amigos, por suportarem mais uma noite de “só mais um pouquinho".
 
 Aos professores que acreditaram no projeto desde o rascunho, pela paciência, orientação e por nos empurrarem a terminar o que começamos.
 
@@ -132,7 +128,9 @@ Unity Gaming Services, Relay e Lobby
 TextMesh Pro
 DOTween, Demigiant
 Universal Render Pipeline (URP)
-Cursor e ferramentas de IA assistiva no desenvolvimento
+Cursor
+Git e Github
+Unity Localization
 
 
 <size=120%><b>LICENÇAS E ASSETS DE TERCEIROS</b></size>
@@ -150,7 +148,7 @@ e que a meia-noite é a hora em que os gatos ficam mais corajosos.
 
 
 <size=140%><b>MidnightMeow</b></size>
-<size=85%>© 2024 a 2026 Equipe MidnightMeow
+<size=85%>© 2025 a 2026 Equipe MidnightMeow
 Todos os direitos reservados.</size>
 
 <size=90%><i>Até a próxima noite.</i></size>

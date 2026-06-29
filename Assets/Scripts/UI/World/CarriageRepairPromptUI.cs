@@ -1,9 +1,13 @@
+// ----------------------------------------------------------------
+// CRIADO POR: Pedro Caurio
+// DESCRIÇÃO: Popup "consertar" acima da carruagem quebrada. Traduzido
+// ---------------------------------------------------------------- 
+
 using TMPro;
 using UnityEngine;
+using UnityEngine.Localization;
+using UnityEngine.Localization.Settings;
 
-/// <summary>
-/// Popup "consertar" acima da carruagem quebrada.
-/// </summary>
 [DisallowMultipleComponent]
 public class CarriageRepairPromptUI : MonoBehaviour
 {
@@ -82,9 +86,19 @@ public class CarriageRepairPromptUI : MonoBehaviour
         var labelRect = labelGo.AddComponent<RectTransform>();
         labelRect.sizeDelta = new Vector2(2.8f, 0.5f);
         _label = labelGo.AddComponent<TextMeshProUGUI>();
-        _label.text = "Aperte E para consertar";
+        _label.text = IsPortuguese() ? "Aperte E para consertar" : "Press E to repair";
         _label.fontSize = 2.2f;
         _label.alignment = TextAlignmentOptions.Center;
         _label.color = new Color(1f, 0.9f, 0.55f, 1f);
+    }
+
+    private static bool IsPortuguese()
+    {
+        if (!LocalizationSettings.HasSettings)
+            return true;
+
+        Locale locale = LocalizationSettings.SelectedLocale;
+        // Sem locale definido, assume português (idioma base do projeto).
+        return locale == null || locale.Identifier.Code.StartsWith("pt", System.StringComparison.OrdinalIgnoreCase);
     }
 }

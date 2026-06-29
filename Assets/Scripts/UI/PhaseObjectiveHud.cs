@@ -1,9 +1,14 @@
+// ----------------------------------------------------------------
+// CRIADO POR: Pedro Caurio
+// DESCRIÇÃO: HUD de objetivo da fase: buracos selados e inimigos ativos.
+// ---------------------------------------------------------------- 
+
+
 using UnityEngine;
+using UnityEngine.Localization;
+using UnityEngine.Localization.Settings;
 using UnityEngine.UI;
 
-/// <summary>
-/// HUD de objetivo da fase: buracos selados e inimigos ativos.
-/// </summary>
 [DisallowMultipleComponent]
 public class PhaseObjectiveHud : MonoBehaviour
 {
@@ -11,6 +16,7 @@ public class PhaseObjectiveHud : MonoBehaviour
     [SerializeField] private bool buildTextIfMissing = true;
     [SerializeField] private float refreshInterval = 0.35f;
 
+    //tradução maneira
     private string _status = "Buracos: -/-  |  Inimigos: -";
     private float _refreshTimer;
     private float _carriageProgressPercent;
@@ -21,6 +27,7 @@ public class PhaseObjectiveHud : MonoBehaviour
     {
         GameEvents.OnPhaseObjectiveStatusChanged += UpdateStatus;
         GameEvents.OnCarriagePathProgressChanged += HandleCarriageProgressChanged;
+        LocalizationSettings.SelectedLocaleChanged += HandleLocaleChanged;
         RefreshFromLocalState();
     }
 
@@ -28,7 +35,10 @@ public class PhaseObjectiveHud : MonoBehaviour
     {
         GameEvents.OnPhaseObjectiveStatusChanged -= UpdateStatus;
         GameEvents.OnCarriagePathProgressChanged -= HandleCarriageProgressChanged;
+        LocalizationSettings.SelectedLocaleChanged -= HandleLocaleChanged;
     }
+
+    private void HandleLocaleChanged(Locale _) => RefreshFromLocalState();
 
     private void HandleCarriageProgressChanged(float normalizedProgress)
     {
@@ -96,26 +106,46 @@ public class PhaseObjectiveHud : MonoBehaviour
 
     private void UpdateStatus(int holesSealed, int totalHoles, int enemiesAlive)
     {
+        bool pt = IsPortuguese();
         PhaseWaveSettingsCatalog catalog = PhaseWaveSettingsCatalog.LoadCached();
         string sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
         if (catalog != null && catalog.TryGetEntry(sceneName, out PhaseWaveSettingsCatalog.PhaseEntry entry) &&
             entry.winCondition == PhaseWaveSettingsCatalog.PhaseWinCondition.KillBoss)
         {
-            _status = $"Derrote o Boss  |  Inimigos: {enemiesAlive}";
+            //tradução maneira
+            _status = pt
+                ? $"Derrote o Boss  |  Inimigos: {enemiesAlive}"
+                : $"Defeat the Boss  |  Enemies: {enemiesAlive}";
         }
         else if (catalog != null && catalog.TryGetEntry(sceneName, out entry) &&
                  entry.winCondition == PhaseWaveSettingsCatalog.PhaseWinCondition.CarriageReachEnd)
         {
             int remaining = Mathf.Max(0, totalHoles - holesSealed);
-            _status = $"Carruagem: {_carriageProgressPercent:0}%  |  Buracos: {holesSealed}/{totalHoles} ({remaining} faltando)  |  Inimigos: {enemiesAlive}";
+            _status = pt
+            //tradução maneira
+                ? $"Carruagem: {_carriageProgressPercent:0}%  |  Buracos: {holesSealed}/{totalHoles} ({remaining} faltando)  |  Inimigos: {enemiesAlive}"
+                : $"Carriage: {_carriageProgressPercent:0}%  |  Holes: {holesSealed}/{totalHoles} ({remaining} left)  |  Enemies: {enemiesAlive}";
         }
         else
         {
             int remaining = Mathf.Max(0, totalHoles - holesSealed);
-            _status = $"Buracos: {holesSealed}/{totalHoles} selados ({remaining} faltando)  |  Inimigos: {enemiesAlive}";
+            _status = pt
+            //tradução maneira
+                ? $"Buracos: {holesSealed}/{totalHoles} selados ({remaining} faltando)  |  Inimigos: {enemiesAlive}"
+                : $"Holes: {holesSealed}/{totalHoles} sealed ({remaining} left)  |  Enemies: {enemiesAlive}";
         }
 
         UpdateUI();
+    }
+
+    private static bool IsPortuguese()
+    {
+        if (!LocalizationSettings.HasSettings)
+            return true;
+
+        Locale locale = LocalizationSettings.SelectedLocale;
+        // Sem locale definido, assume português (idioma base do projeto).
+        return locale == null || locale.Identifier.Code.StartsWith("pt", System.StringComparison.OrdinalIgnoreCase);
     }
 
     private void RefreshFromLocalState()

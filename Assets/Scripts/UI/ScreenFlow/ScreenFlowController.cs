@@ -770,7 +770,9 @@ public class TransitionFadeOverlay : Singleton<TransitionFadeOverlay>
             LoadingProgressUtility.SetProgress(_progressFill, LoadingProgress);
 
         if (_statusText != null)
-            _statusText.text = $"Carregando... {LoadingProgress:P0}";
+            _statusText.text = LocaleText.IsPortuguese()
+                ? $"Carregando... {LoadingProgress:P0}"
+                : $"Loading... {LoadingProgress:P0}";
     }
 
     public void ResetLoadingProgress() => SetLoadingProgress(0f);

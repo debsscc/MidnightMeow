@@ -1,9 +1,14 @@
+// ----------------------------------------------------------------
+// CRIADO POR: Pedro Caurio
+// DESCRIÇÃO: Prompt world-space "Aperte E para selar" perto de buracos não selados. 
+// ---------------------------------------------------------------- 
+
 using TMPro;
 using UnityEngine;
+using UnityEngine.Localization;
+using UnityEngine.Localization.Settings;
 
-/// <summary>
-/// Prompt world-space "Aperte E para selar" perto de buracos não selados.
-/// </summary>
+
 [DisallowMultipleComponent]
 [RequireComponent(typeof(PlayerRatHoleSealInteraction))]
 public class RatHoleSealPromptUI : MonoBehaviour
@@ -66,12 +71,23 @@ public class RatHoleSealPromptUI : MonoBehaviour
         labelRect.offsetMin = Vector2.zero;
         labelRect.offsetMax = Vector2.zero;
         _label = labelGo.AddComponent<TextMeshProUGUI>();
-        _label.text = "Aperte E para selar";
+        //tradução maneira
+        _label.text = IsPortuguese() ? "Aperte E para selar" : "Press E to seal";
         _label.fontSize = 1.65f;
         _label.enableAutoSizing = false;
         _label.textWrappingMode = TextWrappingModes.NoWrap;
         _label.overflowMode = TextOverflowModes.Overflow;
         _label.alignment = TextAlignmentOptions.Center;
         _label.color = new Color(0.85f, 0.95f, 1f, 1f);
+    }
+
+    private static bool IsPortuguese()
+    {
+        if (!LocalizationSettings.HasSettings)
+            return true;
+
+        Locale locale = LocalizationSettings.SelectedLocale;
+        // Sem locale definido, assume português (idioma base do projeto).
+        return locale == null || locale.Identifier.Code.StartsWith("pt", System.StringComparison.OrdinalIgnoreCase);
     }
 }

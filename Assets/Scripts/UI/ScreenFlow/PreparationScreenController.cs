@@ -168,7 +168,9 @@ public class PreparationScreenController : MonoBehaviour
                 }
 
                 if (!IsLocalHost())
-                    ShowFeedback("Apenas o host pode escolher o contrato.");
+                    ShowFeedback(LocaleText.IsPortuguese()
+                        ? "Apenas o host pode escolher o contrato."
+                        : "Only the host can choose the contract.");
                 else
                     SelectContract(index);
             });
@@ -198,7 +200,9 @@ public class PreparationScreenController : MonoBehaviour
     {
         if (!IsLocalHost())
         {
-            ShowFeedback("Apenas o host pode confirmar o contrato.");
+            ShowFeedback(LocaleText.IsPortuguese()
+                ? "Apenas o host pode confirmar o contrato."
+                : "Only the host can confirm the contract.");
             return;
         }
 
@@ -206,7 +210,9 @@ public class PreparationScreenController : MonoBehaviour
         {
             if (_localSelectedContract < 0)
             {
-                ShowFeedback("Escolha um contrato antes de confirmar.");
+                ShowFeedback(LocaleText.IsPortuguese()
+                    ? "Escolha um contrato antes de confirmar."
+                    : "Choose a contract before confirming.");
                 return;
             }
 
@@ -219,7 +225,9 @@ public class PreparationScreenController : MonoBehaviour
         PreparationSessionManager session = HubSessionStateReader.GetPreparationSession();
         if (session == null)
         {
-            ShowFeedback("Aguardando sessão de rede...");
+            ShowFeedback(LocaleText.IsPortuguese()
+                ? "Aguardando sessão de rede..."
+                : "Waiting for network session...");
             return;
         }
 
@@ -274,7 +282,9 @@ public class PreparationScreenController : MonoBehaviour
             PreparationSessionManager session = HubSessionStateReader.GetPreparationSession();
             if (session == null)
             {
-                ShowFeedback("Aguardando sessão de rede...");
+                ShowFeedback(LocaleText.IsPortuguese()
+                ? "Aguardando sessão de rede..."
+                : "Waiting for network session...");
                 return;
             }
 
@@ -333,7 +343,9 @@ public class PreparationScreenController : MonoBehaviour
         PreparationSessionManager session = HubSessionStateReader.GetPreparationSession();
         if (session == null)
         {
-            ShowFeedback("Aguardando sessão de rede...");
+            ShowFeedback(LocaleText.IsPortuguese()
+                ? "Aguardando sessão de rede..."
+                : "Waiting for network session...");
             RefreshView();
             return;
         }
@@ -349,10 +361,14 @@ public class PreparationScreenController : MonoBehaviour
             return string.Empty;
 
         if (_localSelectedContract < 0)
-            return "Escolha um contrato antes de confirmar.";
+            return LocaleText.IsPortuguese()
+                ? "Escolha um contrato antes de confirmar."
+                : "Choose a contract before confirming.";
 
         if (_soloCharacter == LobbyCharacterType.Default)
-            return "Escolha um personagem antes de confirmar.";
+            return LocaleText.IsPortuguese()
+                ? "Escolha um personagem antes de confirmar."
+                : "Choose a character before confirming.";
 
         return string.Empty;
     }
@@ -461,9 +477,11 @@ public class PreparationScreenController : MonoBehaviour
             if (readyStatusText != null)
             {
                 if (_localSelectedContract < 0)
-                    readyStatusText.text = "Escolha um contrato";
+                    readyStatusText.text = LocaleText.IsPortuguese() ? "Escolha um contrato" : "Choose a contract";
                 else
-                    readyStatusText.text = "Confirme o contrato para continuar";
+                    readyStatusText.text = LocaleText.IsPortuguese()
+                        ? "Confirme o contrato para continuar"
+                        : "Confirm the contract to continue";
             }
 
             if (chooseCharacterButton != null)
@@ -485,7 +503,9 @@ public class PreparationScreenController : MonoBehaviour
         if (session == null)
         {
             if (readyStatusText != null)
-                readyStatusText.text = "Aguardando sessão de rede...";
+                readyStatusText.text = LocaleText.IsPortuguese()
+                    ? "Aguardando sessão de rede..."
+                    : "Waiting for network session...";
             return;
         }
 
@@ -501,19 +521,23 @@ public class PreparationScreenController : MonoBehaviour
 
         if (readyStatusText != null)
         {
-            string localReadyLabel = session.GetLocalReadyState() ? " (você pronto)" : string.Empty;
+            bool pt = LocaleText.IsPortuguese();
+            string localReadyLabel = session.GetLocalReadyState()
+                ? (pt ? " (você pronto)" : " (you ready)")
+                : string.Empty;
             int contractIndex = session.SelectedContractIndex;
 
             if (contractIndex < 0)
             {
                 readyStatusText.text = IsLocalHost()
-                    ? "Escolha um contrato"
-                    : "Aguardando o host escolher o contrato";
+                    ? (pt ? "Escolha um contrato" : "Choose a contract")
+                    : (pt ? "Aguardando o host escolher o contrato" : "Waiting for the host to choose the contract");
             }
             else
             {
-                readyStatusText.text =
-                    $"Prontos: {readyCount}/{session.Players.Count} | Personagens: {charCount}/{session.Players.Count}{localReadyLabel}";
+                readyStatusText.text = pt
+                    ? $"Prontos: {readyCount}/{session.Players.Count} | Personagens: {charCount}/{session.Players.Count}{localReadyLabel}"
+                    : $"Ready: {readyCount}/{session.Players.Count} | Characters: {charCount}/{session.Players.Count}{localReadyLabel}";
             }
         }
 
@@ -550,12 +574,17 @@ public class PreparationScreenController : MonoBehaviour
             if (contracts != null && i < contracts.Length && contracts[i] != null)
             {
                 bool unlocked = IsContractUnlocked(i);
+                string lockedSuffix = LocaleText.IsPortuguese() ? "\n(bloqueado)" : "\n(locked)";
                 label.text = unlocked
                     ? contracts[i].displayName
-                    : $"{contracts[i].displayName}\n(bloqueado)";
+                    : $"{contracts[i].displayName}{lockedSuffix}";
             }
             else
-                label.text = IsContractUnlocked(i) ? $"Contrato {i + 1}" : $"Contrato {i + 1}\n(bloqueado)";
+            {
+                bool pt = LocaleText.IsPortuguese();
+                string name = pt ? $"Contrato {i + 1}" : $"Contract {i + 1}";
+                label.text = IsContractUnlocked(i) ? name : (pt ? $"{name}\n(bloqueado)" : $"{name}\n(locked)");
+            }
         }
     }
 

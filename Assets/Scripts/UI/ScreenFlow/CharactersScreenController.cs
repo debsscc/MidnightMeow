@@ -176,7 +176,9 @@ public class CharactersScreenController : MonoBehaviour
             LobbyCharacterType selected = ResolveLocalSelection();
             if (selected == LobbyCharacterType.Default)
             {
-                ShowFeedback("Escolha um personagem antes de confirmar.");
+                ShowFeedback(LocaleText.IsPortuguese()
+                    ? "Escolha um personagem antes de confirmar."
+                    : "Choose a character before confirming.");
                 return;
             }
 
@@ -189,7 +191,9 @@ public class CharactersScreenController : MonoBehaviour
         PreparationSessionManager session = HubSessionStateReader.GetPreparationSession();
         if (session == null)
         {
-            ShowFeedback("Aguardando sessão de rede...");
+            ShowFeedback(LocaleText.IsPortuguese()
+                ? "Aguardando sessão de rede..."
+                : "Waiting for network session...");
             return;
         }
 
@@ -220,7 +224,9 @@ public class CharactersScreenController : MonoBehaviour
         PreparationSessionManager session = HubSessionStateReader.GetPreparationSession();
         if (session == null)
         {
-            ShowFeedback("Aguardando sessão de rede...");
+            ShowFeedback(LocaleText.IsPortuguese()
+                ? "Aguardando sessão de rede..."
+                : "Waiting for network session...");
             return;
         }
 
@@ -261,7 +267,9 @@ public class CharactersScreenController : MonoBehaviour
 
         if (!save.TrySpendMagiculas(upgradeCostPerTier))
         {
-            ShowFeedback("Magículas insuficientes.");
+            ShowFeedback(LocaleText.IsPortuguese()
+                ? "Magículas insuficientes."
+                : "Not enough magículas.");
             return;
         }
 
@@ -322,13 +330,18 @@ public class CharactersScreenController : MonoBehaviour
                 PreparationSessionManager session = HubSessionStateReader.GetPreparationSession();
                 TMP_Text label = readyButton.GetComponentInChildren<TMP_Text>();
                 if (label != null)
-                    label.text = session != null && session.GetLocalReadyState() ? "Desmarcar Pronto" : "Pronto";
+                {
+                    bool pt = LocaleText.IsPortuguese();
+                    label.text = session != null && session.GetLocalReadyState()
+                        ? (pt ? "Desmarcar Pronto" : "Unready")
+                        : (pt ? "Pronto" : "Ready");
+                }
             }
             else if (showReady)
             {
                 TMP_Text label = readyButton.GetComponentInChildren<TMP_Text>();
                 if (label != null)
-                    label.text = "Pronto";
+                    label.text = LocaleText.IsPortuguese() ? "Pronto" : "Ready";
             }
         }
 
@@ -345,7 +358,12 @@ public class CharactersScreenController : MonoBehaviour
             bool visible = countdown >= 0;
             countdownText.gameObject.SetActive(visible);
             if (visible)
-                countdownText.text = countdown > 0 ? $"Iniciando em {countdown}..." : "Iniciando!";
+            {
+                bool pt = LocaleText.IsPortuguese();
+                countdownText.text = countdown > 0
+                    ? (pt ? $"Iniciando em {countdown}..." : $"Starting in {countdown}...")
+                    : (pt ? "Iniciando!" : "Starting!");
+            }
         }
 
         if (readyStatusText != null && showReady && !GameSessionContext.IsSinglePlayer)
@@ -364,7 +382,9 @@ public class CharactersScreenController : MonoBehaviour
                     readyCount++;
             }
 
-            readyStatusText.text = $"Prontos: {readyCount}/{session.Players.Count}";
+            readyStatusText.text = LocaleText.IsPortuguese()
+                ? $"Prontos: {readyCount}/{session.Players.Count}"
+                : $"Ready: {readyCount}/{session.Players.Count}";
         }
         else if (readyStatusText != null)
         {
@@ -414,10 +434,11 @@ public class CharactersScreenController : MonoBehaviour
         ulong? ownerId = HubSessionStateReader.FindCharacterOwnerId(type);
         ulong localId = NetworkManager.Singleton != null ? NetworkManager.Singleton.LocalClientId : 0;
 
+        bool pt = LocaleText.IsPortuguese();
         if (localSelection == type)
-            label.text = $"{baseName}\n(Você)";
+            label.text = pt ? $"{baseName}\n(Você)" : $"{baseName}\n(You)";
         else if (ownerId.HasValue && ownerId.Value != localId)
-            label.text = $"{baseName}\n(Jogador {ownerId.Value + 1})";
+            label.text = pt ? $"{baseName}\n(Jogador {ownerId.Value + 1})" : $"{baseName}\n(Player {ownerId.Value + 1})";
         else
             label.text = baseName;
     }
@@ -469,7 +490,7 @@ public class CharactersScreenController : MonoBehaviour
 
         SaveProfileStore save = SaveProfileStore.Instance;
         int tier = save?.Active?.GetCharacterData(character).GetTierForSlot(slot) ?? 0;
-        label.text = $"{name} (Nv.{tier})";
+        label.text = LocaleText.IsPortuguese() ? $"{name} (Nv.{tier})" : $"{name} (Lv.{tier})";
     }
 
     private void RefreshPopupContent()
@@ -489,7 +510,12 @@ public class CharactersScreenController : MonoBehaviour
         int tier = browse ? 0 : save?.Active?.GetCharacterData(_popupCharacter).GetTierForSlot(_popupSlot) ?? 0;
 
         if (skillPopupLevel != null)
-            skillPopupLevel.text = browse ? "Modo consulta" : $"Nível: {tier}/3";
+        {
+            bool pt = LocaleText.IsPortuguese();
+            skillPopupLevel.text = browse
+                ? (pt ? "Modo consulta" : "Browse mode")
+                : (pt ? $"Nível: {tier}/3" : $"Level: {tier}/3");
+        }
 
         if (skillPopupUpgradeButton != null)
         {
@@ -510,14 +536,14 @@ public class CharactersScreenController : MonoBehaviour
         {
             AbilitySlot.Ability1 => set.ability1 != null ? set.ability1.displayName : "Skill 1",
             AbilitySlot.Ability2 => set.ability2 != null ? set.ability2.displayName : "Skill 2",
-            _ => "Ataque Normal"
+            _ => LocaleText.IsPortuguese() ? "Ataque Normal" : "Normal Attack"
         };
     }
 
     private static string ResolveSkillDescription(CharacterAbilitySet set, AbilitySlot slot)
     {
         if (set == null)
-            return "Descrição placeholder.";
+            return LocaleText.IsPortuguese() ? "Descrição placeholder." : "Placeholder description.";
 
         CharacterAbilityDefinition def = slot switch
         {
@@ -527,10 +553,14 @@ public class CharactersScreenController : MonoBehaviour
         };
 
         if (def == null)
-            return "Melhora o ataque básico do personagem.";
+            return LocaleText.IsPortuguese()
+                ? "Melhora o ataque básico do personagem."
+                : "Improves the character's basic attack.";
 
         AbilityTierData tier = def.GetTierData(1);
-        return $"Alcance: {tier.range:0.##} | CD: {tier.cooldown:0.##}s";
+        return LocaleText.IsPortuguese()
+            ? $"Alcance: {tier.range:0.##} | CD: {tier.cooldown:0.##}s"
+            : $"Range: {tier.range:0.##} | CD: {tier.cooldown:0.##}s";
     }
 
     private static void SetPanelHighlight(Button button, bool selected)
