@@ -5435,6 +5435,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerAim
   firePoint: {fileID: 874212205570085287}
   stats: {fileID: 11400000, guid: 7f4fa052e88f8494f918e2f5d5b9cdd1, type: 2}
+  gamepadAimDeadzone: 0.15
 --- !u!114 &5792988918660519372
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5504,9 +5505,11 @@ MonoBehaviour:
   animationBinder: {fileID: 910001001001001007}
   sortingOrderOffset: 5000
   sortingPrecision: 100
+  sortingReferenceYOffset: 0
   shadowSpriteRenderer: {fileID: 0}
   _attackAnimClipLength: 0.12
   _deathDestroyDelay: 4
+  deadSortingOrderBoost: 50
 --- !u!114 &4338388805264836550
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6119,9 +6122,21 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DissolveEffect
   spriteRenderer: {fileID: 7050732553715643850}
+  animationBinder: {fileID: 0}
+  visualRoot: {fileID: 0}
+  includeChildRenderers: 1
   dissolveMaterial: {fileID: 2100000, guid: 33566b8d8d9359649bfd2bf459ae623b, type: 2}
   duration: 1.5
+  hideAtDissolveProgress: 0.82
+  void1HideAtLinearTime: 0.92
+  waitForDeathAnimation: 1
+  deathStateName: Dying
+  dissolveStartNormalizedTime: 0.95
+  deathAnimLeadTimeFallback: 0.52
   edgeColor: {r: 0.15294118, g: 0.14117648, b: 0.227451, a: 1}
+  edgeIntensity: 3.5
+  sparkleIntensity: 2
+  playSparkleParticles: 1
 --- !u!114 &1595175843066875490
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6138,8 +6153,9 @@ MonoBehaviour:
   installDownedUI: 1
   installReviveZoneVisual: 1
   installRevivePromptUI: 1
-  installMeleeDebugVisual: 1
+  installMeleeHitVisual: 1
   installAbilityDebugVisual: 1
+  installRatHoleSealInteraction: 1
 --- !u!114 &-6993549697573688914
 MonoBehaviour:
   m_ObjectHideFlags: 0

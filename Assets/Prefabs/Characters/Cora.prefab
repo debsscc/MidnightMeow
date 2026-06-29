@@ -5451,7 +5451,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerShooting
   projectilePrefab: {fileID: 691743863976024828, guid: eadee2043abe1c540b4356dff9dbd9a7, type: 3}
   firePoint: {fileID: 874212205570085287}
-  baseFireRate: 1.5
+  baseFireRate: 1
   CurrentFireRate: 0
   DamageMultiplier: 1
 --- !u!114 &5631259045198985370
@@ -5468,6 +5468,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerAim
   firePoint: {fileID: 874212205570085287}
   stats: {fileID: 11400000, guid: 7f4fa052e88f8494f918e2f5d5b9cdd1, type: 2}
+  gamepadAimDeadzone: 0.15
 --- !u!114 &5792988918660519372
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5537,6 +5538,7 @@ MonoBehaviour:
   animationBinder: {fileID: 910002001001001007}
   sortingOrderOffset: 5000
   sortingPrecision: 100
+  sortingReferenceYOffset: 0
   shadowSpriteRenderer: {fileID: 0}
   _attackAnimClipLength: 0.12
   _deathDestroyDelay: 4
@@ -5781,7 +5783,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
-  GlobalObjectIdHash: 3197444296
+  GlobalObjectIdHash: 1626128580
   InScenePlacedSourceGlobalObjectIdHash: 1626128580
   DeferredDespawnTick: 0
   Ownership: 1
@@ -6219,7 +6221,7 @@ MonoBehaviour:
   installDownedUI: 1
   installReviveZoneVisual: 1
   installRevivePromptUI: 1
-  installMeleeDebugVisual: 1
+  installMeleeHitVisual: 1
   installAbilityDebugVisual: 1
   installRatHoleSealInteraction: 1
 --- !u!114 &910002001001001001
