@@ -22,7 +22,9 @@ public class PlayerAbilityHudTheme : ScriptableObject
     public Color abilityFallbackColor = new Color(0.75f, 0.55f, 0.2f, 0.9f);
 
     [Header("Layout")]
-    public Vector2 anchoredPosition = new Vector2(24f, 24f);
-    public float slotSize = 56f;
-    public float slotSpacing = 68f;
+    public Vector2 anchoredPosition = new Vector2(28f, 28f);
+    public float slotSize = 76f;
+    public float slotSpacing = 88f;
+    [Range(12, 28)] public int labelFontSize = 16;
+    [Range(14, 32)] public int timerFontSize = 22;
 }

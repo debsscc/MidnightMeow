@@ -33,6 +33,7 @@
 | Collectable | 10 | Ciência (`Science.prefab`, tag `Drop`) |
 | DashableWall | 12 | Paredes atravessáveis no dash |
 | Shadow | 13 | Sombra projetada do personagem |
+| Barrier | 14 | Barreira da Cora (colide só com Enemy / ProjectileEnemy) |
 | UI | 5 | Interface |
 
 ## Input

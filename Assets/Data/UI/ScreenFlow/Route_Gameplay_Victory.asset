@@ -15,6 +15,6 @@ MonoBehaviour:
   routeId: gameplay_victory
   sceneName: VictoryScene
   transitionMode: 2
-  loadKind: 1
+  loadKind: 0
   fadeTime: 1
   minLoadingTime: 0

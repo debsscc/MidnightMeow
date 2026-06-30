@@ -22,6 +22,7 @@ TagManager:
   - Collectable
   - DashableWall
   - Shadow
+  - Barrier
   - 
   - 
   - 

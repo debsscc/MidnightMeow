@@ -2,7 +2,7 @@ using Unity.Netcode;
 using UnityEngine;
 
 /// <summary>
-/// Sincroniza vitória/derrota em multiplayer: todos os peers iniciam fade antes do host trocar de cena.
+/// Sincroniza vitória/derrota em multiplayer via <see cref="MultiplayerGameManager.BeginEndGameScreenTransitionClientRpc"/>.
 /// </summary>
 public static class GameplayEndTransitionCoordinator
 {
@@ -21,14 +21,7 @@ public static class GameplayEndTransitionCoordinator
         if (!IsNetworkGameplaySession())
             return;
 
-        // Host/servidor dispara a troca de cena via MultiplayerGameManager.ReturnToPreparationRoutine.
-        if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsServer)
-            return;
-
-        if (newState == GameState.Victory)
-            ScreenFlowStateMachine.ShowVictoryScreen();
-        else
-            ScreenFlowStateMachine.ShowDefeatScreen();
+        // Transição unificada no ClientRpc do MultiplayerGameManager (host + clientes).
     }
 
     private static bool IsNetworkGameplaySession()

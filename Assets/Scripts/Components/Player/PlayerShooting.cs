@@ -1,7 +1,7 @@
 ///* ----------------------------------------------------------------
 // CRIADO EM: 13-11-2025
 // FEITO POR: Pedro Caurio
-// DESCRI��O: Controla o disparo de proj�teis pelo jogador quando o input de 'Fire' � acionado.
+// DESCRIÇÃO: Controla o disparo de projéteis pelo jogador quando o input de 'Fire' é acionado.
 // ---------------------------------------------------------------- */
 using System;
 using System.Collections;
@@ -68,11 +68,11 @@ public class PlayerShooting : MonoBehaviour
     private PlayerAnimationHandler _animationHandler;
     private Camera _mainCamera;
 
-    private bool _awaitingFireRelease;
-    private bool _fireReleaseTriggered;
+    private float _nextShotAllowedTime;
+    private bool _wantsContinuousFire;
+    private bool _tapShotQueued;
 
     public event Action OnShoot;
-    // Evento emitido quando um projétil é instanciado com a pose calculada no cliente dono.
     public event Action<GameObject, Vector3, Quaternion, Vector2> OnProjectileInstantiated;
     public event Action OnOutOfAmmo;
     public event Action<Vector2, bool, int> OnFireDirectionComputed;
@@ -87,7 +87,6 @@ public class PlayerShooting : MonoBehaviour
     private Coroutine _fireCoroutine;
 
     public float BaseFireRate => baseFireRate;
-
     public bool IsFiring => _fireCoroutine != null;
 
     public void ApplyRuntimeStats(RangedCombatStats rangedStats)
@@ -100,10 +99,6 @@ public class PlayerShooting : MonoBehaviour
         DamageMultiplier = rangedStats.damageMultiplier;
     }
 
-    /// <summary>
-    /// Em multiplayer, o gasto de munição é feito no servidor ao spawnar o projétil de rede
-    /// (evita gasto duplo no host e mantém validação no servidor).
-    /// </summary>
     private bool ShouldConsumeAmmoLocally()
     {
         var nm = NetworkManager.Singleton;
@@ -130,27 +125,17 @@ public class PlayerShooting : MonoBehaviour
         CurrentFireRate = baseFireRate;
     }
 
-    /// <summary>Chamado pelo Animation Event via <see cref="PlayerAnimationHandler.PerformFire"/>.</summary>
-    internal void NotifyPerformFireFromAnimation()
-    {
-        if (!_awaitingFireRelease)
-            return;
-
-        _fireReleaseTriggered = true;
-    }
-
-    // Assina e desassina eventos de input
     private void OnEnable()
     {
         _input.OnFireInput += HandleFireInput;
     }
+
     private void OnDisable()
     {
         _input.OnFireInput -= HandleFireInput;
-        StopFiring();
+        StopFiringImmediate();
     }
 
-    // Lida com o input de disparo (pressed = true, released = false)
     private void HandleFireInput(bool pressed)
     {
         if (TryGetComponent<NetworkPlayerRevive>(out var revive) && revive.IsReviving)
@@ -158,45 +143,38 @@ public class PlayerShooting : MonoBehaviour
 
         if (pressed)
         {
+            _wantsContinuousFire = true;
+            _tapShotQueued = true;
             if (_fireCoroutine == null)
-                _fireCoroutine = StartCoroutine(FireContinuously());
+                _fireCoroutine = StartCoroutine(FireRoutine());
         }
         else
         {
-            StopFiring();
+            _wantsContinuousFire = false;
         }
-//        Debug.Log($"Fire input: {(pressed ? "Pressed" : "Released")}. Fire Rate: {CurrentFireRate}, Damage Multiplier: {DamageMultiplier}");
     }
 
-    private void StopFiring()
+    private void StopFiringImmediate()
     {
+        _wantsContinuousFire = false;
+        _tapShotQueued = false;
+
         if (_fireCoroutine != null)
         {
             StopCoroutine(_fireCoroutine);
             _fireCoroutine = null;
         }
-
-        FlushPendingFireRelease();
     }
 
-    private void FlushPendingFireRelease()
+    private IEnumerator FireRoutine()
     {
-        if (!_awaitingFireRelease)
-            return;
-
-        _awaitingFireRelease = false;
-        _fireReleaseTriggered = false;
-
-        if (_ammo.HasAmmo())
-            ExecuteShot();
-    }
-
-    private IEnumerator FireContinuously()
-    {
-        while (true)
+        while (_wantsContinuousFire || _tapShotQueued)
         {
             if (_abilityHandler != null && _abilityHandler.IsActionLocked)
             {
+                if (!_wantsContinuousFire && !_tapShotQueued)
+                    break;
+
                 yield return null;
                 continue;
             }
@@ -214,52 +192,53 @@ public class PlayerShooting : MonoBehaviour
                     firePoint != null ? firePoint.eulerAngles.z : 0f
                 );
                 OnOutOfAmmo?.Invoke();
-                Debug.Log("Sem Munição!");
-                yield break;
+                break;
             }
 
-            float cycleStart = Time.time;
-            float cycleInterval = CurrentFireRate > 0f ? 1f / CurrentFireRate : 0.2f;
-
-            _awaitingFireRelease = true;
-            _fireReleaseTriggered = false;
-            OnShoot?.Invoke();
-
-            float maxWait = _animationHandler != null
-                ? _animationHandler.GetRangedAttackMaxWaitSeconds()
-                : 0.517f;
-            float releaseWallTime = _animationHandler != null
-                ? _animationHandler.GetRangedFireReleaseWallSeconds()
-                : 0.3f;
-            float elapsed = 0f;
-            while (_awaitingFireRelease)
+            while (Time.time < _nextShotAllowedTime)
             {
-                if (_fireReleaseTriggered)
-                    break;
-
-                elapsed += Time.deltaTime;
-
-                // Fallback só após o frame PerformFire do clip (evento tem prioridade).
-                if (elapsed >= releaseWallTime
-                    && _animationHandler != null
-                    && _animationHandler.IsRangedFireReleaseReady())
-                    break;
-
-                if (elapsed >= maxWait)
-                    break;
+                if (!_wantsContinuousFire && !_tapShotQueued)
+                    yield break;
 
                 yield return null;
             }
 
-            _awaitingFireRelease = false;
+            if (!TryFireValidatedShot())
+                break;
 
-            if (_ammo.HasAmmo())
-                ExecuteShot();
+            _tapShotQueued = false;
 
-            float remaining = cycleStart + cycleInterval - Time.time;
-            if (remaining > 0f)
-                yield return new WaitForSeconds(remaining);
+            if (!_wantsContinuousFire)
+                break;
+
+            float wait = _nextShotAllowedTime - Time.time;
+            if (wait > 0f)
+                yield return new WaitForSeconds(wait);
         }
+
+        _fireCoroutine = null;
+    }
+
+    private bool TryFireValidatedShot()
+    {
+        if (!TryConsumeFireCooldown())
+            return false;
+
+        if (!_ammo.HasAmmo())
+            return false;
+
+        ExecuteShot();
+        return true;
+    }
+
+    private bool TryConsumeFireCooldown()
+    {
+        if (Time.time < _nextShotAllowedTime)
+            return false;
+
+        float interval = CurrentFireRate > 0f ? 1f / CurrentFireRate : 0.2f;
+        _nextShotAllowedTime = Time.time + interval;
+        return true;
     }
 
     private void ExecuteShot()
@@ -312,6 +291,7 @@ public class PlayerShooting : MonoBehaviour
                 projectile.AddBonusBounces(bonusBounces);
         }
 
+        OnShoot?.Invoke();
         OnProjectileInstantiated?.Invoke(projectileInstance, spawnPosition, fireRotation, fireDirection);
     }
 
@@ -350,9 +330,7 @@ public class PlayerShooting : MonoBehaviour
         }
 
         if (_mainCamera == null)
-        {
             _mainCamera = Camera.main;
-        }
 
         if (Mouse.current == null || _mainCamera == null)
         {
@@ -382,7 +360,6 @@ public class PlayerShooting : MonoBehaviour
         return fireDirection;
     }
 
-    // API: allow external systems (upgrades) to change fire rate and damage
     public void SetFireRate(float shotsPerSecond)
     {
         CurrentFireRate = Mathf.Max(0.1f, shotsPerSecond);

@@ -34,10 +34,9 @@ public class NetworkWaveManager : NetworkBehaviour
     private bool _isSpawning;
     private bool _hasStarted;
     private SpawnMode _spawnMode = SpawnMode.Waves;
-    private float _holeSpawnInterval = 4f;
     private int _maxEnemiesAlive = 35;
     private float _firstSpawnDelay = 3f;
-    private readonly List<GameObject> _holeSpawnPrefabs = new List<GameObject>();
+    private RatHoleSpawnOrchestrator _holeOrchestrator;
 
     private readonly List<NetworkObject> _spawnedEnemies = new List<NetworkObject>();
 
@@ -110,8 +109,8 @@ public class NetworkWaveManager : NetworkBehaviour
         switch (_spawnMode)
         {
             case SpawnMode.RatHoles:
-                Debug.Log("[NetworkWaveManager] Iniciando spawn por buracos.");
-                StartCoroutine(HoleSpawnLoopRoutine());
+                Debug.Log("[NetworkWaveManager] Iniciando spawn por buracos (data-driven).");
+                BeginHoleSpawning();
                 break;
             case SpawnMode.SingleBoss:
                 Debug.Log("[NetworkWaveManager] Spawnando boss.");
@@ -131,22 +130,75 @@ public class NetworkWaveManager : NetworkBehaviour
         StartCoroutine(SpawnWaveRoutine());
     }
 
-    private IEnumerator HoleSpawnLoopRoutine()
+    private void BeginHoleSpawning()
     {
-        yield return new WaitForSeconds(_firstSpawnDelay);
+        EnsureHoleProfilesFromLegacySettings();
+        _holeOrchestrator = EnsureHoleOrchestrator();
+        _holeOrchestrator.Configure(_firstSpawnDelay);
+        _holeOrchestrator.Begin(SpawnNetworkEnemyFromHole, () => _enemiesAlive < _maxEnemiesAlive);
+    }
 
-        while (true)
+    private RatHoleSpawnOrchestrator EnsureHoleOrchestrator()
+    {
+        RatHoleSpawnOrchestrator orchestrator = RatHoleSpawnOrchestrator.Instance;
+        if (orchestrator != null)
+            return orchestrator;
+
+        GameObject host = new GameObject("RatHoleSpawnOrchestrator");
+        return host.AddComponent<RatHoleSpawnOrchestrator>();
+    }
+
+    private void EnsureHoleProfilesFromLegacySettings()
+    {
+        RatHoleSpawnProfile fallback = BuildFallbackHoleProfile();
+        if (fallback == null)
+            return;
+
+        foreach (RatHoleSpawnPoint hole in RatHoleSpawnPoint.All)
         {
-            if (_enemiesAlive < _maxEnemiesAlive && _holeSpawnPrefabs.Count > 0)
-            {
-                GameObject prefab = _holeSpawnPrefabs[Random.Range(0, _holeSpawnPrefabs.Count)];
-                if (prefab != null)
-                    SpawnNetworkEnemy(prefab);
-            }
+            if (hole == null || hole.SpawnProfile != null)
+                continue;
 
-            BroadcastObjectiveStatusClientRpc(_enemiesAlive);
-            yield return new WaitForSeconds(_holeSpawnInterval);
+            hole.ConfigureSpawnProfile(fallback);
         }
+    }
+
+    private RatHoleSpawnProfile BuildFallbackHoleProfile()
+    {
+        if (waveSettings == null || waveSettings.waves == null || waveSettings.waves.Count == 0)
+            return null;
+
+        var profile = ScriptableObject.CreateInstance<RatHoleSpawnProfile>();
+        profile.minSpawnTime = 2f;
+        profile.maxSpawnTime = 5f;
+
+        WaveData firstWave = waveSettings.waves[0];
+        if (firstWave.enemies == null)
+            return profile;
+
+        for (int i = 0; i < firstWave.enemies.Count; i++)
+        {
+            GameObject prefab = firstWave.enemies[i].enemyPrefab;
+            if (prefab == null)
+                continue;
+
+            profile.enemyTable.Add(new RatHoleSpawnProfile.WeightedEnemyEntry
+            {
+                enemyPrefab = prefab,
+                spawnWeight = Mathf.Max(1, firstWave.enemies[i].count)
+            });
+        }
+
+        return profile;
+    }
+
+    private GameObject SpawnNetworkEnemyFromHole(RatHoleSpawnPoint hole, GameObject prefab, Vector3 spawnPosition)
+    {
+        if (prefab == null)
+            return null;
+
+        SpawnNetworkEnemyAt(prefab, spawnPosition);
+        return null;
     }
 
     private IEnumerator SpawnBossRoutine()
@@ -162,8 +214,16 @@ public class NetworkWaveManager : NetworkBehaviour
 
     private GameObject ResolveBossPrefab()
     {
-        if (_holeSpawnPrefabs.Count > 0)
-            return _holeSpawnPrefabs[0];
+        foreach (RatHoleSpawnPoint hole in RatHoleSpawnPoint.All)
+        {
+            RatHoleSpawnProfile profile = hole != null ? hole.SpawnProfile : null;
+            if (profile == null || profile.enemyTable == null || profile.enemyTable.Count == 0)
+                continue;
+
+            GameObject prefab = profile.enemyTable[0].enemyPrefab;
+            if (prefab != null)
+                return prefab;
+        }
 
         if (waveSettings == null || waveSettings.waves == null || waveSettings.waves.Count == 0)
             return null;
@@ -230,6 +290,11 @@ public class NetworkWaveManager : NetworkBehaviour
             spawnPosition = Vector3.zero;
         }
 
+        SpawnNetworkEnemyAt(prefab, spawnPosition, useHoleSelection);
+    }
+
+    private void SpawnNetworkEnemyAt(GameObject prefab, Vector3 spawnPosition, bool broadcastObjective = true)
+    {
         GameObject enemyObj = Instantiate(prefab, spawnPosition, Quaternion.identity);
 
         NetworkObject netObj = enemyObj.GetComponent<NetworkObject>();
@@ -366,6 +431,7 @@ public class NetworkWaveManager : NetworkBehaviour
 
         StopAllCoroutines();
         _isSpawning = false;
+        _holeOrchestrator?.StopAll();
     }
 
     [Rpc(SendTo.Server)]
@@ -391,9 +457,6 @@ public class NetworkWaveManager : NetworkBehaviour
         if (entry.waveSettings != null)
             waveSettings = entry.waveSettings;
 
-        _holeSpawnPrefabs.Clear();
-        CollectHoleSpawnPrefabs(waveSettings);
-        _holeSpawnInterval = Mathf.Max(0.5f, entry.holeSpawnInterval);
         _maxEnemiesAlive = Mathf.Max(1, entry.maxEnemiesAlive);
         _firstSpawnDelay = Mathf.Max(0f, entry.firstSpawnDelay);
 
@@ -405,23 +468,6 @@ public class NetworkWaveManager : NetworkBehaviour
             _spawnMode = SpawnMode.Waves;
         else
             _spawnMode = SpawnMode.RatHoles;
-    }
-
-    private void CollectHoleSpawnPrefabs(WaveSettings settings)
-    {
-        if (settings == null || settings.waves == null || settings.waves.Count == 0)
-            return;
-
-        WaveData firstWave = settings.waves[0];
-        if (firstWave.enemies == null)
-            return;
-
-        for (int i = 0; i < firstWave.enemies.Count; i++)
-        {
-            GameObject prefab = firstWave.enemies[i].enemyPrefab;
-            if (prefab != null && !_holeSpawnPrefabs.Contains(prefab))
-                _holeSpawnPrefabs.Add(prefab);
-        }
     }
 
     private static bool ShouldInvokeLegacyNightEnded()

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: CoraPoolAbility
   m_EditorClassIdentifier: Assembly-CSharp::CharacterAbilityDefinition
   abilityType: 4
-  displayName: Investida
+  displayName: Poça
   tier1:
     range: 4
     damage: 0

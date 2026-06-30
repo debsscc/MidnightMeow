@@ -65,6 +65,8 @@ public class PlayerAbilityHud : MonoBehaviour
 
         if (buildIfMissing)
             BuildUi();
+
+        ApplyLayoutFromTheme();
     }
 
     private void ResolveThemeIcons()
@@ -135,6 +137,49 @@ public class PlayerAbilityHud : MonoBehaviour
     {
         theme = hudTheme;
         ResolveThemeIcons();
+        ApplyLayoutFromTheme();
+    }
+
+    private void ApplyLayoutFromTheme()
+    {
+        if (_root == null)
+            return;
+
+        float spacing = theme != null ? theme.slotSpacing : 88f;
+        float slotSize = theme != null ? theme.slotSize : 76f;
+        Vector2 anchor = theme != null ? theme.anchoredPosition : new Vector2(28f, 28f);
+
+        _root.anchorMin = new Vector2(0f, 0f);
+        _root.anchorMax = new Vector2(0f, 0f);
+        _root.pivot = new Vector2(0f, 0f);
+        _root.anchoredPosition = anchor;
+        _root.sizeDelta = new Vector2(spacing * 3f + slotSize + 20f, slotSize + 20f);
+
+        if (_slots[0] == null)
+            return;
+
+        ApplySlotLayout(_slots[0], new Vector2(0f, 10f), slotSize, theme != null ? theme.labelFontSize : 16, theme != null ? theme.timerFontSize : 22);
+        ApplySlotLayout(_slots[1], new Vector2(spacing * 1f, 10f), slotSize, theme != null ? theme.labelFontSize : 16, theme != null ? theme.timerFontSize : 22);
+        ApplySlotLayout(_slots[2], new Vector2(spacing * 2f, 10f), slotSize, theme != null ? theme.labelFontSize : 16, theme != null ? theme.timerFontSize : 22);
+        ApplySlotLayout(_slots[3], new Vector2(spacing * 3f, 10f), slotSize, theme != null ? theme.labelFontSize : 16, theme != null ? theme.timerFontSize : 22);
+    }
+
+    private static void ApplySlotLayout(SlotView slot, Vector2 position, float slotSize, int labelSize, int timerSize)
+    {
+        if (slot?.Background == null)
+            return;
+
+        RectTransform rt = slot.Background.rectTransform;
+        rt.anchorMin = new Vector2(0f, 0f);
+        rt.anchorMax = new Vector2(0f, 0f);
+        rt.pivot = new Vector2(0f, 0f);
+        rt.anchoredPosition = position;
+        rt.sizeDelta = new Vector2(slotSize, slotSize);
+
+        if (slot.Label != null)
+            slot.Label.fontSize = labelSize;
+        if (slot.Timer != null)
+            slot.Timer.fontSize = timerSize;
     }
 
     private void HandleLocalPlayerSpawned(NetworkPlayerController player) => BindPlayer(player != null ? player.gameObject : null);
@@ -166,13 +211,24 @@ public class PlayerAbilityHud : MonoBehaviour
         if (player == null)
             return;
 
+        if (_abilityHandler != null)
+            _abilityHandler.OnAbilitySetChanged -= HandleAbilitySetChanged;
+
         _abilityHandler = player.GetComponent<PlayerAbilityHandler>();
         _dash = player.GetComponent<PlayerDash>();
         _passive = player.GetComponent<PlayerPassiveHandler>();
+
+        if (_abilityHandler != null)
+            _abilityHandler.OnAbilitySetChanged += HandleAbilitySetChanged;
     }
+
+    private void HandleAbilitySetChanged() { }
 
     private void ClearBindings()
     {
+        if (_abilityHandler != null)
+            _abilityHandler.OnAbilitySetChanged -= HandleAbilitySetChanged;
+
         _abilityHandler = null;
         _dash = null;
         _passive = null;
@@ -362,20 +418,30 @@ public class PlayerAbilityHud : MonoBehaviour
         _root.anchorMin = new Vector2(0f, 0f);
         _root.anchorMax = new Vector2(0f, 0f);
         _root.pivot = new Vector2(0f, 0f);
-        Vector2 anchor = theme != null ? theme.anchoredPosition : new Vector2(24f, 24f);
+
+        float spacing = theme != null ? theme.slotSpacing : 88f;
+        float slotSize = theme != null ? theme.slotSize : 76f;
+        int labelSize = theme != null ? theme.labelFontSize : 16;
+        int timerSize = theme != null ? theme.timerFontSize : 22;
+        Vector2 anchor = theme != null ? theme.anchoredPosition : new Vector2(28f, 28f);
         _root.anchoredPosition = anchor;
+        _root.sizeDelta = new Vector2(spacing * 3f + slotSize + 20f, slotSize + 20f);
 
-        float spacing = theme != null ? theme.slotSpacing : 68f;
-        float slotSize = theme != null ? theme.slotSize : 56f;
-        _root.sizeDelta = new Vector2(spacing * 3f + slotSize + 16f, slotSize + 16f);
-
-        _slots[0] = CreateSlot("PassiveSlot", AbilitySlot.Ability1, "Passiva", passiveIcon, new Vector2(0f, 8f));
-        _slots[1] = CreateSlot("DashSlot", AbilitySlot.Dash, "Dash", dashIcon, new Vector2(spacing * 1f, 8f));
-        _slots[2] = CreateSlot("Ability1Slot", AbilitySlot.Ability1, "Q", ability1Icon, new Vector2(spacing * 2f, 8f));
-        _slots[3] = CreateSlot("Ability2Slot", AbilitySlot.Ability2, "R", ability2Icon, new Vector2(spacing * 3f, 8f));
+        _slots[0] = CreateSlot("PassiveSlot", AbilitySlot.Ability1, "Passiva", passiveIcon, new Vector2(0f, 10f), slotSize, labelSize, timerSize);
+        _slots[1] = CreateSlot("DashSlot", AbilitySlot.Dash, "Dash", dashIcon, new Vector2(spacing * 1f, 10f), slotSize, labelSize, timerSize);
+        _slots[2] = CreateSlot("Ability1Slot", AbilitySlot.Ability1, "Q", ability1Icon, new Vector2(spacing * 2f, 10f), slotSize, labelSize, timerSize);
+        _slots[3] = CreateSlot("Ability2Slot", AbilitySlot.Ability2, "R", ability2Icon, new Vector2(spacing * 3f, 10f), slotSize, labelSize, timerSize);
     }
 
-    private SlotView CreateSlot(string name, AbilitySlot slot, string label, Sprite iconSprite, Vector2 position)
+    private SlotView CreateSlot(
+        string name,
+        AbilitySlot slot,
+        string label,
+        Sprite iconSprite,
+        Vector2 position,
+        float slotSize,
+        int labelFontSize,
+        int timerFontSize)
     {
         GameObject root = CreateUiObject(name, _root);
         RectTransform rt = root.GetComponent<RectTransform>();
@@ -383,7 +449,7 @@ public class PlayerAbilityHud : MonoBehaviour
         rt.anchorMax = new Vector2(0f, 0f);
         rt.pivot = new Vector2(0f, 0f);
         rt.anchoredPosition = position;
-        rt.sizeDelta = new Vector2(theme != null ? theme.slotSize : 56f, theme != null ? theme.slotSize : 56f);
+        rt.sizeDelta = new Vector2(slotSize, slotSize);
 
         Image bg = root.GetComponent<Image>();
         bg.color = theme != null ? theme.backgroundColor : new Color(0.1f, 0.1f, 0.14f, 0.92f);
@@ -424,8 +490,8 @@ public class PlayerAbilityHud : MonoBehaviour
         lockImg.color = new Color(0f, 0f, 0f, 0.7f);
         lockGo.SetActive(false);
 
-        Text title = CreateText(rt, label, 13, TextAnchor.LowerCenter, new Vector2(0f, 0f), new Vector2(1f, 0.3f));
-        Text timer = CreateText(rt, string.Empty, 18, TextAnchor.UpperCenter, new Vector2(0f, 0.3f), new Vector2(1f, 1f));
+        Text title = CreateText(rt, label, labelFontSize, TextAnchor.LowerCenter, new Vector2(0f, 0f), new Vector2(1f, 0.3f));
+        Text timer = CreateText(rt, string.Empty, timerFontSize, TextAnchor.UpperCenter, new Vector2(0f, 0.3f), new Vector2(1f, 1f));
         timer.gameObject.SetActive(false);
 
         return new SlotView

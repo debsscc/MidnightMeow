@@ -158,7 +158,7 @@ public class PlayerAnimationHandler : MonoBehaviour
     private void OnEnable()
     {
         if (playerShooting != null)
-            playerShooting.OnShoot += HandleShoot;
+            playerShooting.OnProjectileInstantiated += HandleProjectileFired;
         if (playerMeleeCombat != null)
             playerMeleeCombat.OnMeleeAttackStarted += HandleMeleeAttackStarted;
         if (playerAbilityHandler != null)
@@ -172,7 +172,7 @@ public class PlayerAnimationHandler : MonoBehaviour
     private void OnDisable()
     {
         if (playerShooting != null)
-            playerShooting.OnShoot -= HandleShoot;
+            playerShooting.OnProjectileInstantiated -= HandleProjectileFired;
         if (playerMeleeCombat != null)
             playerMeleeCombat.OnMeleeAttackStarted -= HandleMeleeAttackStarted;
         if (playerAbilityHandler != null)
@@ -268,11 +268,13 @@ public class PlayerAnimationHandler : MonoBehaviour
         return clipLength * _rangedFireReleaseNormalizedTime / GetRangedClipSpeedMultiplier();
     }
 
-    /// <summary>Animation Event no clip — repassa para <see cref="PlayerShooting"/>.</summary>
+    /// <summary>
+    /// Animation Event no clip de ataque. Mantido para compatibilidade com os clips;
+    /// o disparo é autoritativo em <see cref="PlayerShooting.ExecuteShot"/> e a animação
+    /// é acionada em <see cref="HandleProjectileFired"/>.
+    /// </summary>
     public void PerformFire()
     {
-        if (playerShooting != null)
-            playerShooting.NotifyPerformFireFromAnimation();
     }
 
     private float GetRangedClipSpeedMultiplier()
@@ -402,7 +404,8 @@ public class PlayerAnimationHandler : MonoBehaviour
         return _animator.HasState(0, stateHash);
     }
 
-    private void HandleShoot() => TriggerRangedAttackAnimation();
+    private void HandleProjectileFired(GameObject _, Vector3 __, Quaternion ___, Vector2 ____)
+        => TriggerRangedAttackAnimation();
 
     private void HandleMeleeAttackStarted() => TriggerMeleeAttackAnimation();
 

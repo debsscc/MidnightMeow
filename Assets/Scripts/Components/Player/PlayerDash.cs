@@ -16,7 +16,6 @@ public class PlayerDash : MonoBehaviour
     [SerializeField] private PlayerStats stats;
 
     [Header("Debug")]
-    [SerializeField] private bool drawDebugGizmos = true;
     [SerializeField] private float dashGizmoWidth = 0.6f;
 
     [Header("Collision Bypass")]
@@ -505,29 +504,6 @@ public class PlayerDash : MonoBehaviour
         RefreshDashStats();
         _currentDashSpeed += extraSpeed;
         _currentDashCooldown = Mathf.Max(0.1f, _currentDashCooldown - cooldownReduction);
-    }
-
-    private void OnDrawGizmosSelected()
-    {
-        if (!drawDebugGizmos || stats == null) return;
-
-        float duration = GetPlannedDashDuration();
-        float speed = _currentDashSpeed > 0f ? _currentDashSpeed : stats.dashSpeed;
-        Vector2 direction = Application.isPlaying ? _activeDashDirection : ResolveDashDirection();
-        if (direction.sqrMagnitude < 0.0001f)
-            direction = Vector2.up;
-
-        Vector2 origin = Application.isPlaying && _isDashing
-            ? _dashStartPosition
-            : (_rb != null ? _rb.position : (Vector2)transform.position);
-
-        AbilityDebugGizmoUtility.DrawDash(
-            origin,
-            direction,
-            GetPlannedDashDistance(speed, duration),
-            dashGizmoWidth,
-            new Color(0.2f, 0.95f, 0.95f, 0.25f),
-            new Color(0.6f, 1f, 1f, 0.9f));
     }
 
     private float _currentDashSpeed;

@@ -24,8 +24,8 @@ public class AbilityProgressionState
         {
             AbilitySlot.PrimaryAttack => true,
             AbilitySlot.Dash => true,
-            AbilitySlot.Ability1 => ability1Unlocked || phaseIndex >= 2,
-            AbilitySlot.Ability2 => ability2Unlocked || phaseIndex >= 3,
+            AbilitySlot.Ability1 => true,
+            AbilitySlot.Ability2 => true,
             _ => false
         };
     }

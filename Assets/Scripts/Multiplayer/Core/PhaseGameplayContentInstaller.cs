@@ -53,6 +53,7 @@ public static class PhaseGameplayContentInstaller
         {
             EnsureRatHoleSealConfig();
             EnsureSealZoneVisualHost();
+            ApplyDefaultHoleSpawnProfiles(entry);
         }
 
         if (entry.enableCarriage && sceneName == "Fase-2")
@@ -202,6 +203,20 @@ public static class PhaseGameplayContentInstaller
 
         bounds = volume.BoundsCollider.bounds;
         return bounds.size.sqrMagnitude > 0.01f;
+    }
+
+    private static void ApplyDefaultHoleSpawnProfiles(PhaseWaveSettingsCatalog.PhaseEntry entry)
+    {
+        if (entry.defaultHoleSpawnProfile == null)
+            return;
+
+        foreach (RatHoleSpawnPoint hole in RatHoleSpawnPoint.All)
+        {
+            if (hole == null || hole.SpawnProfile != null)
+                continue;
+
+            hole.ConfigureSpawnProfile(entry.defaultHoleSpawnProfile);
+        }
     }
 
     private static void DisableLegacyWaveSystemsIfMultiplayerActive()

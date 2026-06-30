@@ -1,6 +1,6 @@
 # Implementação — Habilidades de Personagem
 
-Última revisão: 2026-06-10 (b)
+Última revisão: 2026-06-30
 
 ## Arquitetura
 
@@ -31,11 +31,11 @@
 ## Rede
 
 - **Dash:** predição local + `OwnerNetworkTransform`
-- **Habilidades:** owner executa → `ReportAbilityActivatedServerRpc` → `ClientRpc` para animação remota
-- **Animação jogador (MP):** `NetworkPlayerAbilityRelay` replica `MoveSpeed` + sequência de ataque (`OnShoot`/melee) para remotos; flip via `NetworkPlayerController._networkFacingFlipX`
+- **Habilidades:** owner executa → `ReportAbilityActivatedServerRpc` → `ClientRpc` para animação + VFX remoto (`AbilityDebugVisualHost`)
+- **Animação jogador (MP):** `NetworkPlayerAbilityRelay` replica `MoveSpeed`, sequência de ataque (`OnShoot`/melee) e `PlayRemoteShootImpactClientRpc` no disparo confirmado
 - **Animação inimigo (MP):** `NetworkEnemyController` replica `MoveSpeed`, `flipX` e `OnAttack` via `NetworkVariable` (servidor publica)
 - **Investida (Nix):** dano autoritativo no servidor via `ReportChargeDamageServerRpc` (funciona com owner host ou client)
-- **Barreira/Poça:** `NetworkAbilityObjectSpawner` + `NetworkCoraBarrier.SyncInitializeClientRpc`; colisor sólido `Structure` bloqueia inimigos/projéteis inimigos; projéteis do jogador passam (`excludeLayers: Projectile`)
+- **Barreira/Poça:** `NetworkAbilityObjectSpawner` + `NetworkCoraBarrier.SyncInitializeClientRpc`; barreira usa layer **`Barrier`** + `BoxCollider2D` retangular; colisão 2D só com **Enemy** e **ProjectileEnemy** (matriz em Project Settings → Physics 2D); jogadores e projéteis do jogador atravessam; stun via overlap no `CoraBarrierNavMeshBlocker`
 - **CC (slow/stun):** `ApplySlowRpc` / `ApplyStunRpc` no servidor
 
 ## Setup no Editor
@@ -46,7 +46,7 @@
 |--------|-------------------|
 | `Nixie.prefab` | Executores Nix, passiva, scaler, relay, spawner, `NixAbilitySet` |
 | `Cora.prefab` | Executores Cora, passiva, scaler, relay, spawner, `CoraAbilitySet`, barreira/poça |
-| `CoraBarrier.prefab` | `NetworkObject`, `NavMeshObstacle`, stun trigger |
+| `CoraBarrier.prefab` | `NetworkObject`, `NavMeshObstacle`, `BoxCollider2D` (layer `Barrier`) |
 | `CoraDamagePool.prefab` | `NetworkObject`, dano em área |
 
 `DefaultNetworkPrefabs.asset` inclui `CoraBarrier` e `CoraDamagePool`.
@@ -55,8 +55,10 @@
 
 - Shader `MidnightMeow/AbilityZoneFill` em `Assets/Art/Shaders/AbilityZoneFill.shader`
 - `AbilityDebugVisualHost` instalado via `PlayerGameplayModuleInstaller` nos prefabs Nixie/Cora
-- Gizmos ligados por padrão (`drawDebugGizmos = true`) em dash, executores e melee debug
-- Wave: `unlockAllAbilitySlotsOnStart = false` no prefab; `GameEvents.OnWaveStatusChanged` sincroniza fase via `AbilityProgressionState`
+- Gizmos de dash desativados por padrão em `PlayerDash`
+- Habilidades Q/R desbloqueadas no início da partida (`AbilityProgressionState` + `PlayerAbilityHandler.UnlockAllAbilitiesAtMatchStart`)
+- Fire rate (Cora): `PlayerShooting` aplica cooldown rígido; animação de tiro só em `OnProjectileInstantiated`
+- Gizmo de Poça/Barreira: duração do overlay = `effectDuration` do tier (`AbilityDebugVisualHost`)
 - Investida (R): `NixChargeAbilityExecutor` avança o jogador; dano/gizmo ancorados na posição do corpo (`Rigidbody2D`) no início do avanço
 - Empurrão (Q): knockback em `NixPushAbility.asset` (tiers 3.5 / 4.5 / 5.5 de distância)
 - Dash: `DefaultPlayerStats` — `dashSpeed: 11`, `dashDuration: 0.35`; ignora colisão com `DashableWall`, `Enemy`, `Player`, `ProjectileEnemy` (`passThroughLayer` + merge em código)

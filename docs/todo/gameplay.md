@@ -1,14 +1,18 @@
 # Gameplay — Fases 1–3
 
-Última revisão: 2026-06-25
+Última revisão: 2026-06-30
 
 ## Status
 
 | Fase | Contrato | Cena | Mecânicas |
 |------|----------|------|-----------|
-| 1 | 1 | `Fase-1` | Ondas + selamento de buracos |
-| 2 | 2 | `Fase-2` | Ondas + selamento + carruagem horizontal |
+| 1 | 1 | `Fase-1` | Spawn por buraco (SO) + selamento |
+| 2 | 2 | `Fase-2` | Spawn por buraco + selamento + carruagem horizontal |
 | 3 | 3 | `Fase-3` | Boss (`Rato_Boss`) — sem selamento/carruagem |
+
+## Spawn por buraco (GDX)
+
+Ver [rat-hole-sealing.md](../gameplay/rat-hole-sealing.md). O sistema legado de ondas (`WaveGenerator` / `WaveSettings`) permanece apenas para fases que ainda usam `useWaveSpawning`.
 
 ## Setup obrigatório no Editor
 

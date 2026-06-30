@@ -30,6 +30,8 @@ public class NetworkPlayerAbilityRelay : NetworkBehaviour
     private PlayerMeleeCombat _melee;
     private PlayerDash _dash;
     private PlayerAnimationHandler _animationHandler;
+    private PlayerAbilityHandler _abilityHandler;
+    private AbilityDebugVisualHost _debugHost;
     private byte _lastRemoteAttackSequence;
     private readonly HashSet<ulong> _chargeDamagedEnemyIds = new HashSet<ulong>();
 
@@ -48,6 +50,8 @@ public class NetworkPlayerAbilityRelay : NetworkBehaviour
         _melee = GetComponent<PlayerMeleeCombat>();
         _dash = GetComponent<PlayerDash>();
         _animationHandler = GetComponent<PlayerAnimationHandler>();
+        _abilityHandler = GetComponent<PlayerAbilityHandler>();
+        _debugHost = GetComponent<AbilityDebugVisualHost>();
 
         if (chargeEnemyLayers.value == 0)
         {
@@ -65,7 +69,7 @@ public class NetworkPlayerAbilityRelay : NetworkBehaviour
         if (IsOwner)
         {
             if (_shooting != null)
-                _shooting.OnShoot += HandleOwnerAttack;
+                _shooting.OnProjectileInstantiated += HandleOwnerProjectileFired;
             if (_melee != null)
                 _melee.OnMeleeAttackStarted += HandleOwnerMeleeAttackStarted;
         }
@@ -82,7 +86,7 @@ public class NetworkPlayerAbilityRelay : NetworkBehaviour
         if (IsOwner)
         {
             if (_shooting != null)
-                _shooting.OnShoot -= HandleOwnerAttack;
+                _shooting.OnProjectileInstantiated -= HandleOwnerProjectileFired;
             if (_melee != null)
                 _melee.OnMeleeAttackStarted -= HandleOwnerMeleeAttackStarted;
         }
@@ -209,24 +213,84 @@ public class NetworkPlayerAbilityRelay : NetworkBehaviour
     [ClientRpc]
     private void PlayAbilityVisualClientRpc(CharacterAbilityType abilityType, Vector2 position, Vector2 direction)
     {
-        if (IsOwner) return;
+        if (IsOwner)
+            return;
 
-        if (TryGetComponent<PlayerAnimationHandler>(out var anim))
-            anim.PlayAbilityAnimation(abilityType);
+        ApplyRemoteAbilityPresentation(abilityType, position, direction);
     }
 
-    private void HandleOwnerAttack() => _attackSequence.Value++;
+    private void ApplyRemoteAbilityPresentation(CharacterAbilityType abilityType, Vector2 position, Vector2 direction)
+    {
+        if (_animationHandler != null)
+            _animationHandler.PlayAbilityAnimation(abilityType);
+
+        if (_debugHost == null || _abilityHandler == null)
+            return;
+
+        AbilityTierData tierData = ResolveTierDataForAbility(abilityType);
+        if (tierData.range <= 0f && tierData.damage <= 0f && tierData.areaWidth <= 0f)
+            return;
+
+        Vector2 origin = transform.position;
+        _debugHost.ShowAbility(abilityType, origin, direction, position, tierData);
+    }
+
+    private AbilityTierData ResolveTierDataForAbility(CharacterAbilityType abilityType)
+    {
+        if (_abilityHandler?.AbilitySet == null)
+            return default;
+
+        CharacterAbilityDefinition definition = abilityType switch
+        {
+            CharacterAbilityType.CoraBarrier => _abilityHandler.AbilitySet.ability1,
+            CharacterAbilityType.CoraPool => _abilityHandler.AbilitySet.ability2,
+            CharacterAbilityType.NixPush => _abilityHandler.AbilitySet.ability1,
+            CharacterAbilityType.NixCharge => _abilityHandler.AbilitySet.ability2,
+            _ => null
+        };
+
+        if (definition == null)
+            return default;
+
+        int tier = abilityType switch
+        {
+            CharacterAbilityType.CoraBarrier or CharacterAbilityType.NixPush => _abilityHandler.Progression.ability1Tier,
+            CharacterAbilityType.CoraPool or CharacterAbilityType.NixCharge => _abilityHandler.Progression.ability2Tier,
+            _ => 1
+        };
+
+        return definition.GetTierData(tier);
+    }
+
+    private void HandleOwnerProjectileFired(
+        GameObject _,
+        Vector3 __,
+        Quaternion ___,
+        Vector2 ____)
+    {
+        if (!IsSpawned || !IsOwner)
+            return;
+
+        _attackSequence.Value++;
+    }
 
     private void HandleOwnerMeleeAttackStarted()
     {
         if (_dash != null && _dash.IsDashing)
         {
-            PlayDashAttackVisualClientRpc();
+            if (IsServer)
+                PlayDashAttackVisualClientRpc();
+            else
+                ReportDashAttackVisualServerRpc();
+
             return;
         }
 
         _attackSequence.Value++;
     }
+
+    [Rpc(SendTo.Server)]
+    private void ReportDashAttackVisualServerRpc() => PlayDashAttackVisualClientRpc();
 
     [ClientRpc]
     private void PlayDashAttackVisualClientRpc()

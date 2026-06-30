@@ -94,7 +94,7 @@ Cora
 | Campo | Asset |
 |-------|--------|
 | `PlayerAbilityHandler.abilitySet` | `Assets/Data/Abilities/CoraAbilitySet.asset` |
-| `barrierPrefab` | `CoraBarrier.prefab` — `NetworkCoraBarrier`, `BoxCollider2D` sólido, `NavMeshObstacle.carveOnlyStationary: 0`, rotação Z via `NetworkTransform` |
+| `barrierPrefab` | `CoraBarrier.prefab` — `NetworkCoraBarrier`, `BoxCollider2D` (layer `Barrier`), `NavMeshObstacle.carveOnlyStationary: 0`, rotação Z via `NetworkTransform` |
 | `poolPrefab` | `Assets/Prefabs/Combat/CoraDamagePool.prefab` |
 | `progressionData` | Instância no prefab (GUID `b87f7c79296088641991071b4e517b5c`) |
 | `NetworkPlayerHealth` / revive | `MultiplayerConfig`, `DownedPlayerConfig` |

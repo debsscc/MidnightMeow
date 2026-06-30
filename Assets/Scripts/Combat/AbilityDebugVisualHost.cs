@@ -27,6 +27,7 @@ public class AbilityDebugVisualHost : MonoBehaviour
     private SpriteRenderer _zoneRenderer;
     private Material _materialInstance;
     private float _displayTimer;
+    private float _activeDisplayDuration;
     private AbilityDebugSnapshot _activeSnapshot;
     private AbilityDebugSnapshot _gizmoSnapshot;
 
@@ -50,7 +51,8 @@ public class AbilityDebugVisualHost : MonoBehaviour
         var snapshot = BuildSnapshot(abilityType, origin, aimDirection, placement, tierData);
         _activeSnapshot = snapshot;
         _gizmoSnapshot = snapshot;
-        _displayTimer = displayDuration;
+        _activeDisplayDuration = ResolveDisplayDuration(abilityType, tierData);
+        _displayTimer = _activeDisplayDuration;
         ApplySnapshotToRenderer(snapshot, 1f);
     }
 
@@ -71,8 +73,17 @@ public class AbilityDebugVisualHost : MonoBehaviour
 
         _activeSnapshot = snapshot;
         _gizmoSnapshot = snapshot;
+        _activeDisplayDuration = displayDuration;
         _displayTimer = displayDuration;
         ApplySnapshotToRenderer(snapshot, 1f);
+    }
+
+    private float ResolveDisplayDuration(CharacterAbilityType abilityType, AbilityTierData tierData)
+    {
+        if (abilityType is CharacterAbilityType.CoraPool or CharacterAbilityType.CoraBarrier)
+            return Mathf.Max(displayDuration, tierData.effectDuration);
+
+        return displayDuration;
     }
 
     private void LateUpdate()
@@ -84,7 +95,9 @@ public class AbilityDebugVisualHost : MonoBehaviour
         }
 
         _displayTimer -= Time.deltaTime;
-        float alpha = Mathf.Clamp01(_displayTimer / displayDuration);
+        float alpha = _activeDisplayDuration > 0f
+            ? Mathf.Clamp01(_displayTimer / _activeDisplayDuration)
+            : 0f;
         ApplySnapshotToRenderer(_activeSnapshot, alpha);
     }
 
@@ -115,11 +128,23 @@ public class AbilityDebugVisualHost : MonoBehaviour
         Vector2 forward = snapshot.aimDirection.sqrMagnitude > 0.0001f
             ? snapshot.aimDirection.normalized
             : Vector2.up;
+        float zoneRotation = Mathf.Atan2(forward.y, forward.x) * Mathf.Rad2Deg - 90f;
+
+        if (snapshot.abilityType == CharacterAbilityType.CoraBarrier)
+        {
+            float length = snapshot.range * 2f;
+            float thickness = Mathf.Max(0.2f, snapshot.areaWidth);
+
+            zoneTransform.position = new Vector3(snapshot.placement.x, snapshot.placement.y, zoneTransform.position.z);
+            zoneTransform.rotation = Quaternion.Euler(0f, 0f, zoneRotation);
+            zoneTransform.localScale = new Vector3(length, thickness, 1f);
+            return;
+        }
 
         if (snapshot.isCircle)
         {
             float diameter = snapshot.range * 2f;
-            Vector2 circleCenter = snapshot.abilityType is CharacterAbilityType.CoraBarrier or CharacterAbilityType.CoraPool
+            Vector2 circleCenter = snapshot.abilityType == CharacterAbilityType.CoraPool
                 ? snapshot.placement
                 : snapshot.origin;
 
@@ -131,11 +156,10 @@ public class AbilityDebugVisualHost : MonoBehaviour
 
         float depth = snapshot.range;
         float width = Mathf.Max(0.2f, snapshot.areaWidth);
-        float angle = Mathf.Atan2(forward.y, forward.x) * Mathf.Rad2Deg - 90f;
         Vector2 center = snapshot.origin + forward * (depth * 0.5f);
 
         zoneTransform.position = new Vector3(center.x, center.y, zoneTransform.position.z);
-        zoneTransform.rotation = Quaternion.Euler(0f, 0f, angle);
+        zoneTransform.rotation = Quaternion.Euler(0f, 0f, zoneRotation);
         zoneTransform.localScale = new Vector3(width, depth, 1f);
     }
 
@@ -180,7 +204,17 @@ public class AbilityDebugVisualHost : MonoBehaviour
                 areaWidth = tierData.areaWidth,
                 isCircle = false
             },
-            CharacterAbilityType.CoraBarrier or CharacterAbilityType.CoraPool => new AbilityDebugSnapshot
+            CharacterAbilityType.CoraBarrier => new AbilityDebugSnapshot
+            {
+                abilityType = abilityType,
+                origin = origin,
+                aimDirection = aimDirection,
+                placement = placement,
+                range = tierData.range,
+                areaWidth = tierData.areaWidth,
+                isCircle = false
+            },
+            CharacterAbilityType.CoraPool => new AbilityDebugSnapshot
             {
                 abilityType = abilityType,
                 origin = origin,
@@ -293,9 +327,21 @@ public class AbilityDebugVisualHost : MonoBehaviour
             ? snapshot.aimDirection.normalized
             : Vector2.up;
 
+        if (snapshot.abilityType == CharacterAbilityType.CoraBarrier)
+        {
+            AbilityDebugGizmoUtility.DrawCenteredOrientedRect(
+                snapshot.placement,
+                forward,
+                Mathf.Max(0.2f, snapshot.areaWidth),
+                snapshot.range,
+                fill,
+                outline);
+            return;
+        }
+
         if (snapshot.isCircle)
         {
-            Vector2 center = snapshot.abilityType is CharacterAbilityType.CoraBarrier or CharacterAbilityType.CoraPool
+            Vector2 center = snapshot.abilityType == CharacterAbilityType.CoraPool
                 ? snapshot.placement
                 : snapshot.origin;
             AbilityDebugGizmoUtility.DrawCircle(center, snapshot.range, fill, outline);

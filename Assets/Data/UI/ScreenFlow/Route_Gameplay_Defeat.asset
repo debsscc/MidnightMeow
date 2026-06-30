@@ -15,6 +15,6 @@ MonoBehaviour:
   routeId: gameplay_defeat
   sceneName: GameOver
   transitionMode: 2
-  loadKind: 1
+  loadKind: 0
   fadeTime: 1
   minLoadingTime: 0

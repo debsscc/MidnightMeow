@@ -41,4 +41,17 @@ public static class AbilityDebugGizmoUtility
         direction = direction.sqrMagnitude > 0.0001f ? direction.normalized : Vector2.up;
         DrawOrientedRect(origin, direction, distance, width * 0.5f, fill, outline);
     }
+
+    public static void DrawCenteredOrientedRect(
+        Vector2 center,
+        Vector2 forward,
+        float depth,
+        float halfWidth,
+        Color fill,
+        Color outline)
+    {
+        forward = forward.sqrMagnitude > 0.0001f ? forward.normalized : Vector2.up;
+        Vector2 origin = center - forward * (depth * 0.5f);
+        DrawOrientedRect(origin, forward, depth, halfWidth, fill, outline);
+    }
 }

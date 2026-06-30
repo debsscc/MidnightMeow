@@ -1,6 +1,35 @@
 # Selamento de buracos de spawn
 
-Última revisão: 2026-06-28
+Última revisão: 2026-06-30
+
+## Spawn data-driven por buraco
+
+Cada `RatHoleSpawnPoint` pode referenciar um **`RatHoleSpawnProfile`** (SO):
+
+| Campo | Descrição |
+|-------|-----------|
+| `enemyTable` | Lista de prefabs + `spawnWeight` (ex.: Elétrico 0.7, Padrão 0.3) |
+| `minSpawnTime` / `maxSpawnTime` | Intervalo sorteado entre spawns |
+
+O buraco (`RatHoleSpawnController`) sorteia o delay, aguarda, sorteia o rato e pede spawn ao orquestrador.
+
+- **Multiplayer:** `NetworkWaveManager` + `RatHoleSpawnOrchestrator` (servidor)
+- **Single player:** `LocalRatHoleSpawnService` + mesmo orquestrador
+- **Fallback:** se o buraco não tiver SO, o servidor monta perfil temporário a partir do `WaveSettings` legado da fase
+
+Perfil padrão opcional por fase: `PhaseWaveSettingsCatalog.PhaseEntry.defaultHoleSpawnProfile`.
+
+Criar perfis em `Assets/Data/Gameplay/` → menu **MidnightMeow/Gameplay/Rat Hole Spawn Profile**.
+
+**Valores padrão (`RatHoleSpawnProfile.asset`):**
+
+| Rato | Peso |
+|------|------|
+| Rato Padrão | 0.65 |
+| Rato Elétrico | 0.25 |
+| Rato Resistente | 0.10 |
+
+`minSpawnTime`: 8s · `maxSpawnTime`: 14s
 
 ## Fluxo de selamento (resumo)
 
@@ -33,5 +62,7 @@
 Em cada `SpawnPoint` usado pelo `NetworkWaveManager`:
 
 1. Adicionar `RatHoleSpawnPoint` com `holeId` único (1, 2, 3…).
-2. Sprite do buraco (sem colisão sólida com player); `CircleCollider2D` trigger opcional para debug.
-3. No `WaveSystem`, referenciar `RatHoleSealConfig` no `NetworkRatHoleSealManager`.
+2. Atribuir `RatHoleSpawnProfile` no buraco (ou usar `defaultHoleSpawnProfile` no catálogo da fase).
+3. `RatHoleSpawnController` é adicionado automaticamente em runtime.
+4. Sprite do buraco (sem colisão sólida com player); `CircleCollider2D` trigger opcional para debug.
+5. No `WaveSystem`, referenciar `RatHoleSealConfig` no `NetworkRatHoleSealManager`.

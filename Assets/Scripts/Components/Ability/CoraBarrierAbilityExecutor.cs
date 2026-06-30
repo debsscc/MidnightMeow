@@ -55,7 +55,12 @@ public class CoraBarrierAbilityExecutor : MonoBehaviour, IAbilityExecutor
         if (host != null)
             host.DrawPreviewGizmo(CharacterAbilityType.CoraBarrier, transform.position, forward, definition.tier1);
         else
-            AbilityDebugGizmoUtility.DrawCircle(transform.position, definition.tier1.range,
-                new Color(0.2f, 0.95f, 0.45f, 0.25f), new Color(0.5f, 1f, 0.65f, 0.9f));
+            AbilityDebugGizmoUtility.DrawCenteredOrientedRect(
+                transform.position,
+                forward,
+                definition.tier1.areaWidth,
+                definition.tier1.range,
+                new Color(0.2f, 0.95f, 0.45f, 0.25f),
+                new Color(0.5f, 1f, 0.65f, 0.9f));
     }
 }

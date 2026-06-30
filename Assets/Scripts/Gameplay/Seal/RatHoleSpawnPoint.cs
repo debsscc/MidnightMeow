@@ -10,10 +10,12 @@ public class RatHoleSpawnPoint : MonoBehaviour
     private static readonly List<RatHoleSpawnPoint> Registry = new List<RatHoleSpawnPoint>(8);
 
     [SerializeField] private ushort holeId = 1;
+    [SerializeField] private RatHoleSpawnProfile spawnProfile;
     [SerializeField] private SpriteRenderer holeSprite;
     [SerializeField] private float spawnScatterRadius = 0.6f;
 
     public ushort HoleId => holeId;
+    public RatHoleSpawnProfile SpawnProfile => spawnProfile;
     public Vector2 AnchorPosition => transform.position;
     public float SpawnScatterRadius => spawnScatterRadius;
     public bool CanSpawn => !IsSealed;
@@ -31,6 +33,20 @@ public class RatHoleSpawnPoint : MonoBehaviour
 
         if (GetComponent<RatHoleSealStatusUI>() == null)
             gameObject.AddComponent<RatHoleSealStatusUI>();
+
+        if (GetComponent<RatHoleSpawnController>() == null)
+            gameObject.AddComponent<RatHoleSpawnController>();
+    }
+
+    public void ConfigureSpawnProfile(RatHoleSpawnProfile profile)
+    {
+        if (profile == null)
+            return;
+
+        spawnProfile = profile;
+        RatHoleSpawnController controller = GetComponent<RatHoleSpawnController>();
+        if (controller != null)
+            controller.ConfigureProfile(profile);
     }
 
     private void OnDisable()

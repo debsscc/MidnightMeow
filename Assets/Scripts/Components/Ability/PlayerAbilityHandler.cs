@@ -7,7 +7,6 @@ using System.Collections.Generic;
 // ReSharper disable UnusedMember.Global
 using Unity.Netcode;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 [RequireComponent(typeof(PlayerInputHandler))]
 public class PlayerAbilityHandler : MonoBehaviour
@@ -51,6 +50,7 @@ public class PlayerAbilityHandler : MonoBehaviour
         (TryGetComponent<PlayerMeleeCombat>(out var melee) && melee.IsAttacking);
 
     public event Action<CharacterAbilityType> OnAbilityActivated;
+    public event Action OnAbilitySetChanged;
 
     private void Awake()
     {
@@ -63,29 +63,22 @@ public class PlayerAbilityHandler : MonoBehaviour
         if (dash == null) dash = GetComponent<PlayerDash>();
 
         ApplySandboxUnlock();
-        ApplyEarlyPhaseAbilityUnlock();
+        UnlockAllAbilitiesAtMatchStart();
         CacheExecutors();
     }
 
-    private void ApplyEarlyPhaseAbilityUnlock()
+    private void UnlockAllAbilitiesAtMatchStart()
     {
-        if (!IsEarlyPhaseScene(SceneManager.GetActiveScene().name))
-            return;
-
         _progression.ability1Unlocked = true;
         _progression.ability2Unlocked = true;
         _progression.phaseIndex = 3;
     }
-
-    private static bool IsEarlyPhaseScene(string sceneName) =>
-        sceneName is "Fase-1" or "Fase-2";
 
     private void OnEnable()
     {
         _input.OnAbility1Input += HandleAbility1Input;
         _input.OnAbility2Input += HandleAbility2Input;
         _input.OnDashInput += HandleDashInput;
-        GameEvents.OnWaveStatusChanged += HandleWaveStatusChanged;
 
         if (dash != null)
             dash.OnDashEnded += HandleDashEnded;
@@ -99,7 +92,6 @@ public class PlayerAbilityHandler : MonoBehaviour
         _input.OnAbility1Input -= HandleAbility1Input;
         _input.OnAbility2Input -= HandleAbility2Input;
         _input.OnDashInput -= HandleDashInput;
-        GameEvents.OnWaveStatusChanged -= HandleWaveStatusChanged;
 
         if (dash != null)
             dash.OnDashEnded -= HandleDashEnded;
@@ -365,13 +357,6 @@ public class PlayerAbilityHandler : MonoBehaviour
         return placement.Success ? placement.WorldPosition : (Vector2)transform.position;
     }
 
-    private void HandleWaveStatusChanged(int currentWave, int totalWaves, int enemiesRemaining, int totalKilled)
-    {
-        if (unlockAllAbilitySlotsOnStart) return;
-        if (IsEarlyPhaseScene(SceneManager.GetActiveScene().name)) return;
-        _progression.SyncPhaseFromWaveIndex(currentWave - 1);
-    }
-
     public GameObject GetSpawnPrefab(CharacterAbilityType type)
     {
         return type switch
@@ -388,6 +373,7 @@ public class PlayerAbilityHandler : MonoBehaviour
         CacheExecutors();
         if (_passiveHandler != null)
             _passiveHandler.Configure(set);
+        OnAbilitySetChanged?.Invoke();
     }
 
     public void ApplyAbilitySet(CharacterAbilitySet set) => ConfigureAbilitySet(set);

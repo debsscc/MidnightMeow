@@ -154,6 +154,9 @@ public static class ScreenFlowStateMachine
 
     {
 
+        GameplaySessionTeardown.PrepareForEndGameScreen();
+        Time.timeScale = 1f;
+
         EnterPhase(ScreenFlowPhase.Gameplay);
 
         if (TryTransition(SceneFlowRouteIds.GameplayToVictory))
@@ -172,6 +175,8 @@ public static class ScreenFlowStateMachine
 
     {
 
+        GameplaySessionTeardown.PrepareForEndGameScreen();
+        Time.timeScale = 1f;
         GameplayVignetteController.ClearIfActive();
 
         EnterPhase(ScreenFlowPhase.Gameplay);
