@@ -2308,6 +2308,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: MidnightMeow::RatHoleSpawnPoint
   holeId: 4
+  spawnProfile: {fileID: 0}
   holeSprite: {fileID: 1857619081}
   spawnScatterRadius: 0.6
 --- !u!1001 &513920933
@@ -2762,7 +2763,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &618898879
 RectTransform:
   m_ObjectHideFlags: 0
@@ -3315,6 +3316,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: MidnightMeow::RatHoleSpawnPoint
   holeId: 5
+  spawnProfile: {fileID: 0}
   holeSprite: {fileID: 278050853}
   spawnScatterRadius: 0.6
 --- !u!1 &785246357
@@ -10270,6 +10272,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: MidnightMeow::RatHoleSpawnPoint
   holeId: 1
+  spawnProfile: {fileID: 0}
   holeSprite: {fileID: 249383178}
   spawnScatterRadius: 0.6
 --- !u!1 &1387069387
@@ -10451,6 +10454,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: MidnightMeow::RatHoleSpawnPoint
   holeId: 2
+  spawnProfile: {fileID: 0}
   holeSprite: {fileID: 193702908}
   spawnScatterRadius: 0.6
 --- !u!1001 &1451571914
@@ -10646,7 +10650,7 @@ RectTransform:
   m_Father: {fileID: 618898879}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0.000022888184, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -12633,6 +12637,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: MidnightMeow::RatHoleSpawnPoint
   holeId: 3
+  spawnProfile: {fileID: 0}
   holeSprite: {fileID: 890726440}
   spawnScatterRadius: 0.6
 --- !u!1 &1980568661
@@ -12891,6 +12896,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: MidnightMeow::RatHoleSpawnPoint
   holeId: 6
+  spawnProfile: {fileID: 0}
   holeSprite: {fileID: 1331572635}
   spawnScatterRadius: 0.6
 --- !u!1001 &2018303278

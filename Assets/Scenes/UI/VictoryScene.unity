@@ -374,6 +374,22 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 1703563274330822604, guid: b242745fab239824cb496ab1946bea44, type: 3}
+      propertyPath: m_fontColor.b
+      value: 0.11433956
+      objectReference: {fileID: 0}
+    - target: {fileID: 1703563274330822604, guid: b242745fab239824cb496ab1946bea44, type: 3}
+      propertyPath: m_fontColor.g
+      value: 0.2503985
+      objectReference: {fileID: 0}
+    - target: {fileID: 1703563274330822604, guid: b242745fab239824cb496ab1946bea44, type: 3}
+      propertyPath: m_fontColor.r
+      value: 0.381132
+      objectReference: {fileID: 0}
+    - target: {fileID: 1703563274330822604, guid: b242745fab239824cb496ab1946bea44, type: 3}
+      propertyPath: m_fontColor32.rgba
+      value: 4280107105
+      objectReference: {fileID: 0}
     - target: {fileID: 1925121554048073218, guid: b242745fab239824cb496ab1946bea44, type: 3}
       propertyPath: m_Camera
       value: 
