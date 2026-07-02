@@ -31,8 +31,13 @@
 
 | Confirmar | Valor atual |
 |-----------|-------------|
-| Painel de controles (teclado/mouse) | |
-| Onde é instanciado (Menu2?) | |
+| Script | `ControlsPanelController` (abas + Voltar) |
+| Abas | `Tab_KeyboardMouse`, `Tab_Gamepad` |
+| Painéis | `Panel_KeyboardMouse`, `Panel_Gamepad` |
+| Labels | TMP + `LocalizeStringEvent` (tabela `UI`, chaves `controls.action.*`) |
+| Rebuild | Menu Unity: **MidnightMeow → UI → Rebuild Controls Panel Prefab** |
+| Menu2 | Abre via Opções → Controles (`UIActionBridge.OpenControlsFromSettings`); **não** é aba do `MenuTabController` |
+| PauseMenu | `PauseMenuActions.ShowControls()` reutiliza o mesmo prefab |
 
 ---
 

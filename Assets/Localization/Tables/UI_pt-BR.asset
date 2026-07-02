@@ -348,6 +348,46 @@ MonoBehaviour:
     m_Localized: CONTROLES
     m_Metadata:
       m_Items: []
+  - m_Id: 3642000000000001
+    m_Localized: TECLADO E MOUSE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3642000000000002
+    m_Localized: CONTROLE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3642000000000003
+    m_Localized: MOVER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3642000000000004
+    m_Localized: DASH
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3642000000000005
+    m_Localized: HABILIDADE 1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3642000000000006
+    m_Localized: HABILIDADE 2
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3642000000000008
+    m_Localized: '- INTERAGIR'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3642000000000009
+    m_Localized: '- PAUSAR'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3642000000000010
+    m_Localized: ATIRAR
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3642000000000011
+    m_Localized: MIRAR
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

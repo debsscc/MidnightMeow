@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: e8a292643b029c24e84a8fa234632e92
+guid: e5b97f71c3ae9d14c988297ccb812ffe
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -7348476720309968523
-    second: Sair_Marker_0
+      213: 1822179599071455635
+    second: Creditos_Marker_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -126,7 +126,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Sair_Marker_0
+      name: Creditos_Marker_0
       rect:
         serializedVersion: 2
         x: 22
@@ -141,8 +141,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 57162b55b57f40a90800000000000000
-      internalID: -7348476720309968523
+      spriteID: 3992e97e0bea94910800000000000000
+      internalID: 1822179599071455635
       vertices: []
       indices: 
       edges: []
@@ -161,7 +161,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      Sair_Marker_0: -7348476720309968523
+      Creditos_Marker_0: 1822179599071455635
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

@@ -116,6 +116,20 @@ public class UIActionBridge : MonoBehaviour
     public void ActivateScreen(GameObject screen) => screen.SetActive(true);
     public void DeactivateScreen(GameObject screen) => screen.SetActive(false);
 
+    /// <summary>Abre o painel de controles e esconde Opções (Menu2).</summary>
+    public void OpenControlsFromSettings()
+    {
+        ControlsPanelController panel = ControlsPanelController.FindInScene();
+        if (panel == null)
+        {
+            Debug.LogWarning("UIActionBridge: ControlsPanelController não encontrado na cena.");
+            return;
+        }
+
+        GameObject settings = GameObject.Find("Setings");
+        panel.ShowFrom(settings);
+    }
+
     public void ToggleScreen(GameObject screenDesactivate, GameObject screenActivate)
     {
         screenDesactivate.SetActive(false);

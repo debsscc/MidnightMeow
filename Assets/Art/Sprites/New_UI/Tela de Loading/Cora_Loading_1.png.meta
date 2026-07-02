@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: e8a292643b029c24e84a8fa234632e92
+guid: a6b210c6a6dfd554a96507e96c477041
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -7348476720309968523
-    second: Sair_Marker_0
+      213: 4738541322254892052
+    second: Cora_Loading_1_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -126,13 +126,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Sair_Marker_0
+      name: Cora_Loading_1_0
       rect:
         serializedVersion: 2
-        x: 22
-        y: 26
-        width: 232
-        height: 80
+        x: 26
+        y: 23
+        width: 71
+        height: 91
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -141,8 +141,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 57162b55b57f40a90800000000000000
-      internalID: -7348476720309968523
+      spriteID: 41c338a0a3ea2c140800000000000000
+      internalID: 4738541322254892052
       vertices: []
       indices: 
       edges: []
@@ -161,7 +161,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      Sair_Marker_0: -7348476720309968523
+      Cora_Loading_1_0: 4738541322254892052
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

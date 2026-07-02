@@ -119,18 +119,30 @@ public class PauseMenuActions : MonoBehaviour
 
     public void ShowControls()
     {
-        GameObject panel = ResolveControlsPanel();
+        GameObject panelRoot = ResolveControlsPanel();
+        ControlsPanelController controller = panelRoot != null
+            ? panelRoot.GetComponent<ControlsPanelController>()
+            : null;
+
         SetPauseMainContentVisible(false);
 
-        if (panel != null)
-            panel.SetActive(true);
+        if (controller != null)
+        {
+            controller.Show();
+            return;
+        }
+
+        if (panelRoot != null)
+            panelRoot.SetActive(true);
     }
 
-    public void HideControls()
+    public void HideControls() => CloseControlsOverlay();
+
+    private void CloseControlsOverlay()
     {
-        GameObject panel = ResolveControlsPanel();
-        if (panel != null)
-            panel.SetActive(false);
+        GameObject panelRoot = ResolveControlsPanel();
+        if (panelRoot != null)
+            panelRoot.SetActive(false);
 
         SetPauseMainContentVisible(true);
     }
@@ -163,8 +175,6 @@ public class PauseMenuActions : MonoBehaviour
         Bind(_confirmQuitAppButton, QuitApplication);
         Bind(_cancelQuitAppButton, HideQuitConfirmation);
         Bind(_controlsBackButton, HideControls);
-
-        SetButtonLabel(_restartButton, "Reiniciar fase");
         SetButtonLabel(_abandonButton, "Abandonar");
         SetButtonLabel(_creditsButton, "Créditos");
     }
