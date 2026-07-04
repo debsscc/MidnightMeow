@@ -1,6 +1,6 @@
 # Cenas
 
-Última revisão: 2026-06-25
+Última revisão: 2026-07-04
 
 ## EventSystem
 
@@ -18,7 +18,7 @@ Gameplay: `GameplayPrefabCatalog` em `Resources/` instancia `MultiplayerCameraRi
 | Cena              | Caminho                                             | Função                                  |
 | ----------------- | --------------------------------------------------- | --------------------------------------- |
 | Bootstrap         | `Assets/Scenes/BootstrapScene/BootstrapScene.unity` | Inicialização, carregamento de serviços |
-| Menu principal    | `Assets/Scenes/UI/Menu2.unity`                      | `MainMenuController` — Novo Jogo, Continuar (Saves), Opções, Sair |
+| Menu principal    | `Assets/Scenes/UI/Menu2.unity`                      | `MainMenuController` + `ContinueSavePanelController` — Novo Jogo (slot 0), Continuar (painel Save), Opções, Sair |
 | Lobby             | `Assets/Scenes/UI/Lobby.unity`                      | `LobbyFlowController` — host/entrar/solo/personagens |
 | Personagens       | `Assets/Scenes/UI/Characters.unity`                  | `CharactersScreenController` — consulta ou seleção + upgrades |
 | Preparação        | `Assets/Scenes/UI/Preparation.unity`                | `PreparationScreenController` — contrato + personagem + pronto. Em solo, contrato persiste via `SaveProfileStore.selectedContractIndex` ao voltar de Characters |

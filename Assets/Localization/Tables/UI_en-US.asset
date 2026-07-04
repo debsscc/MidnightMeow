@@ -389,6 +389,54 @@ MonoBehaviour:
     m_Localized: AIM
     m_Metadata:
       m_Items: []
+  - m_Id: 7254583251054592
+    m_Localized: Select Slot
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7254905964998656
+    m_Localized: SLOT 1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7257324547485696
+    m_Localized: SLOT 2
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7257328100061184
+    m_Localized: SLOT 3
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7257566848233472
+    m_Localized: Delete
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7257810591821824
+    m_Localized: Load
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7267525094813696
+    m_Localized: Confirm
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7267570607206400
+    m_Localized: Cancel
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7268000000000001
+    m_Localized: Select a save file
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7268000000000002
+    m_Localized: 'File {0}, saved on {1} at {2}'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7268000000000003
+    m_Localized: 'Delete File {0}?
+
+      Saved on {1} at {2}
+
+      This action cannot be undone.'
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

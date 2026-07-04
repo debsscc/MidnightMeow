@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a7c4e8f12b3d4567890abcdef1234567, type: 3}
+  m_Name: MenuContractVisualConfig
+  m_EditorClassIdentifier: Assembly-CSharp::MenuContractVisualConfig
+  emptyPreviewSprite: {fileID: -1549608738270015995, guid: 992d9da031dfb4a4d80a9884c1e1499d, type: 3}
+  contractSprites:
+  - {fileID: -1549608738270015995, guid: 992d9da031dfb4a4d80a9884c1e1499d, type: 3}
+  - {fileID: -1683764445465458163, guid: 93d5b57666e2a974a90a51fb173c6523, type: 3}
+  - {fileID: 986121752948314192, guid: 376397a2276f21c47923ac3840a10b73, type: 3}
+  emptyPreviewTint: {r: 0.55, g: 0.55, b: 0.55, a: 1}

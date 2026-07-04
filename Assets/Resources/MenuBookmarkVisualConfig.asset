@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f1a2b3c4d5e6789012345678abcdef01, type: 3}
+  m_Name: MenuBookmarkVisualConfig
+  m_EditorClassIdentifier: MidnightMeow::MenuBookmarkVisualConfig
+  newGameTuckedSprite: {fileID: -2823801595206809516, guid: 5a0eaa36872e4cd4fb5256d087cf3105, type: 3}
+  continueTuckedSprite: {fileID: 2470048468297358722, guid: c6fa8ad1af1a8544a9de7469b18c6796, type: 3}
+  settingsTuckedSprite: {fileID: 6596845843069354409, guid: 2e191aa0d1186174d8316b649539ae15, type: 3}
+  creditsTuckedSprite: {fileID: 636565687622363385, guid: a7216e63c8a71e04481785dad1418898, type: 3}
+  continueBackBookmarkSprite: {fileID: -1545918990926596854, guid: 15e18f7fbe626de40930926b62bea4c2, type: 3}

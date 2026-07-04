@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 115d14fe40b7201459805fe8ee991410
+guid: 235db51818b22bd4c92890d314a7b74e
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 6609643886868278407
-    second: Botao_Opcoes_0
+      213: -2939157233254659662
+    second: Controle_Teclado_e_Mouse_SemFrenesi_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -126,13 +126,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Botao_Opcoes_0
+      name: Controle_Teclado_e_Mouse_SemFrenesi_0
       rect:
         serializedVersion: 2
-        x: 24
-        y: 26
-        width: 305
-        height: 78
+        x: 0
+        y: 0
+        width: 1920
+        height: 1080
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -141,8 +141,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 78cad90881c2abb50800000000000000
-      internalID: 6609643886868278407
+      spriteID: 2b906d491140637d0800000000000000
+      internalID: -2939157233254659662
       vertices: []
       indices: 
       edges: []
@@ -161,7 +161,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      Botao_Opcoes_0: 6609643886868278407
+      Controle_Teclado_e_Mouse_SemFrenesi_0: -2939157233254659662
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

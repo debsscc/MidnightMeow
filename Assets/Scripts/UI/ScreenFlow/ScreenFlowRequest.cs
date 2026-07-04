@@ -49,6 +49,9 @@ public class ScreenFlowRequest : MonoBehaviour
     /// <summary>Para botão Sair do menu. Liga em On Click no Inspector.</summary>
     public void QuitApplication()
     {
+        if (ContinueSavePanelController.TryHandleMenuBack())
+            return;
+
         flowEvents.InvokeBefore(this);
 #if UNITY_EDITOR
         UnityEditor.EditorApplication.isPlaying = false;

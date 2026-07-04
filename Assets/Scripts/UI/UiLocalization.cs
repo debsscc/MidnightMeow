@@ -91,4 +91,24 @@ public static class UiLocalization
 
         return message;
     }
+
+    public static string FormatSaveSlotInfo(int slotNumber, string date, string time)
+    {
+        return Format(
+            "saveFiles.slot.info",
+            "Arquivo {0}, salvo em {1} às {2}",
+            slotNumber,
+            date,
+            time);
+    }
+
+    public static string FormatSaveDeletePrompt(int slotNumber, string date, string time)
+    {
+        return Format(
+            "saveFiles.delete.prompt",
+            "Apagar Arquivo {0}?\n\nSalvo em {1} às {2}\n\nEsta ação não pode ser desfeita.",
+            slotNumber,
+            date,
+            time);
+    }
 }

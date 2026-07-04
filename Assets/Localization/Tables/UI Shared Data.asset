@@ -405,6 +405,50 @@ MonoBehaviour:
     m_Key: controls.action.aim
     m_Metadata:
       m_Items: []
+  - m_Id: 7254583251054592
+    m_Key: saveFiles.title.SaveFiles
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7254905964998656
+    m_Key: saveFiles.btn.Slot1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7257324547485696
+    m_Key: saveFiles.btn.Slot2
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7257328100061184
+    m_Key: saveFiles.btn.Slot3
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7257566848233472
+    m_Key: saveFiles.btn.delete
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7257810591821824
+    m_Key: saveFiles.btn.load
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7267525094813696
+    m_Key: saveFiles.btn.confirmDelete
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7267570607206400
+    m_Key: saveFiles.btn.cancelDelete
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7268000000000001
+    m_Key: saveFiles.prompt.selectSlot
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7268000000000002
+    m_Key: saveFiles.slot.info
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7268000000000003
+    m_Key: saveFiles.delete.prompt
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

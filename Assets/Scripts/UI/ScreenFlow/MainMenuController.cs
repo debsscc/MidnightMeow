@@ -45,6 +45,9 @@ public class MainMenuController : MonoBehaviour
     [SerializeField] private Button deleteConfirmButton;
     [SerializeField] private Button deleteCancelButton;
 
+    [Header("Continuar / Saves")]
+    [SerializeField] private ContinueSavePanelController continueSavePanel;
+
     [Header("Opções")]
     [SerializeField] private Button optionsBackButton;
     [SerializeField] private Slider masterVolumeSlider;
@@ -52,7 +55,7 @@ public class MainMenuController : MonoBehaviour
     [SerializeField] private Slider sfxVolumeSlider;
     [SerializeField] private Button resetAudioDefaultsButton;
 
-    [SerializeField] private bool buildPlaceholderIfMissing = true;
+    [SerializeField] private bool buildPlaceholderIfMissing;
 
     private readonly List<int> _hostSaveSlots = new List<int>();
     private int? _pendingDeleteSlot;
@@ -65,7 +68,12 @@ public class MainMenuController : MonoBehaviour
             BuildPlaceholderUI();
 
         EnsureCreditsButtonIfMissing();
-        EnsureSaveDeleteUiIfMissing();
+        if (continueSavePanel == null)
+            continueSavePanel = GetComponent<ContinueSavePanelController>();
+        if (buildPlaceholderIfMissing)
+        {
+            EnsureSaveDeleteUiIfMissing();
+        }
         EnsureAudioVolumeSlidersIfMissing();
         EnsureResetAudioDefaultsButtonIfMissing();
         WireButtons();
@@ -233,6 +241,12 @@ public class MainMenuController : MonoBehaviour
         SaveProfileStore save = SaveProfileStore.Instance;
         if (save == null || !save.HasAnyHostSave())
             return;
+
+        if (continueSavePanel != null)
+        {
+            continueSavePanel.Open();
+            return;
+        }
 
         RefreshSavesPanel();
         navigator?.ShowPanel(PanelSaves);
@@ -407,6 +421,9 @@ public class MainMenuController : MonoBehaviour
 
     public void OnQuit()
     {
+        if (ContinueSavePanelController.TryHandleMenuBack())
+            return;
+
         MidnightMeowAnalyticsTracker.NotifyUiClick("main_menu", "quit");
 #if UNITY_EDITOR
         UnityEditor.EditorApplication.isPlaying = false;
@@ -439,6 +456,7 @@ public class MainMenuController : MonoBehaviour
         }
 
         RefreshSavesPanel();
+        continueSavePanel?.RefreshFromStore();
     }
 
     private void RefreshDeleteAllSavesButton()

@@ -1,6 +1,6 @@
 # Fluxo Menu → Lobby → Loading
 
-Última revisão: 2026-06-14
+Última revisão: 2026-07-04
 
 > Documentação completa: [screen-flow.md](./screen-flow.md)
 
@@ -8,11 +8,25 @@
 
 | Botão | Ação |
 |-------|------|
-| Novo Jogo | `GameSessionContext.BeginNewGame()` → rota `menu_lobby` |
-| Continuar | Painel Saves (só se `SaveProfileStore.CanContinue()`) |
+| Novo Jogo | `GameSessionContext.BeginNewGame()` → slot 0 → rota `menu_lobby` |
+| Continuar | Abre painel **Save** (`ContinueSavePanelController`) — só se `SaveProfileStore.HasAnyHostSave()` |
 | Opções | Painel Opções (gráficos, áudio, controles, geral) |
 | Feedback Playtest | Abre o [formulário de playtest](https://docs.google.com/forms/d/e/1FAIpQLScqrERAjHtXbsp-kTXYh86otM1uvqKOICOwL0JFGYLe5203aw/viewform) no navegador (`Application.OpenURL`) |
 | Sair | `Application.Quit()` |
+
+### Tela Continuar (Save)
+
+Fluxo em dois passos, separado das abas do `MenuTabController` (Levels / Settings / Upgrades):
+
+1. **Continuar** (bookmark) → ativa `Canvas/Save` (inicia oculto); bookmarks do hub trocam para sprites **tucked** (encolhidos na lateral do livro).
+2. **Arquivo 1/2/3** → preview do contrato + data/hora; habilita **Carregar** / **Deletar**. Slots vazios ficam cinza e não clicáveis.
+3. **Carregar** → `GameSessionContext.BeginContinue(slot)` + rota `menu_lobby`.
+4. **Deletar** → modal `SaveDeleteConfirmation` (Confirmar / Cancelar).
+5. **ESC** ou bookmark **Sair** (vira **Voltar** na tela de save) → fecha Save e volta para **Levels**.
+
+Preview de contrato: `MenuContractVisualConfig` em `Resources/`.
+
+Bookmarks na tela Continuar: permanecem visíveis com sprites **tucked** (`MenuBookmarkVisualConfig`); **Sair** vira **Voltar** (sprite + label) e fecha o painel. ESC também volta.
 
 **Música:** objeto raiz `Sound Track` (`menu.wav`, grupo **Music**). O `MusicCrossfadeController` lê o clip, desliga o `AudioSource` da cena e toca via crossfade persistente **no mesmo grupo Music**, controlável pelo slider Música (`GameAudioSettings` → `MusicVolume`).
 

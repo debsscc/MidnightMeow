@@ -297,7 +297,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 3631377986367488
-    m_Localized: "Configura\xE7\xF5es"
+    m_Localized: Config
     m_Metadata:
       m_Items: []
   - m_Id: 3632135087599616
@@ -386,6 +386,55 @@ MonoBehaviour:
       m_Items: []
   - m_Id: 3642000000000011
     m_Localized: MIRAR
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7254583251054592
+    m_Localized: Carregar Jogo
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7254905964998656
+    m_Localized: Arquivo 1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7257324547485696
+    m_Localized: Arquivo 2
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7257328100061184
+    m_Localized: Arquivo 3
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7257566848233472
+    m_Localized: Deletar
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7257810591821824
+    m_Localized: Carregar
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7267570607206400
+    m_Localized: Cancelar
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7267525094813696
+    m_Localized: Confirmar
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7268000000000001
+    m_Localized: Selecione um arquivo
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7268000000000002
+    m_Localized: Arquivo {0}, salvo em {1} \xE0s {2}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7268000000000003
+    m_Localized: 'Apagar Arquivo {0}?
+
+      Salvo em {1} \xE0s {2}
+
+      Esta a\xE7\xE3o
+      n\xE3o pode ser desfeita.'
     m_Metadata:
       m_Items: []
   references:
