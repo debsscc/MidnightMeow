@@ -2,7 +2,7 @@
 
 
 
-Última revisão: 2026-06-28
+Última revisão: 2026-07-05
 
 
 
@@ -60,9 +60,9 @@ Em `CarriageConfig`:
 
 2. **`NetworkCarriageSpawner`** (servidor): instancia o prefab se a cena não tiver carruagem, faz `NetworkObject.Spawn()` e repete a configuração até path + spawn estarem prontos.
 
-3. **`NetworkCarriage.OnNetworkSpawn`**: fallback no servidor se `path` ainda estiver vazio após o NGO spawnar objetos in-scene.
+3. **`NetworkCarriage.OnNetworkSpawn`** (todos os peers): chama `PhaseGameplayContentInstaller.ConfigureCarriage` se `path` estiver vazio; retry local (~2s) até `CarriagePath` com ≥2 waypoints. Progresso HUD sincronizado via `_pathProgress` (`NetworkVariable`) + `GameEvents.OnCarriagePathProgressChanged`.
 
-
+**Multiplayer:** `CarriagePath` **não** é objeto de rede — cada peer cria o trajeto localmente com os mesmos waypoints (`CarriageConfig` + bounds). A posição visual do Cliente vem de `ApplyPathPosition()` alimentado pela NV `_pathProgress` replicada pelo servidor.
 
 O array `waypoints` no Inspector de `CarriagePath` pode parecer vazio **fora do Play** — os waypoints são filhos criados em runtime. Durante o Play, veja a hierarquia `CarriagePath/Waypoint_*`.
 

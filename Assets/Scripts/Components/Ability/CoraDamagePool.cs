@@ -13,6 +13,7 @@ public class CoraDamagePool : MonoBehaviour
 
     private AbilityTierData _tierData;
     private ulong _ownerClientId;
+    private float _worldRadius;
     private CircleCollider2D _trigger;
     private readonly HashSet<int> _enemiesInside = new HashSet<int>();
     private Coroutine _damageRoutine;
@@ -35,14 +36,9 @@ public class CoraDamagePool : MonoBehaviour
     {
         _tierData = tierData;
         _ownerClientId = ownerClientId;
+        _worldRadius = Mathf.Max(0.25f, tierData.range);
 
-        const float referenceRange = 4f;
-        const float basePrefabScale = 2.42f;
-        float scaleMultiplier = Mathf.Max(0.5f, tierData.range / referenceRange);
-        transform.localScale = Vector3.one * (basePrefabScale * scaleMultiplier);
-
-        if (_trigger != null)
-            _trigger.radius = tierData.range / (basePrefabScale * scaleMultiplier);
+        SyncPoolVisualAndCollider(_worldRadius);
 
         if (_damageRoutine != null)
             StopCoroutine(_damageRoutine);
@@ -52,6 +48,26 @@ public class CoraDamagePool : MonoBehaviour
             StopCoroutine(_lifetimeRoutine);
         if (tierData.effectDuration > 0f)
             _lifetimeRoutine = StartCoroutine(LifetimeRoutine(tierData.effectDuration));
+    }
+
+    private void SyncPoolVisualAndCollider(float worldRadius)
+    {
+        transform.localScale = Vector3.one;
+
+        SpriteRenderer spriteRenderer = GetComponent<SpriteRenderer>();
+        float spriteDiameter = 1f;
+        if (spriteRenderer != null && spriteRenderer.sprite != null)
+        {
+            Vector2 bounds = spriteRenderer.sprite.bounds.size;
+            spriteDiameter = Mathf.Max(bounds.x, bounds.y);
+        }
+
+        float targetDiameter = worldRadius * 2f;
+        float uniformScale = targetDiameter / Mathf.Max(0.01f, spriteDiameter);
+        transform.localScale = Vector3.one * uniformScale;
+
+        if (_trigger != null)
+            _trigger.radius = worldRadius / uniformScale;
     }
 
     private IEnumerator DamageTickRoutine()
@@ -89,7 +105,8 @@ public class CoraDamagePool : MonoBehaviour
 
         if (damage <= 0f) return;
 
-        var hits = Physics2D.OverlapCircleAll(transform.position, _tierData.range, enemyLayers);
+        float radius = _worldRadius > 0f ? _worldRadius : _tierData.range;
+        var hits = Physics2D.OverlapCircleAll(transform.position, radius, enemyLayers);
         foreach (var hit in hits)
         {
             if (hit == null) continue;
@@ -104,4 +121,31 @@ public class CoraDamagePool : MonoBehaviour
     {
         return enemyLayers.value == 0 || ((1 << other.gameObject.layer) & enemyLayers.value) != 0;
     }
+
+#if UNITY_EDITOR
+    private void OnDrawGizmosSelected()
+    {
+        CircleCollider2D collider = _trigger != null ? _trigger : GetComponent<CircleCollider2D>();
+        if (collider == null)
+            return;
+
+        Bounds bounds = collider.bounds;
+        float radius = Mathf.Max(bounds.extents.x, bounds.extents.y);
+        Vector3 center = bounds.center;
+
+        Gizmos.color = new Color(0.75f, 0.2f, 0.95f, 0.25f);
+        Gizmos.DrawSphere(center, radius * 0.15f);
+
+        const int segments = 32;
+        Vector3 previous = center + Vector3.right * radius;
+        Gizmos.color = new Color(0.9f, 0.5f, 1f, 0.95f);
+        for (int i = 1; i <= segments; i++)
+        {
+            float angle = i / (float)segments * Mathf.PI * 2f;
+            Vector3 next = center + new Vector3(Mathf.Cos(angle), Mathf.Sin(angle), 0f) * radius;
+            Gizmos.DrawLine(previous, next);
+            previous = next;
+        }
+    }
+#endif
 }

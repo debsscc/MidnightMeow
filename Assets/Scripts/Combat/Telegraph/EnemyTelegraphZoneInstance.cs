@@ -23,6 +23,16 @@ public class EnemyTelegraphZoneInstance : MonoBehaviour
 
     public bool IsResolved => _resolved;
 
+    public void CancelForPause()
+    {
+        if (_resolved)
+            return;
+
+        StopAllCoroutines();
+        _resolved = true;
+        Destroy(gameObject);
+    }
+
     public void Initialize(
         TelegraphStrikeDefinition strike,
         EnemyTelegraphVisualStyle style,
@@ -69,6 +79,12 @@ public class EnemyTelegraphZoneInstance : MonoBehaviour
 
         while (elapsed < duration)
         {
+            if (GameEvents.IsPaused)
+            {
+                yield return null;
+                continue;
+            }
+
             elapsed += Time.deltaTime;
             if (_view != null)
                 _view.SetFill(elapsed / duration);

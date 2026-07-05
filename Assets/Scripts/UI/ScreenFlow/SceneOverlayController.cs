@@ -69,6 +69,8 @@ public class SceneOverlayController : MonoBehaviour
         entry.root.SetActive(true);
         _openStack.Push(overlayId);
 
+        GameplayHudController.BringOverlayToFront(entry.root.transform);
+
         if (entry.pauseGameTime)
             Time.timeScale = 0f;
 

@@ -64,6 +64,9 @@ public class MainMenuController : MonoBehaviour
 
     private void Awake()
     {
+        ApplyResponsiveCanvasScalers();
+        ApplyMenuCanvasGammaSpace();
+
         if (buildPlaceholderIfMissing && mainMenuPanel == null)
             BuildPlaceholderUI();
 
@@ -887,6 +890,24 @@ public class MainMenuController : MonoBehaviour
                 new Vector2(continueRt.offsetMax.x + 8f, continueRt.offsetMin.y),
                 new Vector2(continueRt.offsetMax.x + 300f, continueRt.offsetMax.y));
             saveDeleteSlotButtons[i].gameObject.SetActive(false);
+        }
+    }
+
+    private void ApplyResponsiveCanvasScalers()
+    {
+        Canvas[] canvases = FindObjectsByType<Canvas>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        for (int i = 0; i < canvases.Length; i++)
+            GameplayHudController.ApplyResponsiveCanvasScaler(canvases[i]);
+    }
+
+    private void ApplyMenuCanvasGammaSpace()
+    {
+        Canvas[] canvases = FindObjectsByType<Canvas>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        for (int i = 0; i < canvases.Length; i++)
+        {
+            Canvas canvas = canvases[i];
+            if (canvas != null)
+                canvas.vertexColorAlwaysGammaSpace = true;
         }
     }
 }

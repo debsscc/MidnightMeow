@@ -186,8 +186,9 @@ public class PlayerInputHandler : MonoBehaviour
         _isPaused = paused;
         if (paused)
         {
-            // Force a release signal to stop continuous actions like firing
+            OnMoveInput?.Invoke(Vector2.zero);
             OnFireInput?.Invoke(false);
+            OnInteractHoldChanged?.Invoke(false);
         }
     }
 }

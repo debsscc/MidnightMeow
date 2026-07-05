@@ -36,13 +36,21 @@ public class MultiplayerGameManager : NetworkBehaviour
         NetworkVariableWritePermission.Server
     );
 
+    private readonly NetworkVariable<int> _resumeCountdown = new NetworkVariable<int>(
+        -1,
+        NetworkVariableReadPermission.Everyone,
+        NetworkVariableWritePermission.Server);
+
     private bool _defeatSequenceStarted;
     private bool _victorySequenceStarted;
+    private Coroutine _resumeCountdownRoutine;
 
     public GameState CurrentState => _networkGameState.Value;
     public bool HasReachedVictoryState => IsVictoryTransitionComplete();
     public int PlayersFighting => _playersFighting.Value;
     public int PlayersAlive => _playersFighting.Value;
+    public int ResumeCountdown => _resumeCountdown.Value;
+    public bool IsResumeCountdownActive => _resumeCountdown.Value > 0;
 
     public static event System.Action<GameState> OnGameStateChanged;
     public static event System.Action OnVictory;
@@ -175,8 +183,11 @@ public class MultiplayerGameManager : NetworkBehaviour
     public void RequestPauseRpc()
     {
         if (_networkGameState.Value != GameState.Playing) return;
-        // Muda o estado no servidor ANTES do ClientRpc para evitar bug de write em cliente
+        if (_resumeCountdownRoutine != null) return;
+
         _networkGameState.Value = GameState.Paused;
+        Time.timeScale = 0f;
+        GameEvents.InvokePauseChanged(true);
         ApplyPauseClientRpc(true);
     }
 
@@ -184,8 +195,36 @@ public class MultiplayerGameManager : NetworkBehaviour
     public void RequestResumeRpc()
     {
         if (_networkGameState.Value != GameState.Paused) return;
+        if (_resumeCountdownRoutine != null) return;
+
+        _resumeCountdownRoutine = StartCoroutine(ResumeCountdownRoutine());
+    }
+
+    private IEnumerator ResumeCountdownRoutine()
+    {
+        for (int seconds = 3; seconds >= 1; seconds--)
+        {
+            _resumeCountdown.Value = seconds;
+            BroadcastResumeCountdownClientRpc(seconds);
+            yield return new WaitForSecondsRealtime(1f);
+        }
+
+        _resumeCountdown.Value = 0;
+        BroadcastResumeCountdownClientRpc(0);
+
         _networkGameState.Value = GameState.Playing;
+        _resumeCountdown.Value = -1;
+        GameEvents.InvokePauseChanged(false);
         ApplyPauseClientRpc(false);
+
+        _resumeCountdownRoutine = null;
+    }
+
+    [ClientRpc]
+    private void BroadcastResumeCountdownClientRpc(int seconds)
+    {
+        GameManager2 gameManager = FindFirstObjectByType<GameManager2>();
+        gameManager?.ShowResumeCountdown(seconds);
     }
 
     /// <summary>
@@ -196,7 +235,11 @@ public class MultiplayerGameManager : NetworkBehaviour
     private void ApplyPauseClientRpc(bool paused)
     {
         Time.timeScale = paused ? 0f : 1f;
-        GameEvents.InvokePauseChanged(paused);
+
+        if (!IsServer)
+            GameEvents.InvokePauseChanged(paused);
+        else if (!paused)
+            GameEvents.InvokePauseChanged(false);
 
         GameFlowOrchestrator.Instance?.NotifyPauseChanged(paused);
 
@@ -204,9 +247,14 @@ public class MultiplayerGameManager : NetworkBehaviour
         if (localGameManager != null)
         {
             if (paused)
+            {
                 localGameManager.ShowPauseOverlay();
+            }
             else
+            {
+                localGameManager.HideResumeCountdown();
                 localGameManager.HidePauseOverlay();
+            }
         }
         else
         {

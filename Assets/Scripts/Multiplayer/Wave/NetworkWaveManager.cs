@@ -94,8 +94,19 @@ public class NetworkWaveManager : NetworkBehaviour
 
     private void HandleGameStateChanged(GameState newState)
     {
+        if (newState == GameState.Paused)
+        {
+            if (_holeOrchestrator != null)
+                _holeOrchestrator.SetSpawnPaused(true);
+            return;
+        }
+
         if (newState == GameState.Playing)
+        {
+            if (_holeOrchestrator != null)
+                _holeOrchestrator.SetSpawnPaused(false);
             TryStartSpawning();
+        }
     }
 
     [Rpc(SendTo.Server)]
@@ -257,6 +268,9 @@ public class NetworkWaveManager : NetworkBehaviour
 
         while (enemyPool.Count > 0)
         {
+            while (GameEvents.IsPaused)
+                yield return new WaitForSecondsRealtime(0.25f);
+
             int idx = Random.Range(0, enemyPool.Count);
             GameObject prefab = enemyPool[idx];
             enemyPool.RemoveAt(idx);

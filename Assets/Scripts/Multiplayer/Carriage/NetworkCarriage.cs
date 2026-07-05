@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
@@ -16,6 +17,10 @@ public class NetworkCarriage : NetworkBehaviour
 
     private HealthComponent _health;
     private static Sprite _cachedPlaceholderSprite;
+    private Coroutine _pathSetupRoutine;
+
+    private const float PathSetupTimeoutSeconds = 2f;
+    private const float PathSetupPollSeconds = 0.1f;
 
     private const float TargetVisualWidth = 2.4f;
     private const float TargetVisualHeight = 1.6f;
@@ -250,30 +255,80 @@ public class NetworkCarriage : NetworkBehaviour
         _syncHealth.OnValueChanged += HandleSyncedHealthChanged;
         _syncMaxHealth.OnValueChanged += HandleSyncedMaxHealthChanged;
 
-        if (IsServer && (path == null || path.WaypointCount < 2))
-            PhaseGameplayContentInstaller.ConfigureCarriage(this);
-
+        EnsureLocalPathConfigured();
         ApplyPathPosition();
+        SyncCarriageHudProgress();
         ApplySyncedHealthToComponent();
 
-        if (!IsServer)
-            return;
-
-        if (config != null)
+        if (IsServer && config != null)
         {
             _health.Initialize(config.maxHealth);
             PublishHealthToNetwork();
         }
 
-        ApplyPathPosition();
+        if (!IsPathReady())
+            BeginPathSetupRetry();
     }
 
     public override void OnNetworkDespawn()
     {
+        if (_pathSetupRoutine != null)
+        {
+            StopCoroutine(_pathSetupRoutine);
+            _pathSetupRoutine = null;
+        }
+
         _pathProgress.OnValueChanged -= HandlePathProgressChanged;
         _syncHealth.OnValueChanged -= HandleSyncedHealthChanged;
         _syncMaxHealth.OnValueChanged -= HandleSyncedMaxHealthChanged;
         base.OnNetworkDespawn();
+    }
+
+    private void EnsureLocalPathConfigured()
+    {
+        if (IsPathReady())
+            return;
+
+        PhaseGameplayContentInstaller.ConfigureCarriage(this);
+    }
+
+    private bool IsPathReady() => path != null && path.WaypointCount >= 2;
+
+    private void SyncCarriageHudProgress() =>
+        GameEvents.InvokeCarriagePathProgressChanged(_pathProgress.Value);
+
+    private void BeginPathSetupRetry()
+    {
+        if (_pathSetupRoutine != null)
+            StopCoroutine(_pathSetupRoutine);
+
+        _pathSetupRoutine = StartCoroutine(EnsurePathConfiguredRoutine());
+    }
+
+    private IEnumerator EnsurePathConfiguredRoutine()
+    {
+        float elapsed = 0f;
+
+        while (elapsed < PathSetupTimeoutSeconds)
+        {
+            if (!IsPathReady())
+                PhaseGameplayContentInstaller.ConfigureCarriage(this);
+
+            if (IsPathReady())
+            {
+                ApplyPathPosition();
+                SyncCarriageHudProgress();
+                _pathSetupRoutine = null;
+                yield break;
+            }
+
+            elapsed += PathSetupPollSeconds;
+            yield return new WaitForSeconds(PathSetupPollSeconds);
+        }
+
+        Debug.LogWarning(
+            $"[NetworkCarriage] Timeout aguardando CarriagePath no peer (IsServer={IsServer}) — verifique Fase-2 e CarriageConfig.");
+        _pathSetupRoutine = null;
     }
 
     private void HandlePathProgressChanged(float previous, float current)
@@ -309,6 +364,9 @@ public class NetworkCarriage : NetworkBehaviour
         if (!IsServer || !IsSpawned || config == null || path == null)
             return;
 
+        if (GameEvents.IsPaused)
+            return;
+
         if (_arrived.Value)
             return;
 
@@ -332,9 +390,6 @@ public class NetworkCarriage : NetworkBehaviour
         transform.position += toEnd / distanceToEnd * step;
         _pathProgress.Value = path.GetNormalizedProgress(transform.position);
         ApplyPathPosition();
-
-        if (IsServer)
-            GameEvents.InvokeCarriagePathProgressChanged(_pathProgress.Value);
 
         if (_pathProgress.Value >= 0.98f
             || Vector2.Distance(transform.position, arrival) <= config.arrivalZoneRadius)

@@ -32,6 +32,12 @@ public class CoraBarrier : MonoBehaviour
         }
     }
 
+    public static void GetBarrierDimensions(AbilityTierData tierData, out float length, out float thickness)
+    {
+        length = Mathf.Max(0.2f, tierData.range * 2f);
+        thickness = tierData.areaWidth > 0f ? tierData.areaWidth : 0.5f;
+    }
+
     public void Initialize(AbilityTierData tierData, ulong ownerClientId)
     {
         _tierData = tierData;
@@ -81,12 +87,10 @@ public class CoraBarrier : MonoBehaviour
         if (blockingCollider == null)
             blockingCollider = gameObject.AddComponent<BoxCollider2D>();
 
-        float width = tierData.range * 2f;
-        float height = tierData.areaWidth > 0f ? tierData.areaWidth : 0.5f;
+        GetBarrierDimensions(tierData, out float length, out float thickness);
+        SyncBarrierVisualAndCollider(length, thickness);
 
         blockingCollider.isTrigger = false;
-        blockingCollider.size = new Vector2(width, height);
-        blockingCollider.offset = Vector2.zero;
         blockingCollider.excludeLayers = 0;
 
         int barrierLayer = LayerMask.NameToLayer("Barrier");
@@ -94,19 +98,45 @@ public class CoraBarrier : MonoBehaviour
             gameObject.layer = barrierLayer;
     }
 
+    private void SyncBarrierVisualAndCollider(float worldLength, float worldThickness)
+    {
+        transform.localScale = Vector3.one;
+
+        SpriteRenderer spriteRenderer = GetComponent<SpriteRenderer>();
+        Vector2 spriteSize = Vector2.one;
+        if (spriteRenderer != null && spriteRenderer.sprite != null)
+            spriteSize = spriteRenderer.sprite.bounds.size;
+
+        float scaleX = worldLength / Mathf.Max(0.01f, spriteSize.x);
+        float scaleY = worldThickness / Mathf.Max(0.01f, spriteSize.y);
+        transform.localScale = new Vector3(scaleX, scaleY, 1f);
+
+        if (blockingCollider != null)
+        {
+            blockingCollider.size = spriteSize;
+            blockingCollider.offset = Vector2.zero;
+        }
+    }
+
     private void ConfigureNavMeshObstacle(AbilityTierData tierData)
     {
         if (_obstacle == null)
             return;
 
+        GetBarrierDimensions(tierData, out float length, out float thickness);
+
         _obstacle.shape = NavMeshObstacleShape.Box;
         _obstacle.carving = true;
         _obstacle.carveOnlyStationary = false;
         _obstacle.enabled = true;
-        _obstacle.size = new Vector3(
-            tierData.range * 2f,
-            tierData.areaWidth > 0f ? tierData.areaWidth : 0.5f,
-            1f);
+
+        SpriteRenderer spriteRenderer = GetComponent<SpriteRenderer>();
+        Vector2 spriteSize = Vector2.one;
+        if (spriteRenderer != null && spriteRenderer.sprite != null)
+            spriteSize = spriteRenderer.sprite.bounds.size;
+
+        _obstacle.size = new Vector3(spriteSize.x, spriteSize.y, 1f);
+        _obstacle.center = Vector3.zero;
     }
 
     private void ScheduleLifetime(float duration)
@@ -143,5 +173,29 @@ public class CoraBarrier : MonoBehaviour
             projectile.TriggerHitAndDestroy();
         }
     }
+
+#if UNITY_EDITOR
+    private void OnDrawGizmosSelected()
+    {
+        BoxCollider2D collider = blockingCollider != null ? blockingCollider : GetComponent<BoxCollider2D>();
+        if (collider == null)
+            return;
+
+        Bounds bounds = collider.bounds;
+        Gizmos.color = new Color(0.2f, 0.95f, 0.45f, 0.35f);
+        Gizmos.DrawCube(bounds.center, bounds.size);
+        Gizmos.color = new Color(0.5f, 1f, 0.65f, 0.95f);
+        Gizmos.DrawWireCube(bounds.center, bounds.size);
+
+        NavMeshObstacle obstacle = _obstacle != null ? _obstacle : GetComponent<NavMeshObstacle>();
+        if (obstacle == null)
+            return;
+
+        Vector3 worldCenter = transform.TransformPoint(obstacle.center);
+        Vector3 worldSize = Vector3.Scale(obstacle.size, transform.lossyScale);
+        Gizmos.color = new Color(0.95f, 0.75f, 0.2f, 0.9f);
+        Gizmos.DrawWireCube(worldCenter, worldSize);
+    }
+#endif
 }
 

@@ -48,6 +48,9 @@ public class PhaseObjectiveHud : MonoBehaviour
 
     private void Update()
     {
+        if (GameEvents.IsPaused)
+            return;
+
         _refreshTimer += Time.unscaledDeltaTime;
         if (_refreshTimer < refreshInterval)
             return;

@@ -16,6 +16,9 @@ public class RatHoleSpawnOrchestrator : MonoBehaviour
     private System.Func<bool> _canSpawnMore;
     private Coroutine _startRoutine;
     private bool _started;
+    private bool _spawnPaused;
+
+    public bool IsSpawnPaused => _spawnPaused;
 
     private void Awake()
     {
@@ -55,6 +58,7 @@ public class RatHoleSpawnOrchestrator : MonoBehaviour
     public void StopAll()
     {
         _started = false;
+        _spawnPaused = false;
 
         if (_startRoutine != null)
         {
@@ -92,6 +96,20 @@ public class RatHoleSpawnOrchestrator : MonoBehaviour
         }
 
         _startRoutine = null;
+    }
+
+    public void SetSpawnPaused(bool paused)
+    {
+        _spawnPaused = paused;
+
+        foreach (RatHoleSpawnPoint hole in RatHoleSpawnPoint.All)
+        {
+            if (hole == null)
+                continue;
+
+            RatHoleSpawnController controller = hole.GetComponent<RatHoleSpawnController>();
+            controller?.SetSpawnPaused(paused);
+        }
     }
 
     private static void EnsureControllersOnHoles()

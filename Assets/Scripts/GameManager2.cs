@@ -6,6 +6,7 @@
 
 using System;
 using System.Collections;
+using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
@@ -28,12 +29,20 @@ public class GameManager2 : MonoBehaviour
     [SerializeField] private SceneOverlayController sceneOverlayController;
 
     [SerializeField] private string pauseOverlayId = "pause";
+
+    [Header("Pause — countdown de resume (multiplayer)")]
+    [SerializeField] private TMP_Text resumeCountdownText;
     
     [Tooltip("Configurações de delay e cenas para vitória/derrota.")]
     [SerializeField] private GameConfig gameConfig;
 
     private GameStates currentState = GameStates.Playing;
     public GameStates CurrentState => currentState;
+
+    private TMP_Text _runtimeResumeCountdownText;
+    private Coroutine _resumeCountdownRoutine;
+
+    public bool IsResumeCountdownActive => _resumeCountdownRoutine != null;
 
     public event Action<GameStates> OnGameStateChanged;
 
@@ -43,11 +52,12 @@ public class GameManager2 : MonoBehaviour
 
     private void Awake()
     {
-        // Colisão Player x Enemy é gerida por PlayerDamageImmunity (passagem breve após dano).
+        ResolvePauseReferences();
     }
 
     private void Start()
     {
+        ResolvePauseReferences();
         InitializePhase();
     }
 
@@ -137,16 +147,60 @@ public class GameManager2 : MonoBehaviour
         if (currentState != GameStates.Playing) return;
 
         currentState = GameStates.Paused;
+        GameEvents.InvokePauseChanged(true);
         Time.timeScale = 0f;
         OnGameStateChanged?.Invoke(currentState);
-        GameEvents.InvokePauseChanged(true);
         ShowPauseOverlay();
     }
 
     public void ResumeGame()
     {
         if (currentState != GameStates.Paused) return;
+        if (_resumeCountdownRoutine != null) return;
 
+        BeginResumeCountdown();
+    }
+
+    public void BeginResumeCountdown()
+    {
+        if (currentState != GameStates.Paused) return;
+        if (_resumeCountdownRoutine != null) return;
+
+        _resumeCountdownRoutine = StartCoroutine(ResumeCountdownRoutine());
+    }
+
+    private IEnumerator ResumeCountdownRoutine()
+    {
+        HidePauseOverlay();
+
+        for (int seconds = 3; seconds >= 1; seconds--)
+        {
+            ShowResumeCountdown(seconds);
+            yield return new WaitForSecondsRealtime(1f);
+        }
+
+        ShowResumeCountdown(0);
+        HideResumeCountdown();
+        _resumeCountdownRoutine = null;
+
+        currentState = GameStates.Playing;
+        Time.timeScale = 1f;
+        OnGameStateChanged?.Invoke(currentState);
+        GameEvents.InvokePauseChanged(false);
+    }
+
+    private void CompleteResumeImmediately()
+    {
+        if (_resumeCountdownRoutine != null)
+        {
+            StopCoroutine(_resumeCountdownRoutine);
+            _resumeCountdownRoutine = null;
+        }
+
+        if (currentState != GameStates.Paused)
+            return;
+
+        HideResumeCountdown();
         currentState = GameStates.Playing;
         Time.timeScale = 1f;
         OnGameStateChanged?.Invoke(currentState);
@@ -157,6 +211,8 @@ public class GameManager2 : MonoBehaviour
     /// <summary>Abre o canvas de pause sem alterar timeScale (multiplayer).</summary>
     public void ShowPauseOverlay()
     {
+        ResolvePauseReferences();
+
         if (ServiceLocator.HasService<CursorManager>())
             ServiceLocator.GetService<CursorManager>().ResetToDefault();
 
@@ -166,7 +222,159 @@ public class GameManager2 : MonoBehaviour
         if (sceneOverlayController != null)
             sceneOverlayController.OpenOverlay(pauseOverlayId);
         else if (pauseMenuObject != null)
+        {
             pauseMenuObject.SetActive(true);
+            GameplayHudController.BringOverlayToFront(pauseMenuObject.transform);
+        }
+
+        RefreshResumeButtonInteractable();
+    }
+
+    /// <summary>Exibe contagem regressiva 3→1 antes de retomar (multiplayer).</summary>
+    public void ShowResumeCountdown(int seconds)
+    {
+        if (seconds > 0)
+            HidePauseOverlay();
+
+        TMP_Text label = ResolveResumeCountdownText();
+        if (label == null)
+            return;
+
+        if (seconds <= 0)
+        {
+            label.gameObject.SetActive(false);
+            RefreshResumeButtonInteractable();
+            return;
+        }
+
+        EnsureResumeCountdownVisible(label);
+        label.gameObject.SetActive(true);
+        label.text = seconds.ToString();
+        RefreshResumeButtonInteractable();
+    }
+
+    public void HideResumeCountdown()
+    {
+        TMP_Text label = ResolveResumeCountdownText();
+        if (label != null)
+            label.gameObject.SetActive(false);
+
+        RefreshResumeButtonInteractable();
+    }
+
+    private void EnsurePauseOverlayVisible()
+    {
+        ResolvePauseReferences();
+
+        if (sceneOverlayController != null)
+            sceneOverlayController.OpenOverlay(pauseOverlayId);
+        else if (pauseMenuObject != null)
+        {
+            if (!pauseMenuObject.activeSelf)
+                pauseMenuObject.SetActive(true);
+            GameplayHudController.BringOverlayToFront(pauseMenuObject.transform);
+        }
+    }
+
+    private void ResolvePauseReferences()
+    {
+        if (sceneOverlayController == null)
+            sceneOverlayController = FindFirstObjectByType<SceneOverlayController>();
+
+        if (pauseMenuObject != null)
+            return;
+
+        PauseMenuActions pauseActions = FindFirstObjectByType<PauseMenuActions>(FindObjectsInactive.Include);
+        if (pauseActions != null)
+        {
+            pauseMenuObject = pauseActions.gameObject;
+            return;
+        }
+
+        GameObject named = GameObject.Find("PauseMenu");
+        if (named != null)
+            pauseMenuObject = named;
+    }
+
+    private static void EnsureResumeCountdownVisible(TMP_Text label)
+    {
+        if (label == null)
+            return;
+
+        Transform countdownTransform = label.transform;
+        if (!countdownTransform.gameObject.activeSelf)
+            countdownTransform.gameObject.SetActive(true);
+
+        countdownTransform.SetAsLastSibling();
+
+        if (countdownTransform.parent is RectTransform parentRect)
+        {
+            RectTransform rt = countdownTransform as RectTransform;
+            if (rt != null)
+            {
+                rt.anchorMin = new Vector2(0.5f, 0.5f);
+                rt.anchorMax = new Vector2(0.5f, 0.5f);
+                rt.pivot = new Vector2(0.5f, 0.5f);
+                rt.anchoredPosition = Vector2.zero;
+                rt.sizeDelta = new Vector2(240f, 160f);
+            }
+
+            GameplayHudController.BringOverlayToFront(parentRect);
+        }
+    }
+
+    private TMP_Text ResolveResumeCountdownText()
+    {
+        if (resumeCountdownText != null)
+            return resumeCountdownText;
+
+        if (_runtimeResumeCountdownText != null)
+            return _runtimeResumeCountdownText;
+
+        GameplayHudController hud = FindFirstObjectByType<GameplayHudController>();
+        Transform parent = hud != null ? hud.transform : null;
+        if (parent == null)
+        {
+            ResolvePauseReferences();
+            parent = pauseMenuObject != null ? pauseMenuObject.transform : null;
+        }
+
+        if (parent == null)
+            return null;
+
+        Transform existing = parent.Find("ResumeCountdown");
+        if (existing != null)
+        {
+            _runtimeResumeCountdownText = existing.GetComponent<TMP_Text>();
+            return _runtimeResumeCountdownText;
+        }
+
+        GameObject go = new GameObject("ResumeCountdown", typeof(RectTransform));
+        go.transform.SetParent(parent, false);
+
+        RectTransform rt = go.GetComponent<RectTransform>();
+        rt.anchorMin = new Vector2(0.5f, 0.5f);
+        rt.anchorMax = new Vector2(0.5f, 0.5f);
+        rt.pivot = new Vector2(0.5f, 0.5f);
+        rt.anchoredPosition = Vector2.zero;
+        rt.sizeDelta = new Vector2(240f, 160f);
+
+        _runtimeResumeCountdownText = go.AddComponent<TextMeshProUGUI>();
+        _runtimeResumeCountdownText.alignment = TextAlignmentOptions.Center;
+        _runtimeResumeCountdownText.fontSize = 96f;
+        _runtimeResumeCountdownText.color = Color.white;
+        _runtimeResumeCountdownText.raycastTarget = false;
+        _runtimeResumeCountdownText.gameObject.SetActive(false);
+        return _runtimeResumeCountdownText;
+    }
+
+    private void RefreshResumeButtonInteractable()
+    {
+        PauseMenuActions pauseActions = pauseMenuObject != null
+            ? pauseMenuObject.GetComponent<PauseMenuActions>()
+            : FindFirstObjectByType<PauseMenuActions>();
+
+        pauseActions?.RefreshResumeInteractable();
     }
 
     /// <summary>Fecha o canvas de pause sem alterar timeScale (multiplayer).</summary>
@@ -198,6 +406,9 @@ public class GameManager2 : MonoBehaviour
         }
 
         if (currentState != GameStates.Paused)
+            return;
+
+        if (_resumeCountdownRoutine != null)
             return;
 
         currentState = GameStates.Playing;

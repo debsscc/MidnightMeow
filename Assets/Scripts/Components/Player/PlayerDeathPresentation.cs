@@ -75,6 +75,27 @@ public class PlayerDeathPresentation : MonoBehaviour
         _routine = StartCoroutine(DeathPresentationRoutine(dissolveAfterHold, onComplete));
     }
 
+    /// <summary>
+    /// Inconsciente revivível (MP): animação de queda sem dissolve, foco de câmera ou ambience de derrota.
+    /// </summary>
+    public void BeginDownedPresentation(Action onComplete = null)
+    {
+        if (_routine != null)
+            StopCoroutine(_routine);
+
+        PrepareForDownedPresentation();
+        _routine = StartCoroutine(DownedPresentationRoutine(onComplete));
+    }
+
+    public void CancelPresentation()
+    {
+        if (_routine == null)
+            return;
+
+        StopCoroutine(_routine);
+        _routine = null;
+    }
+
     private void PrepareForDeathPresentation()
     {
         if (healthComponent != null)
@@ -88,6 +109,34 @@ public class PlayerDeathPresentation : MonoBehaviour
 
         if (animator != null)
             animator.updateMode = AnimatorUpdateMode.UnscaledTime;
+    }
+
+    private void PrepareForDownedPresentation()
+    {
+        if (healthComponent != null)
+        {
+            healthComponent.SetAllowDestroyOnDeath(false);
+            float hold = postDeathHoldSeconds > 0f ? postDeathHoldSeconds : 10f;
+            healthComponent.SetDestroyDelay(hold + 60f);
+        }
+
+        if (animator != null)
+            animator.updateMode = AnimatorUpdateMode.UnscaledTime;
+    }
+
+    private IEnumerator DownedPresentationRoutine(Action onComplete)
+    {
+        animationHandler?.HandleDeath();
+
+        yield return null;
+        yield return null;
+
+        yield return WaitUntilDeathAnimationCompletes();
+        FreezeDeathPose();
+        animationHandler?.FinalizeDeathPhysics();
+
+        onComplete?.Invoke();
+        _routine = null;
     }
 
     private IEnumerator DeathPresentationRoutine(bool dissolveAfterHold, Action onComplete)

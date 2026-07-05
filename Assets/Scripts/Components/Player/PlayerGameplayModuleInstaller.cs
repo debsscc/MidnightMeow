@@ -11,7 +11,7 @@ public class PlayerGameplayModuleInstaller : MonoBehaviour
     [SerializeField] private bool installReviveZoneVisual = true;
     [SerializeField] private bool installRevivePromptUI = true;
     [SerializeField] private bool installMeleeHitVisual = true;
-    [SerializeField] private bool installAbilityDebugVisual = true;
+    [SerializeField] private bool installAbilityDebugVisual = false;
     [SerializeField] private bool installRatHoleSealInteraction = true;
 
     private void Awake()
@@ -45,11 +45,21 @@ public class PlayerGameplayModuleInstaller : MonoBehaviour
         if (GetComponent<PlayerMeleeCombat>() != null && GetComponent<PlayerMeleeHitFeedback>() == null)
             gameObject.AddComponent<PlayerMeleeHitFeedback>();
 
-        if (installAbilityDebugVisual && GetComponent<PlayerAbilityHandler>() != null &&
+        if (installAbilityDebugVisual && ShouldInstallAbilityDebugVisual() &&
+            GetComponent<PlayerAbilityHandler>() != null &&
             GetComponent<AbilityDebugVisualHost>() == null)
             gameObject.AddComponent<AbilityDebugVisualHost>();
 
         if (GetComponent<PlayerFacingController>() == null)
             gameObject.AddComponent<PlayerFacingController>();
+    }
+
+    private static bool ShouldInstallAbilityDebugVisual()
+    {
+#if UNITY_EDITOR
+        return true;
+#else
+        return Debug.isDebugBuild;
+#endif
     }
 }

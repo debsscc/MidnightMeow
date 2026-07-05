@@ -8,7 +8,7 @@ public class AbilityDebugVisualHost : MonoBehaviour
 {
     [Header("Debug")]
     [SerializeField] private bool drawDebugGizmos = true;
-    [SerializeField] private bool showInPlayMode = true;
+    [SerializeField] private bool showInPlayMode = false;
     [SerializeField] private float displayDuration = 0.45f;
     [SerializeField] private int sortingOrder = 45;
 
@@ -132,8 +132,10 @@ public class AbilityDebugVisualHost : MonoBehaviour
 
         if (snapshot.abilityType == CharacterAbilityType.CoraBarrier)
         {
-            float length = snapshot.range * 2f;
-            float thickness = Mathf.Max(0.2f, snapshot.areaWidth);
+            CoraBarrier.GetBarrierDimensions(
+                new AbilityTierData { range = snapshot.range, areaWidth = snapshot.areaWidth },
+                out float length,
+                out float thickness);
 
             zoneTransform.position = new Vector3(snapshot.placement.x, snapshot.placement.y, zoneTransform.position.z);
             zoneTransform.rotation = Quaternion.Euler(0f, 0f, zoneRotation);
@@ -279,13 +281,7 @@ public class AbilityDebugVisualHost : MonoBehaviour
         _zoneRenderer.sprite = CreateUnitSprite();
         _zoneRenderer.sortingOrder = sortingOrder;
 
-        var shader = Shader.Find("MidnightMeow/AbilityZoneFill");
-        if (shader == null)
-            shader = Shader.Find("MidnightMeow/TelegraphFill");
-        if (shader == null)
-            shader = Shader.Find("Sprites/Default");
-
-        _materialInstance = new Material(shader);
+        _materialInstance = CombatVisualMaterials.CreateAbilityZoneFillInstance();
         _zoneRenderer.material = _materialInstance;
         _zoneRenderer.enabled = false;
     }
@@ -304,10 +300,12 @@ public class AbilityDebugVisualHost : MonoBehaviour
 
     private void OnDrawGizmos()
     {
+#if UNITY_EDITOR
         if (!drawDebugGizmos || _gizmoSnapshot.abilityType == CharacterAbilityType.None)
             return;
 
         DrawSnapshotGizmo(_gizmoSnapshot);
+#endif
     }
 
     public void DrawPreviewGizmo(
@@ -316,8 +314,10 @@ public class AbilityDebugVisualHost : MonoBehaviour
         Vector2 aimDirection,
         AbilityTierData tierData)
     {
+#if UNITY_EDITOR
         if (!drawDebugGizmos) return;
         DrawSnapshotGizmo(BuildSnapshot(abilityType, origin, aimDirection, origin, tierData));
+#endif
     }
 
     private void DrawSnapshotGizmo(AbilityDebugSnapshot snapshot)

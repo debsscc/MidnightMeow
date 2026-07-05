@@ -18,6 +18,7 @@ public class RatHoleSpawnController : MonoBehaviour
     private Func<bool> _canSpawnMore;
     private Coroutine _spawnRoutine;
     private bool _running;
+    private bool _spawnPaused;
 
     public RatHoleSpawnProfile SpawnProfile
     {
@@ -62,12 +63,23 @@ public class RatHoleSpawnController : MonoBehaviour
         _running = false;
     }
 
+    public void SetSpawnPaused(bool paused)
+    {
+        _spawnPaused = paused;
+    }
+
     private IEnumerator SpawnLoopRoutine()
     {
         _running = true;
 
         while (_running)
         {
+            if (_spawnPaused || GameEvents.IsPaused)
+            {
+                yield return new WaitForSecondsRealtime(0.25f);
+                continue;
+            }
+
             if (_hole == null || !_hole.CanSpawn)
             {
                 yield return new WaitForSeconds(0.5f);

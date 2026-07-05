@@ -16,6 +16,10 @@ public class GameplayHudController : MonoBehaviour
     public const string IndicatorsLayerName = "IndicatorsHudLayer";
 
     public const string ObjectiveLayerName = "ObjectiveHudLayer";
+    public const string PauseOverlayLayerName = "PauseOverlayLayer";
+
+    public const float ResponsiveScalerMatch = 0.5f;
+    public static readonly Vector2 ResponsiveReferenceResolution = new Vector2(1920f, 1080f);
 
     [Header("Widgets (opcional — cena/prefab)")]
     [SerializeField] private HordeIndicator waveIndicator;
@@ -40,6 +44,7 @@ public class GameplayHudController : MonoBehaviour
             return;
 
         BindGameplayCamera(canvas);
+        ApplyResponsiveCanvasScaler(canvas);
         EnsureLayersRoot();
 
         if (visualTheme == null)
@@ -51,6 +56,53 @@ public class GameplayHudController : MonoBehaviour
         DisableOffscreenIndicators();
         EnsureFeedbackButton();
     }
+
+    /// <summary>
+    /// Garante que overlays (pause, baú, etc.) renderizem acima da HUD de habilidades.
+    /// </summary>
+    public static void BringOverlayToFront(Transform overlayRoot)
+    {
+        if (overlayRoot == null)
+            return;
+
+        GameplayHudController controller = FindFirstObjectByType<GameplayHudController>();
+        if (controller != null)
+        {
+            controller.AttachOverlayToPauseLayer(overlayRoot);
+            return;
+        }
+
+        overlayRoot.SetAsLastSibling();
+    }
+
+    public static void ApplyResponsiveCanvasScaler(Canvas canvas, float match = ResponsiveScalerMatch)
+    {
+        if (canvas == null)
+            return;
+
+        CanvasScaler scaler = canvas.GetComponent<CanvasScaler>();
+        if (scaler == null || scaler.uiScaleMode != CanvasScaler.ScaleMode.ScaleWithScreenSize)
+            return;
+
+        if (scaler.referenceResolution.x < 1f || scaler.referenceResolution.y < 1f)
+            scaler.referenceResolution = ResponsiveReferenceResolution;
+
+        scaler.matchWidthOrHeight = match;
+    }
+
+    private void AttachOverlayToPauseLayer(Transform overlayRoot)
+    {
+        EnsureLayersRoot();
+        Transform pauseLayer = GetLayer(PauseOverlayLayerName);
+        pauseLayer.SetAsLastSibling();
+
+        if (overlayRoot.parent != pauseLayer)
+            overlayRoot.SetParent(pauseLayer, false);
+
+        overlayRoot.SetAsLastSibling();
+    }
+
+    private void ApplyResponsiveCanvasScaler(Canvas canvas) => ApplyResponsiveCanvasScaler(canvas, ResponsiveScalerMatch);
 
     private void BindGameplayCamera(Canvas canvas)
     {
@@ -155,11 +207,16 @@ public class GameplayHudController : MonoBehaviour
 
     private void EnsureAbilityHud(PlayerAbilityHudTheme theme)
     {
+        Transform abilityLayer = GetLayer(AbilityLayerName);
+
         if (abilityHud == null)
             abilityHud = GetComponentInChildren<PlayerAbilityHud>(true);
 
         if (abilityHud != null)
         {
+            if (abilityHud.transform.parent != abilityLayer)
+                abilityHud.transform.SetParent(abilityLayer, false);
+
             if (!abilityHud.gameObject.activeSelf)
                 abilityHud.gameObject.SetActive(true);
             if (!abilityHud.enabled)
@@ -167,12 +224,10 @@ public class GameplayHudController : MonoBehaviour
             if (theme != null)
                 abilityHud.ApplyTheme(theme);
             abilityHud.EnsureBuilt();
-            abilityHud.transform.SetAsLastSibling();
             return;
         }
 
-        abilityHud = PlayerAbilityHud.CreateUnder(transform, theme);
-        abilityHud.transform.SetAsLastSibling();
+        abilityHud = PlayerAbilityHud.CreateUnder(abilityLayer, theme);
     }
 
     private void DisableOffscreenIndicators()

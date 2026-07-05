@@ -1,6 +1,6 @@
 # Gameplay — Fases 1–3
 
-Última revisão: 2026-07-04
+Última revisão: 2026-07-05
 
 ## Status
 
@@ -34,15 +34,18 @@ Ver plano completo: [phases-implementation.md](phases-implementation.md)
 
 ---
 
-### HABILIDADE DA CORA - Duplicação de áreas na Barreira da Cora
-- **Comportamento Atual vs Desejado:** Dois retângulos visuais (debug + barreira) simultâneos. Desejado: um único retângulo como barreira física/lógica — bloqueia inimigos, libera jogadores aliados e projéteis aliados.
-- **Arquivos Investigados:** `Assets/Scripts/Components/Ability/CoraBarrierAbilityExecutor.cs`, `Assets/Scripts/Components/Ability/CoraBarrier.cs`, `Assets/Scripts/Multiplayer/Combat/NetworkCoraBarrier.cs`, `Assets/Scripts/Combat/AbilityDebugVisualHost.cs`, `Assets/Scripts/Components/Player/PlayerAbilityHandler.cs`, `Assets/Scripts/Multiplayer/Player/NetworkPlayerAbilityRelay.cs`, `Assets/Scripts/Combat/CombatLayerCollision.cs`
-- **Causas Prováveis Identificadas:**
-  1. **Overlay de debug sobreposto à barreira real:** `PlayerAbilityHandler` chama `_debugHost.ShowAbility(CoraBarrier, …)` com duração = `tierData.effectDuration`; `AbilityDebugVisualHost` instancia `SpriteRenderer` com `AbilityZoneFill` — segundo retângulo visual independente do `BoxCollider2D` da `CoraBarrier`.
-  2. **Replicação remota duplica debug:** `NetworkPlayerAbilityRelay` também invoca `_debugHost.ShowAbility` no ClientRpc de habilidades — owner e peers podem exibir retângulo debug além do prefab spawnado via `NetworkAbilityObjectSpawner`.
-  3. **Layer `Barrier` sem matriz completa em código:** `CoraBarrier` usa layer `Barrier` e comentário indica passagem de jogador/projétil via Physics Matrix, mas `CombatLayerCollision` só configura Player/Enemy/Projectile — se a matrix do Editor não ignorar Barrier×Player e Barrier×Projectile, jogadores podem colidir; se Barrier×Enemy não estiver bloqueando, inimigos atravessam.
-- **Plano de Ação Recomendado:**
-  1. Desativar `ShowAbility` para `CharacterAbilityType.CoraBarrier` em `PlayerAbilityHandler` e `NetworkPlayerAbilityRelay` (barreira física já é o feedback visual).
-  2. Opcional: material/shader leve no prefab da barreira (reutilizar `TelegraphFill` como zona estática) em vez do debug host.
-  3. Auditar **Edit → Project Settings → Physics 2D → Layer Collision Matrix**: Barrier×Enemy = colide; Barrier×Player e Barrier×Projectile = ignorado; validar tag/layer de projéteis aliados (`Projectile`).
-  4. Teste MP: Cora usa Q — um retângulo, inimigo não passa, jogador e projétil aliado passam.
+## [TASK CONCLUÍDA] Duplicação de áreas na Barreira da Cora
+
+- **O que foi feito:** Removido `ShowAbility` para `CharacterAbilityType.CoraBarrier` em `PlayerAbilityHandler` e `NetworkPlayerAbilityRelay` — barreira física (`CoraBarrier` + prefab rede) é o único retângulo visual. `CombatLayerCollision` configura layer `Barrier`: ignora colisão com `Player` e `Projectile`; mantém colisão com `Enemy` e `ProjectileEnemy`. Scripts: `PlayerAbilityHandler.cs`, `NetworkPlayerAbilityRelay.cs`, `CombatLayerCollision.cs`.
+
+- **Como testar (Singleplayer):** Fase com Cora → Q (barreira) → um único retângulo; jogador atravessa; inimigo não.
+
+- **Como testar (Multiplayer/Netcode):** Host + Cliente → Cora usa Q → um retângulo em ambos; projétil aliado (`Projectile`) passa; inimigo bloqueado.
+
+- **Resultado Esperado:** Sem overlay duplicado do `AbilityDebugVisualHost`; colisão 2D coerente com design da habilidade.
+
+---
+
+## Verificação manual
+
+- [x] Cora barreira: um retângulo, colisão correta (código — validar em Play)

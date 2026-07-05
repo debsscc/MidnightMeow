@@ -232,7 +232,8 @@ public class NetworkPlayerAbilityRelay : NetworkBehaviour
             return;
 
         Vector2 origin = transform.position;
-        _debugHost.ShowAbility(abilityType, origin, direction, position, tierData);
+        if (abilityType != CharacterAbilityType.CoraBarrier)
+            _debugHost.ShowAbility(abilityType, origin, direction, position, tierData);
     }
 
     private AbilityTierData ResolveTierDataForAbility(CharacterAbilityType abilityType)

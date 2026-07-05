@@ -1,6 +1,6 @@
 # Reviver por zona (área)
 
-Última revisão: 2026-05-22
+Última revisão: 2026-07-05
 
 ## Comportamento
 
@@ -26,6 +26,18 @@
 - `DownedReviveZoneVisual` — círculo no jogador caído
 - `RevivePromptWorldUI` — texto no aliado vivo
 - `NetworkPlayerRevive` — flag local `IsContributingToRevive` (sem botão Interact)
+- `PlayerDeathPresentation.BeginDownedPresentation` — queda revivível sem dissolve/câmera (MP com aliado vivo)
+- `NetworkPlayerHealth` — timer de inconsciência no servidor (pausa na zona); bleed-out via `_networkIsBleedingOut`
+
+## Downed vs morte final
+
+| Estado | Quando | Apresentação |
+|--------|--------|----------------|
+| **Downed revivível** | Inconsciente + aliado vivo + timer > 0 | Animação de queda, collider desligado, círculo verde |
+| **Bleed-out** | Timer esgotou sem revive | Não pode mais reviver; dissolve/spectator se aliado vivo |
+| **Morte final** | Sem aliados vivos | `BeginDeathPresentation` + derrota |
+
+Última revisão: 2026-07-05
 
 ## Teste em Fase-1
 

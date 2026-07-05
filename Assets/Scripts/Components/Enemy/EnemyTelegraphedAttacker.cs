@@ -26,6 +26,7 @@ public class EnemyTelegraphedAttacker : MonoBehaviour
     private NetworkEnemyController _networkEnemy;
     private NetworkEnemyTelegraphRelay _relay;
     private float _cooldownTimer;
+    private Coroutine _patternRoutine;
     private bool _isExecuting;
 
     public event Action OnAttackWindup;
@@ -82,6 +83,7 @@ public class EnemyTelegraphedAttacker : MonoBehaviour
 
     private void Update()
     {
+        if (GameEvents.IsPaused) return;
         if (pattern == null || _isExecuting) return;
         if (_hitStun != null && _hitStun.IsStunned) return;
 
@@ -93,7 +95,22 @@ public class EnemyTelegraphedAttacker : MonoBehaviour
         if (_targetFinder.CurrentTarget == null || _cooldownTimer > 0f) return;
         if (!IsTargetInRange()) return;
 
-        StartCoroutine(ExecutePatternRoutine());
+        _patternRoutine = StartCoroutine(ExecutePatternRoutine());
+    }
+
+    public void FreezeForPause()
+    {
+        if (_patternRoutine != null)
+        {
+            StopCoroutine(_patternRoutine);
+            _patternRoutine = null;
+        }
+
+        _isExecuting = false;
+        _cooldownTimer = Mathf.Max(_cooldownTimer, 0.25f);
+
+        if (_movement != null)
+            _movement.SetAttackPaused(false);
     }
 
     private bool IsServerAuthority()
@@ -174,6 +191,7 @@ public class EnemyTelegraphedAttacker : MonoBehaviour
             _movement.SetAttackPaused(false);
 
         _isExecuting = false;
+        _patternRoutine = null;
     }
 
     private void BroadcastTelegraphVisualToClients(
@@ -201,7 +219,7 @@ public class EnemyTelegraphedAttacker : MonoBehaviour
         if (!IsServerAuthority() || _isExecuting) return;
         var previous = pattern;
         pattern = overridePattern;
-        StartCoroutine(ExecutePatternRoutine());
+        _patternRoutine = StartCoroutine(ExecutePatternRoutine());
         pattern = previous;
     }
 }

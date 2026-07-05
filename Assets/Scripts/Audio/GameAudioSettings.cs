@@ -129,6 +129,10 @@ public class GameAudioSettings : Singleton<GameAudioSettings>
 
     private static AudioMixer FindProjectMixer()
     {
+        AudioMixer fromResources = Resources.Load<AudioMixer>("NewAudioMixer");
+        if (fromResources != null)
+            return fromResources;
+
         AudioMixer[] mixers = Resources.FindObjectsOfTypeAll<AudioMixer>();
         for (int i = 0; i < mixers.Length; i++)
         {

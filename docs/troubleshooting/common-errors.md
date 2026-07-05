@@ -6,6 +6,32 @@ Referência rápida para mensagens frequentes no Console do Unity / compilador C
 
 ---
 
+---
+
+## Multiplayer — downed vs morte final
+
+### Jogador some da rede / câmera salta ao cair (reviver quebrado)
+
+**Sintoma:** Cliente caído desaparece após alguns segundos; câmera foca no Host; Host trava ao se aproximar do corpo.
+
+**Causa:** `ApplyUnconsciousLocal()` chamava `BeginDeathPresentation(dissolveAfterHold: true)` sempre que havia aliado vivo — o mesmo fluxo de **spectator/dissolve** da morte final, incompatível com reviver por zona.
+
+**Solução no projeto:** usar `BeginDownedPresentation()` quando MP + aliado vivo; timer de inconsciência no servidor (`_networkUnconsciousTimeRemaining`, pausa via `_networkRevivePaused`); bleed-out (`_networkIsBleedingOut`) só então dispara dissolve. Collider desligado no downed via `FinalizeDeathPhysics()`.
+
+**Referência:** [revive-zone.md](../multiplayer/revive-zone.md)
+
+### Carruagem parada no Cliente / HUD em 0% (Fase 2)
+
+**Sintoma:** Host vê carruagem mover e HUD subir; Cliente vê carruagem parada e `Carruagem: 0%`.
+
+**Causa:** `ConfigureCarriage` era chamado só no servidor em `OnNetworkSpawn`; `CarriagePath` não é `NetworkObject`, então o Cliente ficava com `path == null` e `ApplyPathPosition()` não aplicava a NV `_pathProgress`.
+
+**Solução no projeto:** todos os peers chamam `PhaseGameplayContentInstaller.ConfigureCarriage` no spawn + retry local; progresso HUD via `HandlePathProgressChanged`.
+
+**Referência:** [carriage.md](../gameplay/carriage.md)
+
+---
+
 ## Unity Netcode (NGO)
 
 ### CS0618 — `ServerRpcAttribute.RequireOwnership` is obsolete

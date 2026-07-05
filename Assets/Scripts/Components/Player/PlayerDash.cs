@@ -141,8 +141,23 @@ public class PlayerDash : MonoBehaviour
             _nextRechargeTime = Time.time + GetCooldownDuration();
     }
 
+    public void FreezeForPause()
+    {
+        if (_rb != null)
+        {
+            _rb.linearVelocity = Vector2.zero;
+            _rb.angularVelocity = 0f;
+        }
+    }
+
     private void FixedUpdate()
     {
+        if (GameEvents.IsPaused)
+        {
+            FreezeForPause();
+            return;
+        }
+
         if (!_isDashing || _rb == null) return;
 
         float step = _dashSpeedActive * Time.fixedDeltaTime;

@@ -207,6 +207,7 @@ public class NetworkPlayerHealth : NetworkBehaviour
         _networkMaxHealth.OnValueChanged += HandleNetworkMaxHealthChanged;
 
         _networkIsUnconscious.OnValueChanged += HandleUnconsciousChanged;
+        _networkIsBleedingOut.OnValueChanged += HandleBleedingOutChanged;
 
         if (IsServer)
             StartCoroutine(SyncHealthToNetworkAfterInitRoutine());
@@ -238,23 +239,29 @@ public class NetworkPlayerHealth : NetworkBehaviour
         _networkMaxHealth.OnValueChanged -= HandleNetworkMaxHealthChanged;
 
         _networkIsUnconscious.OnValueChanged -= HandleUnconsciousChanged;
+        _networkIsBleedingOut.OnValueChanged -= HandleBleedingOutChanged;
 
     }
 
 
 
     private void Update()
-
     {
-
         if (!IsServer) return;
 
         DownedReviveZoneSystem.TickServer(downedConfig);
 
-        if (!_networkIsUnconscious.Value || _networkIsBleedingOut.Value) return;
+        if (!_networkIsUnconscious.Value || _networkIsBleedingOut.Value)
+            return;
 
-        // Bleed-out/revive pausado até existir animação de down e gameplay de reviver.
+        if (_networkRevivePaused.Value)
+            return;
 
+        float remaining = _networkUnconsciousTimeRemaining.Value - Time.deltaTime;
+        _networkUnconsciousTimeRemaining.Value = Mathf.Max(0f, remaining);
+
+        if (_networkUnconsciousTimeRemaining.Value <= 0f)
+            EnterBleedingOutOnServer();
     }
 
 
@@ -369,6 +376,16 @@ public class NetworkPlayerHealth : NetworkBehaviour
         MultiplayerGameManager.Instance?.RegisterPlayerRevived();
     }
 
+    private void EnterBleedingOutOnServer()
+    {
+        if (!IsServer || !_networkIsUnconscious.Value || _networkIsBleedingOut.Value)
+            return;
+
+        _networkIsBleedingOut.Value = true;
+        _networkReviveProgress.Value = 0f;
+        _networkRevivePaused.Value = false;
+    }
+
 
 
     private void HandleNetworkHealthChanged(float oldValue, float newValue)
@@ -449,11 +466,12 @@ public class NetworkPlayerHealth : NetworkBehaviour
 
         OnNetworkPlayerDowned?.Invoke(OwnerClientId);
 
-        bool dissolveAfterHold = ShouldDissolveAfterDeathHold();
-
         if (_deathPresentation != null)
         {
-            _deathPresentation.BeginDeathPresentation(dissolveAfterHold);
+            if (ShouldUseDownedPresentation())
+                _deathPresentation.BeginDownedPresentation();
+            else
+                _deathPresentation.BeginDeathPresentation(ShouldDissolveAfterDeathHold());
             return;
         }
 
@@ -461,7 +479,15 @@ public class NetworkPlayerHealth : NetworkBehaviour
             animationHandler.HandleDeath();
     }
 
-    private bool ShouldDissolveAfterDeathHold()
+    private bool ShouldUseDownedPresentation()
+    {
+        if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening)
+            return false;
+
+        return HasAliveAlly();
+    }
+
+    private bool HasAliveAlly()
     {
         NetworkPlayerHealth[] players =
             Object.FindObjectsByType<NetworkPlayerHealth>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
@@ -479,28 +505,41 @@ public class NetworkPlayerHealth : NetworkBehaviour
         return false;
     }
 
+    private bool ShouldDissolveAfterDeathHold()
+    {
+        return HasAliveAlly();
+    }
+
+    private void HandleBleedingOutChanged(bool wasBleedingOut, bool isBleedingOut)
+    {
+        if (!isBleedingOut || wasBleedingOut)
+            return;
+
+        if (!HasAliveAlly())
+            return;
+
+        if (_deathPresentation != null)
+            _deathPresentation.BeginDeathPresentation(dissolveAfterHold: true);
+    }
+
 
 
     private void ApplyReviveLocal()
-
     {
-
         if (IsOwner)
-
         {
-
             EnableGameplayComponents();
 
             if (_spectator != null)
-
                 _spectator.ExitSpectatorMode();
-
         }
 
+        _deathPresentation?.CancelPresentation();
 
+        if (TryGetComponent<PlayerAnimationHandler>(out var animationHandler))
+            animationHandler.RestoreFromDowned();
 
         OnNetworkPlayerRevived?.Invoke(OwnerClientId);
-
     }
 
 

@@ -237,7 +237,8 @@ public class PlayerAbilityHandler : MonoBehaviour
             _cooldownTotals[slot] = cooldown;
         }
 
-        _debugHost?.ShowAbility(definition.abilityType, origin, aimDirection, placement, tierData);
+        if (definition.abilityType != CharacterAbilityType.CoraBarrier)
+            _debugHost?.ShowAbility(definition.abilityType, origin, aimDirection, placement, tierData);
         OnAbilityActivated?.Invoke(definition.abilityType);
         _abilityRelay?.ReportAbilityActivated(definition.abilityType, placement, aimDirection);
     }

@@ -130,6 +130,9 @@ public class GameFlowOrchestrator : MonoBehaviour
             MultiplayerGameManager mp = MultiplayerGameManager.Instance;
             if (mp != null)
             {
+                if (mp.IsResumeCountdownActive)
+                    return;
+
                 mp.RequestPauseRpc();
                 return;
             }
@@ -155,9 +158,6 @@ public class GameFlowOrchestrator : MonoBehaviour
 
     public void RequestResume()
     {
-        if (!IsPauseActive)
-            return;
-
         if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening)
         {
             MultiplayerGameManager mp = MultiplayerGameManager.Instance;
@@ -167,6 +167,9 @@ public class GameFlowOrchestrator : MonoBehaviour
                 return;
             }
         }
+
+        if (!IsPauseActive)
+            return;
 
         GameManager2 local = FindFirstObjectByType<GameManager2>();
         if (local != null)

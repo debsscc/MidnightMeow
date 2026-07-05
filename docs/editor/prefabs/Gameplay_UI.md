@@ -30,6 +30,12 @@ Canvas de HUD principal (vida, upgrades, magículas da fase) durante gameplay si
 - **Escala do root:** `Gameplay_UI` estava com `localScale (0,0,0)` — corrigido para `(1,1,1)`.
 - **`GameplayHudController`:** camadas `GameplayHudLayers` com fallback **apenas** para widgets ausentes; reutiliza `HordeIndicator` da cena quando presente.
 
+## Correção 2026-07-05
+
+- **`PauseOverlayLayer`:** overlays (pause, baú) reparentados para camada acima da HUD de habilidades via `GameplayHudController.BringOverlayToFront`.
+- **`AbilityHudLayer`:** `PlayerAbilityHud` deixa de usar `SetAsLastSibling` no canvas raiz.
+- **`CanvasScaler`:** `matchWidthOrHeight = 0.5` aplicado em runtime no gameplay (`GameplayHudController`) e no menu (`MainMenuController`).
+
 ## HUD de habilidades (`PlayerAbilityHud`)
 
 - Posição padrão: **canto inferior esquerdo** (fallback procedural).

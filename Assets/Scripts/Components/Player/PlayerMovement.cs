@@ -92,8 +92,26 @@ public class PlayerMovement : MonoBehaviour
             _lastDustFlipSign = 0;
     }
 
+    public void FreezeForPause()
+    {
+        _moveDirection = Vector2.zero;
+        _isMoving = false;
+        if (_rb != null)
+        {
+            _rb.linearVelocity = Vector2.zero;
+            _rb.angularVelocity = 0f;
+        }
+    }
+
     private void FixedUpdate()
     {
+        if (GameEvents.IsPaused)
+        {
+            if (_rb != null)
+                _rb.linearVelocity = Vector2.zero;
+            return;
+        }
+
         // Regra de Ouro (Baixo Acoplamento): 
         // Se o Dash ou Knockback estiverem ocorrendo, o PlayerMovement cede o controle do Rigidbody.
         if (_dash != null && _dash.IsDashing)

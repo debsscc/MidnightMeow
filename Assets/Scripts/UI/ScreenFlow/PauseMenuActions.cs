@@ -240,6 +240,25 @@ public class PauseMenuActions : MonoBehaviour
             _restartButton.interactable = solo;
             _restartButton.gameObject.SetActive(solo);
         }
+
+        RefreshResumeInteractable();
+    }
+
+    public void RefreshResumeInteractable()
+    {
+        if (_resumeButton == null)
+            return;
+
+        bool countdownActive = MultiplayerGameManager.Instance != null
+                               && MultiplayerGameManager.Instance.IsResumeCountdownActive;
+
+        if (!countdownActive)
+        {
+            GameManager2 gameManager = FindFirstObjectByType<GameManager2>();
+            countdownActive = gameManager != null && gameManager.IsResumeCountdownActive;
+        }
+
+        _resumeButton.interactable = !countdownActive;
     }
 
     private Button FindQuitAppEntryButton()

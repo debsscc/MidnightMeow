@@ -171,11 +171,7 @@ public class MeleeAttackVisual : MonoBehaviour
         _zoneRenderer.sprite = CreateUnitSprite();
         _zoneRenderer.sortingOrder = visualConfig != null ? visualConfig.sortingOrder : 48;
 
-        Shader shader = Shader.Find("MidnightMeow/MeleeHitWave");
-        if (shader == null)
-            shader = Shader.Find("Sprites/Default");
-
-        _materialInstance = new Material(shader);
+        _materialInstance = CombatVisualMaterials.CreateMeleeHitWaveInstance();
         _zoneRenderer.material = _materialInstance;
         _zoneRenderer.enabled = false;
     }

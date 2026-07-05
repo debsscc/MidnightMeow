@@ -20,6 +20,9 @@ public class WaveGenerator : MonoBehaviour
     private int _totalKilledInPhase = 0;
     private List<GameObject> _currentWaveEnemyPool = new List<GameObject>();
     private bool _isSpawning = false;
+    private bool _spawnPaused;
+
+    public void SetSpawnPaused(bool paused) => _spawnPaused = paused;
 
     /// <summary>
     /// Delegate opcional de spawn. Se definido, usado no lugar de Instantiate.
@@ -52,6 +55,9 @@ public class WaveGenerator : MonoBehaviour
 
     private IEnumerator FirstWaveDelayRoutine()
     {
+        while (_spawnPaused || GameEvents.IsPaused)
+            yield return new WaitForSecondsRealtime(0.1f);
+
         yield return new WaitForSeconds(_currentSettings.firstWaveDelay);
         StartCoroutine(SpawnWaveRoutine());
     }
@@ -79,6 +85,9 @@ public class WaveGenerator : MonoBehaviour
 
         while (_currentWaveEnemyPool.Count > 0)
         {
+            while (_spawnPaused || GameEvents.IsPaused)
+                yield return new WaitForSecondsRealtime(0.1f);
+
             int randomIndex = Random.Range(0, _currentWaveEnemyPool.Count);
             GameObject enemyPrefab = _currentWaveEnemyPool[randomIndex];
             _currentWaveEnemyPool.RemoveAt(randomIndex);

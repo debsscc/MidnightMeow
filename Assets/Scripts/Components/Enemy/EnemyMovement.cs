@@ -74,12 +74,30 @@ public class EnemyMovement : MonoBehaviour
         _hasRandomDestination = false;
     }
 
+    public void FreezeForPause()
+    {
+        if (_agent == null)
+            return;
+
+        _agent.isStopped = true;
+        _agent.velocity = Vector3.zero;
+        _agent.ResetPath();
+        _hasRandomDestination = false;
+    }
+
     private void Update()
     {
         if (stats == null) return;
         if (_health != null && !_health.IsAlive) return;
 
         if (_attackPaused)
+        {
+            _agent.isStopped = true;
+            _agent.velocity = Vector3.zero;
+            return;
+        }
+
+        if (GameEvents.IsPaused)
         {
             _agent.isStopped = true;
             _agent.velocity = Vector3.zero;

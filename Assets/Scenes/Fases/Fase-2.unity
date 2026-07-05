@@ -1118,7 +1118,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3fcb839ec57722443b6a44cba58d542b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameManager2
-  pauseMenuObject: {fileID: 0}
+  pauseMenuObject: {fileID: 201441933}
   sceneOverlayController: {fileID: 0}
   pauseOverlayId: pause
   gameConfig: {fileID: 11400000, guid: ca1e29a8a0f38c04e845505abd2b0638, type: 2}

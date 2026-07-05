@@ -554,6 +554,28 @@ public class PlayerAnimationHandler : MonoBehaviour
             _collider2D.enabled = false;
     }
 
+    /// <summary>Restaura física e animator após reviver de inconsciência.</summary>
+    public void RestoreFromDowned()
+    {
+        _deathPresentationActive = false;
+
+        if (_rb != null)
+        {
+            _rb.linearVelocity = Vector2.zero;
+            _rb.simulated = true;
+        }
+
+        if (_collider2D != null)
+            _collider2D.enabled = true;
+
+        if (_animator != null)
+        {
+            _animator.speed = _defaultAnimatorSpeed;
+            _animator.updateMode = AnimatorUpdateMode.Normal;
+            _animator.SetFloat(_hashMoveSpeed, 0f);
+        }
+    }
+
     private bool IsInDeathPresentation()
     {
         if (_deathPresentationActive)

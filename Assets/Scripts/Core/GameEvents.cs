@@ -18,6 +18,7 @@ public static class GameEvents
     public static event Action<int, int, int> OnPhaseObjectiveStatusChanged;
     // Evento global disparado quando o jogo entra/ Sai do estado de pause
     public static event Action<bool> OnPauseChanged;
+    public static bool IsPaused { get; private set; }
     // Evento global disparado quando todas as waves são completadas
     public static event Action OnNightEnded;
     // Evento global disparado quando o jogador morre
@@ -83,6 +84,13 @@ public static class GameEvents
 
     public static void InvokePauseChanged(bool paused)
     {
+        IsPaused = paused;
+
+        if (paused)
+            GameplayPauseController.ApplyImmediateFreeze();
+        else
+            GameplayPauseController.ReleaseSpawners();
+
         OnPauseChanged?.Invoke(paused);
     }
 

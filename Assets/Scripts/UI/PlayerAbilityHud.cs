@@ -113,7 +113,8 @@ public class PlayerAbilityHud : MonoBehaviour
             if (hudTheme != null)
                 existing.ApplyTheme(hudTheme);
             existing.EnsureBuilt();
-            existing.transform.SetAsLastSibling();
+            if (!IsUnderGameplayHudLayers(parent))
+                existing.transform.SetAsLastSibling();
             return;
         }
 
@@ -124,7 +125,6 @@ public class PlayerAbilityHud : MonoBehaviour
     {
         GameObject go = new GameObject("PlayerAbilityHud", typeof(RectTransform), typeof(PlayerAbilityHud));
         go.transform.SetParent(parent, false);
-        go.transform.SetAsLastSibling();
         go.layer = parent.gameObject.layer;
         PlayerAbilityHud hud = go.GetComponent<PlayerAbilityHud>();
         if (hudTheme != null)
@@ -147,7 +147,7 @@ public class PlayerAbilityHud : MonoBehaviour
 
         float spacing = theme != null ? theme.slotSpacing : 88f;
         float slotSize = theme != null ? theme.slotSize : 76f;
-        Vector2 anchor = theme != null ? theme.anchoredPosition : new Vector2(28f, 28f);
+        Vector2 anchor = ResolveHudAnchorPosition();
 
         _root.anchorMin = new Vector2(0f, 0f);
         _root.anchorMax = new Vector2(0f, 0f);
@@ -406,6 +406,37 @@ public class PlayerAbilityHud : MonoBehaviour
         return locale == null || locale.Identifier.Code.StartsWith("pt", System.StringComparison.OrdinalIgnoreCase);
     }
 
+    private static bool IsUnderGameplayHudLayers(Transform node)
+    {
+        while (node != null)
+        {
+            if (node.name == GameplayHudController.LayersRootName)
+                return true;
+            node = node.parent;
+        }
+
+        return false;
+    }
+
+    private Vector2 ResolveHudAnchorPosition()
+    {
+        Vector2 margin = theme != null ? theme.anchoredPosition : new Vector2(28f, 28f);
+        Canvas canvas = GetComponentInParent<Canvas>();
+        if (canvas == null)
+            return margin;
+
+        RectTransform canvasRect = canvas.transform as RectTransform;
+        if (canvasRect == null)
+            return margin;
+
+        Rect safe = Screen.safeArea;
+        Camera cam = canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera;
+        if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, safe.min, cam, out Vector2 localMin))
+            return margin;
+
+        return new Vector2(margin.x + localMin.x, margin.y + localMin.y);
+    }
+
     private void BuildUi()
     {
         if (_root != null && _slots[0] != null)
@@ -423,7 +454,7 @@ public class PlayerAbilityHud : MonoBehaviour
         float slotSize = theme != null ? theme.slotSize : 76f;
         int labelSize = theme != null ? theme.labelFontSize : 16;
         int timerSize = theme != null ? theme.timerFontSize : 22;
-        Vector2 anchor = theme != null ? theme.anchoredPosition : new Vector2(28f, 28f);
+        Vector2 anchor = ResolveHudAnchorPosition();
         _root.anchoredPosition = anchor;
         _root.sizeDelta = new Vector2(spacing * 3f + slotSize + 20f, slotSize + 20f);
 

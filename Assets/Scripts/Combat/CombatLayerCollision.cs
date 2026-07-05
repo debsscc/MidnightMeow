@@ -25,6 +25,7 @@ public static class CombatLayerCollision
         int enemy = LayerMask.NameToLayer("Enemy");
         int projectile = LayerMask.NameToLayer("Projectile");
         int projectileEnemy = LayerMask.NameToLayer("ProjectileEnemy");
+        int barrier = LayerMask.NameToLayer("Barrier");
 
         SetIgnore(player, enemy, true);
         SetIgnore(player, projectile, true);
@@ -33,6 +34,14 @@ public static class CombatLayerCollision
         SetIgnore(projectile, enemy, false);
         SetIgnore(projectileEnemy, enemy, true);
         SetIgnore(projectileEnemy, projectile, true);
+
+        if (barrier >= 0)
+        {
+            SetIgnore(barrier, player, true);
+            SetIgnore(barrier, projectile, true);
+            SetIgnore(barrier, enemy, false);
+            SetIgnore(barrier, projectileEnemy, false);
+        }
     }
 
     public static bool IsPlayerEnemyCollisionIgnored()

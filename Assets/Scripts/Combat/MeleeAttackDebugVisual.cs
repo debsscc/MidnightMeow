@@ -7,7 +7,7 @@ using UnityEngine;
 public class MeleeAttackDebugVisual : MonoBehaviour
 {
     [SerializeField] private bool drawDebugGizmos = true;
-    [SerializeField] private bool showInPlayMode = true;
+    [SerializeField] private bool showInPlayMode = false;
     [SerializeField] private Color fillColor = new Color(1f, 0.35f, 0.1f, 0.25f);
     [SerializeField] private Color outlineColor = new Color(1f, 0.9f, 0.2f, 0.9f);
     [SerializeField] private float lineWidth = 0.04f;
@@ -96,10 +96,7 @@ public class MeleeAttackDebugVisual : MonoBehaviour
         _lineRenderer.useWorldSpace = true;
         _lineRenderer.loop = false;
         _lineRenderer.widthMultiplier = lineWidth;
-        var shader = Shader.Find("MidnightMeow/AbilityZoneFill");
-        if (shader == null)
-            shader = Shader.Find("Sprites/Default");
-        _lineRenderer.material = new Material(shader);
+        _lineRenderer.material = CombatVisualMaterials.CreateAbilityZoneFillInstance();
         _lineRenderer.startColor = outlineColor;
         _lineRenderer.endColor = outlineColor;
         _lineRenderer.sortingOrder = 50;
@@ -107,14 +104,18 @@ public class MeleeAttackDebugVisual : MonoBehaviour
 
     private void OnDrawGizmos()
     {
+#if UNITY_EDITOR
         if (!drawDebugGizmos) return;
         DrawGizmoShape();
+#endif
     }
 
     private void OnDrawGizmosSelected()
     {
+#if UNITY_EDITOR
         if (!drawDebugGizmos) return;
         DrawGizmoShape();
+#endif
     }
 
     private void DrawGizmoShape()
