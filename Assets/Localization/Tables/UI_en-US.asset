@@ -443,6 +443,71 @@ MonoBehaviour:
     m_Localized: Nyxie's skills
     m_Metadata:
       m_Items: []
+  - m_Id: 7990057284415488
+    m_Localized: Normal Attack
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7990018222862336
+    m_Localized: Barrier
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7989996680916992
+    m_Localized: Charge
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7989939269283840
+    m_Localized: Blocks enemies;
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7989884269375488
+    m_Localized: Directional area attack.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7989861188120576
+    m_Localized: 'Range and zone-control specialist: projectiles, barriers, and ground
+      AoE.
+
+
+
+'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7989830523564032
+    m_Localized: 'Melee specialist: knockback, area damage, and cleave passive.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7999254541643776
+    m_Localized: Creates a magical pool on the ground that deals damage over time to enemies in the area.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7999423488208896
+    m_Localized: Materializes a barrier that blocks enemies. Touching it stuns them.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8001066824904704
+    m_Localized: Push
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8001301450076160
+    m_Localized: Pushes enemies back with the shield and applies slow for 3 seconds.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8001362317815808
+    m_Localized: Frontal melee slash. With the passive, hits up to 3 nearby enemies.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8001434359181312
+    m_Localized: Fires feathers at range. Projectiles can ricochet off walls.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8001531872555008
+    m_Localized: Directional charge that damages all enemies in a rectangular zone ahead.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8003577002602496
+    m_Localized: Pool
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

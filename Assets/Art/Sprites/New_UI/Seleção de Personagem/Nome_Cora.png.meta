@@ -1,10 +1,19 @@
 fileFormatVersion: 2
-guid: 4b03c39a2aac1e04d865c521d18f8060
+guid: ace3b1dc80820d944a00133fb1e761ea
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 4866453261023410965
-    second: Captura de tela 2026-07-05 160045_0
+      213: 7500015051951241779
+    second: Nome_Cora_0
+  - first:
+      213: -9059108144245277702
+    second: Nome_Cora_1
+  - first:
+      213: -5085100471871971787
+    second: Nome_Cora_2
+  - first:
+      213: -4333672810653225990
+    second: Nome_Cora_3
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -72,10 +81,10 @@ TextureImporter:
   platformSettings:
   - serializedVersion: 4
     buildTarget: DefaultTexturePlatform
-    maxTextureSize: 2048
+    maxTextureSize: 4096
     resizeAlgorithm: 0
     textureFormat: -1
-    textureCompression: 1
+    textureCompression: 0
     compressionQuality: 50
     crunchedCompression: 0
     allowsAlphaSplitting: 0
@@ -126,13 +135,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Captura de tela 2026-07-05 160045_0
+      name: Nome_Cora_0
       rect:
         serializedVersion: 2
-        x: 0
-        y: 0
-        width: 238
-        height: 90
+        x: 56
+        y: 24
+        width: 129
+        height: 167
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -141,8 +150,74 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 51b7753157d198340800000000000000
-      internalID: 4866453261023410965
+      spriteID: 33af2a5f3f7651860800000000000000
+      internalID: 7500015051951241779
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Nome_Cora_1
+      rect:
+        serializedVersion: 2
+        x: 189
+        y: 25
+        width: 133
+        height: 152
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: afb7968d325974280800000000000000
+      internalID: -9059108144245277702
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Nome_Cora_2
+      rect:
+        serializedVersion: 2
+        x: 332
+        y: 22
+        width: 108
+        height: 156
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 53e56e610181e69b0800000000000000
+      internalID: -5085100471871971787
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Nome_Cora_3
+      rect:
+        serializedVersion: 2
+        x: 448
+        y: 21
+        width: 131
+        height: 155
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: afbee3c1a83bbd3c0800000000000000
+      internalID: -4333672810653225990
       vertices: []
       indices: 
       edges: []
@@ -161,7 +236,10 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      Captura de tela 2026-07-05 160045_0: 4866453261023410965
+      Nome_Cora_0: 7500015051951241779
+      Nome_Cora_1: -9059108144245277702
+      Nome_Cora_2: -5085100471871971787
+      Nome_Cora_3: -4333672810653225990
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

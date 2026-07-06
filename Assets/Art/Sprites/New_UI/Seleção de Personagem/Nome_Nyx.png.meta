@@ -1,10 +1,16 @@
 fileFormatVersion: 2
-guid: 1687cf955a07275418cc669926404a7e
+guid: 5514de9dc865f0f4b9a10b27fa53cf41
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -8792952081301296165
-    second: Cora_Loading_2_0
+      213: 2072544205840333454
+    second: Nome_Nyx_0
+  - first:
+      213: -452278223486254920
+    second: Nome_Nyx_1
+  - first:
+      213: -4113818819866569104
+    second: Nome_Nyx_2
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -126,13 +132,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Cora_Loading_2_0
+      name: Nome_Nyx_0
       rect:
         serializedVersion: 2
-        x: 165
-        y: 159
-        width: 469
-        height: 541
+        x: 73
+        y: 25
+        width: 127
+        height: 170
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -141,8 +147,52 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: bdb210b4ba829f580800000000000000
-      internalID: -8792952081301296165
+      spriteID: e8a386279f723cc10800000000000000
+      internalID: 2072544205840333454
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Nome_Nyx_1
+      rect:
+        serializedVersion: 2
+        x: 231
+        y: 19
+        width: 141
+        height: 173
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8b0057d1a5f29b9f0800000000000000
+      internalID: -452278223486254920
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Nome_Nyx_2
+      rect:
+        serializedVersion: 2
+        x: 388
+        y: 23
+        width: 170
+        height: 167
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 076598b4497c8e6c0800000000000000
+      internalID: -4113818819866569104
       vertices: []
       indices: 
       edges: []
@@ -161,7 +211,9 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      Cora_Loading_2_0: -8792952081301296165
+      Nome_Nyx_0: 2072544205840333454
+      Nome_Nyx_1: -452278223486254920
+      Nome_Nyx_2: -4113818819866569104
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

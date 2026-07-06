@@ -22,14 +22,24 @@ public static class HubSceneNavigator
         if (loadKind != SceneLoadKind.SinglePlayer)
             return false;
 
+        if (sceneName is not (HubBaseScene or HubOverlayScene))
+            return false;
+
+        bool preparationLoaded = IsBaseLoaded();
+        bool overlayLoaded = IsOverlayLoaded();
+
+        if (GameSessionContext.CharactersOrigin == GameSessionContext.CharactersScreenOrigin.Preparation
+            && preparationLoaded)
+            return true;
+
+        if (preparationLoaded && overlayLoaded)
+            return true;
+
         if (GameSessionContext.IsSinglePlayer)
             return false;
 
         NetworkManager net = NetworkManager.Singleton;
-        if (net == null || !net.IsListening)
-            return false;
-
-        return sceneName is HubBaseScene or HubOverlayScene;
+        return net != null && net.IsListening && preparationLoaded;
     }
 
     public static bool IsOverlayLoaded()
@@ -200,7 +210,7 @@ public static class HubSceneNavigator
     }
 
     private static bool ShouldToggleHubUiRoot(string rootName) =>
-        rootName is "Menu" or "UIManager" or "Main Camera" or "---- ScreenFlow ----";
+        rootName is "Menu" or "UIManager" or "Main Camera" or "Canvas" or "---- ScreenFlow ----";
 
     private static IEnumerator ReportLoadingProgress(float minLoadingTime, AsyncOperation asyncLoad = null)
     {

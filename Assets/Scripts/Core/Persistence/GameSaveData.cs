@@ -38,10 +38,7 @@ public class GameSaveData
     public CharacterSaveData cora = new CharacterSaveData { characterType = LobbyCharacterType.CharacterB };
     public LobbyCharacterType lastSelectedCharacter = LobbyCharacterType.Default;
 
-    public LobbyCharacterType SelectedCharacter =>
-        lastSelectedCharacter != LobbyCharacterType.Default
-            ? lastSelectedCharacter
-            : LobbyCharacterType.CharacterA;
+    public LobbyCharacterType SelectedCharacter => lastSelectedCharacter;
 
     public CharacterSaveData GetCharacterData(LobbyCharacterType type)
     {

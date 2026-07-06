@@ -245,7 +245,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 3411167597846528
-    m_Localized: Carregando prepara\xE7\xE3o...
+    m_Localized: "Carregando prepara\xE7\xE3o..."
     m_Metadata:
       m_Items: []
   - m_Id: 3411177597846528
@@ -438,6 +438,72 @@ MonoBehaviour:
       m_Items: []
   - m_Id: 7626404110544896
     m_Localized: Habilidades da Nyxie
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7989996680916992
+    m_Localized: Investida
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7990018222862336
+    m_Localized: Barreira
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7990057284415488
+    m_Localized: Ataque Normal
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7989939269283840
+    m_Localized: Bloqueia inimigos;
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7989884269375488
+    m_Localized: "Ataque em \xE1rea direcional."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7989861188120576
+    m_Localized: "Especialista em alcance e zona: proj\xE9teis, barreiras e dano
+      em \xE1rea.\r\n\r\n"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7989830523564032
+    m_Localized: "Especialista em melee: knockback, dano em \xE1rea e cleave passivo."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7999254541643776
+    m_Localized: "Cria uma po\xE7a m\xE1gica no ch\xE3o que causa dano cont\xEDnuo
+      aos inimigos na \xE1rea."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7999423488208896
+    m_Localized: Materializa uma barreira que bloqueia inimigos. Quem tocar nela
+      fica atordoado.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8001066824904704
+    m_Localized: "Empurr\xE3o"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8001301450076160
+    m_Localized: "Empurra inimigos com o escudo e aplica lentid\xE3o por 3 segundos."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8001362317815808
+    m_Localized: "Ataque corpo a corpo frontal. Com a passiva, atinge at\xE9 3 inimigos
+      pr\xF3ximos."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8001434359181312
+    m_Localized: "Dispara penas \xE0 dist\xE2ncia. Os proj\xE9teis podem ricochetear
+      nas paredes."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8001531872555008
+    m_Localized: "Investida em \xE1rea retangular \xE0 frente, causando dano a todos
+      os inimigos na zona."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8003577002602496
+    m_Localized: "Po\xE7a"
     m_Metadata:
       m_Items: []
   references:

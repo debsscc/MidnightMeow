@@ -203,7 +203,7 @@ public static class ScreenFlowStateMachine
 
         GameSessionContext.ResetContractRound();
 
-
+        ResetPreparationCharacterSelection();
 
         string route = SceneManager.GetActiveScene().name == "VictoryScene"
 
@@ -427,11 +427,25 @@ public static class ScreenFlowStateMachine
 
     }
 
+    public static void ResetPreparationCharacterSelection()
+    {
+        LobbySelectionStore.Clear();
+
+        SaveProfileStore save = SaveProfileStore.Instance;
+        if (save?.Active == null)
+            return;
+
+        save.Active.lastSelectedCharacter = LobbyCharacterType.Default;
+        save.SaveActive();
+    }
+
     private static void ResetPreparationContractForNewLobbyEntry()
     {
         PreparationSessionManager session = PreparationSessionManager.Instance;
         if (session != null && session.IsServer)
             session.ResetRound();
+
+        ResetPreparationCharacterSelection();
 
         if (!GameSessionContext.IsSinglePlayer)
             return;

@@ -1,3 +1,4 @@
+using System;
 using TMPro;
 using Unity.Netcode;
 using UnityEngine;
@@ -5,19 +6,28 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 /// <summary>
-/// Hub de preparação: escolha de contrato, personagem e confirmação de pronto (sem ordem obrigatória).
+/// Hub de preparação: escolha de fase/contrato, personagem (via Characters) e confirmação de pronto.
 /// </summary>
 [DisallowMultipleComponent]
 public class PreparationScreenController : MonoBehaviour
 {
     private const int ContractCount = 3;
+    private static readonly Color IconSelectedColor = Color.white;
+    private static readonly Color IconDeselectedColor = new(0.55f, 0.5f, 0.48f, 1f);
+
+    private static Sprite _nixieIconSelectedSprite;
+    private static Sprite _nixieIconDeselectedSprite;
+    private static Sprite _coraIconSelectedSprite;
+    private static Sprite _coraIconDeselectedSprite;
 
     [SerializeField] private ContractDefinition[] contracts;
     [SerializeField] private Button[] contractButtons;
+    [SerializeField] private GameObject[] contractCompletionBadges = System.Array.Empty<GameObject>();
+    [SerializeField] private GameObject[] contractPreviewImages = System.Array.Empty<GameObject>();
+    [SerializeField] private Image nixieIcon;
+    [SerializeField] private Image coraIcon;
     [SerializeField] private TMP_Text tooltipText;
-    [SerializeField] private TMP_Text selectedCharacterText;
     [SerializeField] private Button chooseCharacterButton;
-    [SerializeField] private Button confirmContractButton;
     [SerializeField] private Button backButton;
     [SerializeField] private Button leaveLobbyButton;
     [SerializeField] private Button readyButton;
@@ -25,14 +35,13 @@ public class PreparationScreenController : MonoBehaviour
     [SerializeField] private bool buildPlaceholderIfMissing = true;
 
     private int _localSelectedContract = -1;
-    private bool _localReady;
-    private LobbyCharacterType _soloCharacter = LobbyCharacterType.Default;
     private bool _buttonsWired;
     private PreparationSessionManager _subscribedSession;
 
     private void Awake()
     {
         ResolveContracts();
+        BindSceneReferences();
         EnsureUi();
         WireButtons();
     }
@@ -43,14 +52,15 @@ public class PreparationScreenController : MonoBehaviour
         EnsureUi();
         if (!_buttonsWired)
             WireButtons();
+
+        EnsureDefaultContract();
         RefreshView();
         ScreenFlowSceneReadiness.MarkReadyIfPending("Preparation");
     }
 
     private void EnsureUi()
     {
-        bool missingUi = contractButtons == null || contractButtons.Length == 0
-                         || readyButton == null || confirmContractButton == null;
+        bool missingUi = contractButtons == null || contractButtons.Length == 0 || readyButton == null;
 
         if (buildPlaceholderIfMissing && missingUi)
             BuildPlaceholderUI();
@@ -64,17 +74,10 @@ public class PreparationScreenController : MonoBehaviour
         ContractSceneResolver.FillMissingSlots(contracts);
     }
 
-    private static ContractDefinition FindContractAsset(string assetName)
-    {
-        return ContractSceneResolver.ResolveContract(
-            assetName == "Contract_1" ? 0 : assetName == "Contract_2" ? 1 : assetName == "Contract_3" ? 2 : -1);
-    }
-
     public void RefreshFromHubNavigation()
     {
         RestoreSinglePlayerContractState();
         TrySubscribeSession();
-        RefreshCharacterLabel();
         RefreshView();
     }
 
@@ -94,7 +97,7 @@ public class PreparationScreenController : MonoBehaviour
     {
         PreparationSessionManager.OnInstanceAvailable += TrySubscribeSession;
         TrySubscribeSession();
-        RefreshCharacterLabel();
+        EnsureDefaultContract();
         RefreshView();
         ScreenFlowPlaceholderFactory.ApplyMenuCursor();
     }
@@ -129,25 +132,160 @@ public class PreparationScreenController : MonoBehaviour
         _subscribedSession = null;
     }
 
+    private void BindSceneReferences()
+    {
+        Transform canvas = FindSceneCanvas();
+        if (canvas == null)
+            return;
+
+        Transform buttonsDir = FindDeep(canvas, "Buttons_Dir");
+        if (buttonsDir != null && (contractButtons == null || contractButtons.Length == 0))
+        {
+            contractButtons = new Button[ContractCount];
+            contractCompletionBadges = new GameObject[ContractCount];
+            for (int i = 0; i < ContractCount; i++)
+            {
+                string phaseName = $"Fase {i + 1}";
+                Transform phase = buttonsDir.Find(phaseName);
+                if (phase == null)
+                    continue;
+
+                contractButtons[i] = phase.GetComponent<Button>();
+                Transform badge = phase.Find("Selected_Badge");
+                if (badge != null)
+                    contractCompletionBadges[i] = badge.gameObject;
+            }
+        }
+
+        Transform contractImagesRoot = FindDeep(canvas, "Contract_images");
+        if (contractImagesRoot != null && (contractPreviewImages == null || contractPreviewImages.Length == 0))
+        {
+            contractPreviewImages = new GameObject[ContractCount];
+            for (int i = 0; i < ContractCount; i++)
+            {
+                Transform preview = contractImagesRoot.Find($"Contract{i + 1}");
+                if (preview != null)
+                    contractPreviewImages[i] = preview.gameObject;
+            }
+        }
+
+        Transform iconsRoot = FindDeep(canvas, "Icons_Characters");
+        if (iconsRoot != null)
+        {
+            if (nixieIcon == null)
+                nixieIcon = iconsRoot.Find("Nyxie")?.GetComponent<Image>();
+            if (coraIcon == null)
+                coraIcon = iconsRoot.Find("Cora")?.GetComponent<Image>();
+        }
+
+        if (chooseCharacterButton == null)
+            chooseCharacterButton = FindDeep(canvas, "ChooseCharacter")?.GetComponent<Button>();
+
+        if (readyButton == null)
+            readyButton = FindDeep(canvas, "Ready")?.GetComponent<Button>();
+
+        if (backButton == null)
+            backButton = FindDeep(canvas, "Btn_Back")?.GetComponent<Button>();
+
+        if (leaveLobbyButton == null)
+            leaveLobbyButton = FindDeep(canvas, "Lobby")?.GetComponent<Button>();
+    }
+
+    private static Transform FindSceneCanvas()
+    {
+        Canvas[] canvases = FindObjectsByType<Canvas>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        for (int i = 0; i < canvases.Length; i++)
+        {
+            Canvas canvas = canvases[i];
+            if (canvas != null && canvas.gameObject.scene.name == "Preparation")
+                return canvas.transform;
+        }
+
+        return null;
+    }
+
+    private static Transform FindDeep(Transform root, string objectName)
+    {
+        if (root == null)
+            return null;
+
+        if (root.name == objectName)
+            return root;
+
+        for (int i = 0; i < root.childCount; i++)
+        {
+            Transform found = FindDeep(root.GetChild(i), objectName);
+            if (found != null)
+                return found;
+        }
+
+        return null;
+    }
+
+    private void EnsureDefaultContract()
+    {
+        if (_localSelectedContract >= 0)
+            return;
+
+        if (!GameSessionContext.IsSinglePlayer)
+        {
+            PreparationSessionManager session = PreparationSessionManager.Instance;
+            if (session != null && session.SelectedContractIndex >= 0)
+            {
+                _localSelectedContract = session.SelectedContractIndex;
+                return;
+            }
+        }
+
+        SaveProfileStore save = SaveProfileStore.Instance;
+        if (save?.Active != null && save.Active.selectedContractIndex >= 0)
+        {
+            _localSelectedContract = save.Active.selectedContractIndex;
+            ContractSceneResolver.ApplyToSession(_localSelectedContract);
+            return;
+        }
+
+        if (!IsContractUnlocked(0))
+            return;
+
+        _localSelectedContract = 0;
+        ContractSceneResolver.ApplyToSession(0);
+
+        if (save?.Active != null)
+        {
+            save.Active.selectedContractIndex = 0;
+            save.SaveActive();
+        }
+    }
+
     private void WireButtons()
     {
         if (_buttonsWired)
             return;
 
         if (readyButton != null)
+        {
+            readyButton.onClick.RemoveListener(ToggleReady);
             readyButton.onClick.AddListener(ToggleReady);
-
-        if (confirmContractButton != null)
-            confirmContractButton.onClick.AddListener(ConfirmContract);
+        }
 
         if (backButton != null)
+        {
+            backButton.onClick.RemoveListener(GoBackToMenu);
             backButton.onClick.AddListener(GoBackToMenu);
+        }
 
         if (leaveLobbyButton != null)
+        {
+            leaveLobbyButton.onClick.RemoveListener(LeaveLobby);
             leaveLobbyButton.onClick.AddListener(LeaveLobby);
+        }
 
         if (chooseCharacterButton != null)
+        {
+            chooseCharacterButton.onClick.RemoveListener(OnChooseCharacter);
             chooseCharacterButton.onClick.AddListener(OnChooseCharacter);
+        }
 
         if (contractButtons == null)
             return;
@@ -158,6 +296,7 @@ public class PreparationScreenController : MonoBehaviour
             if (contractButtons[i] == null)
                 continue;
 
+            contractButtons[i].onClick.RemoveAllListeners();
             contractButtons[i].interactable = IsContractUnlocked(index) && IsLocalHost();
             contractButtons[i].onClick.AddListener(() =>
             {
@@ -168,11 +307,14 @@ public class PreparationScreenController : MonoBehaviour
                 }
 
                 if (!IsLocalHost())
+                {
                     ShowFeedback(LocaleText.IsPortuguese()
-                        ? "Apenas o host pode escolher o contrato."
-                        : "Only the host can choose the contract.");
-                else
-                    SelectContract(index);
+                        ? "Apenas o host pode escolher a fase."
+                        : "Only the host can choose the phase.");
+                    return;
+                }
+
+                SelectContract(index);
             });
 
             EventTrigger trigger = contractButtons[i].gameObject.GetComponent<EventTrigger>();
@@ -190,51 +332,10 @@ public class PreparationScreenController : MonoBehaviour
         var entry = new EventTrigger.Entry { eventID = EventTriggerType.PointerEnter };
         entry.callback.AddListener(_ =>
         {
-            PreparationScreenController ctrl = Object.FindFirstObjectByType<PreparationScreenController>();
+            PreparationScreenController ctrl = UnityEngine.Object.FindFirstObjectByType<PreparationScreenController>();
             ctrl?.ShowTooltip(index);
         });
         trigger.triggers.Add(entry);
-    }
-
-    private void ConfirmContract()
-    {
-        if (!IsLocalHost())
-        {
-            ShowFeedback(LocaleText.IsPortuguese()
-                ? "Apenas o host pode confirmar o contrato."
-                : "Only the host can confirm the contract.");
-            return;
-        }
-
-        if (GameSessionContext.IsSinglePlayer)
-        {
-            if (_localSelectedContract < 0)
-            {
-                ShowFeedback(LocaleText.IsPortuguese()
-                    ? "Escolha um contrato antes de confirmar."
-                    : "Choose a contract before confirming.");
-                return;
-            }
-
-            ContractSceneResolver.ApplyToSession(_localSelectedContract);
-            ScreenFlowStateMachine.OpenCharactersFromPreparation();
-            RefreshView();
-            return;
-        }
-
-        PreparationSessionManager session = HubSessionStateReader.GetPreparationSession();
-        if (session == null)
-        {
-            ShowFeedback(LocaleText.IsPortuguese()
-                ? "Aguardando sessão de rede..."
-                : "Waiting for network session...");
-            return;
-        }
-
-        if (session.IsServer)
-            session.RequestConfirmContractRpc();
-        else
-            session.RequestConfirmContractRpc();
     }
 
     private void GoBackToMenu()
@@ -275,7 +376,6 @@ public class PreparationScreenController : MonoBehaviour
             return;
 
         _localSelectedContract = index;
-        _localReady = false;
 
         if (!GameSessionContext.IsSinglePlayer)
         {
@@ -283,8 +383,8 @@ public class PreparationScreenController : MonoBehaviour
             if (session == null)
             {
                 ShowFeedback(LocaleText.IsPortuguese()
-                ? "Aguardando sessão de rede..."
-                : "Waiting for network session...");
+                    ? "Aguardando sessão de rede..."
+                    : "Waiting for network session...");
                 return;
             }
 
@@ -318,25 +418,17 @@ public class PreparationScreenController : MonoBehaviour
     {
         if (GameSessionContext.IsSinglePlayer)
         {
-            _localReady = !_localReady;
-            MidnightMeowAnalyticsTracker.NotifyUiClick("preparation", _localReady ? "ready" : "unready");
             string error = ValidateSinglePlayerReady();
             if (!string.IsNullOrEmpty(error))
             {
-                _localReady = false;
                 ShowFeedback(error);
-                RefreshView();
                 return;
             }
 
-            if (_localReady)
-            {
-                ApplyContractScene(_localSelectedContract);
-                LobbySelectionStore.CaptureSinglePlayer(_soloCharacter);
-                ScreenFlowStateMachine.BeginGameplayLoading();
-            }
-
-            RefreshView();
+            ApplyContractScene(_localSelectedContract);
+            LobbySelectionStore.CaptureSinglePlayer(ResolveLocalCharacter());
+            MidnightMeowAnalyticsTracker.NotifyUiClick("preparation", "ready");
+            ScreenFlowStateMachine.BeginGameplayLoading();
             return;
         }
 
@@ -352,20 +444,18 @@ public class PreparationScreenController : MonoBehaviour
 
         bool targetReady = !session.GetLocalReadyState();
         session.RequestSetReadyRpc(targetReady);
+        MidnightMeowAnalyticsTracker.NotifyUiClick("preparation", targetReady ? "ready" : "unready");
         RefreshView();
     }
 
     private string ValidateSinglePlayerReady()
     {
-        if (!_localReady)
-            return string.Empty;
-
         if (_localSelectedContract < 0)
             return LocaleText.IsPortuguese()
-                ? "Escolha um contrato antes de confirmar."
-                : "Choose a contract before confirming.";
+                ? "Escolha uma fase antes de confirmar."
+                : "Choose a phase before confirming.";
 
-        if (_soloCharacter == LobbyCharacterType.Default)
+        if (ResolveLocalCharacter() == LobbyCharacterType.Default)
             return LocaleText.IsPortuguese()
                 ? "Escolha um personagem antes de confirmar."
                 : "Choose a character before confirming.";
@@ -382,6 +472,12 @@ public class PreparationScreenController : MonoBehaviour
     {
         SaveProfileStore save = SaveProfileStore.Instance;
         return ContractProgressionUtility.IsContractUnlocked(index, save?.Active);
+    }
+
+    private static bool IsContractCompleted(int index)
+    {
+        SaveProfileStore save = SaveProfileStore.Instance;
+        return save?.Active != null && save.Active.IsContractCompleted(index);
     }
 
     private void ShowTooltip(int index)
@@ -448,19 +544,14 @@ public class PreparationScreenController : MonoBehaviour
             Invoke(nameof(RefreshView), 2f);
     }
 
-    private void RefreshCharacterLabel()
-    {
-        if (selectedCharacterText != null)
-            selectedCharacterText.gameObject.SetActive(false);
-    }
-
     private LobbyCharacterType ResolveLocalCharacter()
     {
         if (GameSessionContext.IsSinglePlayer)
         {
             if (LobbySelectionStore.TryGetCharacter(0, out LobbyCharacterType selected))
-                return _soloCharacter = selected;
-            return _soloCharacter = LobbyCharacterType.Default;
+                return selected;
+
+            return LobbyCharacterType.Default;
         }
 
         return HubSessionStateReader.GetLocalCharacterType();
@@ -468,37 +559,168 @@ public class PreparationScreenController : MonoBehaviour
 
     private void RefreshView()
     {
-        RefreshCharacterLabel();
+        EnsureDefaultContract();
+
+        if (chooseCharacterButton != null)
+            chooseCharacterButton.gameObject.SetActive(true);
+
+        if (readyButton != null)
+        {
+            readyButton.gameObject.SetActive(true);
+            bool canReady = ResolveLocalCharacter() != LobbyCharacterType.Default && _localSelectedContract >= 0;
+            readyButton.interactable = canReady;
+        }
+
+        RefreshContractCompletionBadges();
+        RefreshContractPreviewImages();
+        RefreshCharacterIcons();
+
+        int selectedContract = _localSelectedContract;
+
+        if (!GameSessionContext.IsSinglePlayer)
+        {
+            PreparationSessionManager session = HubSessionStateReader.GetPreparationSession();
+            if (session != null)
+                selectedContract = session.SelectedContractIndex;
+        }
+
+        if (selectedContract >= 0)
+            HighlightSelectedContract(selectedContract);
+
+        ApplyContractButtonLabels();
 
         if (GameSessionContext.IsSinglePlayer)
         {
-            _soloCharacter = ResolveLocalCharacter();
-
-            if (readyStatusText != null)
-            {
-                if (_localSelectedContract < 0)
-                    readyStatusText.text = LocaleText.IsPortuguese() ? "Escolha um contrato" : "Choose a contract";
-                else
-                    readyStatusText.text = LocaleText.IsPortuguese()
-                        ? "Confirme o contrato para continuar"
-                        : "Confirm the contract to continue";
-            }
-
-            if (chooseCharacterButton != null)
-                chooseCharacterButton.gameObject.SetActive(false);
-            if (readyButton != null)
-                readyButton.gameObject.SetActive(false);
-            if (confirmContractButton != null)
-            {
-                confirmContractButton.gameObject.SetActive(true);
-                confirmContractButton.interactable = _localSelectedContract >= 0;
-            }
-
-            if (_localSelectedContract >= 0)
-                HighlightSelectedContract(_localSelectedContract);
+            RefreshSinglePlayerStatus();
             return;
         }
 
+        RefreshMultiplayerStatus();
+    }
+
+    private void RefreshContractCompletionBadges()
+    {
+        if (contractCompletionBadges == null)
+            return;
+
+        for (int i = 0; i < contractCompletionBadges.Length; i++)
+        {
+            if (contractCompletionBadges[i] == null)
+                continue;
+
+            contractCompletionBadges[i].SetActive(IsContractCompleted(i));
+        }
+    }
+
+    private void RefreshContractPreviewImages()
+    {
+        if (contractPreviewImages == null)
+            return;
+
+        int selected = _localSelectedContract;
+        if (!GameSessionContext.IsSinglePlayer)
+        {
+            PreparationSessionManager session = HubSessionStateReader.GetPreparationSession();
+            if (session != null && session.SelectedContractIndex >= 0)
+                selected = session.SelectedContractIndex;
+        }
+
+        for (int i = 0; i < contractPreviewImages.Length; i++)
+        {
+            if (contractPreviewImages[i] == null)
+                continue;
+
+            contractPreviewImages[i].SetActive(selected < 0 || i == selected);
+        }
+    }
+
+    private void RefreshCharacterIcons()
+    {
+        LobbyCharacterType selected = ResolveLocalCharacter();
+        EnsureCharacterIconSprites();
+
+        if (nixieIcon != null)
+        {
+            Sprite sprite = selected == LobbyCharacterType.CharacterA
+                ? _nixieIconSelectedSprite
+                : _nixieIconDeselectedSprite;
+            if (sprite != null)
+            {
+                nixieIcon.sprite = sprite;
+                nixieIcon.color = Color.white;
+            }
+            else
+            {
+                nixieIcon.color = selected == LobbyCharacterType.CharacterA ? IconSelectedColor : IconDeselectedColor;
+            }
+        }
+
+        if (coraIcon != null)
+        {
+            Sprite sprite = selected == LobbyCharacterType.CharacterB
+                ? _coraIconSelectedSprite
+                : _coraIconDeselectedSprite;
+            if (sprite != null)
+            {
+                coraIcon.sprite = sprite;
+                coraIcon.color = Color.white;
+            }
+            else
+            {
+                coraIcon.color = selected == LobbyCharacterType.CharacterB ? IconSelectedColor : IconDeselectedColor;
+            }
+        }
+    }
+
+    private static void EnsureCharacterIconSprites()
+    {
+        if (_nixieIconSelectedSprite == null)
+            _nixieIconSelectedSprite = FindMenuContractSprite("Nix_Selecionado");
+        if (_nixieIconDeselectedSprite == null)
+            _nixieIconDeselectedSprite = FindMenuContractSprite("Nix_Nao_Selecionado");
+        if (_coraIconSelectedSprite == null)
+            _coraIconSelectedSprite = FindMenuContractSprite("Cora_Selecionada");
+        if (_coraIconDeselectedSprite == null)
+            _coraIconDeselectedSprite = FindMenuContractSprite("Cora_Nao_Selecionada");
+    }
+
+    private static Sprite FindMenuContractSprite(string spriteNamePrefix)
+    {
+        Sprite[] sprites = Resources.FindObjectsOfTypeAll<Sprite>();
+        for (int i = 0; i < sprites.Length; i++)
+        {
+            Sprite sprite = sprites[i];
+            if (sprite != null && sprite.name.StartsWith(spriteNamePrefix, StringComparison.Ordinal))
+                return sprite;
+        }
+
+        return null;
+    }
+
+    private void RefreshSinglePlayerStatus()
+    {
+        if (readyStatusText == null)
+            return;
+
+        LobbyCharacterType character = ResolveLocalCharacter();
+        bool pt = LocaleText.IsPortuguese();
+
+        if (character == LobbyCharacterType.Default)
+        {
+            readyStatusText.text = pt
+                ? "Escolha um personagem para jogar."
+                : "Choose a character to play.";
+            return;
+        }
+
+        string characterName = character == LobbyCharacterType.CharacterB ? "Cora" : "Nixie";
+        readyStatusText.text = pt
+            ? $"Personagem: {characterName}. Pressione Pronto para iniciar."
+            : $"Character: {characterName}. Press Ready to start.";
+    }
+
+    private void RefreshMultiplayerStatus()
+    {
         PreparationSessionManager session = HubSessionStateReader.GetPreparationSession();
         if (session == null)
         {
@@ -508,6 +730,9 @@ public class PreparationScreenController : MonoBehaviour
                     : "Waiting for network session...";
             return;
         }
+
+        if (readyStatusText == null)
+            return;
 
         int readyCount = 0;
         int charCount = 0;
@@ -519,41 +744,32 @@ public class PreparationScreenController : MonoBehaviour
                 charCount++;
         }
 
-        if (readyStatusText != null)
-        {
-            bool pt = LocaleText.IsPortuguese();
-            string localReadyLabel = session.GetLocalReadyState()
-                ? (pt ? " (você pronto)" : " (you ready)")
-                : string.Empty;
-            int contractIndex = session.SelectedContractIndex;
+        bool pt = LocaleText.IsPortuguese();
+        string localReadyLabel = session.GetLocalReadyState()
+            ? (pt ? " (você pronto)" : " (you ready)")
+            : string.Empty;
 
-            if (contractIndex < 0)
-            {
-                readyStatusText.text = IsLocalHost()
-                    ? (pt ? "Escolha um contrato" : "Choose a contract")
-                    : (pt ? "Aguardando o host escolher o contrato" : "Waiting for the host to choose the contract");
-            }
-            else
-            {
-                readyStatusText.text = pt
-                    ? $"Prontos: {readyCount}/{session.Players.Count} | Personagens: {charCount}/{session.Players.Count}{localReadyLabel}"
-                    : $"Ready: {readyCount}/{session.Players.Count} | Characters: {charCount}/{session.Players.Count}{localReadyLabel}";
-            }
+        if (session.SelectedContractIndex < 0)
+        {
+            readyStatusText.text = IsLocalHost()
+                ? (pt ? "Escolha uma fase" : "Choose a phase")
+                : (pt ? "Aguardando o host escolher a fase" : "Waiting for the host to choose the phase");
+            return;
         }
 
-        ApplyContractButtonLabels();
-        if (session.SelectedContractIndex >= 0)
-            HighlightSelectedContract(session.SelectedContractIndex);
+        readyStatusText.text = pt
+            ? $"Prontos: {readyCount}/{session.Players.Count} | Personagens: {charCount}/{session.Players.Count}{localReadyLabel}"
+            : $"Ready: {readyCount}/{session.Players.Count} | Characters: {charCount}/{session.Players.Count}{localReadyLabel}";
 
-        bool contractConfirmed = session.ContractConfirmed;
-        if (chooseCharacterButton != null)
-            chooseCharacterButton.gameObject.SetActive(false);
         if (readyButton != null)
-            readyButton.gameObject.SetActive(false);
-        if (confirmContractButton != null)
         {
-            confirmContractButton.gameObject.SetActive(!contractConfirmed && IsLocalHost());
-            confirmContractButton.interactable = session.SelectedContractIndex >= 0;
+            TMP_Text label = readyButton.GetComponentInChildren<TMP_Text>();
+            if (label != null)
+            {
+                label.text = session.GetLocalReadyState()
+                    ? (pt ? "Desmarcar Pronto" : "Unready")
+                    : (pt ? "Pronto" : "Ready");
+            }
         }
     }
 
@@ -567,23 +783,22 @@ public class PreparationScreenController : MonoBehaviour
             if (contractButtons[i] == null)
                 continue;
 
+            contractButtons[i].interactable = IsContractUnlocked(i) && IsLocalHost();
+
             TMP_Text label = contractButtons[i].GetComponentInChildren<TMP_Text>();
             if (label == null)
                 continue;
 
-            if (contracts != null && i < contracts.Length && contracts[i] != null)
+            bool pt = LocaleText.IsPortuguese();
+            string phaseName = pt ? $"FASE {i + 1}" : $"PHASE {i + 1}";
+            if (!IsContractUnlocked(i))
             {
-                bool unlocked = IsContractUnlocked(i);
-                string lockedSuffix = LocaleText.IsPortuguese() ? "\n(bloqueado)" : "\n(locked)";
-                label.text = unlocked
-                    ? contracts[i].displayName
-                    : $"{contracts[i].displayName}{lockedSuffix}";
+                string lockedSuffix = pt ? "\n(bloqueada)" : "\n(locked)";
+                label.text = $"{phaseName}{lockedSuffix}";
             }
             else
             {
-                bool pt = LocaleText.IsPortuguese();
-                string name = pt ? $"Contrato {i + 1}" : $"Contract {i + 1}";
-                label.text = IsContractUnlocked(i) ? name : (pt ? $"{name}\n(bloqueado)" : $"{name}\n(locked)");
+                label.text = phaseName;
             }
         }
     }
@@ -593,9 +808,9 @@ public class PreparationScreenController : MonoBehaviour
         if (contractButtons == null)
             return;
 
-        Color selected = new Color(0.75f, 0.15f, 0.15f, 0.95f);
-        Color normal = new Color(0.18f, 0.18f, 0.22f, 0.95f);
-        Color locked = new Color(0.12f, 0.12f, 0.14f, 0.7f);
+        Color selected = new Color(0.95f, 0.85f, 0.45f, 1f);
+        Color normal = Color.white;
+        Color locked = new Color(0.65f, 0.65f, 0.65f, 0.85f);
 
         for (int i = 0; i < contractButtons.Length; i++)
         {
@@ -627,20 +842,18 @@ public class PreparationScreenController : MonoBehaviour
         for (int i = 0; i < ContractCount; i++)
         {
             float x = 0.25f + i * 0.25f;
-            string label = i == 0 && contracts[0] != null
-                ? contracts[0].displayName
-                : $"Contrato {i + 1}\n(bloqueado)";
+            string label = $"Fase {i + 1}";
             contractButtons[i] = ScreenFlowPlaceholderFactory.CreateButton(panel.transform, label,
                 new Vector2(x, 0.55f), new Vector2(x, 0.55f),
                 new Vector2(-140f, -140f), new Vector2(140f, 140f));
         }
 
-        tooltipText = ScreenFlowPlaceholderFactory.CreateText(panel.transform, "Passe o mouse sobre o contrato.", 22,
+        tooltipText = ScreenFlowPlaceholderFactory.CreateText(panel.transform, "Passe o mouse sobre a fase.", 22,
             TextAlignmentOptions.TopLeft, Color.white,
             new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(-210f, 20f), new Vector2(210f, 200f));
 
-        confirmContractButton = ScreenFlowPlaceholderFactory.CreateButton(panel.transform, "Confirmar Contrato!",
-            new Vector2(1f, 0f), new Vector2(1f, 0f), new Vector2(-360f, 120f), new Vector2(-40f, 180f));
+        chooseCharacterButton = ScreenFlowPlaceholderFactory.CreateButton(panel.transform, "Escolher Personagem",
+            new Vector2(0.2f, 0.35f), new Vector2(0.2f, 0.35f), new Vector2(-160f, -40f), new Vector2(160f, 40f));
 
         backButton = ScreenFlowPlaceholderFactory.CreateButton(panel.transform, "Voltar ao Menu",
             new Vector2(0f, 0f), new Vector2(0f, 0f), new Vector2(40f, 210f), new Vector2(260f, 270f));
@@ -650,7 +863,7 @@ public class PreparationScreenController : MonoBehaviour
 
         readyButton = ScreenFlowPlaceholderFactory.CreateButton(panel.transform, "Pronto",
             new Vector2(1f, 0f), new Vector2(1f, 0f), new Vector2(-320f, 40f), new Vector2(-40f, 100f));
-        readyStatusText = ScreenFlowPlaceholderFactory.CreateText(panel.transform, "Escolha um contrato", 24,
+        readyStatusText = ScreenFlowPlaceholderFactory.CreateText(panel.transform, "Escolha uma fase", 24,
             TextAlignmentOptions.Bottom, Color.white,
             new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(-280f, 20f), new Vector2(280f, 60f));
     }

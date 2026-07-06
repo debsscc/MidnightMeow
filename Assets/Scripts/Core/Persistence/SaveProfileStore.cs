@@ -200,7 +200,7 @@ public class SaveProfileStore : MonoBehaviour
     public LobbyCharacterType GetSelectedCharacter()
     {
         if (_active == null)
-            return LobbyCharacterType.CharacterA;
+            return LobbyCharacterType.Default;
 
         return _active.SelectedCharacter;
     }

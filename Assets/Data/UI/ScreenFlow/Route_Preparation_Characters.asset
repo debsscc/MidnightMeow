@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SceneFlowRouteDefinition
   routeId: preparation_characters
   sceneName: Characters
-  transitionMode: 2
+  transitionMode: 1
   loadKind: 0
-  fadeTime: 0.5
+  fadeTime: 0
   minLoadingTime: 0

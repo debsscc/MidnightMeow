@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 5334daffbe068e9469d5e75b627ad329
+guid: 54579dff247d8a5408b488cf349e6f1b
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 6546307368419709222
-    second: Nix_Loading_1_0
+      213: -4232720355568383458
+    second: Nyx_Loading_1_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -46,7 +46,7 @@ TextureImporter:
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 1
+  spriteMode: 2
   spriteExtrude: 1
   spriteMeshType: 1
   alignment: 0
@@ -72,10 +72,10 @@ TextureImporter:
   platformSettings:
   - serializedVersion: 4
     buildTarget: DefaultTexturePlatform
-    maxTextureSize: 4096
+    maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: -1
-    textureCompression: 0
+    textureCompression: 1
     compressionQuality: 50
     crunchedCompression: 0
     allowsAlphaSplitting: 0
@@ -126,13 +126,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Nix_Loading_1_0
+      name: Nyx_Loading_1_0
       rect:
         serializedVersion: 2
-        x: 24
-        y: 27
-        width: 80
-        height: 88
+        x: 158
+        y: 128
+        width: 484
+        height: 543
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -141,8 +141,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 621dd252ed729da50800000000000000
-      internalID: 6546307368419709222
+      spriteID: e1a08c4334b5245c0800000000000000
+      internalID: -4232720355568383458
       vertices: []
       indices: 
       edges: []
@@ -151,7 +151,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 5e97eb03825dee720800000000000000
+    spriteID: 
     internalID: 0
     vertices: []
     indices: 
@@ -161,7 +161,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      Nix_Loading_1_0: 6546307368419709222
+      Nyx_Loading_1_0: -4232720355568383458
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

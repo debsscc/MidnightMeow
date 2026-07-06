@@ -3,9 +3,7 @@ using Unity.Collections;
 using Unity.Netcode;
 using UnityEngine;
 
-/// <summary>
-/// Estado replicado da tela de Preparação: contrato selecionado e prontidão dos jogadores.
-/// </summary>
+
 [DisallowMultipleComponent]
 public class PreparationSessionManager : NetworkBehaviour
 {
@@ -126,7 +124,7 @@ public class PreparationSessionManager : NetworkBehaviour
 
         _selectedContractIndex.Value = contractIndex;
         ContractSceneResolver.ApplyToSession(contractIndex);
-        _contractConfirmed.Value = false;
+        _contractConfirmed.Value = true;
         _startCountdown.Value = -1;
         ClearAllReady();
         BroadcastHubStateChanged();
@@ -149,13 +147,6 @@ public class PreparationSessionManager : NetworkBehaviour
         _startCountdown.Value = -1;
         ClearAllReady();
         BroadcastHubStateChanged();
-        NotifyContractConfirmedClientRpc();
-    }
-
-    [ClientRpc]
-    private void NotifyContractConfirmedClientRpc()
-    {
-        ScreenFlowStateMachine.OpenCharactersFromPreparation();
     }
 
     [Rpc(SendTo.Server)]
@@ -362,8 +353,8 @@ public class PreparationSessionManager : NetworkBehaviour
 
     private string ValidateReady(ulong callerId)
     {
-        if (!_contractConfirmed.Value)
-            return "Aguarde o host confirmar o contrato.";
+        if (_selectedContractIndex.Value < 0)
+            return "Escolha uma fase antes de confirmar.";
 
         int index = FindPlayerIndex(callerId);
         if (index < 0)

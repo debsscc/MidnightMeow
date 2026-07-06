@@ -457,6 +457,66 @@ MonoBehaviour:
     m_Key: characters.Btn.SkillsNyxie
     m_Metadata:
       m_Items: []
+  - m_Id: 7989830523564032
+    m_Key: Nix.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7989861188120576
+    m_Key: Cora.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7989884269375488
+    m_Key: Investida.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7989939269283840
+    m_Key: Barreira.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7989996680916992
+    m_Key: Nix.Investida.Title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7990018222862336
+    m_Key: Barreira.Title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7990057284415488
+    m_Key: AtaqueNormal.Title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7999254541643776
+    m_Key: Cora.Poca.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7999423488208896
+    m_Key: Cora.Barreira.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8001066824904704
+    m_Key: Nix.Empurrao.Title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8001301450076160
+    m_Key: Nix.Empurrao.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8001362317815808
+    m_Key: Nix.AtaqueNormal.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8001434359181312
+    m_Key: Cora.AtaqueNormal.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8001531872555008
+    m_Key: Nix.Investida.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8003577002602496
+    m_Key: Cora.poca.Title
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:
