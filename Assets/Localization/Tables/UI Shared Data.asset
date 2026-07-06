@@ -449,6 +449,14 @@ MonoBehaviour:
     m_Key: saveFiles.delete.prompt
     m_Metadata:
       m_Items: []
+  - m_Id: 7626184995909632
+    m_Key: characters.Btn.SkillsCora
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7626404110544896
+    m_Key: characters.Btn.SkillsNyxie
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

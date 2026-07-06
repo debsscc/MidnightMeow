@@ -426,15 +426,21 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 7268000000000002
-    m_Localized: 'File {0}, saved on {1} at {2}'
+    m_Localized: File saved
     m_Metadata:
       m_Items: []
   - m_Id: 7268000000000003
-    m_Localized: 'Delete File {0}?
-
-      Saved on {1} at {2}
+    m_Localized: 'Delete File?
 
       This action cannot be undone.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7626184995909632
+    m_Localized: Cora's skills
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7626404110544896
+    m_Localized: Nyxie's skills
     m_Metadata:
       m_Items: []
   references:
