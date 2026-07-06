@@ -65,6 +65,9 @@ public class MultiplayerGameManager : NetworkBehaviour
         }
         Instance = this;
         GameEvents.OnNightEnded += HandleNightEndedFromEvent;
+
+        if (GetComponent<NetworkDownedReviveManager>() == null)
+            gameObject.AddComponent<NetworkDownedReviveManager>();
     }
 
     public override void OnDestroy()

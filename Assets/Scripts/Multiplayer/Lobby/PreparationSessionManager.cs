@@ -2,6 +2,7 @@ using System;
 using Unity.Collections;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 
 [DisallowMultipleComponent]
@@ -354,7 +355,7 @@ public class PreparationSessionManager : NetworkBehaviour
     private string ValidateReady(ulong callerId)
     {
         if (_selectedContractIndex.Value < 0)
-            return "Escolha uma fase antes de confirmar.";
+            return "Escolha uma fase antes de marcar pronto.";
 
         int index = FindPlayerIndex(callerId);
         if (index < 0)
@@ -455,7 +456,24 @@ public class PreparationSessionManager : NetworkBehaviour
 
         string gameplayScene = ApplySelectedContractToSession();
         SyncGameplaySceneClientRpc(new FixedString64Bytes(gameplayScene));
+        SyncBeginGameplayLoadingClientRpc();
+
+        GameSessionContext.PendingRouteId = SceneFlowRouteIds.Loading2ToGameplay;
+
+        NetworkManager networkManager = NetworkManager.Singleton;
+        if (networkManager != null && networkManager.IsServer)
+        {
+            networkManager.SceneManager.LoadScene("Loading2", LoadSceneMode.Single);
+            return;
+        }
+
         ScreenFlowStateMachine.BeginGameplayLoading();
+    }
+
+    [ClientRpc]
+    private void SyncBeginGameplayLoadingClientRpc()
+    {
+        GameSessionContext.PendingRouteId = SceneFlowRouteIds.Loading2ToGameplay;
     }
 
     private string ApplySelectedContractToSession()
@@ -480,7 +498,7 @@ public class PreparationSessionManager : NetworkBehaviour
 
     private bool AreAllReady()
     {
-        if (!_contractConfirmed.Value)
+        if (_selectedContractIndex.Value < 0)
             return false;
 
         int required = GameSessionContext.IsSinglePlayer ? 1 : minimumPlayersToProceed;

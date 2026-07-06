@@ -1,76 +1,53 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// Servidor: progresso de reviver por permanência na zona ao redor do jogador caído.
+/// Tick de servidor para progresso/cancelamento do reviver cooperativo (transplante de <see cref="RatHoleSealZoneSystem"/>).
 /// </summary>
 public static class DownedReviveZoneSystem
 {
-    private static int _lastTickFrame = -1;
-
-    public static void TickServer(DownedPlayerConfig config)
+    public static void TickSession(
+        ref DownedReviveSession session,
+        DownedPlayerConfig config,
+        float deltaTime)
     {
-        if (config == null) return;
-        if (_lastTickFrame == Time.frameCount) return;
-        _lastTickFrame = Time.frameCount;
+        if (!session.IsActive || session.IsCompleted || config == null)
+            return;
 
-        float radius = config.reviveZoneRadius;
-        float fillDuration = Mathf.Max(0.1f, config.reviveZoneFillDuration);
-        float decayPerSecond = Mathf.Max(0f, config.reviveZoneProgressDecayPerSecond);
+        var zones = new List<Vector2>(2);
+        zones.Add(session.ZoneA);
+        if (session.ZoneCount > 1)
+            zones.Add(session.ZoneB);
 
-        foreach (var downed in Object.FindObjectsByType<NetworkPlayerHealth>(FindObjectsSortMode.None))
+        int occupiedZones = CooperativeZonePlacementUtility.CountPlayersInZones(
+            zones,
+            config.reviveZoneRadius,
+            requireDistinctZones: session.ZoneCount > 1);
+
+        if (occupiedZones <= 0)
         {
-            if (!downed.IsSpawned || !downed.CanBeRevived) continue;
-
-            bool allyInside = HasAllyInsideZone(downed, radius, out int count);
-
-            if (allyInside)
+            session.AbandonTimer += deltaTime;
+            if (session.AbandonTimer >= config.reviveAbandonTimeout)
             {
-                downed.ServerSetRevivePaused(true);
-                float next = downed.ReviveProgress + Time.deltaTime / fillDuration;
-                downed.ServerSetReviveProgress(next);
-
-                if (next >= 1f)
-                    downed.ServerReviveFromUnconscious();
+                session.Flags &= unchecked((byte)~DownedReviveSession.FlagActive);
+                session.Progress = 0f;
+                session.AbandonTimer = 0f;
             }
-            else
-            {
-                downed.ServerSetRevivePaused(false);
-                if (downed.ReviveProgress > 0f && decayPerSecond > 0f)
-                {
-                    float next = downed.ReviveProgress - decayPerSecond * Time.deltaTime;
-                    downed.ServerSetReviveProgress(next);
-                }
-            }
-        }
-    }
 
-    public static bool IsAllyInsideReviveZone(
-        NetworkPlayerHealth downed,
-        NetworkPlayerHealth ally,
-        DownedPlayerConfig config)
-    {
-        if (downed == null || ally == null || config == null) return false;
-        if (!downed.CanBeRevived || !ally.CanFight) return false;
-        if (downed.OwnerClientId == ally.OwnerClientId) return false;
-
-        float dist = Vector2.Distance(downed.transform.position, ally.transform.position);
-        return dist <= config.reviveZoneRadius;
-    }
-
-    private static bool HasAllyInsideZone(NetworkPlayerHealth downed, float radius, out int count)
-    {
-        count = 0;
-        Vector2 center = downed.transform.position;
-
-        foreach (var ally in Object.FindObjectsByType<NetworkPlayerHealth>(FindObjectsSortMode.None))
-        {
-            if (!ally.IsSpawned || !ally.CanFight) continue;
-            if (ally.OwnerClientId == downed.OwnerClientId) continue;
-
-            if (Vector2.Distance(center, ally.transform.position) <= radius)
-                count++;
+            return;
         }
 
-        return count > 0;
+        session.AbandonTimer = 0f;
+        float speed = 1f / Mathf.Max(0.1f, config.reviveZoneFillDuration);
+        if (session.ZoneCount > 1 && occupiedZones >= 2)
+            speed *= config.reviveDualPlayerSpeedMultiplier;
+
+        session.Progress = Mathf.Clamp01(session.Progress + speed * deltaTime);
+        if (session.Progress < 1f)
+            return;
+
+        session.Flags |= DownedReviveSession.FlagCompleted;
+        session.Flags &= unchecked((byte)~DownedReviveSession.FlagActive);
+        session.Progress = 1f;
     }
 }

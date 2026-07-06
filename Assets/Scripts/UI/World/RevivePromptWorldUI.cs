@@ -39,9 +39,8 @@ public class RevivePromptWorldUI : MonoBehaviour
     {
         if (_canvas == null || !_selfHealth.IsSpawned || downedConfig == null) return;
 
-        bool nearDowned = _selfHealth.CanFight && HasDownedTeammateNearby();
         bool inZone = _revive.IsContributingToRevive;
-        bool show = nearDowned || inZone;
+        bool show = inZone;
 
         SetVisible(show);
         if (!show) return;
@@ -49,7 +48,11 @@ public class RevivePromptWorldUI : MonoBehaviour
         _canvas.transform.position = transform.position + offset;
 
         if (_promptLabel != null)
-            _promptLabel.gameObject.SetActive(nearDowned && !inZone);
+        {
+            _promptLabel.gameObject.SetActive(inZone);
+            if (inZone)
+                _promptLabel.text = IsPortuguese() ? "Permaneça na área para reviver" : "Stay in the area to revive";
+        }
 
         if (_progressFill != null)
         {
@@ -61,30 +64,35 @@ public class RevivePromptWorldUI : MonoBehaviour
 
     private float GetActiveDownedProgress()
     {
-        foreach (var h in FindObjectsByType<NetworkPlayerHealth>(FindObjectsSortMode.None))
+        NetworkDownedReviveManager manager = NetworkDownedReviveManager.Instance;
+        if (manager == null || !manager.IsSpawned)
+            return 0f;
+
+        Vector2 pos = transform.position;
+        foreach (DownedReviveSession session in manager.Sessions)
         {
-            if (!h.IsSpawned || !h.CanBeRevived) continue;
-            if (DownedReviveZoneSystem.IsAllyInsideReviveZone(h, _selfHealth, downedConfig))
-                return h.ReviveProgress;
+            if (!session.IsActive)
+                continue;
+
+            if (!IsInsideSessionZone(pos, session))
+                continue;
+
+            return session.Progress;
         }
 
         return 0f;
     }
 
-    private bool HasDownedTeammateNearby()
+    private bool IsInsideSessionZone(Vector2 pos, DownedReviveSession session)
     {
-        float range = downedConfig.reviveZoneRadius * 1.5f;
-        Vector2 pos = transform.position;
+        if (downedConfig == null)
+            return false;
 
-        foreach (var h in FindObjectsByType<NetworkPlayerHealth>(FindObjectsSortMode.None))
-        {
-            if (!h.IsSpawned || h.OwnerClientId == _selfHealth.OwnerClientId) continue;
-            if (!h.CanBeRevived) continue;
-            if (Vector2.Distance(pos, h.transform.position) <= range)
-                return true;
-        }
+        if (CooperativeZonePlacementUtility.IsInsideZone(pos, session.ZoneA, downedConfig.reviveZoneRadius))
+            return true;
 
-        return false;
+        return session.ZoneCount > 1
+               && CooperativeZonePlacementUtility.IsInsideZone(pos, session.ZoneB, downedConfig.reviveZoneRadius);
     }
 
     private void SetVisible(bool visible)
@@ -111,7 +119,7 @@ public class RevivePromptWorldUI : MonoBehaviour
         labelRect.sizeDelta = new Vector2(2.4f, 0.3f);
         labelRect.anchoredPosition = new Vector2(0f, 0.15f);
         _promptLabel = labelGo.AddComponent<TextMeshProUGUI>();
-        _promptLabel.text = IsPortuguese() ? "Entre na área verde para reviver" : "Enter the green area to revive";
+            _promptLabel.text = IsPortuguese() ? "Permaneça na área para reviver" : "Stay in the area to revive";
         _promptLabel.fontSize = 2f;
         _promptLabel.alignment = TextAlignmentOptions.Center;
         _promptLabel.color = new Color(0.85f, 1f, 0.9f, 1f);

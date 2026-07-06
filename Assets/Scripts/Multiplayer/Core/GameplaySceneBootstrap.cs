@@ -34,8 +34,15 @@ public static class GameplaySceneBootstrap
         {
             RatHoleSealZoneVisual.EnsureAttached(sealManager);
             EnsureCarriageRepairVisual();
-            return;
         }
+
+        NetworkDownedReviveManager reviveManager =
+            Object.FindFirstObjectByType<NetworkDownedReviveManager>(FindObjectsInactive.Include);
+        if (reviveManager != null)
+            DownedReviveZoneVisualHost.EnsureAttached(reviveManager);
+
+        if (sealManager != null)
+            return;
 
         if (Object.FindFirstObjectByType<CarriageRepairZoneVisual>(FindObjectsInactive.Include) != null)
             return;

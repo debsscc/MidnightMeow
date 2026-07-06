@@ -1,5 +1,5 @@
 /// <summary>
-/// Reviver por zona: aliados permanecem na área ao redor do jogador caído (lógica em <see cref="DownedReviveZoneSystem"/>).
+/// Estado local do aliado dentro de zonas de reviver ativas (gerenciadas por <see cref="NetworkDownedReviveManager"/>).
 /// </summary>
 
 using Unity.Netcode;
@@ -14,8 +14,7 @@ public class NetworkPlayerRevive : NetworkBehaviour
 
     public bool IsContributingToRevive { get; private set; }
 
-    /// <summary>Alias usado por movimento/combate: jogador está na zona reanimando um aliado.</summary>
-    public bool IsReviving => IsContributingToRevive;
+    public bool IsReviving => false;
 
     private void Awake()
     {
@@ -32,15 +31,29 @@ public class NetworkPlayerRevive : NetworkBehaviour
             return;
         }
 
-        IsContributingToRevive = false;
-        foreach (var downed in FindObjectsByType<NetworkPlayerHealth>(FindObjectsSortMode.None))
+        IsContributingToRevive = IsInsideAnyActiveReviveZone();
+    }
+
+    private bool IsInsideAnyActiveReviveZone()
+    {
+        NetworkDownedReviveManager manager = NetworkDownedReviveManager.Instance;
+        if (manager == null || !manager.IsSpawned)
+            return false;
+
+        Vector2 pos = transform.position;
+        foreach (DownedReviveSession session in manager.Sessions)
         {
-            if (!downed.IsSpawned || !downed.CanBeRevived) continue;
-            if (DownedReviveZoneSystem.IsAllyInsideReviveZone(downed, _selfHealth, downedConfig))
-            {
-                IsContributingToRevive = true;
-                break;
-            }
+            if (!session.IsActive)
+                continue;
+
+            if (CooperativeZonePlacementUtility.IsInsideZone(pos, session.ZoneA, downedConfig.reviveZoneRadius))
+                return true;
+
+            if (session.ZoneCount > 1 &&
+                CooperativeZonePlacementUtility.IsInsideZone(pos, session.ZoneB, downedConfig.reviveZoneRadius))
+                return true;
         }
+
+        return false;
     }
 }

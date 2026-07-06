@@ -57,7 +57,6 @@ public class healthBarUi : MonoBehaviour
     private void OnEnable()
     {
         GameplaySceneBootstrap.TryEnsureGameplayHud();
-        GameEvents.OnPlayerHealthChanged += UpdateHealthBar;
         NetworkPlayerHealth.OnNetworkHealthChanged += HandleNetworkHealthChanged;
         NetworkPlayerController.OnLocalPlayerSpawned += HandleLocalPlayerSpawned;
         QueueRefresh();
@@ -65,7 +64,6 @@ public class healthBarUi : MonoBehaviour
 
     private void OnDisable()
     {
-        GameEvents.OnPlayerHealthChanged -= UpdateHealthBar;
         NetworkPlayerHealth.OnNetworkHealthChanged -= HandleNetworkHealthChanged;
         NetworkPlayerController.OnLocalPlayerSpawned -= HandleLocalPlayerSpawned;
 
@@ -97,10 +95,16 @@ public class healthBarUi : MonoBehaviour
 
     private void HandleNetworkHealthChanged(ulong clientId, float current, float max)
     {
-        if (NetworkManager.Singleton == null || clientId != NetworkManager.Singleton.LocalClientId)
+        if (!IsLocalPlayerClientId(clientId))
             return;
 
         UpdateHealthBar(current, max);
+    }
+
+    private static bool IsLocalPlayerClientId(ulong clientId)
+    {
+        NetworkManager networkManager = NetworkManager.Singleton;
+        return networkManager != null && clientId == networkManager.LocalClientId;
     }
 
     private void QueueRefresh()
@@ -353,7 +357,7 @@ public class healthBarUi : MonoBehaviour
         for (int i = 0; i < players.Length; i++)
         {
             NetworkPlayerHealth health = players[i];
-            if (health == null || !health.IsSpawned || !health.IsOwner || !health.CanFight)
+            if (health == null || !health.IsSpawned || !health.IsOwner)
                 continue;
 
             current = health.CurrentHealth;

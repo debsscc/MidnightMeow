@@ -7,8 +7,7 @@ using UnityEngine;
 public class PlayerGameplayModuleInstaller : MonoBehaviour
 {
     [SerializeField] private bool installDamageImmunity = true;
-    [SerializeField] private bool installDownedUI = false;
-    [SerializeField] private bool installReviveZoneVisual = true;
+    [SerializeField] private bool installDownedUI = true;
     [SerializeField] private bool installRevivePromptUI = true;
     [SerializeField] private bool installMeleeHitVisual = true;
     [SerializeField] private bool installAbilityDebugVisual = false;
@@ -25,14 +24,14 @@ public class PlayerGameplayModuleInstaller : MonoBehaviour
         if (installRatHoleSealInteraction && GetComponent<RatHoleSealPromptUI>() == null)
             gameObject.AddComponent<RatHoleSealPromptUI>();
 
+        if (GetComponent<NetworkPlayerRevive>() != null && GetComponent<PlayerDownedReviveInteraction>() == null)
+            gameObject.AddComponent<PlayerDownedReviveInteraction>();
+
         if (GetComponent<CarriageRepairPromptUI>() == null)
             gameObject.AddComponent<CarriageRepairPromptUI>();
 
         if (installDownedUI && GetComponent<DownedPlayerWorldUI>() == null)
             gameObject.AddComponent<DownedPlayerWorldUI>();
-
-        if (installReviveZoneVisual && GetComponent<DownedReviveZoneVisual>() == null)
-            gameObject.AddComponent<DownedReviveZoneVisual>();
 
         if (installRevivePromptUI && GetComponent<NetworkPlayerRevive>() != null &&
             GetComponent<RevivePromptWorldUI>() == null)

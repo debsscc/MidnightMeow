@@ -237,12 +237,15 @@ public class PreparationScreenController : MonoBehaviour
             }
         }
 
-        SaveProfileStore save = SaveProfileStore.Instance;
-        if (save?.Active != null && save.Active.selectedContractIndex >= 0)
+        if (GameSessionContext.IsSinglePlayer)
         {
-            _localSelectedContract = save.Active.selectedContractIndex;
-            ContractSceneResolver.ApplyToSession(_localSelectedContract);
-            return;
+            SaveProfileStore save = SaveProfileStore.Instance;
+            if (save?.Active != null && save.Active.selectedContractIndex >= 0)
+            {
+                _localSelectedContract = save.Active.selectedContractIndex;
+                ContractSceneResolver.ApplyToSession(_localSelectedContract);
+                return;
+            }
         }
 
         if (!IsContractUnlocked(0))
@@ -251,11 +254,31 @@ public class PreparationScreenController : MonoBehaviour
         _localSelectedContract = 0;
         ContractSceneResolver.ApplyToSession(0);
 
-        if (save?.Active != null)
+        if (GameSessionContext.IsSinglePlayer)
         {
-            save.Active.selectedContractIndex = 0;
-            save.SaveActive();
+            SaveProfileStore save = SaveProfileStore.Instance;
+            if (save?.Active != null)
+            {
+                save.Active.selectedContractIndex = 0;
+                save.SaveActive();
+            }
         }
+        else
+        {
+            SyncDefaultContractToServerIfHost(0);
+        }
+    }
+
+    private static void SyncDefaultContractToServerIfHost(int contractIndex)
+    {
+        if (!IsLocalHost())
+            return;
+
+        PreparationSessionManager session = HubSessionStateReader.GetPreparationSession();
+        if (session == null || !session.IsServer || session.SelectedContractIndex >= 0)
+            return;
+
+        session.SetContractIndexOnServer(contractIndex);
     }
 
     private void WireButtons()
@@ -567,7 +590,15 @@ public class PreparationScreenController : MonoBehaviour
         if (readyButton != null)
         {
             readyButton.gameObject.SetActive(true);
-            bool canReady = ResolveLocalCharacter() != LobbyCharacterType.Default && _localSelectedContract >= 0;
+            bool hasContract = _localSelectedContract >= 0;
+            if (!GameSessionContext.IsSinglePlayer)
+            {
+                PreparationSessionManager session = HubSessionStateReader.GetPreparationSession();
+                if (session != null)
+                    hasContract = session.SelectedContractIndex >= 0;
+            }
+
+            bool canReady = ResolveLocalCharacter() != LobbyCharacterType.Default && hasContract;
             readyButton.interactable = canReady;
         }
 

@@ -295,7 +295,7 @@ public class NetworkCarriage : NetworkBehaviour
     private bool IsPathReady() => path != null && path.WaypointCount >= 2;
 
     private void SyncCarriageHudProgress() =>
-        GameEvents.InvokeCarriagePathProgressChanged(_pathProgress.Value);
+        PublishPathProgressIfChanged(_pathProgress.Value);
 
     private void BeginPathSetupRetry()
     {
@@ -334,7 +334,7 @@ public class NetworkCarriage : NetworkBehaviour
     private void HandlePathProgressChanged(float previous, float current)
     {
         ApplyPathPosition();
-        GameEvents.InvokeCarriagePathProgressChanged(current);
+        PublishPathProgressIfChanged(current);
     }
 
     private void HandleSyncedHealthChanged(float previous, float current) => ApplySyncedHealthToComponent();
@@ -398,6 +398,26 @@ public class NetworkCarriage : NetworkBehaviour
         }
     }
 
+    private float _lastPublishedPathProgress = -1f;
+
+    private void LateUpdate()
+    {
+        if (IsServer || !IsSpawned)
+            return;
+
+        ApplyPathPosition();
+        PublishPathProgressIfChanged(_pathProgress.Value);
+    }
+
+    private void PublishPathProgressIfChanged(float normalized)
+    {
+        float clamped = Mathf.Clamp01(normalized);
+        if (Mathf.Abs(clamped - _lastPublishedPathProgress) < 0.0005f)
+            return;
+
+        _lastPublishedPathProgress = clamped;
+        GameEvents.InvokeCarriagePathProgressChanged(clamped);
+    }
     private void CompleteArrival(Vector3 arrival)
     {
         if (_arrived.Value)
@@ -410,7 +430,7 @@ public class NetworkCarriage : NetworkBehaviour
 
         if (IsServer)
         {
-            GameEvents.InvokeCarriagePathProgressChanged(1f);
+            PublishPathProgressIfChanged(1f);
             GameEvents.InvokeCarriageArrived();
             EnsurePhaseObjectiveAndNotifyVictory();
         }

@@ -1,8 +1,9 @@
 using UnityEngine;
 
 /// <summary>
-/// Círculo de zona de reviver ao redor do jogador inconsciente (shader TelegraphFill).
+/// Obsoleto — visual migrado para <see cref="DownedReviveZoneVisualHost"/>.
 /// </summary>
+[System.Obsolete("Use DownedReviveZoneVisualHost no NetworkDownedReviveManager.")]
 [RequireComponent(typeof(NetworkPlayerHealth))]
 public class DownedReviveZoneVisual : MonoBehaviour
 {
@@ -14,6 +15,7 @@ public class DownedReviveZoneVisual : MonoBehaviour
 
     private void Awake()
     {
+        enabled = false;
         _health = GetComponent<NetworkPlayerHealth>();
         if (downedConfig == null)
             downedConfig = _health.DownedConfig;
@@ -23,7 +25,7 @@ public class DownedReviveZoneVisual : MonoBehaviour
     {
         if (_health == null || downedConfig == null) return;
 
-        bool show = _health.IsSpawned && _health.IsUnconscious && !_health.IsBleedingOut;
+        bool show = _health.IsSpawned && _health.IsUnconscious && !_health.IsBleedingOut && _health.IsReviveZoneActive;
         if (!show)
         {
             HideZone();

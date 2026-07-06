@@ -103,6 +103,16 @@ public class NetworkPlayerHealth : NetworkBehaviour
 
 
 
+    private readonly NetworkVariable<bool> _networkReviveZoneActive = new NetworkVariable<bool>(
+
+        false,
+
+        NetworkVariableReadPermission.Everyone,
+
+        NetworkVariableWritePermission.Server);
+
+
+
     private float _reviveProgressSendTimer;
 
 
@@ -130,6 +140,8 @@ public class NetworkPlayerHealth : NetworkBehaviour
     public float UnconsciousDuration => downedConfig != null ? downedConfig.unconsciousDuration : 45f;
 
     public bool IsReviveTimerPaused => _networkRevivePaused.Value;
+
+    public bool IsReviveZoneActive => _networkReviveZoneActive.Value;
 
     public DownedPlayerConfig DownedConfig => downedConfig;
 
@@ -249,8 +261,6 @@ public class NetworkPlayerHealth : NetworkBehaviour
     {
         if (!IsServer) return;
 
-        DownedReviveZoneSystem.TickServer(downedConfig);
-
         if (!_networkIsUnconscious.Value || _networkIsBleedingOut.Value)
             return;
 
@@ -312,9 +322,12 @@ public class NetworkPlayerHealth : NetworkBehaviour
 
         _networkRevivePaused.Value = false;
 
+        _networkReviveZoneActive.Value = false;
+
 
 
         MultiplayerGameManager.Instance?.RegisterPlayerDowned();
+        NetworkDownedReviveManager.Instance?.RegisterDownedPlayer(OwnerClientId);
     }
 
 
@@ -339,6 +352,25 @@ public class NetworkPlayerHealth : NetworkBehaviour
 
         _networkReviveProgress.Value = Mathf.Clamp01(normalized);
 
+    }
+
+    public void ServerSetReviveZoneActive(bool active)
+    {
+        if (!IsServer)
+            return;
+
+        _networkReviveZoneActive.Value = active;
+    }
+
+    public void ServerClearReviveZone()
+    {
+        if (!IsServer)
+            return;
+
+        _networkReviveZoneActive.Value = false;
+        _networkReviveProgress.Value = 0f;
+        _networkRevivePaused.Value = false;
+        NetworkDownedReviveManager.Instance?.UnregisterDownedPlayer(OwnerClientId);
     }
 
 
@@ -371,9 +403,12 @@ public class NetworkPlayerHealth : NetworkBehaviour
 
         _networkRevivePaused.Value = false;
 
+        _networkReviveZoneActive.Value = false;
+
 
 
         MultiplayerGameManager.Instance?.RegisterPlayerRevived();
+        NetworkDownedReviveManager.Instance?.UnregisterDownedPlayer(OwnerClientId);
     }
 
     private void EnterBleedingOutOnServer()
@@ -384,6 +419,8 @@ public class NetworkPlayerHealth : NetworkBehaviour
         _networkIsBleedingOut.Value = true;
         _networkReviveProgress.Value = 0f;
         _networkRevivePaused.Value = false;
+        _networkReviveZoneActive.Value = false;
+        NetworkDownedReviveManager.Instance?.UnregisterDownedPlayer(OwnerClientId);
     }
 
 
