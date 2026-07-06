@@ -373,11 +373,11 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 3642000000000008
-    m_Localized: '- INTERAGIR'
+    m_Localized: INTERAGIR
     m_Metadata:
       m_Items: []
   - m_Id: 3642000000000009
-    m_Localized: '- PAUSAR'
+    m_Localized: PAUSAR
     m_Metadata:
       m_Items: []
   - m_Id: 3642000000000010
