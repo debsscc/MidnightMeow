@@ -12,18 +12,26 @@ public class NetworkCarriage : NetworkBehaviour
 {
     public static NetworkCarriage Instance { get; private set; }
 
+    /// <summary>Disparado quando uma instância de carruagem fica disponível (spawn ou Awake).</summary>
+    public static event System.Action<NetworkCarriage> OnInstanceAvailable;
+
+    /// <summary>Progresso normalizado do trajeto (0–1), replicado pelo servidor.</summary>
+    public event System.Action<float> PathProgressChanged;
+
     [SerializeField] private CarriageConfig config;
     [SerializeField] private CarriagePath path;
 
     private HealthComponent _health;
     private static Sprite _cachedPlaceholderSprite;
     private Coroutine _pathSetupRoutine;
+    private Coroutine _clientVisualRefreshRoutine;
 
-    private const float PathSetupTimeoutSeconds = 2f;
+    private const float PathSetupTimeoutSeconds = 15f;
     private const float PathSetupPollSeconds = 0.1f;
 
     private const float TargetVisualWidth = 2.4f;
     private const float TargetVisualHeight = 1.6f;
+    private const int CarriageSortingOrder = 25;
 
     private readonly NetworkVariable<float> _pathProgress = new NetworkVariable<float>(
         0f,
@@ -93,13 +101,6 @@ public class NetworkCarriage : NetworkBehaviour
 
     private void Awake()
     {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(this);
-            return;
-        }
-
-        Instance = this;
         ResolveSingleHealthComponent();
         if (config == null)
         {
@@ -143,27 +144,43 @@ public class NetworkCarriage : NetworkBehaviour
         }
     }
 
-    private void EnsurePlaceholderSprite()
+    private Transform ResolveVisualTransform()
     {
         Transform visual = transform.Find("Visual");
-        if (visual == null)
+        if (visual != null)
+            return visual;
+
+        SpriteRenderer[] renderers = GetComponentsInChildren<SpriteRenderer>(true);
+        for (int i = 0; i < renderers.Length; i++)
         {
-            SpriteRenderer rootSprite = GetComponentInChildren<SpriteRenderer>();
-            if (rootSprite != null)
-                visual = rootSprite.transform;
+            SpriteRenderer candidate = renderers[i];
+            if (candidate != null && candidate.gameObject.name == "Visual")
+                return candidate.transform;
         }
 
+        return renderers.Length > 0 ? renderers[0].transform : null;
+    }
+
+    private void EnsurePlaceholderSprite()
+    {
+        Transform visual = ResolveVisualTransform();
         if (visual == null)
             return;
+
+        if (!visual.gameObject.activeSelf)
+            visual.gameObject.SetActive(true);
+
+        visual.gameObject.layer = gameObject.layer;
 
         SpriteRenderer spriteRenderer = visual.GetComponent<SpriteRenderer>();
         if (spriteRenderer == null)
             return;
 
+        spriteRenderer.enabled = true;
         spriteRenderer.sprite = ResolvePlaceholderSprite();
         spriteRenderer.drawMode = SpriteDrawMode.Simple;
         spriteRenderer.color = new Color(0.75f, 0.55f, 0.25f, 1f);
-        spriteRenderer.sortingOrder = Mathf.Max(spriteRenderer.sortingOrder, 2);
+        spriteRenderer.sortingOrder = CarriageSortingOrder;
     }
 
     private static Sprite ResolvePlaceholderSprite()
@@ -198,14 +215,7 @@ public class NetworkCarriage : NetworkBehaviour
 
     private void ApplyVisualScale()
     {
-        Transform visual = transform.Find("Visual");
-        if (visual == null)
-        {
-            SpriteRenderer sprite = GetComponentInChildren<SpriteRenderer>();
-            if (sprite != null)
-                visual = sprite.transform;
-        }
-
+        Transform visual = ResolveVisualTransform();
         if (visual == null)
             return;
 
@@ -246,6 +256,7 @@ public class NetworkCarriage : NetworkBehaviour
         if (Instance == this)
             Instance = null;
 
+        PathProgressChanged = null;
         base.OnDestroy();
     }
 
@@ -255,9 +266,18 @@ public class NetworkCarriage : NetworkBehaviour
         _syncHealth.OnValueChanged += HandleSyncedHealthChanged;
         _syncMaxHealth.OnValueChanged += HandleSyncedMaxHealthChanged;
 
-        EnsureLocalPathConfigured();
-        ApplyPathPosition();
-        SyncCarriageHudProgress();
+        if (Instance != null && Instance != this)
+            Debug.LogWarning("[NetworkCarriage] Substituindo instância local por carruagem spawnada na rede.");
+
+        Instance = this;
+        OnInstanceAvailable?.Invoke(this);
+
+        PhaseGameplayContentInstaller.ConfigureCarriage(this);
+
+        if (IsServer)
+            ApplyPathPosition();
+
+        ForcePublishPathProgress(_pathProgress.Value);
         ApplySyncedHealthToComponent();
 
         if (IsServer && config != null)
@@ -265,6 +285,11 @@ public class NetworkCarriage : NetworkBehaviour
             _health.Initialize(config.maxHealth);
             PublishHealthToNetwork();
         }
+
+        EnsureRuntimePresentation();
+
+        if (!IsServer)
+            BeginClientVisualRefresh();
 
         if (!IsPathReady())
             BeginPathSetupRetry();
@@ -278,24 +303,34 @@ public class NetworkCarriage : NetworkBehaviour
             _pathSetupRoutine = null;
         }
 
+        if (_clientVisualRefreshRoutine != null)
+        {
+            StopCoroutine(_clientVisualRefreshRoutine);
+            _clientVisualRefreshRoutine = null;
+        }
+
         _pathProgress.OnValueChanged -= HandlePathProgressChanged;
         _syncHealth.OnValueChanged -= HandleSyncedHealthChanged;
         _syncMaxHealth.OnValueChanged -= HandleSyncedMaxHealthChanged;
         base.OnNetworkDespawn();
     }
 
-    private void EnsureLocalPathConfigured()
-    {
-        if (IsPathReady())
-            return;
-
-        PhaseGameplayContentInstaller.ConfigureCarriage(this);
-    }
-
     private bool IsPathReady() => path != null && path.WaypointCount >= 2;
 
-    private void SyncCarriageHudProgress() =>
-        PublishPathProgressIfChanged(_pathProgress.Value);
+    private void BeginClientVisualRefresh()
+    {
+        if (_clientVisualRefreshRoutine != null)
+            StopCoroutine(_clientVisualRefreshRoutine);
+
+        _clientVisualRefreshRoutine = StartCoroutine(RefreshClientVisualAfterNetworkSync());
+    }
+
+    private IEnumerator RefreshClientVisualAfterNetworkSync()
+    {
+        yield return null;
+        EnsureRuntimePresentation();
+        _clientVisualRefreshRoutine = null;
+    }
 
     private void BeginPathSetupRetry()
     {
@@ -316,8 +351,11 @@ public class NetworkCarriage : NetworkBehaviour
 
             if (IsPathReady())
             {
-                ApplyPathPosition();
-                SyncCarriageHudProgress();
+                if (IsServer)
+                    ApplyPathPosition();
+
+                EnsureRuntimePresentation();
+                ForcePublishPathProgress(_pathProgress.Value);
                 _pathSetupRoutine = null;
                 yield break;
             }
@@ -333,8 +371,16 @@ public class NetworkCarriage : NetworkBehaviour
 
     private void HandlePathProgressChanged(float previous, float current)
     {
-        ApplyPathPosition();
+        if (IsServer)
+            ApplyPathPosition();
+
         PublishPathProgressIfChanged(current);
+    }
+
+    private void ForcePublishPathProgress(float normalized)
+    {
+        _lastPublishedPathProgress = -1f;
+        PublishPathProgressIfChanged(normalized);
     }
 
     private void HandleSyncedHealthChanged(float previous, float current) => ApplySyncedHealthToComponent();
@@ -405,7 +451,6 @@ public class NetworkCarriage : NetworkBehaviour
         if (IsServer || !IsSpawned)
             return;
 
-        ApplyPathPosition();
         PublishPathProgressIfChanged(_pathProgress.Value);
     }
 
@@ -416,6 +461,7 @@ public class NetworkCarriage : NetworkBehaviour
             return;
 
         _lastPublishedPathProgress = clamped;
+        PathProgressChanged?.Invoke(clamped);
         GameEvents.InvokeCarriagePathProgressChanged(clamped);
     }
     private void CompleteArrival(Vector3 arrival)
@@ -430,7 +476,7 @@ public class NetworkCarriage : NetworkBehaviour
 
         if (IsServer)
         {
-            PublishPathProgressIfChanged(1f);
+            ForcePublishPathProgress(1f);
             GameEvents.InvokeCarriageArrived();
             EnsurePhaseObjectiveAndNotifyVictory();
         }

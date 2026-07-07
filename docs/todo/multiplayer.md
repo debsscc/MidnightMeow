@@ -33,7 +33,7 @@ _Última revisão: 2026-07-05_
 
 ## [TASK CONCLUÍDA] Dessincronização da Carruagem (Fase 2)
 
-- **O que foi feito:** `NetworkCarriage.OnNetworkSpawn` agora chama `PhaseGameplayContentInstaller.ConfigureCarriage` em **todos os peers** (não só no servidor), com coroutine de retry (`EnsurePathConfiguredRoutine`) até `CarriagePath` local estar pronto. Sync inicial da HUD via `GameEvents.InvokeCarriagePathProgressChanged`. Removida invocação duplicada de progresso no `Update` do servidor (NV `_pathProgress` já dispara `HandlePathProgressChanged`). `NetworkCarriageSpawner.IsCarriageReady` exige `NetworkObject.IsSpawned` no Cliente antes de encerrar setup. Scripts: `NetworkCarriage.cs`, `NetworkCarriageSpawner.cs`; doc `docs/gameplay/carriage.md`.
+- **O que foi feito:** `NetworkCarriage.OnNetworkSpawn` chama `PhaseGameplayContentInstaller.ConfigureCarriage` em **todos os peers** (não só no servidor), com coroutine de retry (`EnsurePathConfiguredRoutine`, timeout 15s) até `CarriagePath` local estar pronto. Posição ao configurar path usa `_pathProgress` replicado (não reseta sempre ao waypoint inicial). `SynchronizeTransform` desligado no prefab — sync de posição só via NV `_pathProgress` + `ApplyPathPosition` (sem `NetworkTransform`). HUD assina `PathProgressChanged` / `OnInstanceAvailable` em `PhaseObjectiveHud` além de `GameEvents`. `NetworkCarriageSpawner` só reconfigura path quando ainda não está pronto. Scripts: `NetworkCarriage.cs`, `NetworkCarriageSpawner.cs`, `PhaseGameplayContentInstaller.cs`, `PhaseObjectiveHud.cs`, `Carriage.prefab`; docs `docs/gameplay/carriage.md`.
 
 - **Como testar (Singleplayer):** Menu → Contrato 2 → **Loading2** → Fase-2. Carruagem move; HUD superior mostra `Carruagem: X%` subindo.
 

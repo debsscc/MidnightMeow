@@ -22,11 +22,11 @@ Referência rápida para mensagens frequentes no Console do Unity / compilador C
 
 ### Carruagem parada no Cliente / HUD em 0% (Fase 2)
 
-**Sintoma:** Host vê carruagem mover e HUD subir; Cliente vê carruagem parada e `Carruagem: 0%`.
+**Sintoma:** Host vê carruagem mover e HUD subir; Cliente vê carruagem parada e `Carruagem: 0%`, ou HUD/inimigos piscam resetando para 0.
 
-**Causa:** `ConfigureCarriage` era chamado só no servidor em `OnNetworkSpawn`; `CarriagePath` não é `NetworkObject`, então o Cliente ficava com `path == null` e `ApplyPathPosition()` não aplicava a NV `_pathProgress`.
+**Causa:** (1) `ConfigureCarriage`/`path` local ausente no Cliente; (2) `SynchronizeTransform` desligado sem `NetworkTransform`; (3) filho `Visual` com `Sorting Order` 2 ficava **atrás** de tilemaps da Fase-2 (ordem até 16); (4) `PhaseObjectiveHud.Update` fazia polling e no Cliente lia `NetworkWaveManager.EnemiesAlive` — campo **só atualizado no servidor**, sempre 0 no peer remoto.
 
-**Solução no projeto:** todos os peers chamam `PhaseGameplayContentInstaller.ConfigureCarriage` no spawn + retry local; progresso HUD via `HandlePathProgressChanged`.
+**Solução no projeto:** `ConfigureCarriage` em todos os peers; prefab com `NetworkTransform`; `Visual` layer `Structure`, `Sorting Order` 25; `EnsureRuntimePresentation` reaplicado no Cliente após 1 frame. HUD **event-driven** (sem `Update` polling); contagem de inimigos via `BroadcastObjectiveStatusClientRpc` → `CachedEnemiesAlive`.
 
 **Referência:** [carriage.md](../gameplay/carriage.md)
 

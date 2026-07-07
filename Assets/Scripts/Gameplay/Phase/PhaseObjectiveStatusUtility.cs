@@ -1,15 +1,41 @@
 using System.Collections.Generic;
+using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 /// <summary>
 /// Conta buracos selados e emite status para HUD.
 /// </summary>
 public static class PhaseObjectiveStatusUtility
 {
+    private static bool _subscribed;
+
     public static int CachedEnemiesAlive { get; private set; }
 
-    public static void SetCachedEnemiesAlive(int enemiesAlive) =>
+    /// <summary>True após o servidor enviar contagem via ClientRpc (fonte autoritativa no Cliente).</summary>
+    public static bool HasNetworkObjectiveStatus { get; private set; }
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+    private static void RegisterSceneReset()
+    {
+        if (_subscribed)
+            return;
+
+        _subscribed = true;
+        SceneManager.sceneLoaded += (_, _) => ResetForScene();
+    }
+
+    public static void ResetForScene()
+    {
+        CachedEnemiesAlive = 0;
+        HasNetworkObjectiveStatus = false;
+    }
+
+    public static void SetCachedEnemiesAlive(int enemiesAlive)
+    {
         CachedEnemiesAlive = Mathf.Max(0, enemiesAlive);
+        HasNetworkObjectiveStatus = true;
+    }
 
     public static void CountSealedHoles(out int sealedCount, out int totalCount)
     {
@@ -43,12 +69,17 @@ public static class PhaseObjectiveStatusUtility
 
     public static int CountAliveNetworkEnemies()
     {
-        NetworkWaveManager waveManager = NetworkWaveManager.Instance;
-        if (waveManager != null && waveManager.IsSpawned)
-            return waveManager.EnemiesAlive;
-
-        if (CachedEnemiesAlive > 0)
+        NetworkManager networkManager = NetworkManager.Singleton;
+        if (networkManager != null && networkManager.IsServer)
+        {
+            NetworkWaveManager waveManager = NetworkWaveManager.Instance;
+            if (waveManager != null && waveManager.IsSpawned)
+                return waveManager.EnemiesAlive;
+        }
+        else if (HasNetworkObjectiveStatus)
+        {
             return CachedEnemiesAlive;
+        }
 
         int count = 0;
         NetworkEnemyController[] enemies = Object.FindObjectsByType<NetworkEnemyController>(FindObjectsSortMode.None);

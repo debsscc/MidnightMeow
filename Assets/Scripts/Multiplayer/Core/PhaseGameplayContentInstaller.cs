@@ -1,3 +1,4 @@
+using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -178,9 +179,24 @@ public static class PhaseGameplayContentInstaller
         path.ConfigureWaypoints(new[] { wpStart, wpEnd });
 
         if (carriage != null)
-            carriage.transform.position = start;
+            ApplyCarriagePositionFromProgress(carriage, path);
 
         return path;
+    }
+
+    private static void ApplyCarriagePositionFromProgress(NetworkCarriage carriage, CarriagePath path)
+    {
+        if (carriage == null || path == null || path.WaypointCount < 2)
+            return;
+
+        float progress = 0f;
+        NetworkObject networkObject = carriage.GetComponent<NetworkObject>();
+        if (networkObject != null && networkObject.IsSpawned)
+            progress = carriage.PathProgress;
+
+        Vector3 pos = path.EvaluatePosition(progress);
+        pos.z = carriage.transform.position.z;
+        carriage.transform.position = pos;
     }
 
     private static float ResolveCarriagePathY(CarriageConfig config)

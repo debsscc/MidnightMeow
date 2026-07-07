@@ -1,6 +1,14 @@
 # Gameplay — Fases 1–3
 
-Última revisão: 2026-07-05
+Última revisão: 2026-07-07
+
+## Pendências (backlog)
+
+- [ ] Glitch de UI na Fase 2: A tela de controles aparece incorretamente por alguns instantes antes da transição para a tela de vitória.
+- [ ] Habilidade R (Poça da Cora): Shader dessincronizado. O tamanho visual no Cliente está minúsculo, não refletindo a área real de dano que o Host enxerga.
+- [ ] Refinamento da Mecânica de Reviver.
+- [ ] Implementação da Mecânica de Arrumar a Carruagem.
+- [ ] Chefe/Inimigo: Rei Rato.
 
 ## Status
 

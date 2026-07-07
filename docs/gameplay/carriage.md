@@ -62,7 +62,7 @@ Em `CarriageConfig`:
 
 3. **`NetworkCarriage.OnNetworkSpawn`** (todos os peers): chama `PhaseGameplayContentInstaller.ConfigureCarriage` se `path` estiver vazio; retry local (~2s) até `CarriagePath` com ≥2 waypoints. Progresso HUD sincronizado via `_pathProgress` (`NetworkVariable`) + `GameEvents.OnCarriagePathProgressChanged`.
 
-**Multiplayer:** `CarriagePath` **não** é objeto de rede — cada peer cria o trajeto localmente com os mesmos waypoints (`CarriageConfig` + bounds). A posição visual do Cliente vem de `ApplyPathPosition()` alimentado pela NV `_pathProgress` replicada pelo servidor.
+**Multiplayer:** `CarriagePath` **não** é objeto de rede — cada peer cria o trajeto localmente com os mesmos waypoints (`CarriageConfig` + bounds). **Posição visual no Cliente:** `NetworkTransform` (autoridade do servidor) replica `transform.position`; **HUD:** `NetworkVariable<float> _pathProgress` → `PathProgressChanged` / `PhaseObjectiveHud`. Não aplicar `ApplyPathPosition` no Cliente (evita conflito com `NetworkTransform`).
 
 O array `waypoints` no Inspector de `CarriagePath` pode parecer vazio **fora do Play** — os waypoints são filhos criados em runtime. Durante o Play, veja a hierarquia `CarriagePath/Waypoint_*`.
 
@@ -102,7 +102,8 @@ Setup de cena (Editor): **MidnightMeow → Phases → Setup Active Phase Scene**
 
 |------------|--------|
 
-| `NetworkObject` | Spawn pelo host (`NetworkCarriageSpawner` ou in-scene) |
+| `NetworkObject` | Spawn pelo host (`NetworkCarriageSpawner` ou in-scene); `SynchronizeTransform = true` |
+| `NetworkTransform` | Autoridade do servidor; sync só posição X/Y |
 
 | `NetworkCarriage` | Referência a `CarriageConfig`; `path` pode ficar vazio (runtime preenche) |
 
