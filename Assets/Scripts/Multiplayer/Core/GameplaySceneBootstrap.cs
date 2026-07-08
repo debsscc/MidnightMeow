@@ -31,43 +31,21 @@ public static class GameplaySceneBootstrap
             Object.FindFirstObjectByType<NetworkRatHoleSealManager>(FindObjectsInactive.Include);
 
         if (sealManager != null)
-        {
             RatHoleSealZoneVisual.EnsureAttached(sealManager);
-            EnsureCarriageRepairVisual();
-        }
 
         NetworkDownedReviveManager reviveManager =
             Object.FindFirstObjectByType<NetworkDownedReviveManager>(FindObjectsInactive.Include);
         if (reviveManager != null)
             DownedReviveZoneVisualHost.EnsureAttached(reviveManager);
 
-        if (sealManager != null)
-            return;
-
-        if (Object.FindFirstObjectByType<CarriageRepairZoneVisual>(FindObjectsInactive.Include) != null)
-            return;
-
-        var root = new GameObject("CooperativeZoneVisuals");
-        root.AddComponent<CarriageRepairZoneVisual>();
-    }
-
-    private static void EnsureCarriageRepairVisual()
-    {
-        NetworkRatHoleSealManager sealManager =
-            Object.FindFirstObjectByType<NetworkRatHoleSealManager>(FindObjectsInactive.Include);
-
-        Transform parent = sealManager != null ? sealManager.transform : null;
-        if (parent != null && parent.GetComponentInChildren<CarriageRepairZoneVisual>(true) != null)
-            return;
-
-        GameObject host = parent != null
-            ? new GameObject("CarriageRepairVisuals")
-            : new GameObject("CooperativeZoneVisuals");
-
-        if (parent != null)
-            host.transform.SetParent(parent, false);
-
-        host.AddComponent<CarriageRepairZoneVisual>();
+        CarriageController carriage = CarriageController.Instance
+            ?? Object.FindFirstObjectByType<CarriageController>(FindObjectsInactive.Include);
+        if (carriage != null)
+        {
+            NetworkCarriageRepairManager repairManager = carriage.GetComponent<NetworkCarriageRepairManager>();
+            if (repairManager != null)
+                CarriageRepairZoneVisualHost.EnsureAttached(repairManager);
+        }
     }
 
     public static void TryEnsureGameplayHud()

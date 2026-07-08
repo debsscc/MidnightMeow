@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 using System.Collections.Generic;
 using Unity.Netcode;
+using Unity.Netcode.Components;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -437,28 +438,20 @@ public static class PhaseSceneSetupEditor
 
     private static void InstallCarriage()
     {
-        NetworkCarriage existingCarriage = Object.FindFirstObjectByType<NetworkCarriage>(FindObjectsInactive.Include);
-        GameObject carriageGo;
-        if (existingCarriage != null)
+        CarriageController[] sceneCarriages = Object.FindObjectsByType<CarriageController>(
+            FindObjectsInactive.Include,
+            FindObjectsSortMode.None);
+        for (int i = 0; i < sceneCarriages.Length; i++)
         {
-            carriageGo = existingCarriage.gameObject;
-        }
-        else
-        {
-            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Gameplay/Carriage.prefab");
-            if (prefab != null)
-            {
-                carriageGo = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
-                Undo.RegisterCreatedObjectUndo(carriageGo, "Carriage");
-            }
-            else
-            {
-                carriageGo = CreateCarriageInScene();
-            }
+            if (sceneCarriages[i] != null)
+                Undo.DestroyObjectImmediate(sceneCarriages[i].gameObject);
         }
 
         if (!TryGetMapBounds(out Bounds bounds))
+        {
+            Debug.LogWarning("[PhaseSetup] CameraBoundsVolume ausente — CarriagePath não configurado.");
             return;
+        }
 
         CarriageConfig config = AssetDatabase.LoadAssetAtPath<CarriageConfig>(CarriageConfigPath);
         float pathY = config != null && config.useCustomPathY ? config.pathY : bounds.center.y;
@@ -498,17 +491,9 @@ public static class PhaseSceneSetupEditor
         wpEnd.position = right;
         path.ConfigureWaypoints(new[] { wpStart, wpEnd });
 
-        NetworkCarriage carriage = carriageGo.GetComponent<NetworkCarriage>();
-        if (carriage != null)
-        {
-            SerializedObject carriageSo = new SerializedObject(carriage);
-            carriageSo.FindProperty("path").objectReferenceValue = path;
-            if (config != null)
-                carriageSo.FindProperty("config").objectReferenceValue = config;
-            carriageSo.ApplyModifiedPropertiesWithoutUndo();
-        }
-
-        carriageGo.transform.position = left;
+        Debug.Log(
+            "[PhaseSetup] CarriagePath configurado na cena. A carruagem NÃO é colocada aqui — " +
+            "spawn exclusivo em runtime pelo servidor (CarriageSpawner).");
     }
 
     private static GameObject CreateCarriageInScene()
@@ -519,7 +504,12 @@ public static class PhaseSceneSetupEditor
         go.layer = LayerMask.NameToLayer("Structure");
 
         Undo.AddComponent<NetworkObject>(go);
-        Undo.AddComponent<NetworkCarriage>(go);
+        Undo.AddComponent<NetworkTransform>(go);
+        Undo.AddComponent<CarriageController>(go);
+        Undo.AddComponent<NetworkCarriageHealth>(go);
+        Undo.AddComponent<CarriageDamageFilter>(go);
+        Undo.AddComponent<NetworkCarriageRepairManager>(go);
+        Undo.AddComponent<CarriageRepairWorldUI>(go);
         HealthComponent health = Undo.AddComponent<HealthComponent>(go);
         BoxCollider2D box = Undo.AddComponent<BoxCollider2D>(go);
         box.size = new Vector2(2.4f, 1.6f);
@@ -537,7 +527,7 @@ public static class PhaseSceneSetupEditor
         healthSo.ApplyModifiedPropertiesWithoutUndo();
 
         CarriageConfig config = AssetDatabase.LoadAssetAtPath<CarriageConfig>(CarriageConfigPath);
-        NetworkCarriage carriage = go.GetComponent<NetworkCarriage>();
+        CarriageController carriage = go.GetComponent<CarriageController>();
         SerializedObject carriageSo = new SerializedObject(carriage);
         if (config != null)
             carriageSo.FindProperty("config").objectReferenceValue = config;

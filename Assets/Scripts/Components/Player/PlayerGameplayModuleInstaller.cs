@@ -8,7 +8,7 @@ public class PlayerGameplayModuleInstaller : MonoBehaviour
 {
     [SerializeField] private bool installDamageImmunity = true;
     [SerializeField] private bool installDownedUI = true;
-    [SerializeField] private bool installRevivePromptUI = true;
+    [SerializeField] private bool installCarriageRepairInteraction = true;
     [SerializeField] private bool installMeleeHitVisual = true;
     [SerializeField] private bool installAbilityDebugVisual = false;
     [SerializeField] private bool installRatHoleSealInteraction = true;
@@ -27,8 +27,8 @@ public class PlayerGameplayModuleInstaller : MonoBehaviour
         if (GetComponent<NetworkPlayerRevive>() != null && GetComponent<PlayerDownedReviveInteraction>() == null)
             gameObject.AddComponent<PlayerDownedReviveInteraction>();
 
-        if (GetComponent<CarriageRepairPromptUI>() == null)
-            gameObject.AddComponent<CarriageRepairPromptUI>();
+        if (installCarriageRepairInteraction && GetComponent<PlayerCarriageRepairInteraction>() == null)
+            gameObject.AddComponent<PlayerCarriageRepairInteraction>();
 
         if (installDownedUI && GetComponent<DownedPlayerWorldUI>() == null)
             gameObject.AddComponent<DownedPlayerWorldUI>();

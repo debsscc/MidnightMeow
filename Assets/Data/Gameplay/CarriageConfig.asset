@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: CarriageConfig
   m_EditorClassIdentifier: Assembly-CSharp::CarriageConfig
   maxHealth: 120
+  repairRestoreHealthFraction: 0.5
   visualScale: 1
   pathStartX: -42
   pathEndX: 18
@@ -27,6 +28,15 @@ MonoBehaviour:
   repairDuration: 8
   repairDualPlayerSpeedMultiplier: 2
   repairAbandonTimeout: 2.5
+  repairZoneVisualScaleMultiplier: 1.05
+  repairZoneOutlineThickness: 0.055
+  repairZoneShowInteriorFill: 0
+  repairZoneSortingOrder: 250
   repairZoneBackgroundColor: {r: 0.95, g: 0.7, b: 0.25, a: 0.22}
   repairZoneFillColor: {r: 1, g: 0.85, b: 0.35, a: 0.5}
   repairZoneOutlineColor: {r: 1, g: 0.95, b: 0.75, a: 0.9}
+  repairPromptPrefab: {fileID: 5804883921897708028, guid: 13966282a7a8dc342b54e9663bb7c08f, type: 3}
+  repairLabelVisibilityRadiusMultiplier: 2
+  approachText: Aproxime-se para consertar
+  pressEText: Aperte E para consertar
+  repairProgressTextFormat: '{0}%'

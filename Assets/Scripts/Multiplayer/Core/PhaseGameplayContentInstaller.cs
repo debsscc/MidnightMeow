@@ -120,14 +120,20 @@ public static class PhaseGameplayContentInstaller
 
     private static void EnsureCarriageSetup()
     {
-        NetworkCarriage carriage = Object.FindFirstObjectByType<NetworkCarriage>(FindObjectsInactive.Include);
-        if (carriage != null)
-            ConfigureCarriage(carriage);
+        if (CarriageSpawner.HasAuthoritativeRuntimeCarriage())
+            return;
 
-        NetworkCarriageSpawner.EnsureCarriageSpawned();
+        CarriageSpawner.RemoveScenePlaceholders();
+
+        NetworkManager networkManager = NetworkManager.Singleton;
+        if (networkManager != null && networkManager.IsServer)
+        {
+            CarriageSpawner.NotifyClientSceneReady(networkManager.LocalClientId);
+            CarriageSpawner.EnsureCarriageSpawned();
+        }
     }
 
-    public static void ConfigureCarriage(NetworkCarriage carriage)
+    public static void ConfigureCarriage(CarriageController carriage)
     {
         if (carriage == null)
             return;
@@ -138,7 +144,7 @@ public static class PhaseGameplayContentInstaller
         carriage.EnsureRuntimePresentation();
     }
 
-    private static CarriagePath EnsureCarriagePath(NetworkCarriage carriage, CarriageConfig config)
+    private static CarriagePath EnsureCarriagePath(CarriageController carriage, CarriageConfig config)
     {
         CarriagePath path = carriage.Path;
         if (path == null)
@@ -184,13 +190,18 @@ public static class PhaseGameplayContentInstaller
         return path;
     }
 
-    private static void ApplyCarriagePositionFromProgress(NetworkCarriage carriage, CarriagePath path)
+    private static void ApplyCarriagePositionFromProgress(CarriageController carriage, CarriagePath path)
     {
         if (carriage == null || path == null || path.WaypointCount < 2)
             return;
 
-        float progress = 0f;
         NetworkObject networkObject = carriage.GetComponent<NetworkObject>();
+        NetworkManager networkManager = NetworkManager.Singleton;
+        if (networkObject != null && networkObject.IsSpawned
+            && networkManager != null && !networkManager.IsServer)
+            return;
+
+        float progress = 0f;
         if (networkObject != null && networkObject.IsSpawned)
             progress = carriage.PathProgress;
 

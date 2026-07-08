@@ -76,6 +76,10 @@ public class HealthComponent : MonoBehaviour, IDamageable
     {
         if (_isDead || amount <= 0f || IsInvulnerable) return;
 
+        if (TryGetComponent<CarriageDamageFilter>(out var carriageFilter)
+            && !carriageFilter.CanAcceptDamage(instigator, damageType))
+            return;
+
         if (gameObject.CompareTag("Player") && IsPlayerDashing(gameObject))
             return;
 

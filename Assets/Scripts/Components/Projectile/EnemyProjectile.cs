@@ -64,9 +64,16 @@ public class EnemyProjectile : MonoBehaviour
     //Bloqueia fisicamente pela parede e destroi o projétil se cair na layer wall e structure
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        if (collision.gameObject.layer == LayerMask.NameToLayer("Wall") ||
-            collision.gameObject.layer == LayerMask.NameToLayer("Structure"))
+        if (collision.gameObject.layer == LayerMask.NameToLayer("Wall"))
         {
+            TriggerHitAndDestroy();
+            return;
+        }
+
+        if (collision.gameObject.layer == LayerMask.NameToLayer("Structure")
+            || collision.gameObject.CompareTag("Structure"))
+        {
+            PlayerCombatUtility.TryApplyDamage(collision.collider, stats.damage, gameObject);
             TriggerHitAndDestroy();
         }
     }
@@ -75,6 +82,13 @@ public class EnemyProjectile : MonoBehaviour
     private void OnTriggerEnter2D(Collider2D other)
     {
         if (other.gameObject.layer == LayerMask.NameToLayer("Player"))
+        {
+            PlayerCombatUtility.TryApplyDamage(other, stats.damage, gameObject);
+            TriggerHitAndDestroy();
+            return;
+        }
+
+        if (other.CompareTag("Structure"))
         {
             PlayerCombatUtility.TryApplyDamage(other, stats.damage, gameObject);
             TriggerHitAndDestroy();

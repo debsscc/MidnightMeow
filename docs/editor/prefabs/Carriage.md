@@ -1,6 +1,6 @@
 # Carriage.prefab
 
-Última revisão: 2026-06-28
+Última revisão: 2026-07-08
 
 | Campo | Valor |
 |-------|--------|
@@ -14,20 +14,27 @@
 ```
 Carriage (tag Structure, layer Structure)
 ├── NetworkObject
+├── NetworkTransform (AuthorityMode = Server)
 ├── HealthComponent (max 120, não destrói ao morrer)
-├── NetworkCarriage → CarriageConfig, path (vazio OK — runtime)
+├── CarriageController → CarriageConfig, path (vazio OK — runtime)
+├── NetworkCarriageHealth
+├── CarriageDamageFilter
+├── NetworkCarriageRepairManager → CarriageConfig
+├── CarriageRepairWorldUI
 ├── BoxCollider2D
 └── Visual
-    └── SpriteRenderer (sem sprite — placeholder runtime)
+    └── SpriteRenderer (placeholder marrom runtime)
 ```
 
 ## Notas para agentes
 
-- **Não** atribuir sprites de menu/UI no `Visual` — `NetworkCarriage` força placeholder quadrado.
-- `CarriageConfig.visualScale` padrão **1**; tamanho alvo ~2,4×1,6 uu.
-- `path` no Inspector pode ficar vazio; `PhaseGameplayContentInstaller` + `NetworkCarriageSpawner` preenchem em runtime.
-- Fase-2 pode ter instância in-scene **ou** spawn dinâmico pelo host.
-- Setup opcional: **MidnightMeow → Phases → Setup Active Phase Scene** (cria `CarriagePath` + waypoints na cena).
+- **Não** atribuir sprites de menu/UI no `Visual` — `CarriageController` força placeholder quadrado.
+- Progresso HUD: `NetworkVariable<float> _pathProgress` (servidor escreve; clientes leem via `PhaseObjectiveHud`).
+- Posição replicada via `NetworkTransform` (servidor move; clientes não aplicam path localmente).
+- `path` no Inspector pode ficar vazio; `PhaseGameplayContentInstaller` + `CarriageSpawner` preenchem em runtime.
+- Conserto: `PlayerCarriageRepairInteraction` no jogador; label em `CarriageRepairWorldUI`; zonas em `CarriageRepairZoneVisualHost`.
+- Fase-2: instância in-scene **ou** spawn dinâmico pelo host.
+- Setup: **MidnightMeow → Phases → Setup Active Phase Scene**.
 
 ## Ver também
 

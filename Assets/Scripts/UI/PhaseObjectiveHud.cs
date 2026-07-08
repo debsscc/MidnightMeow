@@ -20,14 +20,14 @@ public class PhaseObjectiveHud : MonoBehaviour
     private int _holesSealed;
     private int _totalHoles;
     private int _enemiesAlive;
-    private NetworkCarriage _subscribedCarriage;
+    private CarriageController _subscribedCarriage;
 
     private void Awake() => EnsureConfigured();
 
     private void OnEnable()
     {
         GameEvents.OnPhaseObjectiveStatusChanged += HandleObjectiveStatusChanged;
-        NetworkCarriage.OnInstanceAvailable += HandleCarriageAvailable;
+        CarriageController.OnInstanceAvailable += HandleCarriageAvailable;
         LocalizationSettings.SelectedLocaleChanged += HandleLocaleChanged;
 
         if (PhaseObjectiveStatusUtility.HasNetworkObjectiveStatus)
@@ -35,29 +35,29 @@ public class PhaseObjectiveHud : MonoBehaviour
 
         PhaseObjectiveStatusUtility.CountSealedHoles(out _holesSealed, out _totalHoles);
 
-        TrySubscribeCarriage(NetworkCarriage.Instance);
+        TrySubscribeCarriage(CarriageController.Instance);
         RebuildStatusText();
     }
 
     private void OnDisable()
     {
         GameEvents.OnPhaseObjectiveStatusChanged -= HandleObjectiveStatusChanged;
-        NetworkCarriage.OnInstanceAvailable -= HandleCarriageAvailable;
+        CarriageController.OnInstanceAvailable -= HandleCarriageAvailable;
         LocalizationSettings.SelectedLocaleChanged -= HandleLocaleChanged;
         UnsubscribeCarriage();
     }
 
-    private void HandleCarriageAvailable(NetworkCarriage carriage) => TrySubscribeCarriage(carriage);
+    private void HandleCarriageAvailable(CarriageController carriage) => TrySubscribeCarriage(carriage);
 
-    private void TrySubscribeCarriage(NetworkCarriage carriage)
+    private void TrySubscribeCarriage(CarriageController carriage)
     {
         if (carriage == null || carriage == _subscribedCarriage)
             return;
 
         UnsubscribeCarriage();
         _subscribedCarriage = carriage;
-        _subscribedCarriage.PathProgressChanged += HandleCarriageProgressChanged;
-        HandleCarriageProgressChanged(_subscribedCarriage.PathProgress);
+        _subscribedCarriage.PathProgressVariable.OnValueChanged += HandleCarriageProgressChanged;
+        HandleCarriageProgressChanged(0f, _subscribedCarriage.PathProgress);
     }
 
     private void UnsubscribeCarriage()
@@ -65,7 +65,7 @@ public class PhaseObjectiveHud : MonoBehaviour
         if (_subscribedCarriage == null)
             return;
 
-        _subscribedCarriage.PathProgressChanged -= HandleCarriageProgressChanged;
+        _subscribedCarriage.PathProgressVariable.OnValueChanged -= HandleCarriageProgressChanged;
         _subscribedCarriage = null;
     }
 
@@ -79,9 +79,9 @@ public class PhaseObjectiveHud : MonoBehaviour
         RebuildStatusText();
     }
 
-    private void HandleCarriageProgressChanged(float normalizedProgress)
+    private void HandleCarriageProgressChanged(float previous, float current)
     {
-        _carriageProgressPercent = Mathf.Clamp01(normalizedProgress) * 100f;
+        _carriageProgressPercent = Mathf.Clamp01(current) * 100f;
         RebuildStatusText();
     }
 
