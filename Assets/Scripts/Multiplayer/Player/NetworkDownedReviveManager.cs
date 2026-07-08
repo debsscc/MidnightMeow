@@ -73,6 +73,9 @@ public class NetworkDownedReviveManager : NetworkBehaviour
             if (!before.IsCompleted && session.IsCompleted)
                 CompleteRevive(session.DownedClientId);
 
+            if (before.IsActive && !session.IsActive)
+                HandleSessionDeactivated(session.DownedClientId);
+
             _sessions[i] = session;
             dirty = true;
 
@@ -238,6 +241,25 @@ public class NetworkDownedReviveManager : NetworkBehaviour
         }
     }
 
+    [ClientRpc]
+    private void NotifyReviveSessionEndedClientRpc(ulong downedClientId)
+    {
+        DownedReviveZoneVisualHost.EnsureAttached(this)?.HideSession(downedClientId);
+    }
+
+    private void HandleSessionDeactivated(ulong downedClientId)
+    {
+        NetworkPlayerHealth downed = FindDownedHealth(downedClientId);
+        if (downed != null)
+        {
+            downed.ServerSetReviveZoneActive(false);
+            downed.ServerSetReviveProgress(0f);
+            downed.ServerSetRevivePaused(false);
+        }
+
+        NotifyReviveSessionEndedClientRpc(downedClientId);
+    }
+
     private void CompleteRevive(ulong downedClientId)
     {
         FindDownedHealth(downedClientId)?.ServerReviveFromUnconscious();
@@ -335,12 +357,22 @@ public class NetworkDownedReviveManager : NetworkBehaviour
         return Mathf.Max(1, count);
     }
 
-    private void HandleSessionsListChanged(NetworkListEvent<DownedReviveSession> _) { }
+    private void HandleSessionsListChanged(NetworkListEvent<DownedReviveSession> _)
+    {
+        DownedReviveZoneVisualHost.EnsureAttached(this)?.RefreshFromSessions();
+    }
 
     private void ResolveConfig()
     {
         if (config != null)
             return;
+
+        MultiplayerGameManager gameManager = MultiplayerGameManager.Instance;
+        if (gameManager != null && gameManager.DownedPlayerConfig != null)
+        {
+            config = gameManager.DownedPlayerConfig;
+            return;
+        }
 
         MultiplayerConfig multiplayer = Resources.Load<MultiplayerConfig>("MultiplayerConfig");
         if (multiplayer != null && multiplayer.downedPlayerConfig != null)

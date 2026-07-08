@@ -59,7 +59,15 @@ public class DownedReviveZoneVisualHost : MonoBehaviour
         RefreshAllZones();
     }
 
-    private void LateUpdate() => RefreshAllZones();
+    private void LateUpdate() => RefreshFromSessions();
+
+    public void RefreshFromSessions() => RefreshAllZones();
+
+    public void HideSession(ulong downedClientId)
+    {
+        if (_zoneObjects.TryGetValue(downedClientId, out List<GameObject> zones))
+            SetZonesActive(zones, false);
+    }
 
     public void Bind(NetworkDownedReviveManager manager)
     {
@@ -106,7 +114,7 @@ public class DownedReviveZoneVisualHost : MonoBehaviour
         _subscribed = false;
     }
 
-    private void HandleSessionsChanged(NetworkListEvent<DownedReviveSession> _) => RefreshAllZones();
+    private void HandleSessionsChanged(NetworkListEvent<DownedReviveSession> _) => RefreshFromSessions();
 
     private void RefreshAllZones()
     {

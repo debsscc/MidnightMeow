@@ -51,6 +51,8 @@ public class MultiplayerGameManager : NetworkBehaviour
     public int PlayersAlive => _playersFighting.Value;
     public int ResumeCountdown => _resumeCountdown.Value;
     public bool IsResumeCountdownActive => _resumeCountdown.Value > 0;
+    public DownedPlayerConfig DownedPlayerConfig =>
+        multiplayerConfig != null ? multiplayerConfig.downedPlayerConfig : null;
 
     public static event System.Action<GameState> OnGameStateChanged;
     public static event System.Action OnVictory;

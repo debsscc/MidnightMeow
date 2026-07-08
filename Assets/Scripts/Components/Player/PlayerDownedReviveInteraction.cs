@@ -22,7 +22,7 @@ public class PlayerDownedReviveInteraction : MonoBehaviour
         _selfHealth = GetComponent<NetworkPlayerHealth>();
 
         if (downedConfig == null)
-            downedConfig = _selfHealth != null ? _selfHealth.DownedConfig : null;
+            downedConfig = DownedPlayerConfigUtility.Resolve(_selfHealth != null ? _selfHealth.DownedConfig : null);
     }
 
     private void OnEnable()

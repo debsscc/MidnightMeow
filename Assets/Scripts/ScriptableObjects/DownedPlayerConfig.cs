@@ -56,8 +56,23 @@ public class DownedPlayerConfig : ScriptableObject
     public Color reviveZoneOutlineColor = new Color(0.9f, 1f, 0.95f, 0.9f);
 
     [Header("UI")]
-    [Tooltip("Prefab world-space do prompt \"Aperte E para reviver\" (mesmo estilo do selamento).")]
+    [Tooltip("Prefab world-space do label acima do jogador caído (mesmo estilo do selamento).")]
     public GameObject revivePromptPrefab;
+
+    [Tooltip("Raio extra para o aliado ver \"Aproxime-se\" antes de entrar no raio de E.")]
+    public float reviveLabelVisibilityRadiusMultiplier = 2f;
+
+    [Tooltip("Texto para o jogador caído (IsOwner).")]
+    public string ownerWaitingText = "Aguarde ser revivido";
+
+    [Tooltip("Texto para aliado fora do raio de interação.")]
+    public string allyApproachText = "Aproxime-se para revive-lo";
+
+    [Tooltip("Texto para aliado dentro do raio de interação.")]
+    public string allyPressEText = "Aperte E para revive-lo";
+
+    [Tooltip("Formato do progresso. Use {0} para a porcentagem.")]
+    public string reviveProgressTextFormat = "{0}%";
 
     [Header("Legado (obsoleto)")]
     [Tooltip("Use reviveZoneRadius. Mantido para assets antigos.")]
@@ -72,11 +87,30 @@ public class DownedPlayerConfig : ScriptableObject
     public float GetReviveZoneVisualDiameter() =>
         Mathf.Max(0.5f, reviveZoneRadius * 2f * Mathf.Max(0.85f, reviveZoneVisualScaleMultiplier));
 
+    public float GetReviveLabelVisibilityRadius() =>
+        Mathf.Max(revivePromptRadius, revivePromptRadius * Mathf.Max(1f, reviveLabelVisibilityRadiusMultiplier));
+
+    public string GetOwnerWaitingText() => string.IsNullOrWhiteSpace(ownerWaitingText)
+        ? "Aguarde ser revivido"
+        : ownerWaitingText;
+
+    public string GetAllyApproachText() => string.IsNullOrWhiteSpace(allyApproachText)
+        ? "Aproxime-se para revive-lo"
+        : allyApproachText;
+
+    public string GetAllyPressEText() => string.IsNullOrWhiteSpace(allyPressEText)
+        ? "Aperte E para revive-lo"
+        : allyPressEText;
+
+    public string FormatReviveProgressText(int percent) =>
+        string.IsNullOrWhiteSpace(reviveProgressTextFormat) ? $"{percent}%" : string.Format(reviveProgressTextFormat, percent);
+
     private void OnValidate()
     {
         if (reviveZoneRadius <= 0f) reviveZoneRadius = reviveRange > 0f ? reviveRange : 1.1f;
         if (reviveZoneFillDuration <= 0f) reviveZoneFillDuration = reviveHoldDuration > 0f ? reviveHoldDuration : 6f;
         if (revivePromptRadius <= 0f) revivePromptRadius = reviveZoneRadius * 3f;
         if (reviveAbandonTimeout <= 0f) reviveAbandonTimeout = 2.5f;
+        if (reviveLabelVisibilityRadiusMultiplier < 1f) reviveLabelVisibilityRadiusMultiplier = 2f;
     }
 }

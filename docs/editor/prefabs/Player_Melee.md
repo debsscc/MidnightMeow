@@ -53,8 +53,8 @@ Cálculo: `MeleeStrikeTimingUtility` + `PlayerAnimationHandler.GetMeleeStrikeDel
 | `MeleeCombatStats`              | SO: dano, cone, range, knockback               |
 | `KnockbackReceiver`             | `ApplyKnockback(direction, force, duration)`   |
 | `PlayerDamageImmunity`          | I-frames + atravessar inimigos após dano       |
-| `DownedPlayerWorldUI`           | Barra inconsciente + progresso revive          |
-| `RevivePromptWorldUI`           | Texto "Interagir para Ressuscitar" + barra     |
+| `DownedPlayerWorldUI`           | Label world-space no caído (máquina de estados) |
+| `RevivePromptWorldUI`           | **Obsoleto** — migrado para `DownedPlayerWorldUI` |
 | `PlayerGameplayModuleInstaller` | Instala módulos no `Awake`                     |
 
 

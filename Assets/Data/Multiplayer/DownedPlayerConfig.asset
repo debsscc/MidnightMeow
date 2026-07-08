@@ -30,6 +30,11 @@ MonoBehaviour:
   reviveZoneFillColor: {r: 0.35, g: 1, b: 0.55, a: 0.45}
   reviveZoneOutlineColor: {r: 0.9, g: 1, b: 0.95, a: 0.9}
   revivePromptPrefab: {fileID: 5804883921897708028, guid: 13966282a7a8dc342b54e9663bb7c08f, type: 3}
+  reviveLabelVisibilityRadiusMultiplier: 2
+  ownerWaitingText: Aguarde ser revivido
+  allyApproachText: Aproxime-se para revive-lo
+  allyPressEText: Aperte E para revive-lo
+  reviveProgressTextFormat: '{0}%'
   reviveRange: 2.2
   reviveHoldDuration: 3
   reviveZoneProgressDecayPerSecond: 0.75

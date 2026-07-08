@@ -33,9 +33,7 @@ public class PlayerGameplayModuleInstaller : MonoBehaviour
         if (installDownedUI && GetComponent<DownedPlayerWorldUI>() == null)
             gameObject.AddComponent<DownedPlayerWorldUI>();
 
-        if (installRevivePromptUI && GetComponent<NetworkPlayerRevive>() != null &&
-            GetComponent<RevivePromptWorldUI>() == null)
-            gameObject.AddComponent<RevivePromptWorldUI>();
+        // RevivePromptWorldUI obsoleto — UI consolidada em DownedPlayerWorldUI no jogador caído.
 
         if (installMeleeHitVisual && GetComponent<PlayerMeleeCombat>() != null &&
             GetComponent<MeleeAttackVisual>() == null)

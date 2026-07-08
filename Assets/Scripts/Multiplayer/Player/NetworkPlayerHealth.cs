@@ -191,6 +191,10 @@ public class NetworkPlayerHealth : NetworkBehaviour
 
             downedConfig = multiplayerConfig.downedPlayerConfig;
 
+        if (downedConfig == null)
+
+            downedConfig = DownedPlayerConfigUtility.Resolve();
+
     }
 
 
