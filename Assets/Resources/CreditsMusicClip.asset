@@ -12,4 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7e4c9a2b1d8f4e6a9c3b5d7e1f0a2c4b, type: 3}
   m_Name: CreditsMusicClip
   m_EditorClassIdentifier: Assembly-CSharp::CreditsMusicClipReference
-  clip: {fileID: 8300000, guid: edcce261986a15f48a505ad2eb8808ce, type: 3}
+  clip: {fileID: 8300000, guid: ec899af1e7f405d4fbe6cf6c256477a3, type: 3}

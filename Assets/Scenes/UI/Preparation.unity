@@ -897,10 +897,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PreparationScreenController
   contracts: []
   contractButtons: []
+  contractCompletionBadges: []
+  contractPreviewImages: []
+  nixieIcon: {fileID: 0}
+  coraIcon: {fileID: 0}
   tooltipText: {fileID: 0}
-  selectedCharacterText: {fileID: 0}
   chooseCharacterButton: {fileID: 0}
-  confirmContractButton: {fileID: 0}
   backButton: {fileID: 1189314661}
   leaveLobbyButton: {fileID: 0}
   readyButton: {fileID: 476179919}
@@ -2015,7 +2017,7 @@ AudioSource:
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 0}
   m_audioClip: {fileID: 0}
-  m_Resource: {fileID: 8300000, guid: 99ea2a1bd9f00cb42b684e546b1faf67, type: 3}
+  m_Resource: {fileID: 8300000, guid: 8b61456ca4ffbe444975e884d6be7972, type: 3}
   m_PlayOnAwake: 0
   m_Volume: 1
   m_Pitch: 1
@@ -2112,7 +2114,7 @@ AudioSource:
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 0}
   m_audioClip: {fileID: 0}
-  m_Resource: {fileID: 8300000, guid: 51a14d3bc52e48341835f214f121a645, type: 3}
+  m_Resource: {fileID: 8300000, guid: 6589400bcb297ad4ca2d0a232c771bee, type: 3}
   m_PlayOnAwake: 0
   m_Volume: 1
   m_Pitch: 1
@@ -3487,11 +3489,11 @@ AudioSource:
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 0}
   m_audioClip: {fileID: 0}
-  m_Resource: {fileID: 8300000, guid: 51728b726f2d8254b81c997b56de6488, type: 3}
-  m_PlayOnAwake: 0
+  m_Resource: {fileID: 8300000, guid: 5fc7994c2897ff2429e6146583915d38, type: 3}
+  m_PlayOnAwake: 1
   m_Volume: 1
   m_Pitch: 1
-  Loop: 0
+  Loop: 1
   Mute: 0
   Spatialize: 0
   SpatializePostEffects: 0

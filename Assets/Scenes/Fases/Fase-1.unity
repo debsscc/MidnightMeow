@@ -1051,6 +1051,7 @@ MonoBehaviour:
   pauseMenuObject: {fileID: 1301115287}
   sceneOverlayController: {fileID: 565339182}
   pauseOverlayId: pause
+  resumeCountdownText: {fileID: 0}
   gameConfig: {fileID: 11400000, guid: ca1e29a8a0f38c04e845505abd2b0638, type: 2}
   progressionData: {fileID: 11400000, guid: b87f7c79296088641991071b4e517b5c, type: 2}
 --- !u!1 &249383176
@@ -11297,7 +11298,7 @@ AudioSource:
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: -2881765551862513947, guid: 0369658093ea21d40a1c846ecafdd511, type: 2}
   m_audioClip: {fileID: 0}
-  m_Resource: {fileID: 8300000, guid: 0a8c7c8576599994a9b2e054389fef6b, type: 3}
+  m_Resource: {fileID: 8300000, guid: aa075aec7d71e2d40b2de9588c25c93f, type: 3}
   m_PlayOnAwake: 1
   m_Volume: 1
   m_Pitch: 1
