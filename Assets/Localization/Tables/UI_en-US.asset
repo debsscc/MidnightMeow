@@ -477,7 +477,8 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 7999254541643776
-    m_Localized: Creates a magical pool on the ground that deals damage over time to enemies in the area.
+    m_Localized: Creates a magical pool on the ground that deals damage over time
+      to enemies in the area.
     m_Metadata:
       m_Items: []
   - m_Id: 7999423488208896
@@ -501,11 +502,24 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 8001531872555008
-    m_Localized: Directional charge that damages all enemies in a rectangular zone ahead.
+    m_Localized: Directional charge that damages all enemies in a rectangular zone
+      ahead.
     m_Metadata:
       m_Items: []
   - m_Id: 8003577002602496
     m_Localized: Pool
+    m_Metadata:
+      m_Items: []
+  - m_Id: 9061044616716288
+    m_Localized: Yes
+    m_Metadata:
+      m_Items: []
+  - m_Id: 9061088736600064
+    m_Localized: No
+    m_Metadata:
+      m_Items: []
+  - m_Id: 9061512285806592
+    m_Localized: Are you sure you want to exit the game?
     m_Metadata:
       m_Items: []
   references:

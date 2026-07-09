@@ -38,6 +38,8 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
 
     private string _activeSceneName;
     private Coroutine _transitionRoutine;
+    private Coroutine _networkFadeInRoutine;
+    private string _networkFadeInScene;
     private float _fadeTime = 1f;
     private float _minLoadingTime = 2f;
 
@@ -110,13 +112,10 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
         _activeSceneName = scene.name;
         CurrentAsyncLoad = null;
         ScreenFlowSceneReadiness.MarkReadyIfPending(scene.name);
-
-        if (scene.name.StartsWith("Fase-", StringComparison.Ordinal) || scene.name is "Game" or "Gameplay")
-            ClearTransitionOverlay();
     }
 
     /// <summary>
-    /// Chamado por <see cref="SceneTransition"/> na cena (ex.: Menu2) para tempos de fade/loading.
+    /// Registra tempos e loading legado da cena. O fade anima apenas o overlay DDOL built-in.
     /// </summary>
     public void RegisterSceneVisuals(UnityEngine.UI.Image fadeImage, GameObject loadingScreen, float fadeTime, float minLoadingTime)
     {
@@ -197,10 +196,16 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
             return false;
 
         if (!gameObject.activeInHierarchy || !isActiveAndEnabled)
+        {
+            Debug.LogWarning($"ScreenFlowController: RequestScene('{sceneName}') bloqueado — controller inativo.");
             return false;
+        }
 
         if (IsTransitioning)
+        {
+            Debug.LogWarning($"ScreenFlowController: RequestScene('{sceneName}') bloqueado — transição em andamento.");
             return false;
+        }
 
         if (_activeSceneName == sceneName)
             return false;
@@ -208,7 +213,11 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
         if (HubSceneNavigator.CanSkipTransition(sceneName))
             return false;
 
-        TransitionFadeOverlay.EnsureExists();
+        if (TransitionFadeOverlay.EnsureExists() == null)
+        {
+            Debug.LogError("ScreenFlowController: TransitionFadeOverlay não encontrado.");
+            return false;
+        }
 
         float ft = fadeTime > 0f ? fadeTime : (_fadeTime > 0f ? _fadeTime : defaultFadeTime);
         float ml = minLoadingTime > 0f ? minLoadingTime : (_minLoadingTime > 0f ? _minLoadingTime : defaultMinLoadingTime);
@@ -315,6 +324,7 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
         if (useFade && !instantLoadingFeedback)
         {
             music?.HandleTransitionFadeOut(fadeTime);
+            overlay.CancelFadeCoroutines();
             yield return overlay.FadeOut(fadeTime, delta =>
             {
                 if (!useLoading)
@@ -328,6 +338,7 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
         {
             float quickFade = fadeTime > 0f ? fadeTime : defaultFadeTime;
             music?.HandleTransitionFadeOut(quickFade);
+            overlay.CancelFadeCoroutines();
             overlay.SetFadeImmediate(1f);
         }
 
@@ -349,7 +360,7 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
                 if (useLoading)
                     yield return WaitForLoadingProgress(overlay, minLoadingTime, loadTimer);
 
-                yield return NetworkSceneSyncUtility.WaitForActiveScene(sceneName);
+                yield return NetworkSceneSyncUtility.WaitForActiveScene(sceneName, fadeInOnArrival: false);
                 loadSucceeded = SceneManager.GetActiveScene().name == sceneName;
             }
             else
@@ -437,6 +448,7 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
         if (useFade && !handoffToDedicatedLoadingScene)
         {
             music?.FadeInPending(fadeTime);
+            overlay.CancelFadeCoroutines();
             yield return overlay.FadeIn(fadeTime);
         }
         else if (!handoffToDedicatedLoadingScene)
@@ -450,9 +462,64 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
         }
     }
 
+    /// <summary>
+    /// Limpa o overlay de transição (fade/loading). Não afeta pause (<see cref="SceneOverlayController"/>).
+    /// Ignorado enquanto <see cref="IsTransitioning"/> — use <see cref="ForceClearTransitionOverlay"/> em recovery.
+    /// </summary>
     public void ClearTransitionOverlay()
     {
+        if (IsTransitioning)
+            return;
+
         TransitionFadeOverlay.Instance?.ResetOverlay();
+    }
+
+    public void ForceClearTransitionOverlay() => TransitionFadeOverlay.Instance?.ResetOverlay();
+
+    /// <summary>
+    /// Clientes que recebem cena via NGO sem <see cref="RequestScene"/> local ainda precisam de fade-in
+    /// quando o overlay ficou opaco (ex.: <see cref="NetworkSceneLoadingFeedback"/>).
+    /// </summary>
+    public IEnumerator TryFadeInAfterNetworkSceneArrival(string sceneName, float fadeTime = -1f)
+    {
+        if (IsTransitioning || string.IsNullOrEmpty(sceneName))
+            yield break;
+
+        if (SceneManager.GetActiveScene().name != sceneName)
+            yield break;
+
+        TransitionFadeOverlay overlay = TransitionFadeOverlay.Instance;
+        if (overlay == null || !overlay.IsFadeOpaque)
+            yield break;
+
+        float ft = fadeTime > 0f ? fadeTime : (_fadeTime > 0f ? _fadeTime : defaultFadeTime);
+
+        yield return ScreenFlowSceneReadiness.WaitUntilReady(sceneName);
+
+        MusicCrossfadeController music = MusicCrossfadeController.Instance;
+        music?.PrepareSceneMusic(SceneManager.GetActiveScene());
+        music?.FadeInPending(ft);
+        overlay.CancelFadeCoroutines();
+        yield return overlay.FadeIn(ft);
+    }
+
+    public void TryBeginFadeInAfterNetworkSceneArrival(string sceneName, float fadeTime = -1f)
+    {
+        if (IsTransitioning || string.IsNullOrEmpty(sceneName))
+            return;
+
+        if (_networkFadeInRoutine != null && _networkFadeInScene == sceneName)
+            return;
+
+        _networkFadeInScene = sceneName;
+        _networkFadeInRoutine = StartCoroutine(RunNetworkFadeInRoutine(sceneName, fadeTime));
+    }
+
+    private IEnumerator RunNetworkFadeInRoutine(string sceneName, float fadeTime)
+    {
+        yield return TryFadeInAfterNetworkSceneArrival(sceneName, fadeTime);
+        _networkFadeInRoutine = null;
+        _networkFadeInScene = null;
     }
 
     private void CompleteTransition(string sceneName)
@@ -461,8 +528,7 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
         TargetSceneName = null;
         _transitionRoutine = null;
 
-        if (sceneName is not ("Loading1" or "Loading2"))
-            ClearTransitionOverlay();
+        // ExecuteLoad já deixa o overlay no estado final (fade-in concluído ou handoff na loading).
 
         onAnyTransitionCompleted?.Invoke();
         OnTransitionCompleted?.Invoke(sceneName);
@@ -533,7 +599,15 @@ public class TransitionFadeOverlay : Singleton<TransitionFadeOverlay>
 {
     public bool IsLoadingVisible { get; private set; }
     public float LoadingProgress { get; private set; }
-    public bool IsFadeOpaque => _fadeImage != null && _fadeImage.color.a >= 0.98f;
+    public bool IsFadeOpaque => GetCurrentFadeAlpha() >= 0.98f;
+
+    private float GetCurrentFadeAlpha()
+    {
+        float alpha = _fadeImage != null ? _fadeImage.color.a : 0f;
+        if (_legacyFadeImage != null)
+            alpha = Mathf.Max(alpha, _legacyFadeImage.color.a);
+        return alpha;
+    }
 
     public event Action<bool> OnLoadingVisibilityChanged;
 
@@ -548,6 +622,9 @@ public class TransitionFadeOverlay : Singleton<TransitionFadeOverlay>
     private Canvas _legacyCanvas;
     private string _legacySceneName;
     private bool _useLegacyLoading = true;
+    private Coroutine _animatedFadeOutRoutine;
+    private Coroutine _fadeInRoutine;
+    private bool _fadeRoutineRunning;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     private static void BootstrapBeforeSceneLoad()
@@ -555,17 +632,25 @@ public class TransitionFadeOverlay : Singleton<TransitionFadeOverlay>
         EnsureExists();
     }
 
-    public static void EnsureExists()
+    /// <returns>Instância pronta ou null se a criação falhar.</returns>
+    public static TransitionFadeOverlay EnsureExists()
     {
         if (Instance != null)
-            return;
+            return Instance;
 
         TransitionFadeOverlay existing = FindFirstObjectByType<TransitionFadeOverlay>(FindObjectsInactive.Include);
         if (existing != null)
-            return;
+        {
+            if (!existing.gameObject.activeInHierarchy)
+                existing.gameObject.SetActive(true);
+
+            if (Instance != null)
+                return Instance;
+        }
 
         var go = new GameObject(nameof(TransitionFadeOverlay));
         go.AddComponent<TransitionFadeOverlay>();
+        return Instance;
     }
 
     protected override void Awake()
@@ -620,26 +705,61 @@ public class TransitionFadeOverlay : Singleton<TransitionFadeOverlay>
         _legacySceneName = null;
     }
 
-    private bool HasValidLegacyVisuals()
+    private bool HasLegacyLoadingScreen() => _legacyLoadingScreen != null;
+
+    private bool HasLegacyFadeImage() =>
+        _legacyFadeImage != null && _legacyFadeImage.gameObject != null;
+
+    private void EnsureLegacyFadeCanvasFront()
     {
-        if (_legacyLoadingScreen != null)
-            return true;
+        if (!HasLegacyFadeImage())
+            return;
 
-        if (_legacyFadeImage != null || _legacyCanvas != null || !string.IsNullOrEmpty(_legacySceneName))
-            ClearLegacyVisuals();
+        if (_legacyCanvas == null)
+            _legacyCanvas = _legacyFadeImage.GetComponentInParent<Canvas>(true);
 
-        return false;
+        if (_legacyCanvas == null)
+            return;
+
+        if (!_legacyCanvas.gameObject.activeSelf)
+            _legacyCanvas.gameObject.SetActive(true);
+
+        _legacyCanvas.enabled = true;
+        _legacyCanvas.overrideSorting = true;
+        _legacyCanvas.sortingOrder = 32000;
     }
 
-    private Image GetActiveFadeImage()
+    private void ApplyFadeAlpha(float alpha, bool raycastWhenVisible)
     {
+        alpha = Mathf.Clamp01(alpha);
+        bool blockInput = raycastWhenVisible && alpha > 0.01f;
+
         EnsureOverlayBuilt();
-        return _fadeImage;
+        SetBuiltInOverlayVisible(true);
+
+        if (_fadeImage != null)
+        {
+            LoadingProgressUtility.ApplySolidSprite(_fadeImage);
+            Color builtIn = _fadeImage.color;
+            builtIn.a = alpha;
+            _fadeImage.color = builtIn;
+            _fadeImage.raycastTarget = blockInput;
+        }
+
+        if (HasLegacyFadeImage())
+        {
+            LoadingProgressUtility.ApplySolidSprite(_legacyFadeImage);
+            EnsureLegacyFadeCanvasFront();
+            Color legacy = _legacyFadeImage.color;
+            legacy.a = alpha;
+            _legacyFadeImage.color = legacy;
+            _legacyFadeImage.raycastTarget = blockInput;
+        }
     }
 
     private void EnsureLegacyCanvasFront()
     {
-        if (!HasValidLegacyVisuals())
+        if (!HasLegacyLoadingScreen())
             return;
 
         if (_legacyCanvas == null)
@@ -658,60 +778,79 @@ public class TransitionFadeOverlay : Singleton<TransitionFadeOverlay>
         if (_canvas == null)
             return;
 
-        _canvas.enabled = visible;
-        if (!visible && _loadingRoot != null)
+        if (visible)
+        {
+            if (!_canvas.gameObject.activeInHierarchy)
+                _canvas.gameObject.SetActive(true);
+
+            _canvas.enabled = true;
+            return;
+        }
+
+        _canvas.enabled = false;
+        if (_loadingRoot != null)
             _loadingRoot.SetActive(false);
     }
 
     public IEnumerator FadeOut(float duration, Action<float> onUnscaledTick = null)
     {
-        EnsureFadeReady();
-        SetBuiltInOverlayVisible(true);
-        EnsureLegacyCanvasFront();
-
-        Image fadeTarget = GetActiveFadeImage();
-        if (fadeTarget == null)
+        if (duration <= 0f)
+        {
+            SetFadeImmediate(1f);
             yield break;
+        }
 
-        fadeTarget.raycastTarget = true;
-
+        EnsureFadeReady();
+        float startAlpha = GetCurrentFadeAlpha();
         float t = 0f;
-        Color c = fadeTarget.color;
+
         while (t < duration)
         {
             float delta = Time.unscaledDeltaTime;
             t += delta;
             onUnscaledTick?.Invoke(delta);
-            c.a = Mathf.Clamp01(t / duration);
-            fadeTarget.color = c;
+            ApplyFadeAlpha(Mathf.Lerp(startAlpha, 1f, Mathf.Clamp01(t / duration)), raycastWhenVisible: true);
             yield return null;
         }
 
-        c.a = 1f;
-        fadeTarget.color = c;
+        ApplyFadeAlpha(1f, raycastWhenVisible: true);
     }
 
     public IEnumerator FadeIn(float duration)
     {
-        SetBuiltInOverlayVisible(true);
-
-        Image fadeTarget = GetActiveFadeImage();
-        if (fadeTarget == null)
+        if (_fadeRoutineRunning)
             yield break;
 
-        float t = duration;
-        Color c = fadeTarget.color;
-        while (t > 0f)
+        if (duration <= 0f)
         {
-            t -= Time.unscaledDeltaTime;
-            c.a = Mathf.Clamp01(t / duration);
-            fadeTarget.color = c;
-            yield return null;
+            SetFadeImmediate(0f);
+            yield break;
         }
 
-        c.a = 0f;
-        fadeTarget.color = c;
-        fadeTarget.raycastTarget = false;
+        float startAlpha = GetCurrentFadeAlpha();
+        if (startAlpha <= 0.01f)
+        {
+            SetFadeImmediate(0f);
+            yield break;
+        }
+
+        _fadeRoutineRunning = true;
+        try
+        {
+            float t = 0f;
+            while (t < duration)
+            {
+                t += Time.unscaledDeltaTime;
+                ApplyFadeAlpha(Mathf.Lerp(startAlpha, 0f, Mathf.Clamp01(t / duration)), raycastWhenVisible: true);
+                yield return null;
+            }
+
+            ApplyFadeAlpha(0f, raycastWhenVisible: false);
+        }
+        finally
+        {
+            _fadeRoutineRunning = false;
+        }
     }
 
     public void ShowLoading()
@@ -727,7 +866,7 @@ public class TransitionFadeOverlay : Singleton<TransitionFadeOverlay>
         _loadingRoot.SetActive(true);
         _loadingRoot.transform.SetAsLastSibling();
 
-        if (_useLegacyLoading && HasValidLegacyVisuals())
+        if (_useLegacyLoading && HasLegacyLoadingScreen())
         {
             EnsureLegacyCanvasFront();
             _legacyLoadingScreen.SetActive(true);
@@ -749,8 +888,6 @@ public class TransitionFadeOverlay : Singleton<TransitionFadeOverlay>
     {
         if (_legacyLoadingScreen != null)
             _legacyLoadingScreen.SetActive(false);
-        else
-            ClearLegacyVisuals();
 
         if (_loadingRoot != null)
             _loadingRoot.SetActive(false);
@@ -779,7 +916,10 @@ public class TransitionFadeOverlay : Singleton<TransitionFadeOverlay>
 
     public void HandoffToDedicatedLoadingScene(float progress = -1f)
     {
+        CancelFadeCoroutines();
         HideLoading();
+
+        // DDOL overlay (sort 32767) cobre a UI da cena de loading — libera alpha para exibir a barra.
         SetFadeImmediate(0f);
 
         if (progress >= 0f)
@@ -788,44 +928,73 @@ public class TransitionFadeOverlay : Singleton<TransitionFadeOverlay>
 
     public void ResetOverlay()
     {
+        CancelFadeCoroutines();
         HideLoading();
         ResetFade();
         _useLegacyLoading = true;
     }
 
-    public void ResetFade()
-    {
-        Image fadeTarget = GetActiveFadeImage();
-        if (fadeTarget == null)
-            return;
-
-        SetFadeImmediate(0f);
-
-        if (_fadeImage != null && _fadeImage != fadeTarget)
-            ResetFadeImage(_fadeImage);
-    }
+    public void ResetFade() => ApplyFadeAlpha(0f, raycastWhenVisible: false);
 
     public void SetFadeImmediate(float alpha)
     {
-        Image fadeTarget = GetActiveFadeImage();
-        if (fadeTarget == null)
-            return;
-
-        Color c = fadeTarget.color;
-        c.a = Mathf.Clamp01(alpha);
-        fadeTarget.color = c;
-        fadeTarget.raycastTarget = c.a > 0.01f;
+        CancelFadeCoroutines();
+        ApplyFadeAlpha(alpha, raycastWhenVisible: alpha > 0.01f);
     }
 
-    private static void ResetFadeImage(Image image)
+    public void CancelFadeCoroutines()
     {
-        if (image == null)
-            return;
+        if (_animatedFadeOutRoutine != null)
+        {
+            StopCoroutine(_animatedFadeOutRoutine);
+            _animatedFadeOutRoutine = null;
+        }
 
-        Color c = image.color;
-        c.a = 0f;
-        image.color = c;
-        image.raycastTarget = false;
+        if (_fadeInRoutine != null)
+        {
+            StopCoroutine(_fadeInRoutine);
+            _fadeInRoutine = null;
+        }
+
+        _fadeRoutineRunning = false;
+    }
+
+    public void BeginAnimatedFadeOut(float duration)
+    {
+        CancelFadeCoroutines();
+
+        if (duration <= 0f)
+        {
+            SetFadeImmediate(1f);
+            return;
+        }
+
+        _animatedFadeOutRoutine = StartCoroutine(AnimatedFadeOutRoutine(duration));
+    }
+
+    private IEnumerator AnimatedFadeOutRoutine(float duration)
+    {
+        yield return FadeOut(duration);
+        _animatedFadeOutRoutine = null;
+    }
+
+    public void BeginAnimatedFadeIn(float duration)
+    {
+        CancelFadeCoroutines();
+
+        if (duration <= 0f)
+        {
+            SetFadeImmediate(0f);
+            return;
+        }
+
+        _fadeInRoutine = StartCoroutine(AnimatedFadeInRoutine(duration));
+    }
+
+    private IEnumerator AnimatedFadeInRoutine(float duration)
+    {
+        yield return FadeIn(duration);
+        _fadeInRoutine = null;
     }
 
     private void BuildOverlay()

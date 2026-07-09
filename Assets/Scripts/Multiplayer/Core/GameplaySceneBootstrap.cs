@@ -13,7 +13,6 @@ public static class GameplaySceneBootstrap
         if (!IsGameplayScene(scene))
             return;
 
-        ScreenFlowController.Instance?.ClearTransitionOverlay();
         TransitionCameraKeeper.EnsureActive();
         EnsureCameraRig();
         TransitionCameraKeeper.Refresh();

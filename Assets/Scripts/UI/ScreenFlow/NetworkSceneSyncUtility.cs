@@ -13,20 +13,21 @@ public static class NetworkSceneSyncUtility
         && NetworkManager.Singleton.IsListening
         && !NetworkManager.Singleton.IsServer;
 
-    public static IEnumerator WaitForActiveScene(string sceneName, float timeoutSeconds = 45f)
+    /// <param name="fadeInOnArrival">
+    /// Quando true, executa fade-in via <see cref="ScreenFlowController"/> após a cena ativa.
+    /// Use false se o caller já fará fade-in (ex.: <see cref="ScreenFlowController"/> NetcodeHost client path).
+    /// </param>
+    public static IEnumerator WaitForActiveScene(
+        string sceneName,
+        float timeoutSeconds = 45f,
+        bool fadeInOnArrival = true)
     {
         if (string.IsNullOrEmpty(sceneName))
             yield break;
 
         if (SceneManager.GetActiveScene().name == sceneName)
         {
-            ScreenFlowController.Instance?.ClearTransitionOverlay();
-            if (GameplaySceneBootstrap.IsGameplayScene(sceneName))
-            {
-                GameplaySceneBootstrap.RebindLocalPlayerCamera();
-                GameplayCameraRebindUtility.ScheduleAfterGameplaySceneReady();
-            }
-
+            yield return AfterSceneArrived(sceneName, fadeInOnArrival);
             yield break;
         }
 
@@ -59,8 +60,6 @@ public static class NetworkSceneSyncUtility
         if (net != null && net.SceneManager != null)
             net.SceneManager.OnSceneEvent -= OnSceneEvent;
 
-        ScreenFlowController.Instance?.ClearTransitionOverlay();
-
         if (SceneManager.GetActiveScene().name != sceneName)
         {
             Debug.LogWarning(
@@ -68,10 +67,24 @@ public static class NetworkSceneSyncUtility
             yield break;
         }
 
+        yield return AfterSceneArrived(sceneName, fadeInOnArrival);
+    }
+
+    private static IEnumerator AfterSceneArrived(string sceneName, bool fadeInOnArrival)
+    {
         if (GameplaySceneBootstrap.IsGameplayScene(sceneName))
         {
             GameplaySceneBootstrap.RebindLocalPlayerCamera();
             GameplayCameraRebindUtility.ScheduleAfterGameplaySceneReady();
         }
+
+        if (!fadeInOnArrival)
+            yield break;
+
+        ScreenFlowController flow = ScreenFlowController.Instance;
+        if (flow == null)
+            yield break;
+
+        yield return flow.TryFadeInAfterNetworkSceneArrival(sceneName);
     }
 }

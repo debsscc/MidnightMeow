@@ -94,6 +94,16 @@ public static class GameEvents
         OnPauseChanged?.Invoke(paused);
     }
 
+    /// <summary>
+    /// Congela gameplay (input, spawners) sem disparar <see cref="OnPauseChanged"/> nem abrir UI de pause.
+    /// Usado em teardown de vitória/derrota.
+    /// </summary>
+    public static void InvokeGameplayFreeze()
+    {
+        IsPaused = true;
+        GameplayPauseController.ApplyImmediateFreeze();
+    }
+
     // --- Eventos de Multiplayer ---
 
     // Disparado quando qualquer jogador entra na partida (clientId, isLocalPlayer)

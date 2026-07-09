@@ -20,21 +20,21 @@ Menu de pausa (UI). Usado como **nested prefab** em `Lobby.prefab` e em cenas de
 |------|-----|
 | `Image`, `Button`, TMP | UI |
 | `EventTrigger` | Hover/click custom |
-| `PauseMenuActions` | Continuar, Reiniciar fase (solo), Abandonar, Controles, Sair do jogo |
+| `PauseMenuActions` | Continuar, Reiniciar fase (solo), Abandonar, Créditos, Sair do jogo |
 
 ## Comportamento (playtest)
 
 | Botão | Solo | Multiplayer |
 |-------|------|-------------|
 | **Continuar** | Retoma (`timeScale = 1`) | Pause global retoma para todos |
-| **Reiniciar fase** | Recarrega Fase-1 via NGO + reset de round | Oculto |
+| **Reiniciar fase** | Recarrega fase via NGO + reset de round | Oculto |
 | **Abandonar** | `ScreenFlowStateMachine.ExitToMainMenu()` | Igual (desconecta NGO) |
-| **Controles** | Abre painel `Controls` (esconde botões do pause) | Igual |
 | **Créditos** | `CreditsOverlayController.OpenFromPause()` — rola, escurece, fecha; volta ao pause | Igual (UI local; jogo continua pausado) |
-| **Voltar** (`Controls/Back`) | Volta ao painel principal do pause | Igual |
 | **Sair** (Buttons2) | Abre confirmação → fecha o aplicativo | Igual |
 
-`PauseMenuActions` religa botões no `Awake` (refs legadas do prefab estavam nulas).
+Painel de **Controles** no pause: removido por enquanto (sem `controlsPanel` em `PauseMenuActions`).
+
+Vitória/derrota: `GameplaySessionTeardown` congela gameplay sem abrir o pause (`GameEvents.InvokeGameplayFreeze`).
 
 ## Valores a confirmar no Editor
 
@@ -42,7 +42,8 @@ Menu de pausa (UI). Usado como **nested prefab** em `Lobby.prefab` e em cenas de
 |----------------|-------|-------------|
 | Canvas Group | Interactable / Blocks Raycasts quando pausado | |
 | `PauseMenuActions` no root | `quitConfirmationRoot` → `Background_PopUp` | Ligado |
-| Botões | Rewire automático por nome (`Resume`, `Replay`, `Menu`, `Config`, `Credits`, `Quit`, `Don'tQuit`, `Back` em `Controls`) | |
+| Botões | Rewire automático por nome (`Resume`, `Replay`, `Menu`, `Credits`, `Quit`, `Don'tQuit`) | |
+| `SceneOverlayController` (cenas Fase-*) | overlay `pause` → root `PauseMenu` | Fase-1 e Fase-2 |
 | MP pause UI | `MultiplayerGameManager.ApplyPauseClientRpc` → `GameManager2.ShowPauseOverlay` | |
 
 ## Referenciado por

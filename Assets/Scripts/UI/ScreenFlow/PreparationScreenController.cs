@@ -48,7 +48,6 @@ public class PreparationScreenController : MonoBehaviour
 
     private void Start()
     {
-        ScreenFlowController.Instance?.ClearTransitionOverlay();
         EnsureUi();
         if (!_buttonsWired)
             WireButtons();

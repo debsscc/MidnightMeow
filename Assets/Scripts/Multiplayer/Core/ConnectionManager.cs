@@ -455,7 +455,7 @@ public class ConnectionManager : MonoBehaviour
             // Vamos sair da cena atual para o lobby: guarda o aviso amigável para o lobby exibir ao abrir.
             GameSessionContext.PendingConnectionMessage = userMessage;
             GameSessionContext.PendingRouteId = string.Empty;
-            ScreenFlowController.Instance?.ClearTransitionOverlay();
+            ScreenFlowController.Instance?.ForceClearTransitionOverlay();
 
             float timeout = 5f;
             while (timeout > 0f && !TryRequestReturnToLobby())

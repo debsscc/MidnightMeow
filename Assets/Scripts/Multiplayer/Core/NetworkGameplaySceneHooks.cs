@@ -70,7 +70,6 @@ public static class NetworkGameplaySceneHooks
     private static void OnGameplaySceneReady(string sceneName)
     {
         GameplaySceneBootstrap.RebindLocalPlayerCamera();
-        ScreenFlowController.Instance?.ClearTransitionOverlay();
         GameplayCameraRebindUtility.ScheduleAfterGameplaySceneReady();
     }
 

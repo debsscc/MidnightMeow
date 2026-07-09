@@ -10,8 +10,6 @@ public static class GameplaySessionStarter
 {
     public static IEnumerator EnsureReadyForGameplay()
     {
-        ScreenFlowController.Instance?.ClearTransitionOverlay();
-
         if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsServer)
             yield break;
 

@@ -517,6 +517,18 @@ MonoBehaviour:
     m_Key: Cora.poca.Title
     m_Metadata:
       m_Items: []
+  - m_Id: 9061044616716288
+    m_Key: btn.yes
+    m_Metadata:
+      m_Items: []
+  - m_Id: 9061088736600064
+    m_Key: btn.no
+    m_Metadata:
+      m_Items: []
+  - m_Id: 9061512285806592
+    m_Key: Title.confirmation.quit
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

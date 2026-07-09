@@ -466,14 +466,8 @@ public class PreparationSessionManager : NetworkBehaviour
 
         GameSessionContext.PendingRouteId = SceneFlowRouteIds.Loading2ToGameplay;
 
-        NetworkManager networkManager = NetworkManager.Singleton;
-        if (networkManager != null && networkManager.IsServer)
-        {
-            networkManager.SceneManager.LoadScene("Loading2", LoadSceneMode.Single);
-            return;
-        }
-
-        ScreenFlowStateMachine.BeginGameplayLoading();
+        if (!ScreenFlowStateMachine.BeginGameplayLoading())
+            Debug.LogError("[PreparationSessionManager] Falha ao iniciar transição para Loading2.");
     }
 
     [ClientRpc]

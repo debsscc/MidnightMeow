@@ -37,4 +37,10 @@ public class MenuTabController : MonoBehaviour
             tab.SetActive(tab == targetTab);
         }
     }
+
+    public void ResetToDefaultTab()
+    {
+        if (defaultTab != null)
+            OpenTab(defaultTab);
+    }
 }

@@ -4,7 +4,6 @@ DATA: 2026-06-23
 DESCRIÇÃO: Ações do menu de pause — reiniciar (solo), abandonar e sair do app.
 ---------------------------------------------------------------- */
 
-using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -13,20 +12,14 @@ using UnityEngine.UI;
 public class PauseMenuActions : MonoBehaviour
 {
     [SerializeField] private GameObject quitConfirmationRoot;
-    [SerializeField] private GameObject controlsPanel;
 
     private Button _resumeButton;
     private Button _restartButton;
     private Button _abandonButton;
-    private Button _controlsButton;
     private Button _quitAppButton;
     private Button _confirmQuitAppButton;
     private Button _cancelQuitAppButton;
     private Button _creditsButton;
-    private Button _controlsBackButton;
-
-    private Transform _backgroundRoot;
-    private readonly List<GameObject> _pauseMainContent = new List<GameObject>();
 
     private void Awake()
     {
@@ -42,7 +35,6 @@ public class PauseMenuActions : MonoBehaviour
     private void OnEnable()
     {
         HideQuitConfirmation();
-        HideControls();
         RefreshForCurrentMode();
     }
 
@@ -117,36 +109,6 @@ public class PauseMenuActions : MonoBehaviour
 #endif
     }
 
-    public void ShowControls()
-    {
-        GameObject panelRoot = ResolveControlsPanel();
-        ControlsPanelController controller = panelRoot != null
-            ? panelRoot.GetComponent<ControlsPanelController>()
-            : null;
-
-        SetPauseMainContentVisible(false);
-
-        if (controller != null)
-        {
-            controller.Show();
-            return;
-        }
-
-        if (panelRoot != null)
-            panelRoot.SetActive(true);
-    }
-
-    public void HideControls() => CloseControlsOverlay();
-
-    private void CloseControlsOverlay()
-    {
-        GameObject panelRoot = ResolveControlsPanel();
-        if (panelRoot != null)
-            panelRoot.SetActive(false);
-
-        SetPauseMainContentVisible(true);
-    }
-
     public void ReloadCurrentScene() => RestartCurrentPhase();
 
     public void QuitGame() => ShowQuitConfirmation();
@@ -156,12 +118,10 @@ public class PauseMenuActions : MonoBehaviour
         _resumeButton = FindButton("Resume");
         _restartButton = FindButton("Replay");
         _abandonButton = FindButton("Menu");
-        _controlsButton = FindButton("Config");
         _creditsButton = FindCreditsButton();
         _quitAppButton = FindQuitAppEntryButton();
         _confirmQuitAppButton = FindConfirmQuitButton();
         _cancelQuitAppButton = FindButton("Don'tQuit");
-        _controlsBackButton = FindControlsBackButton();
     }
 
     private void WireButtons()
@@ -169,12 +129,10 @@ public class PauseMenuActions : MonoBehaviour
         Bind(_resumeButton, ClosePauseMenu);
         Bind(_restartButton, RestartCurrentPhase);
         Bind(_abandonButton, AbandonRun);
-        Bind(_controlsButton, ShowControls);
         Bind(_creditsButton, ShowCredits);
         Bind(_quitAppButton, ShowQuitConfirmation);
         Bind(_confirmQuitAppButton, QuitApplication);
         Bind(_cancelQuitAppButton, HideQuitConfirmation);
-        Bind(_controlsBackButton, HideControls);
         SetButtonLabel(_abandonButton, "Abandonar");
         SetButtonLabel(_creditsButton, "Créditos");
     }
@@ -192,7 +150,7 @@ public class PauseMenuActions : MonoBehaviour
         if (buttons1 == null)
             return;
 
-        Button template = _controlsButton != null ? _controlsButton : _abandonButton;
+        Button template = _abandonButton;
         if (template == null)
             return;
 
@@ -319,77 +277,5 @@ public class PauseMenuActions : MonoBehaviour
         TMP_Text tmp = button.GetComponentInChildren<TMP_Text>(true);
         if (tmp != null)
             tmp.text = label;
-    }
-
-    private Button FindControlsBackButton()
-    {
-        GameObject panel = ResolveControlsPanel();
-        if (panel == null)
-            return null;
-
-        foreach (Button button in panel.GetComponentsInChildren<Button>(true))
-        {
-            if (button != null && button.gameObject.name == "Back")
-                return button;
-        }
-
-        return null;
-    }
-
-    private void CachePauseMainContent()
-    {
-        if (_backgroundRoot != null)
-            return;
-
-        Transform background = transform.Find("Background");
-        if (background == null)
-            return;
-
-        _backgroundRoot = background;
-        GameObject controls = ResolveControlsPanel();
-
-        for (int i = 0; i < background.childCount; i++)
-        {
-            Transform child = background.GetChild(i);
-            if (child == null || (controls != null && child.gameObject == controls))
-                continue;
-
-            _pauseMainContent.Add(child.gameObject);
-        }
-    }
-
-    private void SetPauseMainContentVisible(bool visible)
-    {
-        CachePauseMainContent();
-
-        for (int i = 0; i < _pauseMainContent.Count; i++)
-        {
-            GameObject content = _pauseMainContent[i];
-            if (content != null)
-                content.SetActive(visible);
-        }
-    }
-
-    private GameObject ResolveControlsPanel()
-    {
-        if (controlsPanel != null)
-            return controlsPanel;
-
-        Transform background = transform.Find("Background");
-        if (background != null)
-        {
-            Transform controls = background.Find("Controls");
-            if (controls != null)
-            {
-                controlsPanel = controls.gameObject;
-                return controlsPanel;
-            }
-        }
-
-        GameObject found = GameObject.Find("Controls");
-        if (found != null)
-            controlsPanel = found;
-
-        return controlsPanel;
     }
 }

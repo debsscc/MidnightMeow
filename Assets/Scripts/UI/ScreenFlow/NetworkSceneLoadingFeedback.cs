@@ -3,11 +3,12 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 
 /// <summary>
-/// Exibe o overlay de loading imediatamente quando o host inicia troca de cena via NGO.
-/// Evita que clientes vejam a tela anterior "travada" até a cena carregar.
+/// Exibe fade-out no cliente quando o host inicia troca de cena via NGO.
+/// Fade-in de chegada fica em <see cref="NetworkSceneSyncUtility"/> ou <see cref="ScreenFlowController"/>.
 /// </summary>
 public static class NetworkSceneLoadingFeedback
 {
+    private const float ClientFadeOutSeconds = 1f;
     private static bool _subscribed;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
@@ -38,19 +39,48 @@ public static class NetworkSceneLoadingFeedback
         if (NetworkManager.Singleton == null || NetworkManager.Singleton.IsServer)
             return;
 
-        if (sceneEvent.SceneEventType != SceneEventType.Load)
-            return;
-
-        if (!ShouldShowLoadingForScene(sceneEvent.SceneName))
-            return;
-
-        TransitionFadeOverlay.EnsureExists();
-        ScreenFlowController.EnsureExists();
-        TransitionFadeOverlay.Instance?.ShowLoading();
-        TransitionFadeOverlay.Instance?.SetFadeImmediate(1f);
+        if (sceneEvent.SceneEventType == SceneEventType.Load)
+            HandleClientSceneLoadStarted(sceneEvent.SceneName);
+        else if (sceneEvent.SceneEventType == SceneEventType.LoadEventCompleted)
+            HandleClientSceneLoadCompleted(sceneEvent.SceneName);
     }
 
-    private static bool ShouldShowLoadingForScene(string sceneName)
+    private static void HandleClientSceneLoadStarted(string sceneName)
+    {
+        if (!ShouldCoverOnLoad(sceneName))
+            return;
+
+        ScreenFlowController flow = ScreenFlowController.Instance;
+        if (flow != null && flow.IsTransitioning)
+            return;
+
+        TransitionFadeOverlay overlay = TransitionFadeOverlay.EnsureExists();
+        if (overlay == null)
+            return;
+
+        overlay.ShowLoading();
+        overlay.BeginAnimatedFadeOut(ClientFadeOutSeconds);
+    }
+
+    private static void HandleClientSceneLoadCompleted(string sceneName)
+    {
+        if (string.IsNullOrEmpty(sceneName))
+            return;
+
+        if (ScreenFlowLoadingScenes.IsDedicatedLoadingScene(sceneName))
+            return;
+
+        if (!ShouldFadeInOnArrival(sceneName))
+            return;
+
+        ScreenFlowController flow = ScreenFlowController.Instance;
+        if (flow == null || flow.IsTransitioning)
+            return;
+
+        flow.TryBeginFadeInAfterNetworkSceneArrival(sceneName);
+    }
+
+    private static bool ShouldCoverOnLoad(string sceneName)
     {
         if (string.IsNullOrEmpty(sceneName))
             return false;
@@ -60,6 +90,19 @@ public static class NetworkSceneLoadingFeedback
 
         return sceneName.StartsWith("Fase-", System.StringComparison.Ordinal)
                || sceneName is "Preparation" or "Loading1" or "Loading2"
+               || sceneName is "VictoryScene" or "GameOver";
+    }
+
+    private static bool ShouldFadeInOnArrival(string sceneName)
+    {
+        if (string.IsNullOrEmpty(sceneName))
+            return false;
+
+        if (ScreenFlowLoadingScenes.IsDedicatedLoadingScene(sceneName))
+            return false;
+
+        return sceneName.StartsWith("Fase-", System.StringComparison.Ordinal)
+               || sceneName is "Preparation"
                || sceneName is "VictoryScene" or "GameOver";
     }
 }

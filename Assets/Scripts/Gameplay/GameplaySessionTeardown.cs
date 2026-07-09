@@ -8,12 +8,23 @@ public static class GameplaySessionTeardown
 {
     public static void PrepareForEndGameScreen()
     {
+        CloseGameplayOverlays();
+
         Time.timeScale = 0f;
-        GameEvents.InvokePauseChanged(true);
+        GameEvents.InvokeGameplayFreeze();
 
         DisablePlayerControl();
         HideGameplayActors();
         StopLocalSpawners();
+    }
+
+    private static void CloseGameplayOverlays()
+    {
+        GameManager2 gameManager = Object.FindFirstObjectByType<GameManager2>();
+        gameManager?.HidePauseOverlay();
+
+        SceneOverlayController overlay = Object.FindFirstObjectByType<SceneOverlayController>();
+        overlay?.CloseOverlay("pause");
     }
 
     private static void DisablePlayerControl()

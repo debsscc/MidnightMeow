@@ -193,10 +193,39 @@ public class MainMenuController : MonoBehaviour
     {
         HideDeleteConfirmation();
         HideLegacyMenuContent();
+        HideControlsPanel();
+        HideControlsOverlayScreen();
+        ResetMenuTabs();
         navigator?.ShowPanel(PanelMain);
         if (mainMenuPanel != null) mainMenuPanel.SetActive(true);
         if (legacyHubPanel != null) legacyHubPanel.SetActive(false);
         ScreenFlowPlaceholderFactory.ApplyMenuCursor();
+    }
+
+    private static void HideControlsPanel()
+    {
+        ControlsPanelController controls = ControlsPanelController.FindInScene();
+        if (controls != null)
+            controls.gameObject.SetActive(false);
+    }
+
+    private static void HideControlsOverlayScreen()
+    {
+        GameObject[] all = FindObjectsByType<GameObject>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        for (int i = 0; i < all.Length; i++)
+        {
+            GameObject go = all[i];
+            if (go == null || go.name != "Controls" || go.GetComponent<ControlsPanelController>() != null)
+                continue;
+
+            go.SetActive(false);
+        }
+    }
+
+    private static void ResetMenuTabs()
+    {
+        MenuTabController tabs = FindFirstObjectByType<MenuTabController>();
+        tabs?.ResetToDefaultTab();
     }
 
     private void HideLegacyMenuContent()
@@ -205,6 +234,9 @@ public class MainMenuController : MonoBehaviour
         for (int i = 0; i < canvases.Length; i++)
         {
             Canvas canvas = canvases[i];
+            if (canvas.GetComponentInParent<TransitionFadeOverlay>(true) != null)
+                continue;
+
             if (canvas.gameObject.name is "FadeManager" or "CreditsOverlay")
             {
                 canvas.gameObject.SetActive(false);
