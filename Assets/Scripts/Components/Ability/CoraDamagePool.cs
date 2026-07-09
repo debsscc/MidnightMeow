@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Netcode;
 using UnityEngine;
 
 /// <summary>
@@ -39,6 +40,11 @@ public class CoraDamagePool : MonoBehaviour
         _worldRadius = Mathf.Max(0.25f, tierData.range);
 
         SyncPoolVisualAndCollider(_worldRadius);
+
+        bool isNetworkedInstance = TryGetComponent<NetworkObject>(out var netObj) && netObj != null && netObj.IsSpawned;
+        bool shouldRunAuthoritativeLogic = !isNetworkedInstance || (NetworkManager.Singleton != null && NetworkManager.Singleton.IsServer);
+        if (!shouldRunAuthoritativeLogic)
+            return;
 
         if (_damageRoutine != null)
             StopCoroutine(_damageRoutine);
@@ -83,6 +89,14 @@ public class CoraDamagePool : MonoBehaviour
     private IEnumerator LifetimeRoutine(float duration)
     {
         yield return new WaitForSeconds(duration);
+
+        if (TryGetComponent<NetworkObject>(out var netObj) && netObj != null && netObj.IsSpawned)
+        {
+            if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsServer)
+                netObj.Despawn(true);
+            yield break;
+        }
+
         Destroy(gameObject);
     }
 

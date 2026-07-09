@@ -19,7 +19,7 @@ MonoBehaviour:
   hitStunDuration: 0.35
   randomWalkRadius: 6
   randomWalkInterval: 2.5
-  maxHealth: 6
+  maxHealth: 5
   rangedDefense: 0.25
   deathDespawnDelay: 0.4
   moveSpeed: 6.2

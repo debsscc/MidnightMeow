@@ -84,7 +84,28 @@ public class NetworkAbilityObjectSpawner : NetworkBehaviour
                 barrier.Initialize(tierData, OwnerClientId);
         }
         else if (abilityType == CharacterAbilityType.CoraPool && instance.TryGetComponent<CoraDamagePool>(out var pool))
+        {
             pool.Initialize(tierData, OwnerClientId);
+
+            if (netObj != null)
+                SyncPoolInitializeClientRpc(new NetworkObjectReference(netObj), PackTier(tierData), OwnerClientId);
+        }
+    }
+
+    [ClientRpc]
+    private void SyncPoolInitializeClientRpc(
+        NetworkObjectReference poolReference,
+        AbilityTierPayload payload,
+        ulong ownerClientId)
+    {
+        if (IsServer)
+            return;
+
+        if (!poolReference.TryGet(out NetworkObject poolObject) || poolObject == null)
+            return;
+
+        if (poolObject.TryGetComponent<CoraDamagePool>(out var pool))
+            pool.Initialize(UnpackTier(payload), ownerClientId);
     }
 
     private static AbilityTierPayload PackTier(AbilityTierData data)

@@ -146,6 +146,26 @@ public class MultiplayerGameManager : NetworkBehaviour
         Debug.Log($"[MultiplayerGameManager] Jogo iniciado com {_playersFighting.Value} jogador(es).");
     }
 
+    public void ServerPrepareForGameplayRestart()
+    {
+        if (!IsServer)
+            return;
+
+        if (_resumeCountdownRoutine != null)
+        {
+            StopCoroutine(_resumeCountdownRoutine);
+            _resumeCountdownRoutine = null;
+        }
+
+        _defeatSequenceStarted = false;
+        _victorySequenceStarted = false;
+        _resumeCountdown.Value = -1;
+        _playersFighting.Value = NetworkManager.Singleton != null
+            ? NetworkManager.Singleton.ConnectedClientsIds.Count
+            : 0;
+        _networkGameState.Value = GameState.WaitingForPlayers;
+    }
+
     private void TryAutoBeginGameplayOnServer()
     {
         if (!IsServer || _networkGameState.Value != GameState.WaitingForPlayers) return;

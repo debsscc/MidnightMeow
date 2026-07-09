@@ -5183,6 +5183,7 @@ GameObject:
   - component: {fileID: 910001001001001007}
   - component: {fileID: 910001001001001008}
   - component: {fileID: 910001001001001009}
+  - component: {fileID: 8562360240057296213}
   m_Layer: 3
   m_Name: Nixie
   m_TagString: Player
@@ -5753,7 +5754,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
-  GlobalObjectIdHash: 4217278500
+  GlobalObjectIdHash: 1259787695
   InScenePlacedSourceGlobalObjectIdHash: 1626128580
   DeferredDespawnTick: 0
   Ownership: 1
@@ -6154,7 +6155,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerGameplayModuleInstaller
   installDamageImmunity: 1
   installDownedUI: 1
-  installRevivePromptUI: 1
+  installCarriageRepairInteraction: 1
   installMeleeHitVisual: 1
   installAbilityDebugVisual: 1
   installRatHoleSealInteraction: 1
@@ -6314,6 +6315,29 @@ MonoBehaviour:
   healthComponent: {fileID: 4338388805264836550}
   deathStateName: Dying
   postDeathHoldSeconds: 5
+--- !u!114 &8562360240057296213
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3845447005448380479}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 06d715cd95c2d1d439bf152565a33815, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MidnightMeow::AllyPlayerHealthBarDisplay
+  ShowTopMostFoldoutHeaderGroup: 1
+  buildIfMissing: 1
+  backgroundSprite: {fileID: 0}
+  fillSprite: {fileID: 0}
+  verticalOffset: 0.4
+  widthPadding: 0.12
+  barHeight: 0.35
+  sortingOrder: 220
+  backgroundColor: {r: 0.1, g: 0.12, b: 0.14, a: 0.9}
+  fillColor: {r: 0.22, g: 0.86, b: 0.35, a: 0.97}
+  hideWhenFull: 0
 --- !u!1 &4084784925386163396
 GameObject:
   m_ObjectHideFlags: 0

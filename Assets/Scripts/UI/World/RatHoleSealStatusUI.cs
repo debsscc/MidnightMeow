@@ -16,6 +16,7 @@ public class RatHoleSealStatusUI : MonoBehaviour
 {
     [SerializeField] private Vector3 offset = new Vector3(0f, 0.75f, 0f);
     [SerializeField] private Vector2 panelSize = new Vector2(3.4f, 0.55f);
+    [SerializeField] private SpriteRenderer holeSprite;
 
     private RatHoleSpawnPoint _hole;
     private Canvas _canvas;
@@ -25,6 +26,7 @@ public class RatHoleSealStatusUI : MonoBehaviour
     private void Awake()
     {
         _hole = GetComponent<RatHoleSpawnPoint>();
+        ResolveHoleSprite();
         BuildUI();
         SetVisible(false);
     }
@@ -40,7 +42,10 @@ public class RatHoleSealStatusUI : MonoBehaviour
             if (_hole.IsSealed)
                 ShowSealed();
             else
+            {
+                SetHoleSpriteVisible(true);
                 SetVisible(false);
+            }
             return;
         }
 
@@ -49,7 +54,10 @@ public class RatHoleSealStatusUI : MonoBehaviour
             if (_hole.IsSealed)
                 ShowSealed();
             else
+            {
+                SetHoleSpriteVisible(true);
                 SetVisible(false);
+            }
             return;
         }
 
@@ -61,10 +69,12 @@ public class RatHoleSealStatusUI : MonoBehaviour
 
         if (!session.IsActive)
         {
+            SetHoleSpriteVisible(true);
             SetVisible(false);
             return;
         }
 
+        SetHoleSpriteVisible(true);
         SetVisible(true);
         _canvas.transform.position = (Vector3)_hole.AnchorPosition + offset;
         if (_fill != null)
@@ -80,12 +90,29 @@ public class RatHoleSealStatusUI : MonoBehaviour
 
     private void ShowSealed()
     {
+        SetHoleSpriteVisible(false);
         SetVisible(true);
         _canvas.transform.position = (Vector3)_hole.AnchorPosition + offset;
         if (_fill != null)
             _fill.fillAmount = 1f;
         if (_label != null)
             _label.text = IsPortuguese() ? "Área selada" : "Area sealed";
+    }
+
+    private void ResolveHoleSprite()
+    {
+        if (holeSprite != null)
+            return;
+
+        holeSprite = GetComponent<SpriteRenderer>();
+        if (holeSprite == null)
+            holeSprite = GetComponentInChildren<SpriteRenderer>();
+    }
+
+    private void SetHoleSpriteVisible(bool visible)
+    {
+        if (holeSprite != null)
+            holeSprite.enabled = visible;
     }
 
     private void SetVisible(bool visible)

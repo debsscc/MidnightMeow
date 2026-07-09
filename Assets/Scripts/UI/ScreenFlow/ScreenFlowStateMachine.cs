@@ -279,52 +279,105 @@ public static class ScreenFlowStateMachine
 
 
 
-    public static bool RestartCurrentGameplay()
-
+    public static void RequestRestartCurrentGameplay()
     {
+        NetworkManager networkManager = NetworkManager.Singleton;
+        bool isNetworkSession = !GameSessionContext.IsSinglePlayer
+            && networkManager != null
+            && networkManager.IsListening;
 
-        if (!GameSessionContext.IsSinglePlayer)
+        if (!isNetworkSession)
+        {
+            RestartCurrentGameplay();
+            return;
+        }
 
-            return false;
+        if (networkManager.IsServer)
+            RestartCurrentGameplay();
+        else
+            PreparationSessionManager.Instance?.RequestRestartGameplayServerRpc();
+    }
 
-
-
+    public static bool RestartCurrentGameplay()
+    {
         Time.timeScale = 1f;
-
         GameplayVignetteController.ClearIfActive();
-
         GameSessionContext.ResetContractRound();
-
         PreparationSessionManager.Instance?.ResetRound();
-
         RoundMagiculaTracker.Instance?.ResetRound();
 
+        string sceneName = ResolveRestartGameplaySceneName();
+        if (string.IsNullOrEmpty(sceneName))
+            return false;
 
+        NetworkManager networkManager = NetworkManager.Singleton;
+        bool isNetworkSession = !GameSessionContext.IsSinglePlayer
+            && networkManager != null
+            && networkManager.IsListening;
 
-        if (string.IsNullOrEmpty(GameSessionContext.ActiveGameplaySceneName))
+        if (isNetworkSession)
+        {
+            if (!networkManager.IsServer)
+                return false;
 
-            GameSessionContext.ActiveGameplaySceneName = "Fase-1";
+            return RestartGameplayPhaseOnServer(networkManager, sceneName);
+        }
 
-
-
-        PlayerSpawnManager.Instance?.DespawnAllPlayersForRestart();
-
-
-
+        DespawnPlayersForRestart();
         EnterPhase(ScreenFlowPhase.LoadingToGameplay);
-
         GameSessionContext.PendingRouteId = SceneFlowRouteIds.Loading2ToGameplay;
 
-
-
         if (TryTransition(SceneFlowRouteIds.PreparationToLoading2))
-
             return true;
 
-
-
         return LoadSceneFallback("Loading2");
+    }
 
+    private static string ResolveRestartGameplaySceneName()
+    {
+        if (!string.IsNullOrEmpty(GameSessionContext.ActiveGameplaySceneName)
+            && GameplaySceneBootstrap.IsGameplayScene(GameSessionContext.ActiveGameplaySceneName))
+            return GameSessionContext.ActiveGameplaySceneName;
+
+        string activeScene = SceneManager.GetActiveScene().name;
+        if (GameplaySceneBootstrap.IsGameplayScene(activeScene))
+            return activeScene;
+
+        return string.IsNullOrEmpty(GameSessionContext.ActiveGameplaySceneName)
+            ? "Fase-1"
+            : GameSessionContext.ActiveGameplaySceneName;
+    }
+
+    private static bool RestartGameplayPhaseOnServer(NetworkManager networkManager, string sceneName)
+    {
+        EnterPhase(ScreenFlowPhase.Gameplay);
+        MultiplayerGameManager.Instance?.ServerPrepareForGameplayRestart();
+        DespawnPlayersForRestart();
+        networkManager.SceneManager.LoadScene(sceneName, LoadSceneMode.Single);
+        return true;
+    }
+
+    private static void DespawnPlayersForRestart()
+    {
+        if (PlayerSpawnManager.Instance != null)
+        {
+            PlayerSpawnManager.Instance.DespawnAllPlayersForRestart();
+            return;
+        }
+
+        NetworkManager networkManager = NetworkManager.Singleton;
+        if (networkManager == null || !networkManager.IsServer)
+            return;
+
+        foreach (ulong clientId in networkManager.ConnectedClientsIds)
+        {
+            if (!networkManager.ConnectedClients.TryGetValue(clientId, out NetworkClient client))
+                continue;
+
+            NetworkObject playerObject = client.PlayerObject;
+            if (playerObject != null && playerObject.IsSpawned)
+                playerObject.Despawn(true);
+        }
     }
 
 

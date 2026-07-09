@@ -12,15 +12,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 022c807dc1e04fc42857b0de397ddf6d, type: 3}
   m_Name: CarriageConfig
   m_EditorClassIdentifier: Assembly-CSharp::CarriageConfig
-  maxHealth: 120
+  maxHealth: 20
   repairRestoreHealthFraction: 0.5
   visualScale: 1
   pathStartX: -42
   pathEndX: 18
   useCustomPathY: 0
   pathY: 0
-  moveSpeed: 1.8
+  moveSpeed: 0.9
   arrivalZoneRadius: 2
+  repairPromptRadius: 3.3
   repairZoneRadius: 1.2
   repairMinDistance: 1.4
   repairMaxDistance: 2.8

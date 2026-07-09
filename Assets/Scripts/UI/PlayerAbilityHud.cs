@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.Localization;
 using UnityEngine.Localization.Settings;
 using UnityEngine.UI;
+using TMPro;
 
 // HUD de gameplay (canto inferior esquerdo): Passiva, Dash, Q e R com cooldowns.
 // Sprites opcionais por slot; fallback procedural quando ausentes.
@@ -30,10 +31,18 @@ public class PlayerAbilityHud : MonoBehaviour
     [SerializeField] private Sprite ability2Icon;
 
     [SerializeField] private bool buildIfMissing = true;
+    [Header("Hotkeys (opcional - conectar no prefab)")]
+    [SerializeField] private TMP_Text dashHotkeyText;
+    [SerializeField] private TMP_Text ability1HotkeyText;
+    [SerializeField] private TMP_Text ability2HotkeyText;
+    [SerializeField] private bool includeHotkeyInAbilityLabel = true;
 
     private PlayerAbilityHandler _abilityHandler;
     private PlayerDash _dash;
     private PlayerPassiveHandler _passive;
+    private string _cachedDashLabel = "Dash";
+    private string _cachedAbility1Label = "Q";
+    private string _cachedAbility2Label = "R";
 
     private RectTransform _root;
     private readonly SlotView[] _slots = new SlotView[4];
@@ -90,8 +99,8 @@ public class PlayerAbilityHud : MonoBehaviour
 
         RefreshPassiveSlot();
         RefreshDashSlot();
-        RefreshAbilitySlot(_slots[2], AbilitySlot.Ability1, "Q");
-        RefreshAbilitySlot(_slots[3], AbilitySlot.Ability2, "R");
+        RefreshAbilitySlot(_slots[2], AbilitySlot.Ability1, _cachedAbility1Label);
+        RefreshAbilitySlot(_slots[3], AbilitySlot.Ability2, _cachedAbility2Label);
     }
 
     public static void EnsureOnCanvas(Canvas canvas, PlayerAbilityHudTheme hudTheme = null)
@@ -220,9 +229,16 @@ public class PlayerAbilityHud : MonoBehaviour
 
         if (_abilityHandler != null)
             _abilityHandler.OnAbilitySetChanged += HandleAbilitySetChanged;
+
+        RebuildAbilityLabels();
+        RefreshHotkeyTexts();
     }
 
-    private void HandleAbilitySetChanged() { }
+    private void HandleAbilitySetChanged()
+    {
+        RebuildAbilityLabels();
+        RefreshHotkeyTexts();
+    }
 
     private void ClearBindings()
     {
@@ -232,6 +248,8 @@ public class PlayerAbilityHud : MonoBehaviour
         _abilityHandler = null;
         _dash = null;
         _passive = null;
+        RebuildAbilityLabels();
+        RefreshHotkeyTexts();
     }
 
     private void RefreshDashSlot()
@@ -244,11 +262,11 @@ public class PlayerAbilityHud : MonoBehaviour
         float cooldownRemaining = _dash != null ? _dash.GetCooldownRemaining() : 0f;
         float cooldownTotal = _dash != null ? _dash.GetCooldownDuration() : 1f;
         string label = _abilityHandler != null
-            ? _abilityHandler.GetSlotDisplayName(AbilitySlot.Dash)
-            : string.Empty;
+            ? _cachedDashLabel
+            : _cachedDashLabel;
 
         RefreshCooldownSlot(slot, unlocked, cooldownRemaining, cooldownTotal,
-            string.IsNullOrEmpty(label) ? "Dash" : label, unlockWave: 1);
+            string.IsNullOrEmpty(label) ? _cachedDashLabel : label, unlockWave: 1);
     }
 
     private void RefreshAbilitySlot(SlotView slot, AbilitySlot abilitySlot, string fallbackLabel)
@@ -582,5 +600,58 @@ public class PlayerAbilityHud : MonoBehaviour
         rt.anchorMax = Vector2.one;
         rt.offsetMin = Vector2.zero;
         rt.offsetMax = Vector2.zero;
+    }
+
+    private void RebuildAbilityLabels()
+    {
+        string dashName = _abilityHandler != null
+            ? _abilityHandler.GetSlotDisplayName(AbilitySlot.Dash)
+            : string.Empty;
+        string ability1Name = _abilityHandler != null
+            ? _abilityHandler.GetSlotDisplayName(AbilitySlot.Ability1)
+            : string.Empty;
+        string ability2Name = _abilityHandler != null
+            ? _abilityHandler.GetSlotDisplayName(AbilitySlot.Ability2)
+            : string.Empty;
+
+        _cachedDashLabel = BuildSlotLabel(AbilitySlot.Dash, string.IsNullOrEmpty(dashName) ? "Dash" : dashName);
+        _cachedAbility1Label = BuildSlotLabel(AbilitySlot.Ability1, string.IsNullOrEmpty(ability1Name) ? "Q" : ability1Name);
+        _cachedAbility2Label = BuildSlotLabel(AbilitySlot.Ability2, string.IsNullOrEmpty(ability2Name) ? "R" : ability2Name);
+    }
+
+    private string BuildSlotLabel(AbilitySlot slot, string abilityName)
+    {
+        if (!includeHotkeyInAbilityLabel)
+            return abilityName;
+
+        string hotkey = GetHotkeyLabel(slot);
+        if (string.IsNullOrEmpty(hotkey) || string.IsNullOrEmpty(abilityName))
+            return abilityName;
+
+        return $"[{hotkey}] {abilityName}";
+    }
+
+    private static string GetHotkeyLabel(AbilitySlot slot)
+    {
+        return slot switch
+        {
+            AbilitySlot.Dash => "Shift",
+            AbilitySlot.Ability1 => "Q",
+            AbilitySlot.Ability2 => "R",
+            _ => string.Empty
+        };
+    }
+
+    private void RefreshHotkeyTexts()
+    {
+        SetHotkeyText(dashHotkeyText, GetHotkeyLabel(AbilitySlot.Dash));
+        SetHotkeyText(ability1HotkeyText, GetHotkeyLabel(AbilitySlot.Ability1));
+        SetHotkeyText(ability2HotkeyText, GetHotkeyLabel(AbilitySlot.Ability2));
+    }
+
+    private static void SetHotkeyText(TMP_Text text, string value)
+    {
+        if (text != null)
+            text.text = value;
     }
 }

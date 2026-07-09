@@ -119,19 +119,7 @@ public class EndGameScreenController : MonoBehaviour
             return;
         }
 
-        if (GameSessionContext.IsSinglePlayer)
-        {
-            ScreenFlowStateMachine.RestartCurrentGameplay();
-            return;
-        }
-
-        if (!IsLocalHost())
-        {
-            Debug.Log("[EndGameScreenController] Aguardando o host reiniciar (volta ao lobby).");
-            return;
-        }
-
-        ScreenFlowStateMachine.ReturnToLobbyFromEndGame();
+        ScreenFlowStateMachine.RequestRestartCurrentGameplay();
     }
 
     private void OnAbandon()
@@ -231,15 +219,6 @@ public class EndGameScreenController : MonoBehaviour
 
         button.onClick.RemoveAllListeners();
         button.onClick.AddListener(action);
-    }
-
-    private static bool IsLocalHost()
-    {
-        if (GameSessionContext.IsSinglePlayer)
-            return true;
-
-        Unity.Netcode.NetworkManager net = Unity.Netcode.NetworkManager.Singleton;
-        return net == null || net.IsServer;
     }
 
     private static bool IsPortuguese()

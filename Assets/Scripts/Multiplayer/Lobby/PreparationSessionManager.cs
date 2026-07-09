@@ -132,6 +132,12 @@ public class PreparationSessionManager : NetworkBehaviour
     }
 
     [Rpc(SendTo.Server)]
+    public void RequestRestartGameplayServerRpc(RpcParams rpcParams = default)
+    {
+        ScreenFlowStateMachine.RestartCurrentGameplay();
+    }
+
+    [Rpc(SendTo.Server)]
     public void RequestConfirmContractRpc(RpcParams rpcParams = default)
     {
         ulong caller = rpcParams.Receive.SenderClientId;

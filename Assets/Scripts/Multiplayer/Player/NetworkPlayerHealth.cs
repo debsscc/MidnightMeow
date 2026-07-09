@@ -195,6 +195,9 @@ public class NetworkPlayerHealth : NetworkBehaviour
 
             downedConfig = DownedPlayerConfigUtility.Resolve();
 
+        if (GetComponent<AllyPlayerHealthBarDisplay>() == null)
+            gameObject.AddComponent<AllyPlayerHealthBarDisplay>();
+
     }
 
 

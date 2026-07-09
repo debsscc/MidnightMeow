@@ -162,6 +162,7 @@ public class NetworkEnemyController : NetworkBehaviour
         }
 
         _networkHealth.OnValueChanged += HandleNetworkHealthChanged;
+        _networkMaxHealth.OnValueChanged += HandleNetworkMaxHealthChanged;
         _networkIsDead.OnValueChanged += HandleNetworkDeathChanged;
 
         if (!IsServer)
@@ -174,11 +175,15 @@ public class NetworkEnemyController : NetworkBehaviour
             _health.OnHealthChanged.RemoveListener(HandleHealthChangedOnServer);
 
         _networkHealth.OnValueChanged -= HandleNetworkHealthChanged;
+        _networkMaxHealth.OnValueChanged -= HandleNetworkMaxHealthChanged;
         _networkIsDead.OnValueChanged -= HandleNetworkDeathChanged;
         _animMoveSpeed.OnValueChanged -= HandleAnimMoveSpeedChanged;
         _animFacingFlipX.OnValueChanged -= HandleAnimFacingChanged;
         _animAttackSequence.OnValueChanged -= HandleAnimAttackSequenceChanged;
         _animIsAttacking.OnValueChanged -= HandleAnimIsAttackingChanged;
+
+        if (TryGetComponent<EnemyHealthBarDisplay>(out var healthBarDisplay))
+            healthBarDisplay.HideImmediately();
 
         UnwireAnimationPublishers();
         CancelDeathDespawnRoutine();
@@ -403,6 +408,12 @@ public class NetworkEnemyController : NetworkBehaviour
         ApplyClientMirror(newValue, _networkMaxHealth.Value, _networkIsDead.Value);
     }
 
+    private void HandleNetworkMaxHealthChanged(float oldValue, float newValue)
+    {
+        if (IsServer) return;
+        ApplyClientMirror(_networkHealth.Value, newValue, _networkIsDead.Value);
+    }
+
     private void HandleNetworkDeathChanged(bool wasAlive, bool isDead)
     {
         if (!isDead || IsServer) return;
@@ -410,6 +421,9 @@ public class NetworkEnemyController : NetworkBehaviour
         ApplyClientMirror(0f, _networkMaxHealth.Value, true);
         SetAIComponentsActive(false);
         ApplyDeathPresentation();
+
+        if (TryGetComponent<EnemyHealthBarDisplay>(out var healthBarDisplay))
+            healthBarDisplay.HideImmediately();
 
         PlayDeathVisuals();
     }

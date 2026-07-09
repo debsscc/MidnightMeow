@@ -67,6 +67,12 @@ public class EnemyHealthBarDisplay : MonoBehaviour
             HandleHealthChanged(_health.CurrentHealth, _health.MaxHealth);
     }
 
+    private void OnEnable()
+    {
+        if (_health != null)
+            HandleHealthChanged(_health.CurrentHealth, _health.MaxHealth);
+    }
+
     private void LateUpdate()
     {
         if (_barRoot == null)
@@ -111,6 +117,12 @@ public class EnemyHealthBarDisplay : MonoBehaviour
     }
 
     private void HandleDied()
+    {
+        if (_barRoot != null)
+            _barRoot.gameObject.SetActive(false);
+    }
+
+    public void HideImmediately()
     {
         if (_barRoot != null)
             _barRoot.gameObject.SetActive(false);
