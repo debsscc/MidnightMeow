@@ -6,6 +6,8 @@ using UnityEngine;
 /// </summary>
 public static class ScreenFlowSceneReadiness
 {
+    public const int DefaultRenderPaddingFrames = 2;
+
     private static string _pendingScene;
     private static bool _isReady;
 
@@ -50,5 +52,27 @@ public static class ScreenFlowSceneReadiness
             Debug.LogWarning($"[ScreenFlow] Cena '{expectedScene}' não sinalizou prontidão a tempo; liberando overlay.");
 
         CancelAwaiting();
+    }
+
+    /// <summary>
+    /// Recuo de frames após a cena reportar carregamento — permite Start() e o primeiro draw na GPU.
+    /// </summary>
+    public static IEnumerator WaitForRenderPadding(int extraFrames = DefaultRenderPaddingFrames)
+    {
+        int frames = Mathf.Max(0, extraFrames);
+        for (int i = 0; i < frames; i++)
+            yield return null;
+    }
+
+    /// <summary>
+    /// Mantém o fade opaco até o <see cref="AsyncOperation"/> atingir 100% (isDone).
+    /// </summary>
+    public static IEnumerator WaitUntilLoadComplete(AsyncOperation asyncLoad)
+    {
+        if (asyncLoad == null)
+            yield break;
+
+        while (!asyncLoad.isDone)
+            yield return null;
     }
 }

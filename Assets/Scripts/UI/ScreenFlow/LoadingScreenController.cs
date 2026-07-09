@@ -46,22 +46,18 @@ public class LoadingScreenController : MonoBehaviour
 
         EnsureFollowerParentedToTrack();
         EnsureCanvasOnTop();
-        HandoffTransitionOverlay();
         ResetProgressUi();
     }
 
-    private void HandoffTransitionOverlay()
+    private void ReleaseTransitionOverlayLoading()
     {
         TransitionFadeOverlay overlay = TransitionFadeOverlay.Instance;
-        if (overlay == null)
-            return;
-
-        float progress = overlay.LoadingProgress;
-        overlay.HandoffToDedicatedLoadingScene(progress);
+        overlay?.HideLoading();
     }
 
     private void Start()
     {
+        ReleaseTransitionOverlayLoading();
         HideLegacyLoadingContent();
         ScreenFlowSceneReadiness.MarkReadyIfPending(
             UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
