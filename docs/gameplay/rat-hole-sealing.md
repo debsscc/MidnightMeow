@@ -50,6 +50,21 @@ Criar perfis em `Assets/Data/Gameplay/` → menu **MidnightMeow/Gameplay/Rat Hol
 
 `Assets/Data/Gameplay/RatHoleSealConfig.asset` — instância em produção: `Assets/Resources/RatHoleSealConfig.asset`
 
+| Campo | Descrição |
+|-------|-----------|
+| `sealCompleteClip` | SFX ao concluir selamento (`Buraco Selado.wav`). Grupo **SFX** do `NewAudioMixer` — controlado pelo slider **SFX** nas opções. |
+
+### Textos (pt-BR / en-US)
+
+Chaves na tabela **UI** (`UiLocalization`):
+
+| Chave | PT | EN |
+|-------|----|----|
+| `seal.prompt` | Aperte E para selar | Press E to seal |
+| `seal.progress` | Fique na Área para selar — {0}% | Stay in the Area to seal — {0}% |
+| `seal.complete` | Área selada | Area sealed |
+| `objective.holes_status` | Buracos: … | Holes: … |
+
 ## Código principal
 
 - `RatHoleSpawnPoint`, `NetworkRatHoleSealManager`, `RatHoleSealZoneSystem`

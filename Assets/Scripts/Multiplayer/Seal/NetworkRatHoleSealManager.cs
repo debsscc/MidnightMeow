@@ -104,7 +104,10 @@ public class NetworkRatHoleSealManager : NetworkBehaviour
                 continue;
 
             if (!before.IsSealed && session.IsSealed)
+            {
                 objectiveDirty = true;
+                PlayHoleSealedClientRpc(session.HoleId);
+            }
 
             _sessions[i] = session;
         }
@@ -132,6 +135,12 @@ public class NetworkRatHoleSealManager : NetworkBehaviour
         int alive = PhaseObjectiveStatusUtility.CountAliveNetworkEnemies();
         PhaseObjectiveStatusUtility.BroadcastCurrentStatus(alive);
         NotifyObjectiveStatusClientRpc(alive);
+    }
+
+    [ClientRpc]
+    private void PlayHoleSealedClientRpc(ushort holeId)
+    {
+        RatHoleSealAudioUtility.PlaySealComplete(config);
     }
 
     [ClientRpc]

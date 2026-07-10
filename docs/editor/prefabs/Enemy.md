@@ -1,6 +1,6 @@
 # Prefab: Enemy
 
-Última revisão: 2026-06-28  
+Última revisão: 2026-07-09  
 **Caminho:** `Assets/Prefabs/Enemies/Enemy.prefab`
 
 ## Resumo
@@ -34,7 +34,7 @@ Template de inimigo rato (ranged). Variantes de produção estão em `Rato_*.pre
 | `NetworkEnemyTelegraphRelay` | Réplica visual em clientes MP |
 | `EnemyAttack_Ranged` | Legado — tiro instantâneo |
 | `EnemyAttack_Melee` | Legado — dano instantâneo ao chegar perto |
-| `EnemyAudioController` | SFX dano/morte |
+| `EnemyAudioController` | SFX ataque/dano/morte via `EnemySfxBus` → mixer SFX (`GameAudioSettings.BindSfxOutput`) |
 | `DissolveEffect` | Death: anim `Dying` → dissolve + sparkle |
 | `EnemySpawnPresentation` | Spawn: baforada de poeira + materialização (dissolve reverso). Auto-adicionado pelo `NetworkEnemyController`; roda local em solo e MP |
 | `NetworkObject` + `NetworkTransform` | NGO |

@@ -150,7 +150,12 @@ public class DownedPlayerWorldUI : MonoBehaviour
             return DownedReviveLabelMode.ReviveProgress;
 
         if (_health.IsOwner)
+        {
+            if (!CanShowCooperativeRevivePrompt())
+                return DownedReviveLabelMode.Hidden;
+
             return DownedReviveLabelMode.OwnerWaiting;
+        }
 
         NetworkPlayerHealth localAlly = ResolveLocalFightingPlayer();
         if (localAlly == null)
@@ -165,6 +170,27 @@ public class DownedPlayerWorldUI : MonoBehaviour
             return DownedReviveLabelMode.AllyApproach;
 
         return DownedReviveLabelMode.Hidden;
+    }
+
+    private bool CanShowCooperativeRevivePrompt()
+    {
+        if (GameSessionContext.IsSinglePlayer)
+            return false;
+
+        NetworkPlayerHealth[] players =
+            Object.FindObjectsByType<NetworkPlayerHealth>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+
+        for (int i = 0; i < players.Length; i++)
+        {
+            NetworkPlayerHealth other = players[i];
+            if (other == null || other == _health || !other.IsSpawned)
+                continue;
+
+            if (other.CanFight)
+                return true;
+        }
+
+        return false;
     }
 
     private bool IsReviveSessionActive()

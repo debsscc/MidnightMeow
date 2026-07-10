@@ -55,6 +55,13 @@ public class GameplayHudController : MonoBehaviour
         EnsureAbilityHud(visualTheme != null ? visualTheme.abilityHudTheme : null);
         DisableOffscreenIndicators();
         EnsureFeedbackButton();
+        EnsureDownedReviveTimerHud();
+    }
+
+    private void EnsureDownedReviveTimerHud()
+    {
+        Transform feedbackLayer = GetLayer(FeedbackLayerName);
+        DownedReviveTimerHud.EnsureOnLayer(feedbackLayer, DownedPlayerConfigUtility.Resolve());
     }
 
     /// <summary>

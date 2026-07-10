@@ -224,6 +224,9 @@ public class NetworkPlayerAbilityRelay : NetworkBehaviour
         if (_animationHandler != null)
             _animationHandler.PlayAbilityAnimation(abilityType);
 
+        if (TryGetComponent<PlayerAudioController>(out var audio))
+            audio.PlayAbilitySfx(abilityType);
+
         if (_debugHost == null || _abilityHandler == null)
             return;
 
@@ -319,5 +322,8 @@ public class NetworkPlayerAbilityRelay : NetworkBehaviour
 
         _lastRemoteAttackSequence = sequence;
         _animationHandler.PlayRemoteAttackAnimation();
+
+        if (TryGetComponent<PlayerAudioController>(out var audio))
+            audio.PlayAttackSfx();
     }
 }

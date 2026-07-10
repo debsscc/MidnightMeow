@@ -1,28 +1,23 @@
 ///* ----------------------------------------------------------------
 // DESCRIÇÃO: Controlador de áudio do inimigo. 
-// Ouve eventos de dano e morte para emitir feedback sonoro.
+// Ouve eventos de dano, morte e ataque para emitir feedback sonoro.
 // ---------------------------------------------------------------- */
 
-using System;
+using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.Audio;
-using UnityEngine.Events;
 
 [DisallowMultipleComponent]
 public class EnemyAudioController : MonoBehaviour
 {
     [Header("Dependencies")]
-    [Tooltip("Referência ao componente de vida para escutar OnTakeDamage e OnDied")]
     [SerializeField] private HealthComponent healthComponent;
 
     [Header("Mixer")]
     [SerializeField] private AudioMixerGroup sfxMixerGroup;
 
-    [Header("Audio Source")]
-    [Tooltip("AudioSource para sons gerais (dano, rugidos, etc.)")]
-    [SerializeField] private AudioSource audioSource;
-
-    [Header("Audio Clips")]
+    [Header("Overrides (opcional — vazio usa EnemyCommonSfxConfig em Resources)")]
+    [SerializeField] private AudioClip[] attackClips;
     [SerializeField] private AudioClip damageClip;
     [SerializeField] private AudioClip deathClip;
 
@@ -30,23 +25,40 @@ public class EnemyAudioController : MonoBehaviour
     [Range(0f, 1f)]
     [SerializeField] private float volume = 1f;
 
+    private NetworkEnemyController _networkEnemy;
+    private EnemyAttack_Melee _meleeAttack;
+    private EnemyAttack_Ranged _rangedAttack;
+    private EnemyTelegraphedAttacker _telegraphedAttacker;
+
     private void Awake()
     {
-        if (healthComponent == null) healthComponent = GetComponent<HealthComponent>();
+        if (healthComponent == null)
+            healthComponent = GetComponent<HealthComponent>();
 
-        if (audioSource != null && sfxMixerGroup != null)
-        {
-            audioSource.outputAudioMixerGroup = sfxMixerGroup;
-        }
+        _networkEnemy = GetComponent<NetworkEnemyController>();
+        _telegraphedAttacker = GetComponent<EnemyTelegraphedAttacker>();
+        _meleeAttack = GetComponent<EnemyAttack_Melee>();
+        _rangedAttack = GetComponent<EnemyAttack_Ranged>();
+
+        ResolveFallbackClips();
     }
 
     private void OnEnable()
     {
         if (healthComponent != null)
         {
-            // Usa UnityEvent listeners (OnTakeDamage é UnityEvent<float, GameObject>)
             healthComponent.OnTakeDamage.AddListener(HandleTakeDamage);
             healthComponent.OnDied.AddListener(HandleDied);
+        }
+
+        if (_telegraphedAttacker != null && _telegraphedAttacker.HasActivePattern)
+            _telegraphedAttacker.OnAttackWindup += HandleAttack;
+        else
+        {
+            if (_meleeAttack != null && _meleeAttack.enabled)
+                _meleeAttack.OnAttack += HandleAttack;
+            if (_rangedAttack != null && _rangedAttack.enabled)
+                _rangedAttack.OnAttack += HandleAttack;
         }
     }
 
@@ -57,23 +69,80 @@ public class EnemyAudioController : MonoBehaviour
             healthComponent.OnTakeDamage.RemoveListener(HandleTakeDamage);
             healthComponent.OnDied.RemoveListener(HandleDied);
         }
+
+        if (_telegraphedAttacker != null)
+            _telegraphedAttacker.OnAttackWindup -= HandleAttack;
+        if (_meleeAttack != null)
+            _meleeAttack.OnAttack -= HandleAttack;
+        if (_rangedAttack != null)
+            _rangedAttack.OnAttack -= HandleAttack;
     }
+
+    public void PlayAttackSfx() => PlaySfx(EnemySfxKind.Attack);
+
+    public void PlayDamageSfx() => PlaySfx(EnemySfxKind.Damage);
+
+    public void PlayDeathSfx() => PlaySfx(EnemySfxKind.Death);
+
+    private void HandleAttack() => PlayAttackSfx();
 
     private void HandleTakeDamage()
     {
-        if (audioSource != null && damageClip != null)
-        {
-            audioSource.PlayOneShot(damageClip, volume);
-        }
+        if (UsesNetworkSfxRelay())
+            return;
+
+        PlayDamageSfx();
     }
 
     private void HandleDied()
     {
-        if (deathClip != null)
+        if (UsesNetworkSfxRelay())
+            return;
+
+        PlayDeathSfx();
+    }
+
+    private bool UsesNetworkSfxRelay()
+    {
+        if (_networkEnemy == null)
+            _networkEnemy = GetComponent<NetworkEnemyController>();
+
+        return _networkEnemy != null && _networkEnemy.IsSpawned;
+    }
+
+    private void PlaySfx(EnemySfxKind kind)
+    {
+        AudioClip clip = kind switch
         {
-            // Cria um emissor de áudio temporário na posição atual.
-            // Garante que o som de morte não seja cortado se este GameObject for destruído em seguida.
-            AudioSource.PlayClipAtPoint(deathClip, transform.position, volume);
-        }
+            EnemySfxKind.Attack => PickAttackClip(),
+            EnemySfxKind.Damage => damageClip,
+            EnemySfxKind.Death => deathClip,
+            _ => null
+        };
+
+        EnemySfxBus.Play(kind, transform.position, clip, volume);
+    }
+
+    private AudioClip PickAttackClip()
+    {
+        if (attackClips != null && attackClips.Length > 0)
+            return attackClips[Random.Range(0, attackClips.Length)];
+
+        return EnemySfxBus.Config?.PickAttackClip();
+    }
+
+    private void ResolveFallbackClips()
+    {
+        EnemyCommonSfxConfig shared = EnemySfxBus.Config;
+        if (shared == null)
+            return;
+
+        if (attackClips == null || attackClips.Length == 0)
+            attackClips = shared.attackClips;
+
+        if (damageClip == null)
+            damageClip = shared.damageClip;
+        if (deathClip == null)
+            deathClip = shared.deathClip;
     }
 }

@@ -14,6 +14,7 @@
 
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 
 public class NetworkPlayerController : NetworkBehaviour
@@ -31,6 +32,7 @@ public class NetworkPlayerController : NetworkBehaviour
     private Coroutine _cameraBindCoroutine;
 
     [Header("Componentes locais a desabilitar em clientes remotos")]
+    [SerializeField] private PlayerInput playerInput;
     [SerializeField] private PlayerInputHandler inputHandler;
     [SerializeField] private PlayerMovement movement;
     [SerializeField] private PlayerShooting shooting;
@@ -320,6 +322,12 @@ public class NetworkPlayerController : NetworkBehaviour
 
     private void SetInputComponentsActive(bool active)
     {
+        if (playerInput == null)
+            TryGetComponent(out playerInput);
+
+        if (playerInput != null)
+            playerInput.enabled = active;
+
         if (inputHandler != null) inputHandler.enabled = active;
         if (movement != null) movement.enabled = active;
         if (shooting != null) shooting.enabled = active;

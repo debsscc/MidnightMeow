@@ -36,6 +36,9 @@ public class CharacterGameplayProfile : ScriptableObject
     [Header("Animações")]
     public CharacterAnimationProfile animationProfile;
 
+    [Header("Áudio")]
+    public PlayerAudioConfigSO audioConfig;
+
     [Header("Configurações Avançadas")]
     [Tooltip("Camadas usadas por executores de habilidade (ex.: inimigos).")]
     public LayerMask enemyLayers;

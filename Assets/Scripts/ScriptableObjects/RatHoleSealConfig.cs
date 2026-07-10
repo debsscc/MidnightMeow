@@ -52,6 +52,10 @@ public class RatHoleSealConfig : ScriptableObject
     [Tooltip("Sorting order do sprite (acima do chão, buracos e decoração).")]
     public int zoneSortingOrder = 250;
 
+    [Header("Áudio")]
+    [Tooltip("SFX ao concluir o selamento. Toca pelo grupo SFX do AudioMixer (slider SFX nas opções).")]
+    public AudioClip sealCompleteClip;
+
     public float GetZoneVisualDiameter() =>
         Mathf.Max(0.5f, zoneRadius * 2f * Mathf.Max(0.85f, zoneVisualScaleMultiplier));
 }

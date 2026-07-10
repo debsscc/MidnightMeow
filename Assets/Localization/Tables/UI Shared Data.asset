@@ -529,6 +529,30 @@ MonoBehaviour:
     m_Key: Title.confirmation.quit
     m_Metadata:
       m_Items: []
+  - m_Id: 9200000000000001
+    m_Key: seal.prompt
+    m_Metadata:
+      m_Items: []
+  - m_Id: 9200000000000002
+    m_Key: seal.progress
+    m_Metadata:
+      m_Items: []
+  - m_Id: 9200000000000003
+    m_Key: seal.complete
+    m_Metadata:
+      m_Items: []
+  - m_Id: 9200000000000004
+    m_Key: objective.holes_status
+    m_Metadata:
+      m_Items: []
+  - m_Id: 9200000000000005
+    m_Key: objective.holes_carriage
+    m_Metadata:
+      m_Items: []
+  - m_Id: 9200000000000006
+    m_Key: objective.defeat_boss
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

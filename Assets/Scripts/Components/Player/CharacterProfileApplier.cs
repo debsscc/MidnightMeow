@@ -20,6 +20,7 @@ public class CharacterProfileApplier : MonoBehaviour
         ApplyPrimaryAttack();
         ApplyAbilities();
         ApplyAnimation();
+        ApplyAudio();
         ApplyAdvanced();
     }
 
@@ -33,6 +34,7 @@ public class CharacterProfileApplier : MonoBehaviour
         ApplyPrimaryAttack();
         ApplyAbilities();
         ApplyAnimation();
+        ApplyAudio();
         ApplyAdvanced();
     }
 
@@ -100,6 +102,15 @@ public class CharacterProfileApplier : MonoBehaviour
 
         if (TryGetComponent(out AnimatorProfileBinder binder))
             binder.SetProfile(profile.animationProfile);
+    }
+
+    private void ApplyAudio()
+    {
+        if (profile.audioConfig == null)
+            return;
+
+        if (TryGetComponent(out PlayerAudioController audio))
+            audio.ApplyConfig(profile.audioConfig);
     }
 
     private void ApplyAdvanced()

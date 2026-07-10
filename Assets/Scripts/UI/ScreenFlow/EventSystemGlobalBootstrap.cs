@@ -70,13 +70,14 @@ public static class EventSystemGlobalBootstrap
                 typeof(EventSystem),
                 typeof(InputSystemUIInputModule),
                 typeof(EventSystemSingletonGuard),
-                typeof(GamepadUiAutoSelect));
+                typeof(GamepadUiAutoSelect),
+                typeof(GamepadCursorDriver));
 
             // EventSystem criado via código não vem com as ações de UI; atribui as padrão
             // (Navigate/Submit/Cancel/Point/Click) para a navegação por gamepad/teclado funcionar.
             InputSystemUIInputModule createdModule = go.GetComponent<InputSystemUIInputModule>();
-            if (createdModule != null && createdModule.actionsAsset == null)
-                createdModule.AssignDefaultActions();
+            if (createdModule != null)
+                ProjectInputActions.ApplyToUiModule(createdModule);
 
             Object.DontDestroyOnLoad(go);
             return;
@@ -94,6 +95,13 @@ public static class EventSystemGlobalBootstrap
 
         if (keeper.GetComponent<GamepadUiAutoSelect>() == null)
             keeper.gameObject.AddComponent<GamepadUiAutoSelect>();
+
+        if (keeper.GetComponent<GamepadCursorDriver>() == null)
+            keeper.gameObject.AddComponent<GamepadCursorDriver>();
+
+        InputSystemUIInputModule uiModule = keeper.GetComponent<InputSystemUIInputModule>();
+        if (uiModule != null && !ProjectInputActions.UiModuleActionsValid(uiModule))
+            ProjectInputActions.ApplyToUiModule(uiModule);
     }
 
     private static void DestroySceneEventSystems(Scene scene)

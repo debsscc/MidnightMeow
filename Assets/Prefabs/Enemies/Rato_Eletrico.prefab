@@ -5449,8 +5449,8 @@ MonoBehaviour:
   healthComponent: {fileID: 4817587253931695636}
   sfxMixerGroup: {fileID: -7772116307795827482, guid: 0369658093ea21d40a1c846ecafdd511, type: 2}
   audioSource: {fileID: 6489554930592344053}
-  damageClip: {fileID: 8300000, guid: 984a02afb1b115d4fa28f3a0eee66f79, type: 3}
-  deathClip: {fileID: 8300000, guid: 1dc0986d3ba643a46a9d460572feb4b7, type: 3}
+  damageClip: {fileID: 0}
+  deathClip: {fileID: 0}
   volume: 1
 --- !u!114 &3294447692890742431
 MonoBehaviour:

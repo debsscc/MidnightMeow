@@ -1,6 +1,6 @@
 # Prefab: Cora
 
-Última revisão: 2026-06-14  
+Última revisão: 2026-07-09  
 **Caminho:** `Assets/Prefabs/Characters/Cora.prefab`  
 **GUID:** `b18ed4e45e4d20a4dbdac339b666e689`
 
@@ -49,7 +49,7 @@ Cora
 | `PlayerAdrenaline` | |
 | `SpriteBlink` | |
 | `PlayerInitializer` | Progressão + upgrades |
-| `PlayerAudioController` | |
+| `PlayerAudioController` | SFX via `CoraPlayerAudioConfig` (aplicado pelo profile) → mixer **SFX** |
 | `PlayerDash` | `passThroughLayer` = DashableWall + Player + ProjectileEnemy (`m_Bits: 4360`); dash **não** atravessa Enemy |
 | `KnockbackReceiver` | |
 | `OwnerNetworkTransform` | |
@@ -75,6 +75,19 @@ Cora
 | `AnimatorProfileBinder.profile` | `Assets/Data/Characters/CoraAnimationProfile.asset` → `AC_CORA.controller` |
 | `stats` / `baseStats` (legado, espelhado pelo profile) | `Assets/Data/Stats/Player/PlayerCoreStats.asset` |
 | `CoraRangedCombatStats` (via profile) | `Assets/Data/Characters/CoraRangedCombatStats.asset` — **attackRange**, fireRate, **attackAnimClipLength** (0,517) |
+| `audioConfig` (via profile) | `Assets/Data/Audio/Player/Cora/CoraPlayerAudioConfig.asset` |
+
+## SFX (Cora)
+
+Config em `Assets/Data/Audio/Player/Cora/CoraPlayerAudioConfig.asset` — todos roteados ao grupo **SFX** via `GameAudioSettings.BindSfxOutput`. Sem SFX de morte por enquanto.
+
+| Evento | Clip | Disparo |
+|--------|------|---------|
+| Ataque normal (tiro) | `Cora Ataque Normal.wav` | `PlayerShooting.OnProjectileInstantiated` |
+| Dash | `Cora Dash.wav` | `PlayerDash.OnDashStarted` |
+| Barreira (Q) | `Cora Barreira.wav` | `PlayerAbilityHandler` → `CoraBarrier` |
+| Poça (R) | `Cora Poca.wav` | `PlayerAbilityHandler` → `CoraPool` |
+| Tomando dano | `Cora Tomando Dano.wav` | `HealthComponent` (solo) / `NetworkPlayerHealth` ClientRpc (MP) |
 
 ## Timing do tiro (sync com animação)
 

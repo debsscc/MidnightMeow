@@ -55,6 +55,17 @@ public class DownedPlayerConfig : ScriptableObject
     public Color reviveZoneFillColor = new Color(0.35f, 1f, 0.55f, 0.45f);
     public Color reviveZoneOutlineColor = new Color(0.9f, 1f, 0.95f, 0.9f);
 
+    [Header("Feedback de tela (reviver)")]
+    [Tooltip("SFX de batida cardíaca durante a janela de reviver. Roteado pelo grupo SFX do AudioMixer.")]
+    public AudioClip downedHeartbeatClip;
+
+    [Tooltip("SFX ao concluir o reviver com sucesso. Roteado pelo grupo SFX do AudioMixer.")]
+    public AudioClip reviveCompleteClip;
+
+    [Tooltip("Intensidade base da vinheta pulsante (0–1).")]
+    [Range(0.1f, 0.8f)]
+    public float downedScreenPulseIntensity = 0.38f;
+
     [Header("UI")]
     [Tooltip("Prefab world-space do label acima do jogador caído (mesmo estilo do selamento).")]
     public GameObject revivePromptPrefab;
@@ -73,6 +84,24 @@ public class DownedPlayerConfig : ScriptableObject
 
     [Tooltip("Formato do progresso. Use {0} para a porcentagem.")]
     public string reviveProgressTextFormat = "{0}%";
+
+    [Tooltip("Título do timer na HUD para o aliado vivo.")]
+    public string screenTimerAllyTitle = "Reviva seu aliado";
+
+    [Tooltip("Título do timer na HUD para o jogador caído.")]
+    public string screenTimerOwnerTitle = "Inconsciente";
+
+    [Tooltip("Subtítulo enquanto o reviver está em andamento.")]
+    public string screenTimerRevivingSubtitle = "Revivendo...";
+
+    [Tooltip("Subtítulo para o jogador caído aguardando revive.")]
+    public string screenTimerOwnerSubtitle = "Aguarde ser revivido";
+
+    [Tooltip("Subtítulo para o aliado que precisa se aproximar.")]
+    public string screenTimerAllySubtitle = "Aproxime-se e aperte E";
+
+    [Tooltip("Distância do topo da tela (negativo = abaixo do indicador de ondas/objetivo).")]
+    public float screenTimerTopOffset = -168f;
 
     [Header("Legado (obsoleto)")]
     [Tooltip("Use reviveZoneRadius. Mantido para assets antigos.")]
@@ -104,6 +133,26 @@ public class DownedPlayerConfig : ScriptableObject
 
     public string FormatReviveProgressText(int percent) =>
         string.IsNullOrWhiteSpace(reviveProgressTextFormat) ? $"{percent}%" : string.Format(reviveProgressTextFormat, percent);
+
+    public string GetScreenTimerAllyTitle() => string.IsNullOrWhiteSpace(screenTimerAllyTitle)
+        ? "Reviva seu aliado"
+        : screenTimerAllyTitle;
+
+    public string GetScreenTimerOwnerTitle() => string.IsNullOrWhiteSpace(screenTimerOwnerTitle)
+        ? "Inconsciente"
+        : screenTimerOwnerTitle;
+
+    public string GetScreenTimerRevivingSubtitle() => string.IsNullOrWhiteSpace(screenTimerRevivingSubtitle)
+        ? "Revivendo..."
+        : screenTimerRevivingSubtitle;
+
+    public string GetScreenTimerOwnerSubtitle() => string.IsNullOrWhiteSpace(screenTimerOwnerSubtitle)
+        ? "Aguarde ser revivido"
+        : screenTimerOwnerSubtitle;
+
+    public string GetScreenTimerAllySubtitle() => string.IsNullOrWhiteSpace(screenTimerAllySubtitle)
+        ? "Aproxime-se e aperte E"
+        : screenTimerAllySubtitle;
 
     private void OnValidate()
     {

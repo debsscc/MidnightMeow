@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b7c4e2f1a9d3e647f0a1b2c3d4e5f7a8, type: 3}
+  m_Name: EnemyCommonSfxConfig
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyCommonSfxConfig
+  attackClips:
+  - {fileID: 8300000, guid: a870e069dc15e0f4d80b034706da33f7, type: 3}
+  damageClip: {fileID: 8300000, guid: 80873843fc30c81459c0c19b0ec4587f, type: 3}
+  deathClip: {fileID: 8300000, guid: 7e22c2bc2f22a4242bfb9106c02e6abf, type: 3}
+  pitchMin: 0.9
+  pitchMax: 1.12
+  attackVolume: 0.7
+  damageVolume: 0.65
+  deathVolume: 0.75

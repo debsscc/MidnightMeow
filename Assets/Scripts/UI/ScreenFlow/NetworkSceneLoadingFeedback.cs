@@ -60,8 +60,7 @@ public static class NetworkSceneLoadingFeedback
 
         if (ScreenFlowLoadingScenes.IsDedicatedLoadingScene(sceneName))
         {
-            overlay.HideLoading();
-            overlay.BeginAnimatedFadeOut(ClientFadeOutSeconds);
+            overlay.HandoffToDedicatedLoadingScene();
             return;
         }
 

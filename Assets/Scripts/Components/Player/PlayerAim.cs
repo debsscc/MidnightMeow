@@ -1,8 +1,8 @@
 ///* ----------------------------------------------------------------
 // CRIADO EM: 13-11-2025
 // FEITO POR: Pedro Caurio
-// DESCRIÇÃO: Controla a mira do jogador com o mouse, posicionando e rotacionando o ponto de disparo (firePoint).
-// Mira por analógico direito (twin-stick) tem prioridade quando ativa. Não depende da câmera, então é resolvida antes da lógica de mouse.
+// DESCRIÇÃO: Controla a mira do jogador com o cursor (mouse). O analógico direito move o cursor via GamepadCursorDriver.
+// Mira e flip seguem a posição do cursor no mundo. Twin-stick só como fallback sem mouse.
 // ---------------------------------------------------------------- */
 
 using UnityEngine;
@@ -150,8 +150,40 @@ public class PlayerAim : MonoBehaviour
         Vector3 beforeEuler = firePoint.eulerAngles;
         float radius = ResolveFirePointRadius();
 
-        // Mira por analógico direito (twin-stick) tem prioridade quando ativa.
-        // Não depende da câmera, então é resolvida antes da lógica de mouse.
+        _mainCamera = ResolveAimCamera();
+
+        // Cursor/mouse primeiro: flip, firePoint e mira seguem a posição do cursor
+        // (inclui warp do analógico direito via GamepadCursorDriver).
+        if (_mainCamera != null && Mouse.current != null)
+        {
+            _mousePosition = Mouse.current.position.ReadValue();
+            Vector3 mouseWorldPos = GetMouseWorldPositionOnPlayerPlane(_mousePosition, out bool rayHitPlane);
+
+            Vector2 lookDirection = (Vector2)mouseWorldPos - (Vector2)transform.position;
+            _lastDebugSnapshot = new AimDebugSnapshot(
+                _mousePosition,
+                mouseWorldPos,
+                lookDirection,
+                true,
+                rayHitPlane,
+                _mainCamera.orthographic);
+
+            if (lookDirection.sqrMagnitude > Mathf.Epsilon)
+            {
+                _currentAimDirection = lookDirection.normalized;
+                ApplyFirePointPose(_currentAimDirection);
+                if (emitDebug)
+                    EmitAimPipeline(context, true, "mouse", _mainCamera, true, _mousePosition, mouseWorldPos, rayHitPlane, transform.position, beforePosition, firePoint.position, beforeEuler, firePoint.eulerAngles, _currentAimDirection, radius);
+                return true;
+            }
+
+            ApplyFirePointPose(_currentAimDirection);
+            if (emitDebug)
+                EmitAimPipeline(context, true, "mouse-zero-keep-last", _mainCamera, true, _mousePosition, mouseWorldPos, rayHitPlane, transform.position, beforePosition, firePoint.position, beforeEuler, firePoint.eulerAngles, _currentAimDirection, radius);
+            return true;
+        }
+
+        // Fallback twin-stick: só quando não há mouse (ex.: build sem cursor).
         Vector2 stickAim = _input != null ? _input.AimInput : Vector2.zero;
         if (stickAim.sqrMagnitude >= gamepadAimDeadzone * gamepadAimDeadzone)
         {
@@ -162,55 +194,27 @@ public class PlayerAim : MonoBehaviour
             return true;
         }
 
-        // Tenta obter a câmera principal caso não esteja disponível ainda
-        // (pode ser nula nos primeiros frames após o spawn em multiplayer)
-        if (_mainCamera == null || !_mainCamera.isActiveAndEnabled)
+        if (GenericControllerInput.TryReadAim(out Vector2 genericAim)
+            && genericAim.sqrMagnitude >= gamepadAimDeadzone * gamepadAimDeadzone)
         {
-            _mainCamera = ResolveAimCamera();
-            if (_mainCamera == null)
-            {
-                if (emitDebug)
-                    EmitAimPipeline(context, false, "camera ausente", null, Mouse.current != null, default, default, false, transform.position, beforePosition, beforePosition, beforeEuler, beforeEuler, _currentAimDirection, radius);
-                return false;
-            }
-        }
-
-        if (Mouse.current == null)
-        {
-            // Sem mouse e sem stick: mantém a última direção mirada.
+            _currentAimDirection = genericAim.normalized;
             ApplyFirePointPose(_currentAimDirection);
             if (emitDebug)
-                EmitAimPipeline(context, true, "keep-last (sem mouse/stick)", _mainCamera, false, default, default, false, transform.position, beforePosition, firePoint.position, beforeEuler, firePoint.eulerAngles, _currentAimDirection, radius);
+                EmitAimPipeline(context, true, "generic-hid-aim", _mainCamera, false, default, default, false, transform.position, beforePosition, firePoint.position, beforeEuler, firePoint.eulerAngles, _currentAimDirection, radius);
             return true;
         }
 
-        // Lê a posição do mouse na tela e converte para o plano 2D do jogador.
-        // O ray + plano funciona tanto em câmera ortográfica quanto perspectiva.
-        _mousePosition = Mouse.current.position.ReadValue();
-        Vector3 mouseWorldPos = GetMouseWorldPositionOnPlayerPlane(_mousePosition, out bool rayHitPlane);
-        bool usedRayPlane = true;
-
-        Vector2 lookDirection = (Vector2)mouseWorldPos - (Vector2)transform.position;
-        _lastDebugSnapshot = new AimDebugSnapshot(
-            _mousePosition,
-            mouseWorldPos,
-            lookDirection,
-            usedRayPlane,
-            rayHitPlane,
-            _mainCamera.orthographic);
-
-        if (lookDirection.sqrMagnitude <= Mathf.Epsilon)
+        if (_mainCamera == null)
         {
-            _currentAimDirection = firePoint != null ? (Vector2)firePoint.up : Vector2.up;
             if (emitDebug)
-                EmitAimPipeline(context, false, "lookDirection zero", _mainCamera, true, _mousePosition, mouseWorldPos, rayHitPlane, transform.position, beforePosition, firePoint.position, beforeEuler, firePoint.eulerAngles, _currentAimDirection, radius);
+                EmitAimPipeline(context, false, "camera ausente", null, Mouse.current != null, default, default, false, transform.position, beforePosition, beforePosition, beforeEuler, beforeEuler, _currentAimDirection, radius);
             return false;
         }
 
-        _currentAimDirection = lookDirection.normalized;
+        // Sem mouse e sem stick: mantém a última direção mirada.
         ApplyFirePointPose(_currentAimDirection);
         if (emitDebug)
-            EmitAimPipeline(context, true, "ok", _mainCamera, true, _mousePosition, mouseWorldPos, rayHitPlane, transform.position, beforePosition, firePoint.position, beforeEuler, firePoint.eulerAngles, _currentAimDirection, radius);
+            EmitAimPipeline(context, true, "keep-last (sem mouse/stick)", _mainCamera, Mouse.current != null, default, default, false, transform.position, beforePosition, firePoint.position, beforeEuler, firePoint.eulerAngles, _currentAimDirection, radius);
         return true;
     }
 

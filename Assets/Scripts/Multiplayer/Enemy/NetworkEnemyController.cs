@@ -62,6 +62,7 @@ public class NetworkEnemyController : NetworkBehaviour
 
     private static readonly int HashMoveSpeed = Animator.StringToHash("MoveSpeed");
     private static readonly int HashOnAttack = Animator.StringToHash("OnAttack");
+    private static readonly int HashOnTakeDamage = Animator.StringToHash("OnTakeDamage");
     private static readonly int HashOnDie = Animator.StringToHash("OnDie");
     private static readonly int HashIsAttacking = Animator.StringToHash("IsAttacking");
 
@@ -70,6 +71,8 @@ public class NetworkEnemyController : NetworkBehaviour
     private byte _lastClientAttackSequence;
 
     public bool DrivesAnimatorOnClient => IsSpawned && !IsServer;
+
+    public bool HasDeathVisualsPlayed => _deathVisualsPlayed;
 
     private float _lastSyncedHealth = -1f;
     private ulong _lastInstigatorClientId;
@@ -455,6 +458,7 @@ public class NetworkEnemyController : NetworkBehaviour
 
         _animator.enabled = true;
         _animator.speed = 1f;
+        _animator.ResetTrigger(HashOnTakeDamage);
         _animator.SetFloat(HashMoveSpeed, 0f);
         _animator.SetBool(HashIsAttacking, false);
     }
@@ -604,6 +608,9 @@ public class NetworkEnemyController : NetworkBehaviour
     [ClientRpc]
     private void PlayTakeDamageVisualClientRpc(DamageType damageType)
     {
+        if (_deathVisualsPlayed || _health == null || !_health.IsAlive || _health.CurrentHealth <= 0f)
+            return;
+
         if (_animationHandler != null)
             _animationHandler.PlayTakeDamageAnimation();
 
@@ -611,12 +618,18 @@ public class NetworkEnemyController : NetworkBehaviour
             swordFlash.PlayFlash();
         else if (TryGetComponent<SpriteBlink>(out var blink))
             blink.Blink();
+
+        if (TryGetComponent<EnemyAudioController>(out var audio))
+            audio.PlayDamageSfx();
     }
 
     [ClientRpc]
     private void PlayDeathVisualClientRpc()
     {
         PlayDeathVisuals();
+
+        if (TryGetComponent<EnemyAudioController>(out var audio))
+            audio.PlayDeathSfx();
     }
 
     public void BroadcastTelegraphToClients(
@@ -694,7 +707,13 @@ public class NetworkEnemyController : NetworkBehaviour
 
     private void HandleServerAnimFlip(bool facingRight) => _animFacingFlipX.Value = facingRight;
 
-    private void HandleServerAnimAttack() => _animAttackSequence.Value++;
+    private void HandleServerAnimAttack()
+    {
+        _animAttackSequence.Value++;
+
+        if (TryGetComponent<EnemyAudioController>(out var audio))
+            audio.PlayAttackSfx();
+    }
 
     private void HandleAnimMoveSpeedChanged(float _, float current) =>
         ApplyClientAnimationState(current, _animFacingFlipX.Value, _animAttackSequence.Value, _animIsAttacking.Value, false);
@@ -734,6 +753,9 @@ public class NetworkEnemyController : NetworkBehaviour
         {
             _lastClientAttackSequence = attackSequence;
             _animator?.SetTrigger(HashOnAttack);
+
+            if (TryGetComponent<EnemyAudioController>(out var audio))
+                audio.PlayAttackSfx();
         }
     }
 

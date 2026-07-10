@@ -135,42 +135,35 @@ public class PhaseObjectiveHud : MonoBehaviour
 
     private void RebuildStatusText()
     {
-        bool pt = IsPortuguese();
         PhaseWaveSettingsCatalog catalog = PhaseWaveSettingsCatalog.LoadCached();
         string sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
         if (catalog != null && catalog.TryGetEntry(sceneName, out PhaseWaveSettingsCatalog.PhaseEntry entry) &&
             entry.winCondition == PhaseWaveSettingsCatalog.PhaseWinCondition.KillBoss)
         {
-            _status = pt
-                ? $"Derrote o Boss  |  Inimigos: {_enemiesAlive}"
-                : $"Defeat the Boss  |  Enemies: {_enemiesAlive}";
+            _status = UiLocalization.FormatObjectiveDefeatBoss(_enemiesAlive);
         }
         else if (catalog != null && catalog.TryGetEntry(sceneName, out entry) &&
                  entry.winCondition == PhaseWaveSettingsCatalog.PhaseWinCondition.CarriageReachEnd)
         {
             int remaining = Mathf.Max(0, _totalHoles - _holesSealed);
-            _status = pt
-                ? $"Carruagem: {_carriageProgressPercent:0}%  |  Buracos: {_holesSealed}/{_totalHoles} ({remaining} faltando)  |  Inimigos: {_enemiesAlive}"
-                : $"Carriage: {_carriageProgressPercent:0}%  |  Holes: {_holesSealed}/{_totalHoles} ({remaining} left)  |  Enemies: {_enemiesAlive}";
+            _status = UiLocalization.FormatObjectiveCarriageStatus(
+                _carriageProgressPercent,
+                _holesSealed,
+                _totalHoles,
+                remaining,
+                _enemiesAlive);
         }
         else
         {
             int remaining = Mathf.Max(0, _totalHoles - _holesSealed);
-            _status = pt
-                ? $"Buracos: {_holesSealed}/{_totalHoles} selados ({remaining} faltando)  |  Inimigos: {_enemiesAlive}"
-                : $"Holes: {_holesSealed}/{_totalHoles} sealed ({remaining} left)  |  Enemies: {_enemiesAlive}";
+            _status = UiLocalization.FormatObjectiveHolesStatus(
+                _holesSealed,
+                _totalHoles,
+                remaining,
+                _enemiesAlive);
         }
 
         UpdateUI();
-    }
-
-    private static bool IsPortuguese()
-    {
-        if (!LocalizationSettings.HasSettings)
-            return true;
-
-        Locale locale = LocalizationSettings.SelectedLocale;
-        return locale == null || locale.Identifier.Code.StartsWith("pt", System.StringComparison.OrdinalIgnoreCase);
     }
 
     private void UpdateUI()

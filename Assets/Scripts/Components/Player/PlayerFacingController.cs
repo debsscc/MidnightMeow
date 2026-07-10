@@ -1,6 +1,7 @@
 using System;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 /// <summary>
 /// Orientação do sprite: parado = mira; andando = movimento.
@@ -113,6 +114,13 @@ public class PlayerFacingController : MonoBehaviour
             return null;
         }
 
+        if (ShouldPreferMouseAimFacing())
+        {
+            bool? aimFacing = ResolveAimFacing();
+            if (aimFacing.HasValue)
+                return aimFacing;
+        }
+
         if (playerMovement != null && playerMovement.IsMoving)
         {
             Vector2 move = playerMovement.MoveDirection;
@@ -121,6 +129,17 @@ public class PlayerFacingController : MonoBehaviour
         }
 
         return ResolveAimFacing();
+    }
+
+    private bool ShouldPreferMouseAimFacing()
+    {
+        if (Mouse.current == null || playerAim == null)
+            return false;
+
+        if (playerMovement != null && playerMovement.IsMoving)
+            return false;
+
+        return true;
     }
 
     private bool? ResolveAimFacing()

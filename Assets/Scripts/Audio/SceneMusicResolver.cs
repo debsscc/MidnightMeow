@@ -6,7 +6,7 @@ using UnityEngine.SceneManagement;
 /// </summary>
 public static class SceneMusicResolver
 {
-    private static readonly string[] MusicObjectNames = { "Soundtrack", "Sound Track", "Music" };
+    private static readonly string[] MusicObjectNames = { "Soundtrack", "Sound Track", "Music", "Sountrack" };
 
     public static bool TryResolve(Scene scene, out AudioClip clip, out bool loop)
     {
@@ -22,9 +22,6 @@ public static class SceneMusicResolver
         GameObject[] roots = scene.GetRootGameObjects();
         for (int i = 0; i < roots.Length; i++)
         {
-            if (!roots[i].activeInHierarchy)
-                continue;
-
             if (TryResolveInHierarchy(roots[i], out clip, out loop))
                 return true;
         }
@@ -47,7 +44,7 @@ public static class SceneMusicResolver
         clip = null;
         loop = true;
 
-        if (root == null || !root.activeInHierarchy)
+        if (root == null)
             return false;
 
         if (IsMusicObject(root.name) && root.TryGetComponent(out AudioSource rootSource))
@@ -60,7 +57,7 @@ public static class SceneMusicResolver
         for (int i = 0; i < sources.Length; i++)
         {
             AudioSource source = sources[i];
-            if (source == null || !source.gameObject.activeInHierarchy || !IsMusicObject(source.gameObject.name))
+            if (source == null || !IsMusicObject(source.gameObject.name))
                 continue;
 
             if (TryReadClip(source, out clip, out loop))

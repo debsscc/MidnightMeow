@@ -5,8 +5,6 @@
 
 using TMPro;
 using UnityEngine;
-using UnityEngine.Localization;
-using UnityEngine.Localization.Settings;
 using UnityEngine.UI;
 
 
@@ -82,9 +80,7 @@ public class RatHoleSealStatusUI : MonoBehaviour
         if (_label != null)
         {
             int pct = Mathf.RoundToInt(session.Progress * 100f);
-            _label.text = IsPortuguese()
-                ? $"Fique na Área para selar — {pct}%"
-                : $"Stay in the Area to seal — {pct}%";
+            _label.text = UiLocalization.FormatSealProgress(pct);
         }
     }
 
@@ -96,7 +92,7 @@ public class RatHoleSealStatusUI : MonoBehaviour
         if (_fill != null)
             _fill.fillAmount = 1f;
         if (_label != null)
-            _label.text = IsPortuguese() ? "Área selada" : "Area sealed";
+            _label.text = UiLocalization.GetSealComplete();
     }
 
     private void ResolveHoleSprite()
@@ -159,16 +155,6 @@ public class RatHoleSealStatusUI : MonoBehaviour
         _label.alignment = TextAlignmentOptions.Center;
         _label.color = Color.white;
         _label.textWrappingMode = TextWrappingModes.NoWrap;
-    }
-
-    private static bool IsPortuguese()
-    {
-        if (!LocalizationSettings.HasSettings)
-            return true;
-
-        Locale locale = LocalizationSettings.SelectedLocale;
-        // Sem locale definido, assume português (idioma base do projeto).
-        return locale == null || locale.Identifier.Code.StartsWith("pt", System.StringComparison.OrdinalIgnoreCase);
     }
 
     private static void Stretch(RectTransform rt, float inset = 0f)

@@ -51,6 +51,7 @@ Assets de NavMesh baked por cena em subpastas (`NavMesh-*.asset`). Prefabs: `Nav
 - **HUD habilidades:** `PlayerAbilityHud` é criado automaticamente no Canvas ao entrar em Fase-1/2 (cooldowns Dash/Q/R + barra da passiva, canto inferior direito).
 - **Magículas na fase:** posicione `ScienceIndicator` no Canvas/HUD pelo Editor (RectTransform); o script só atualiza o texto via `RoundMagiculaTracker`.
 - **Estado da partida:** ao carregar Fase-1 como servidor, `MultiplayerGameManager` passa automaticamente para `Playing` (campo `gameplaySceneName`). Sem isso, `NetworkWaveManager` fica em espera e nenhum inimigo spawna.
+- **Trilha:** objeto raiz `Soundtrack` em Fase-1/2/3 define o clip (`Fase 1.wav`, etc.) para o `MusicCrossfadeController`; `Play On Awake` desligado — só o crossfade persistente toca (evita duplo start ao entrar na fase).
 
 ### Hierarquia recomendada (Fase-1)
 

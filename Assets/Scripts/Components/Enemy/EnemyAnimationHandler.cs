@@ -210,21 +210,41 @@ public class EnemyAnimationHandler : MonoBehaviour
     {
         if (_animator == null) return;
         if (debugLogs) Debug.Log($"EnemyAnimationHandler.PlayDeathAnimation - {gameObject.name}");
+        _animator.ResetTrigger(_hashOnTakeDamage);
         _animator.SetTrigger(_hashOnDie);
     }
 
     public void PlayTakeDamageAnimation()
     {
-        if (_animator == null) return;
+        if (!CanPlayTakeDamageVisual())
+            return;
+
         _animator.SetTrigger(_hashOnTakeDamage);
     }
 
     private void HandleTakeDamageEvent()
     {
-        if (_animator == null)
+        if (_networkEnemyController != null && _networkEnemyController.IsSpawned)
+            return;
+
+        if (!CanPlayTakeDamageVisual())
             return;
 
         PlayTakeDamageAnimation();
+    }
+
+    private bool CanPlayTakeDamageVisual()
+    {
+        if (_animator == null || healthComponent == null)
+            return false;
+
+        if (!healthComponent.IsAlive || healthComponent.CurrentHealth <= 0f)
+            return false;
+
+        if (_networkEnemyController != null && _networkEnemyController.HasDeathVisualsPlayed)
+            return false;
+
+        return true;
     }
 
     private void HandleHealthChanged(float current, float max)

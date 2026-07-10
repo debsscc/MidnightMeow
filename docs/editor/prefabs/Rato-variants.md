@@ -70,6 +70,10 @@ Ajuste fino em `Assets/Data/Stats/Enemies/*.asset` — não hardcodar no `EnemyM
 
 Entradas em `WaveSettings` / instância `_GameLoop` em **Fase-1** referenciam estes prefabs — não o prefab `WaveSystem` isolado (campos `waveSettings` / `spawnPoints` vazios no asset).
 
+## SFX (ratos comuns)
+
+Clips em `Assets/Audio/AUDIOS ATUALIZADOS/SFXS/Ratos/`; config central em `Assets/Resources/EnemyCommonSfxConfig.asset`. Prefabs `Rato_*` deixam `damageClip`/`deathClip` vazios no Inspector — o `EnemyAudioController` resolve em runtime. Todos os SFX passam pelo bus global `EnemySfxBus` (grupo **SFX** do `NewAudioMixer`).
+
 ## Relacionados
 
 - [Enemy.md](Enemy.md) — template genérico `Enemy.prefab`

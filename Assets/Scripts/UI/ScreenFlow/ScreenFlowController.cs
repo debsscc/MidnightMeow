@@ -312,17 +312,19 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
         bool loadSucceeded = false;
         float loadTimer = 0f;
 
+        bool enteringDedicatedLoading = ScreenFlowLoadingScenes.IsDedicatedLoadingScene(sceneName);
+
         if (useLoading)
         {
             TransitionCameraKeeper.EnsureActive();
             ScreenFlowSceneReadiness.BeginAwaiting(sceneName);
-            if (!ScreenFlowLoadingScenes.IsDedicatedLoadingScene(sceneName))
+            if (!enteringDedicatedLoading)
                 overlay.ShowLoading();
         }
 
-        bool instantLoadingFeedback = useLoading && ScreenFlowLoadingScenes.IsDedicatedLoadingScene(sceneName);
         MusicCrossfadeController music = MusicCrossfadeController.Instance;
-        if (useFade && !instantLoadingFeedback)
+        // Cenas Loading1/Loading2 têm UI própria — sem fade antes de abrir.
+        if (useFade && !enteringDedicatedLoading)
         {
             music?.HandleTransitionFadeOut(fadeTime);
             overlay.CancelFadeCoroutines();
@@ -334,13 +336,6 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
                 loadTimer += delta;
                 UpdateTransitionLoadingProgress(overlay, loadTimer, minLoadingTime);
             });
-        }
-        else if (useFade && instantLoadingFeedback)
-        {
-            float quickFade = fadeTime > 0f ? fadeTime : defaultFadeTime;
-            music?.HandleTransitionFadeOut(quickFade);
-            overlay.CancelFadeCoroutines();
-            yield return overlay.FadeOut(quickFade);
         }
 
         if (loadKind == SceneLoadKind.NetcodeHost)
@@ -437,33 +432,27 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
         if (useLoading)
             yield return ScreenFlowSceneReadiness.WaitUntilReady(sceneName);
 
-        bool handoffToDedicatedLoadingScene = useLoading && ScreenFlowLoadingScenes.IsDedicatedLoadingScene(sceneName);
-        if (useLoading && !handoffToDedicatedLoadingScene)
+        if (useLoading && !enteringDedicatedLoading)
             overlay.HideLoading();
 
         music = MusicCrossfadeController.Instance;
         music?.PrepareSceneMusic(SceneManager.GetActiveScene());
 
-        if (useFade && !handoffToDedicatedLoadingScene)
+        if (enteringDedicatedLoading)
+        {
+            overlay.HandoffToDedicatedLoadingScene();
+        }
+        else if (useFade)
         {
             yield return ScreenFlowSceneReadiness.WaitForRenderPadding();
             music?.FadeInPending(fadeTime);
             overlay.CancelFadeCoroutines();
             yield return overlay.FadeIn(fadeTime);
         }
-        else if (!handoffToDedicatedLoadingScene)
+        else
         {
             music?.FadeInPending(defaultFadeTime);
             overlay.ResetFade();
-        }
-        else
-        {
-            overlay.HideLoading();
-            yield return ScreenFlowSceneReadiness.WaitForRenderPadding();
-            float revealFade = fadeTime > 0f ? fadeTime : defaultFadeTime;
-            music?.FadeInPending(revealFade);
-            overlay.CancelFadeCoroutines();
-            yield return overlay.FadeIn(revealFade);
         }
     }
 

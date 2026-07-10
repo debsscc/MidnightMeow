@@ -1,0 +1,27 @@
+[Licensing::Module] Trying to connect to existing licensing client channel...
+Built from '6000.3/staging' branch; Version is '6000.3.13f1 (8c4f11e4fb20) revision 9195281'; Using compiler version '194234433'; Build Type 'Release'
+[Licensing::IpcConnector] Successfully connected to: "LicenseClient-dbndy" at "2026-07-10T01:19:06.0678192Z"
+OS: 'Windows 11  (10.0.26200) Core' Language: 'pt' Physical Memory: 32635 MB
+BatchMode: 1, IsHumanControllingUs: 0, StartBugReporterOnCrash: 0, Is64bit: 1
+System  architecture: x64
+Process architecture: x64
+Date: 2026-07-10T01:19:06Z
+
+COMMAND LINE ARGUMENTS:
+C:\Program Files\Unity\Hub\Editor\6000.3.13f1\Editor\Unity.exe
+-batchmode
+-nographics
+-projectPath
+c:\Users\dbndy\Documents\gamejam+\Github_repository\MidnightMeow
+-runTests
+-testPlatform
+EditMode
+-testFilter
+SaveProfileStoreTests
+-testResults
+c:\Users\dbndy\Documents\gamejam+\Github_repository\MidnightMeow\SaveProfileStoreTestResults.xml
+-logFile
+c:\Users\dbndy\Documents\gamejam+\Github_repository\MidnightMeow\SaveProfileStoreTest.log
+Successfully changed project path to: c:\Users\dbndy\Documents\gamejam+\Github_repository\MidnightMeow
+C:/Users/dbndy/Documents/gamejam+/Github_repository/MidnightMeow
+Exiting without the bug reporter. Application will terminate with return code 1

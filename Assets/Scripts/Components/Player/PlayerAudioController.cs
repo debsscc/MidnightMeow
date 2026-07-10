@@ -1,15 +1,19 @@
 ///* ----------------------------------------------------------------
-// DESCRIÇÃO: Controlador de áudio do jogador. 
-// Ouve eventos de movimento e combate para emitir feedback sonoro.
+// DESCRIÇÃO: Controlador de áudio do jogador.
+// Ouve eventos de movimento e combate para emitir feedback sonoro via mixer SFX.
 // ---------------------------------------------------------------- */
 
+using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.Audio;
 
 [DisallowMultipleComponent]
 public class PlayerAudioController : MonoBehaviour
 {
-    [Header("Mixer")]
+    [Header("Config")]
+    [SerializeField] private PlayerAudioConfigSO audioConfig;
+
+    [Header("Mixer (legado — BindSfxOutput usa GameAudioSettings)")]
     [SerializeField] private AudioMixerGroup sfxMixerGroup;
 
     [Tooltip("Referência ao componente de tiro para escutar OnShoot")]
@@ -24,7 +28,7 @@ public class PlayerAudioController : MonoBehaviour
     [SerializeField] private AudioSource sfxSource;
     [SerializeField] private AudioSource dashSource;
 
-    [Header("Audio Clips")]
+    [Header("Legado (Cora / fallback sem PlayerAudioConfigSO)")]
     [SerializeField] private AudioClip movementClip;
     [SerializeField] private AudioClip shootClip;
     [SerializeField] private AudioClip dashClip;
@@ -39,26 +43,28 @@ public class PlayerAudioController : MonoBehaviour
     [SerializeField] private float footstepVolume = 0.85f;
 
     private Rigidbody2D _rb;
+    private PlayerMeleeCombat _meleeCombat;
+    private PlayerAbilityHandler _abilityHandler;
+    private HealthComponent _healthComponent;
+    private NetworkPlayerHealth _networkHealth;
     private float _stepTimer;
+
+    public void ApplyConfig(PlayerAudioConfigSO config) => audioConfig = config;
 
     private void Awake()
     {
-        if (playerShooting == null) playerShooting = GetComponent<PlayerShooting>();
-        if (playerDash == null) playerDash = GetComponent<PlayerDash>();
+        if (playerShooting == null)
+            playerShooting = GetComponent<PlayerShooting>();
+        if (playerDash == null)
+            playerDash = GetComponent<PlayerDash>();
+
         _rb = GetComponent<Rigidbody2D>();
+        _meleeCombat = GetComponent<PlayerMeleeCombat>();
+        _abilityHandler = GetComponent<PlayerAbilityHandler>();
+        _healthComponent = GetComponent<HealthComponent>();
+        _networkHealth = GetComponent<NetworkPlayerHealth>();
 
-        if (loopSource != null)
-        {
-            loopSource.loop = false;
-            loopSource.playOnAwake = false;
-            loopSource.outputAudioMixerGroup = sfxMixerGroup;
-        }
-
-        if (sfxSource != null)
-            sfxSource.outputAudioMixerGroup = sfxMixerGroup;
-
-        if (dashSource != null)
-            dashSource.outputAudioMixerGroup = sfxMixerGroup;
+        ConfigureSources();
     }
 
     private void OnEnable()
@@ -71,6 +77,15 @@ public class PlayerAudioController : MonoBehaviour
             playerDash.OnDashStarted += HandleDashStarted;
             playerDash.OnDashEnded += HandleDashEnded;
         }
+
+        if (_meleeCombat != null)
+            _meleeCombat.OnMeleeAttackStarted += HandleMeleeAttackStarted;
+
+        if (_abilityHandler != null)
+            _abilityHandler.OnAbilityActivated += HandleAbilityActivated;
+
+        if (_healthComponent != null)
+            _healthComponent.OnTakeDamage.AddListener(HandleTakeDamage);
     }
 
     private void OnDisable()
@@ -84,12 +99,63 @@ public class PlayerAudioController : MonoBehaviour
             playerDash.OnDashEnded -= HandleDashEnded;
         }
 
+        if (_meleeCombat != null)
+            _meleeCombat.OnMeleeAttackStarted -= HandleMeleeAttackStarted;
+
+        if (_abilityHandler != null)
+            _abilityHandler.OnAbilityActivated -= HandleAbilityActivated;
+
+        if (_healthComponent != null)
+            _healthComponent.OnTakeDamage.RemoveListener(HandleTakeDamage);
+
         _stepTimer = 0f;
     }
 
-    private void Update()
+    private void Update() => UpdateFootsteps();
+
+    public void PlayAttackSfx() => PlayConfiguredEvent(audioConfig != null ? audioConfig.attack : null);
+
+    public void PlayDamageSfx() => PlayConfiguredEvent(audioConfig != null ? audioConfig.damage : null);
+
+    public void PlayAbilitySfx(CharacterAbilityType abilityType)
     {
-        UpdateFootsteps();
+        if (audioConfig == null)
+            return;
+
+        AudioEventSO audioEvent = abilityType switch
+        {
+            CharacterAbilityType.NixPush => audioConfig.abilityQ,
+            CharacterAbilityType.NixCharge => audioConfig.abilityR,
+            CharacterAbilityType.CoraBarrier => audioConfig.abilityQ,
+            CharacterAbilityType.CoraPool => audioConfig.abilityR,
+            _ => null
+        };
+
+        PlayConfiguredEvent(audioEvent);
+    }
+
+    private void ConfigureSources()
+    {
+        GameAudioSettings.EnsureExists();
+
+        if (loopSource != null)
+        {
+            loopSource.loop = false;
+            loopSource.playOnAwake = false;
+            BindSourceOutput(loopSource);
+        }
+
+        if (sfxSource != null)
+            BindSourceOutput(sfxSource);
+
+        if (dashSource != null)
+            BindSourceOutput(dashSource);
+    }
+
+    private void BindSourceOutput(AudioSource source)
+    {
+        if (!GameAudioSettings.BindSfxOutput(source) && sfxMixerGroup != null)
+            source.outputAudioMixerGroup = sfxMixerGroup;
     }
 
     private void UpdateFootsteps()
@@ -123,12 +189,36 @@ public class PlayerAudioController : MonoBehaviour
 
     private void HandleProjectileInstantiated(GameObject _, Vector3 __, Quaternion ___, Vector2 ____)
     {
-        if (sfxSource != null && shootClip != null)
-            sfxSource.PlayOneShot(shootClip);
+        if (audioConfig != null && audioConfig.attack != null)
+        {
+            PlayAttackSfx();
+            return;
+        }
+
+        if (sfxSource == null || shootClip == null)
+            return;
+
+        sfxSource.PlayOneShot(shootClip);
+    }
+
+    private void HandleMeleeAttackStarted() => PlayAttackSfx();
+
+    private void HandleAbilityActivated(CharacterAbilityType abilityType)
+    {
+        if (abilityType == CharacterAbilityType.Dash)
+            return;
+
+        PlayAbilitySfx(abilityType);
     }
 
     private void HandleDashStarted()
     {
+        if (audioConfig != null && audioConfig.dash != null)
+        {
+            PlayConfiguredEvent(audioConfig.dash, dashSource);
+            return;
+        }
+
         if (dashSource != null && dashClip != null)
             dashSource.PlayOneShot(dashClip);
     }
@@ -137,5 +227,22 @@ public class PlayerAudioController : MonoBehaviour
     {
         if (dashSource != null && dashSource.isPlaying)
             dashSource.Stop();
+    }
+
+    private void HandleTakeDamage()
+    {
+        if (UsesNetworkDamageRelay())
+            return;
+
+        PlayDamageSfx();
+    }
+
+    private bool UsesNetworkDamageRelay() =>
+        _networkHealth != null && _networkHealth.IsSpawned;
+
+    private void PlayConfiguredEvent(AudioEventSO audioEvent, AudioSource sourceOverride = null)
+    {
+        AudioSource source = sourceOverride != null ? sourceOverride : sfxSource;
+        PlayerSfxUtility.PlayOneShot(source, audioEvent);
     }
 }

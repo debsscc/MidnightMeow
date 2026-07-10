@@ -10,6 +10,7 @@ using System.Collections;
 using Unity.Netcode;
 
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 
 
@@ -150,6 +151,10 @@ public class NetworkPlayerHealth : NetworkBehaviour
     public static event System.Action<ulong> OnNetworkPlayerDowned;
 
     public static event System.Action<ulong> OnNetworkPlayerRevived;
+
+
+
+    public static event System.Action<ulong> OnNetworkPlayerBleedOut;
 
 
 
@@ -303,8 +308,35 @@ public class NetworkPlayerHealth : NetworkBehaviour
 
         if (!IsServer || _networkIsUnconscious.Value) return;
 
+        if (!CanUseCooperativeRevive())
+        {
+            EnterFinalDeathOnServer();
+            return;
+        }
+
         EnterUnconsciousOnServer();
 
+    }
+
+    private bool CanUseCooperativeRevive()
+    {
+        if (GameSessionContext.IsSinglePlayer)
+            return false;
+
+        return HasAliveAlly();
+    }
+
+    private void EnterFinalDeathOnServer()
+    {
+        _networkIsUnconscious.Value = true;
+        _networkIsBleedingOut.Value = true;
+        _networkCurrentHealth.Value = 0f;
+        _networkUnconsciousTimeRemaining.Value = 0f;
+        _networkReviveProgress.Value = 0f;
+        _networkRevivePaused.Value = false;
+        _networkReviveZoneActive.Value = false;
+
+        MultiplayerGameManager.Instance?.RegisterPlayerDeath();
     }
 
 
@@ -559,6 +591,8 @@ public class NetworkPlayerHealth : NetworkBehaviour
         if (!isBleedingOut || wasBleedingOut)
             return;
 
+        OnNetworkPlayerBleedOut?.Invoke(OwnerClientId);
+
         if (!HasAliveAlly())
             return;
 
@@ -646,6 +680,9 @@ public class NetworkPlayerHealth : NetworkBehaviour
         if (TryGetComponent<Animator>(out var animator))
             animator.SetTrigger(Animator.StringToHash("OnDamage"));
 
+        if (TryGetComponent<PlayerAudioController>(out var audio))
+            audio.PlayDamageSfx();
+
         if (IsOwner)
             PlayerCameraFeedback.ShakeOnLocalPlayerDamage();
     }
@@ -661,6 +698,9 @@ public class NetworkPlayerHealth : NetworkBehaviour
     private void SetGameplayEnabled(bool enabled)
 
     {
+
+        if (TryGetComponent<PlayerInput>(out var playerInput))
+            playerInput.enabled = enabled;
 
         if (TryGetComponent<PlayerInputHandler>(out var input)) input.enabled = enabled;
 

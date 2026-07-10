@@ -8,7 +8,6 @@ using UnityEngine;
 using UnityEngine.Localization;
 using UnityEngine.Localization.Settings;
 
-
 [DisallowMultipleComponent]
 [RequireComponent(typeof(PlayerRatHoleSealInteraction))]
 public class RatHoleSealPromptUI : MonoBehaviour
@@ -26,6 +25,12 @@ public class RatHoleSealPromptUI : MonoBehaviour
         SetVisible(false);
     }
 
+    private void OnEnable() => LocalizationSettings.SelectedLocaleChanged += HandleLocaleChanged;
+
+    private void OnDisable() => LocalizationSettings.SelectedLocaleChanged -= HandleLocaleChanged;
+
+    private void HandleLocaleChanged(Locale _) => RefreshLabel();
+
     private void LateUpdate()
     {
         RatHoleSpawnPoint hole = _interaction != null ? _interaction.CurrentTargetHole : null;
@@ -42,6 +47,13 @@ public class RatHoleSealPromptUI : MonoBehaviour
             return;
 
         _canvas.transform.position = (Vector3)hole.AnchorPosition + offset;
+        RefreshLabel();
+    }
+
+    private void RefreshLabel()
+    {
+        if (_label != null)
+            _label.text = UiLocalization.GetSealPrompt();
     }
 
     private void SetVisible(bool visible)
@@ -71,23 +83,12 @@ public class RatHoleSealPromptUI : MonoBehaviour
         labelRect.offsetMin = Vector2.zero;
         labelRect.offsetMax = Vector2.zero;
         _label = labelGo.AddComponent<TextMeshProUGUI>();
-        //tradução maneira
-        _label.text = IsPortuguese() ? "Aperte E para selar" : "Press E to seal";
         _label.fontSize = 1.65f;
         _label.enableAutoSizing = false;
         _label.textWrappingMode = TextWrappingModes.NoWrap;
         _label.overflowMode = TextOverflowModes.Overflow;
         _label.alignment = TextAlignmentOptions.Center;
         _label.color = new Color(0.85f, 0.95f, 1f, 1f);
-    }
-
-    private static bool IsPortuguese()
-    {
-        if (!LocalizationSettings.HasSettings)
-            return true;
-
-        Locale locale = LocalizationSettings.SelectedLocale;
-        // Sem locale definido, assume português (idioma base do projeto).
-        return locale == null || locale.Identifier.Code.StartsWith("pt", System.StringComparison.OrdinalIgnoreCase);
+        RefreshLabel();
     }
 }

@@ -1,9 +1,7 @@
 using UnityEngine;
 using UnityEngine.Audio;
 
-/// <summary>
 /// Volumes persistidos (PlayerPrefs) aplicados ao <see cref="AudioMixer"/> do projeto.
-/// </summary>
 [DisallowMultipleComponent]
 [DefaultExecutionOrder(-200)]
 public class GameAudioSettings : Singleton<GameAudioSettings>
@@ -25,6 +23,22 @@ public class GameAudioSettings : Singleton<GameAudioSettings>
     public AudioMixer Mixer => audioMixer;
     public AudioMixerGroup MusicGroup => _musicGroup;
     public AudioMixerGroup SfxGroup => _sfxGroup;
+
+    /// Roteia um <see cref="AudioSource"/> para o grupo SFX do <see cref="AudioMixer"/>
+
+    public static bool BindSfxOutput(AudioSource source)
+    {
+        if (source == null)
+            return false;
+
+        EnsureExists();
+        GameAudioSettings settings = Instance;
+        if (settings == null || settings.SfxGroup == null)
+            return false;
+
+        source.outputAudioMixerGroup = settings.SfxGroup;
+        return true;
+    }
 
     public static void EnsureExists()
     {

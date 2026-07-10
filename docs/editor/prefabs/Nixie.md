@@ -1,6 +1,6 @@
 # Prefab: Nixie
 
-Última revisão: 2026-06-14  
+Última revisão: 2026-07-09  
 **Caminho:** `Assets/Prefabs/Characters/Nixie.prefab`  
 **GUID:** `7b87bef79bcba89408883a628d686c78`
 
@@ -46,7 +46,7 @@ Nixie
 | `HealthComponent` | `_maxHealth: 100`; `OnDied` sem dissolve (VFX via presentation) |
 | `PlayerAdrenaline` | |
 | `PlayerInitializer` | `playerShooting` vazio |
-| `PlayerAudioController` | |
+| `PlayerAudioController` | SFX via `NixiePlayerAudioConfig` (aplicado pelo profile) → mixer **SFX** |
 | `PlayerDash` | `passThroughLayer` = DashableWall + Player + ProjectileEnemy (`m_Bits: 4360`); dash **não** atravessa Enemy; `dashFailsafeExtraSeconds: 0.35` |
 | `KnockbackReceiver` | |
 | `PlayerMeleeCombat` | `combatStats` → MeleeCombatStats |
@@ -71,7 +71,22 @@ Nixie
 | `stats` (legado, espelhado pelo profile) | `Assets/Data/Stats/Player/PlayerCoreStats.asset` |
 | `PlayerMeleeCombat.combatStats` (via profile) | `Assets/Data/Stats/Player/NixieMeleeCombatStats.asset` |
 | `PlayerAbilityHandler.abilitySet` | `Assets/Data/Abilities/NixAbilitySet.asset` |
+| `audioConfig` (via profile) | `Assets/Data/Audio/Player/Nix/NixiePlayerAudioConfig.asset` |
 | `enemyLayers` | Layer Enemy (1024) |
+
+## SFX (Nix)
+
+Config em `Assets/Data/Audio/Player/Nix/NixiePlayerAudioConfig.asset` — todos roteados ao grupo **SFX** via `GameAudioSettings.BindSfxOutput`.
+
+| Evento | Clip | Disparo |
+|--------|------|---------|
+| Ataque normal | `Nix Ataque Normal.wav` | `PlayerMeleeCombat.OnMeleeAttackStarted` |
+| Dash | `Nix Dash.wav` | `PlayerDash.OnDashStarted` |
+| Empurrão (Q) — área | `Nix Ataque em Area.wav` | `PlayerAbilityHandler` → `NixPush` |
+| Investida (R) | `Nix Investida.wav` | `PlayerAbilityHandler` → `NixCharge` |
+| Tomando dano | `Nix Tomando Dano.wav` | `HealthComponent.OnTakeDamage` (solo) / `NetworkPlayerHealth` ClientRpc (MP) |
+
+Em MP, aliados ouvem ataque/habilidades via `NetworkPlayerAbilityRelay`.
 
 ## Debug / combate
 

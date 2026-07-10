@@ -27,3 +27,4 @@ MonoBehaviour:
   zoneFillColor: {r: 0.2, g: 0.95, b: 0.5, a: 0.75}
   zoneOutlineColor: {r: 1, g: 1, b: 1, a: 0.95}
   zoneSortingOrder: 250
+  sealCompleteClip: {fileID: 8300000, guid: 9e1b382f78a026047b904fd21e91d367, type: 3}

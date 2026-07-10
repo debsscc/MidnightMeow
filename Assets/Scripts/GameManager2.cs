@@ -111,7 +111,10 @@ public class GameManager2 : MonoBehaviour
     private void Update()
     {
         bool keyboardPause = Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame;
-        bool gamepadPause = Gamepad.current != null && Gamepad.current.startButton.wasPressedThisFrame;
+        bool gamepadPause = GamepadInputUtility.Current != null
+            && GamepadInputUtility.Current.startButton.wasPressedThisFrame;
+        if (!gamepadPause && GenericControllerInput.HasHidFallbackDevice)
+            gamepadPause = GenericControllerInput.WasPausePressedThisFrame();
         if (keyboardPause || gamepadPause)
         {
             TogglePause();

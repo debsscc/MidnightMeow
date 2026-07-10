@@ -111,4 +111,35 @@ public static class UiLocalization
             date,
             time);
     }
+
+    public static string GetSealPrompt() =>
+        Get("seal.prompt", "Aperte E para selar");
+
+    public static string FormatSealProgress(int percent) =>
+        Format("seal.progress", "Fique na Área para selar — {0}%", percent);
+
+    public static string GetSealComplete() =>
+        Get("seal.complete", "Área selada");
+
+    public static string FormatObjectiveHolesStatus(int sealedCount, int totalHoles, int remaining, int enemiesAlive) =>
+        Format(
+            "objective.holes_status",
+            "Buracos: {0}/{1} selados ({2} faltando)  |  Inimigos: {3}",
+            sealedCount,
+            totalHoles,
+            remaining,
+            enemiesAlive);
+
+    public static string FormatObjectiveCarriageStatus(float carriagePercent, int sealedCount, int totalHoles, int remaining, int enemiesAlive) =>
+        Format(
+            "objective.holes_carriage",
+            "Carruagem: {0}%  |  Buracos: {1}/{2} ({3} faltando)  |  Inimigos: {4}",
+            carriagePercent.ToString("0", CultureInfo.CurrentCulture),
+            sealedCount,
+            totalHoles,
+            remaining,
+            enemiesAlive);
+
+    public static string FormatObjectiveDefeatBoss(int enemiesAlive) =>
+        Format("objective.defeat_boss", "Derrote o Boss  |  Inimigos: {0}", enemiesAlive);
 }

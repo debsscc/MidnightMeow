@@ -520,6 +520,7 @@ MonoBehaviour:
   enemyMovement: {fileID: 8492623029768286588}
   animationBinder: {fileID: 0}
   sortingPrecision: 100
+  sortingReferenceYOffset: 0
   isMelee: 0
   debugLogs: 0
 --- !u!114 &4817587253931695636
@@ -627,10 +628,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnemyAudioController
   healthComponent: {fileID: 4817587253931695636}
   sfxMixerGroup: {fileID: -7772116307795827482, guid: 0369658093ea21d40a1c846ecafdd511, type: 2}
-  audioSource: {fileID: 8416473265528492656}
-  damageClip: {fileID: 8300000, guid: 984a02afb1b115d4fa28f3a0eee66f79, type: 3}
-  deathClip: {fileID: 8300000, guid: 1dc0986d3ba643a46a9d460572feb4b7, type: 3}
+  attackClips:
+  - {fileID: 8300000, guid: 4c17f92a9736a8443afe29a277086577, type: 3}
+  - {fileID: 8300000, guid: 1399bef73feb63d4ba623056379010b7, type: 3}
+  damageClip: {fileID: 8300000, guid: e6fc90d509179fc4f96bb6acdf8065c2, type: 3}
+  deathClip: {fileID: 8300000, guid: 5d5f0298823373748b0406b746e450e5, type: 3}
   volume: 1
+  isMelee: 1
 --- !u!114 &-8951183111382967495
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -643,7 +647,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
-  GlobalObjectIdHash: 55344956
+  GlobalObjectIdHash: 2332569958
   InScenePlacedSourceGlobalObjectIdHash: 0
   DeferredDespawnTick: 0
   Ownership: 1

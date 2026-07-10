@@ -5,9 +5,12 @@ DESCRIÇÃO: Vinheta URP em runtime — morte, pouca vida e flash de dano (solo 
 ---------------------------------------------------------------- */
 
 using System.Collections;
+using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
+using UnityEngine.SceneManagement;
 
 public class GameplayVignetteController : MonoBehaviour
 {
@@ -53,12 +56,19 @@ public class GameplayVignetteController : MonoBehaviour
     private Coroutine _deathSequence;
     private bool _postDeathVisualHold;
 
+    private bool _downedRevivePulseActive;
+    private float _downedReviveStress;
+    private float _downedReviveUrgency;
+
     public static GameplayVignetteController Instance => _instance;
 
     public float CurrentIntensity => _currentIntensity;
 
     public static void EnsureExists()
     {
+        if (!IsActiveGameplayScene())
+            return;
+
         if (_instance != null)
         {
             _instance.BindToGameplayCamera();
@@ -111,6 +121,32 @@ public class GameplayVignetteController : MonoBehaviour
         _instance._damagePulse = _instance._damagePulsePeak;
     }
 
+    public static void SetDownedRevivePulse(bool active, float stress, float urgency)
+    {
+        EnsureExists();
+        if (_instance == null)
+            return;
+
+        _instance._downedRevivePulseActive = active;
+        _instance._downedReviveStress = active ? Mathf.Clamp01(stress) : 0f;
+        _instance._downedReviveUrgency = active ? Mathf.Clamp01(urgency) : 0f;
+    }
+
+    public static void ClearDeathVisualHold()
+    {
+        if (_instance == null)
+            return;
+
+        _instance._postDeathVisualHold = false;
+    }
+
+    public static float SampleDownedHeartbeatPulse(float urgency)
+    {
+        float speed = Mathf.Lerp(2.6f, 4f, Mathf.Clamp01(urgency));
+        float sin = Mathf.Sin(Time.unscaledTime * speed);
+        return Mathf.Pow(Mathf.Max(0f, sin), 2.2f);
+    }
+
     public static void ClearIfActive()
     {
         if (_instance == null)
@@ -118,6 +154,9 @@ public class GameplayVignetteController : MonoBehaviour
 
         _instance.StopDeathSequence();
         _instance._postDeathVisualHold = false;
+        _instance._downedRevivePulseActive = false;
+        _instance._downedReviveStress = 0f;
+        _instance._downedReviveUrgency = 0f;
         _instance._healthRatio = 1f;
         _instance._smoothedStress = 0f;
         _instance._smoothedIntensity = 0f;
@@ -132,6 +171,12 @@ public class GameplayVignetteController : MonoBehaviour
         _instance._damagePulseDuration = 0f;
         _instance._damagePulseEndTime = 0f;
         _instance.ApplyVisuals(0f, NeutralVignetteColor, Color.white, 0f, 0f, 0f, 0.46f);
+    }
+
+    private static bool IsActiveGameplayScene()
+    {
+        Scene scene = SceneManager.GetActiveScene();
+        return scene.IsValid() && GameplaySceneBootstrap.IsGameplayScene(scene.name);
     }
 
     private static Camera ResolveGameplayCamera()
@@ -225,21 +270,31 @@ public class GameplayVignetteController : MonoBehaviour
 
     private void ApplyLowHealthFrame()
     {
-        float targetStress = ComputeStress(_healthRatio);
-        if (_postDeathVisualHold)
-            targetStress = Mathf.Max(targetStress, 0.92f);
+        float targetStress;
+        float heartbeat = 0f;
+
+        if (_downedRevivePulseActive)
+        {
+            targetStress = _downedReviveStress;
+            heartbeat = SampleDownedHeartbeatPulse(_downedReviveUrgency) * _downedReviveStress * 0.22f;
+        }
+        else
+        {
+            targetStress = ComputeStress(_healthRatio);
+            if (_postDeathVisualHold)
+                targetStress = Mathf.Max(targetStress, 0.92f);
+
+            if (_smoothedStress > 0.35f && !_postDeathVisualHold)
+            {
+                float speed = Mathf.Lerp(3.2f, 5f, _smoothedStress);
+                heartbeat = Mathf.Max(0f, Mathf.Sin(Time.unscaledTime * speed)) * _smoothedStress * MaxCriticalVignetteBoost;
+            }
+        }
 
         float intensityDelta = Time.unscaledDeltaTime * IntensitySmoothSpeed;
         float colorDelta = Time.unscaledDeltaTime * ColorSmoothSpeed;
 
         _smoothedStress = Mathf.Lerp(_smoothedStress, targetStress, intensityDelta);
-
-        float heartbeat = 0f;
-        if (_smoothedStress > 0.35f && !_postDeathVisualHold)
-        {
-            float speed = Mathf.Lerp(3.2f, 5f, _smoothedStress);
-            heartbeat = Mathf.Max(0f, Mathf.Sin(Time.unscaledTime * speed)) * _smoothedStress * MaxCriticalVignetteBoost;
-        }
 
         float targetIntensity = _smoothedStress * MaxLowHealthVignette + _damagePulse + heartbeat;
         _smoothedIntensity = Mathf.Lerp(_smoothedIntensity, targetIntensity, intensityDelta);

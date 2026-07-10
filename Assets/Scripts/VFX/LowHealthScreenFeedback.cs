@@ -41,7 +41,40 @@ public static class LowHealthScreenFeedback
         if (!IsLocalClient(clientId))
             return;
 
+        if (HasRevivableTeammateDown())
+        {
+            GameplayVignetteController.ClearDeathVisualHold();
+            GameplayVignetteController.SetHealthRatio(1f);
+            return;
+        }
+
         GameplayVignetteController.SetHealthRatio(0f);
+    }
+
+    private static bool HasRevivableTeammateDown()
+    {
+        NetworkManager networkManager = NetworkManager.Singleton;
+        if (networkManager == null || !networkManager.IsListening)
+            return false;
+
+        NetworkPlayerHealth[] players = Object.FindObjectsByType<NetworkPlayerHealth>(FindObjectsSortMode.None);
+        bool anyRevivable = false;
+        bool anyFighting = false;
+
+        for (int i = 0; i < players.Length; i++)
+        {
+            NetworkPlayerHealth health = players[i];
+            if (health == null || !health.IsSpawned)
+                continue;
+
+            if (health.CanBeRevived)
+                anyRevivable = true;
+
+            if (health.CanFight)
+                anyFighting = true;
+        }
+
+        return anyRevivable && anyFighting;
     }
 
     private static void HandleLocalPlayerRevived(ulong clientId)
