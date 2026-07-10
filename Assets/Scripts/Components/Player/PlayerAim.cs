@@ -152,11 +152,11 @@ public class PlayerAim : MonoBehaviour
 
         _mainCamera = ResolveAimCamera();
 
-        // Cursor/mouse primeiro: flip, firePoint e mira seguem a posição do cursor
+        // Cursor/pointer primeiro: flip, firePoint e mira seguem a posição do cursor
         // (inclui warp do analógico direito via GamepadCursorDriver).
-        if (_mainCamera != null && Mouse.current != null)
+        // Pointer cobre Mouse e Pen — no Windows o clique às vezes não atualiza Mouse.current.
+        if (_mainCamera != null && TryReadPointerScreenPosition(out _mousePosition))
         {
-            _mousePosition = Mouse.current.position.ReadValue();
             Vector3 mouseWorldPos = GetMouseWorldPositionOnPlayerPlane(_mousePosition, out bool rayHitPlane);
 
             Vector2 lookDirection = (Vector2)mouseWorldPos - (Vector2)transform.position;
@@ -207,15 +207,39 @@ public class PlayerAim : MonoBehaviour
         if (_mainCamera == null)
         {
             if (emitDebug)
-                EmitAimPipeline(context, false, "camera ausente", null, Mouse.current != null, default, default, false, transform.position, beforePosition, beforePosition, beforeEuler, beforeEuler, _currentAimDirection, radius);
+                EmitAimPipeline(context, false, "camera ausente", null, Pointer.current != null || Mouse.current != null, default, default, false, transform.position, beforePosition, beforePosition, beforeEuler, beforeEuler, _currentAimDirection, radius);
             return false;
         }
 
         // Sem mouse e sem stick: mantém a última direção mirada.
         ApplyFirePointPose(_currentAimDirection);
         if (emitDebug)
-            EmitAimPipeline(context, true, "keep-last (sem mouse/stick)", _mainCamera, Mouse.current != null, default, default, false, transform.position, beforePosition, firePoint.position, beforeEuler, firePoint.eulerAngles, _currentAimDirection, radius);
+            EmitAimPipeline(context, true, "keep-last (sem mouse/stick)", _mainCamera, Pointer.current != null || Mouse.current != null, default, default, false, transform.position, beforePosition, firePoint.position, beforeEuler, firePoint.eulerAngles, _currentAimDirection, radius);
         return true;
+    }
+
+    private static bool TryReadPointerScreenPosition(out Vector2 screenPosition)
+    {
+        if (Pointer.current != null)
+        {
+            screenPosition = Pointer.current.position.ReadValue();
+            return true;
+        }
+
+        if (Mouse.current != null)
+        {
+            screenPosition = Mouse.current.position.ReadValue();
+            return true;
+        }
+
+        if (Pen.current != null)
+        {
+            screenPosition = Pen.current.position.ReadValue();
+            return true;
+        }
+
+        screenPosition = default;
+        return false;
     }
 
     public void SetAimCamera(Camera camera)

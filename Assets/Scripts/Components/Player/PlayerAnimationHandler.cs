@@ -200,9 +200,27 @@ public class PlayerAnimationHandler : MonoBehaviour
     public void TriggerMeleeAttackAnimation()
     {
         if (playerDash != null && playerDash.IsDashing)
+        {
             TriggerDashAttackAnimation();
-        else
-            TriggerAttackAnimation();
+            return;
+        }
+
+        if (_animator == null || _animator.layerCount == 0)
+            return;
+
+        if (!CanFireAttackTrigger())
+            return;
+
+        // Nixie/melee usa estado Hitting — não depender só do trigger OnShoot (ranged).
+        if (HasAnimatorState(_meleeAttackStateHash))
+        {
+            _animator.Play(_meleeAttackStateHash, 0, 0f);
+            _lastAttackTriggerTime = Time.time;
+            return;
+        }
+
+        TrySetTrigger(_hashOnShoot);
+        _lastAttackTriggerTime = Time.time;
     }
 
     public float GetMeleeStrikeDelay()

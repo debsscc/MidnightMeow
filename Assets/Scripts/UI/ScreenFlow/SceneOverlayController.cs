@@ -74,6 +74,8 @@ public class SceneOverlayController : MonoBehaviour
         if (entry.pauseGameTime)
             Time.timeScale = 0f;
 
+        UiSelectionUtility.SelectFirstUnder(entry.root.transform);
+
         openEvents.InvokeBefore(this);
         onOverlayOpened?.Invoke(overlayId);
     }
@@ -86,6 +88,7 @@ public class SceneOverlayController : MonoBehaviour
         if (entry.root.activeSelf)
         {
             entry.root.SetActive(false);
+            UiSelectionUtility.ClearIfInvalid();
             closeEvents.InvokeBefore(this);
             onOverlayClosed?.Invoke(overlayId);
         }
@@ -119,6 +122,7 @@ public class SceneOverlayController : MonoBehaviour
             onOverlayClosed?.Invoke(id);
         }
 
+        UiSelectionUtility.ClearIfInvalid();
         Time.timeScale = 1f;
     }
 

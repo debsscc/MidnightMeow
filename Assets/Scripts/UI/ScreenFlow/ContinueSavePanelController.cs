@@ -140,6 +140,13 @@ public class ContinueSavePanelController : MonoBehaviour
         ApplyContinueBookmarkMode();
         RefreshSlotButtons();
         SetActionButtonsInteractable(false);
+        SelectDefaultSavePanelControl();
+    }
+
+    private void SelectDefaultSavePanelControl()
+    {
+        if (savePanelRoot != null)
+            UiSelectionUtility.SelectFirstUnder(savePanelRoot.transform);
     }
 
     public void Close()
@@ -641,6 +648,11 @@ public class ContinueSavePanelController : MonoBehaviour
             deleteConfirmationRoot.transform.SetAsLastSibling();
             deleteConfirmationRoot.SetActive(true);
         }
+
+        if (deleteCancelButton != null)
+            UiSelectionUtility.Select(deleteCancelButton);
+        else if (deleteConfirmButton != null)
+            UiSelectionUtility.Select(deleteConfirmButton);
     }
 
     private void HideDeleteConfirmation()

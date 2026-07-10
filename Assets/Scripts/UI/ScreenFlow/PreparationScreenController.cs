@@ -99,6 +99,32 @@ public class PreparationScreenController : MonoBehaviour
         EnsureDefaultContract();
         RefreshView();
         ScreenFlowPlaceholderFactory.ApplyMenuCursor();
+        SelectDefaultPreparationControl();
+    }
+
+    private void SelectDefaultPreparationControl()
+    {
+        if (readyButton != null && readyButton.isActiveAndEnabled && readyButton.IsInteractable())
+        {
+            UiSelectionUtility.Select(readyButton);
+            return;
+        }
+
+        if (contractButtons != null)
+        {
+            for (int i = 0; i < contractButtons.Length; i++)
+            {
+                Button b = contractButtons[i];
+                if (b != null && b.isActiveAndEnabled && b.IsInteractable())
+                {
+                    UiSelectionUtility.Select(b);
+                    return;
+                }
+            }
+        }
+
+        if (chooseCharacterButton != null)
+            UiSelectionUtility.Select(chooseCharacterButton);
     }
 
     private void OnDisable()

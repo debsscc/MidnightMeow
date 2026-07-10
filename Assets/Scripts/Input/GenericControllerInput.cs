@@ -24,6 +24,10 @@ public static class GenericControllerInput
         if (device == null || device is Gamepad || device is Joystick)
             return;
 
+        // Nunca tratar mouse/teclado/caneta como controle genérico.
+        if (device is Mouse || device is Keyboard || device is Pen || device is Touchscreen || device is Pointer)
+            return;
+
         if (HidCandidates.Contains(device))
             return;
 

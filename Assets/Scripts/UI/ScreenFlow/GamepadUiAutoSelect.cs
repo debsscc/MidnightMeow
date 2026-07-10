@@ -34,6 +34,8 @@ public class GamepadUiAutoSelect : MonoBehaviour
 
     private void TryNavigate(EventSystem es)
     {
+        UiSelectionUtility.ClearIfInvalid();
+
         if (!TryReadNavigationVector(out Vector2 nav))
         {
             _lastNavDirection = Vector2.zero;

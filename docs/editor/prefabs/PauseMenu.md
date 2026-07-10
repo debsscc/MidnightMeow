@@ -36,6 +36,19 @@ Painel de **Controles** no pause: removido por enquanto (sem `controlsPanel` em 
 
 Vitória/derrota: `GameplaySessionTeardown` congela gameplay sem abrir o pause (`GameEvents.InvokeGameplayFreeze`).
 
+## Navegação teclado / gamepad
+
+O EventSystem de cena é substituído em runtime pelo `GlobalEventSystem` (`EventSystemGlobalBootstrap`). Por isso **First Selected da cena não vale** — a seleção é feita em código:
+
+| Momento | Comportamento |
+|---------|----------------|
+| Abrir pause (`SceneOverlayController` / `PauseMenuActions`) | Seleciona **Resume** (ou primeiro Selectable) |
+| Popup sair (`Background_PopUp`) | Seleciona **Don'tQuit** (cancelar) |
+| Fechar popup | Volta seleção para Resume |
+| Stick/setas sem seleção | `GamepadUiAutoSelect` escolhe o Selectable do canvas mais alto |
+
+Scripts: `UiSelectionUtility`, `UiSelectOnEnable` (opcional em painéis), `GamepadUiAutoSelect`.
+
 ## Valores a confirmar no Editor
 
 | Campo / objeto | Notas | Valor atual |

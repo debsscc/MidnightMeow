@@ -93,6 +93,28 @@
                 },
                 {
                     "name": "",
+                    "id": "a8c4e2f1-9b7d-4e6a-8c3f-1d2e3f4a5b6c",
+                    "path": "<Pointer>/press",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Fire",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "b9d5f3e2-0c8e-5f7b-9d4a-2e3f4a5b6c7d",
+                    "path": "<Keyboard>/f",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Fire",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
                     "id": "f47e79f1-0ee5-4fbc-ad7a-fc8c1faa1d32",
                     "path": "<Gamepad>/rightTrigger",
                     "interactions": "",

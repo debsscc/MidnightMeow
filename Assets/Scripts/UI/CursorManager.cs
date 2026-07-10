@@ -49,10 +49,21 @@ public class CursorManager : MonoBehaviour
 
     public void SetHoverCursor()
     {
-        Cursor.SetCursor(onHoverSprite, hotspot, CursorMode.Auto);
+        Texture2D tex = onHoverSprite;
+        if (tex == null || tex == defaultSprite)
+            tex = gameplayCursor != null ? gameplayCursor : onHoverSprite;
+
+        if (tex != null)
+            Cursor.SetCursor(tex, hotspot, CursorMode.Auto);
     }
+
     public void SetClickCursor()
     {
-        Cursor.SetCursor(onClickSprite, hotspot, CursorMode.Auto);
+        Texture2D tex = onClickSprite;
+        if (tex == null || tex == defaultSprite)
+            tex = gameplayCursor != null ? gameplayCursor : onClickSprite;
+
+        if (tex != null)
+            Cursor.SetCursor(tex, hotspot, CursorMode.Auto);
     }
 }

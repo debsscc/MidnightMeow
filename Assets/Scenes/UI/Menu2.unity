@@ -1937,7 +1937,7 @@ MonoBehaviour:
         m_Calls:
         - m_Target: {fileID: 920484127}
           m_TargetAssemblyTypeName: CursorManager, Assembly-CSharp
-          m_MethodName: SetClickCursor
+          m_MethodName: SetHoverCursor
           m_Mode: 1
           m_Arguments:
             m_ObjectArgument: {fileID: 0}
@@ -3870,7 +3870,7 @@ MonoBehaviour:
         m_Calls:
         - m_Target: {fileID: 920484127}
           m_TargetAssemblyTypeName: CursorManager, Assembly-CSharp
-          m_MethodName: SetClickCursor
+          m_MethodName: SetHoverCursor
           m_Mode: 1
           m_Arguments:
             m_ObjectArgument: {fileID: 0}
@@ -5349,7 +5349,7 @@ MonoBehaviour:
         m_Calls:
         - m_Target: {fileID: 920484127}
           m_TargetAssemblyTypeName: CursorManager, Assembly-CSharp
-          m_MethodName: SetClickCursor
+          m_MethodName: SetHoverCursor
           m_Mode: 1
           m_Arguments:
             m_ObjectArgument: {fileID: 0}
@@ -14448,7 +14448,7 @@ MonoBehaviour:
         m_Calls:
         - m_Target: {fileID: 920484127}
           m_TargetAssemblyTypeName: CursorManager, Assembly-CSharp
-          m_MethodName: SetClickCursor
+          m_MethodName: SetHoverCursor
           m_Mode: 1
           m_Arguments:
             m_ObjectArgument: {fileID: 0}
@@ -15751,8 +15751,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CursorManager
   defaultSprite: {fileID: 2800000, guid: f1e55371eb92c1d4aa3afb570deeb30b, type: 3}
   gameplayCursor: {fileID: 2800000, guid: 93d6c00510cfef54fa17fc730a8789bc, type: 3}
-  onHoverSprite: {fileID: 2800000, guid: f1e55371eb92c1d4aa3afb570deeb30b, type: 3}
-  onClickSprite: {fileID: 2800000, guid: f1e55371eb92c1d4aa3afb570deeb30b, type: 3}
+  onHoverSprite: {fileID: 2800000, guid: 93d6c00510cfef54fa17fc730a8789bc, type: 3}
+  onClickSprite: {fileID: 2800000, guid: 93d6c00510cfef54fa17fc730a8789bc, type: 3}
 --- !u!114 &920484128
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -17409,7 +17409,7 @@ MonoBehaviour:
         m_Calls:
         - m_Target: {fileID: 920484127}
           m_TargetAssemblyTypeName: CursorManager, Assembly-CSharp
-          m_MethodName: SetClickCursor
+          m_MethodName: SetHoverCursor
           m_Mode: 1
           m_Arguments:
             m_ObjectArgument: {fileID: 0}
@@ -18390,7 +18390,7 @@ MonoBehaviour:
         m_Calls:
         - m_Target: {fileID: 920484127}
           m_TargetAssemblyTypeName: CursorManager, Assembly-CSharp
-          m_MethodName: SetClickCursor
+          m_MethodName: SetHoverCursor
           m_Mode: 1
           m_Arguments:
             m_ObjectArgument: {fileID: 0}
@@ -25935,7 +25935,7 @@ MonoBehaviour:
         m_Calls:
         - m_Target: {fileID: 920484127}
           m_TargetAssemblyTypeName: CursorManager, Assembly-CSharp
-          m_MethodName: SetClickCursor
+          m_MethodName: SetHoverCursor
           m_Mode: 1
           m_Arguments:
             m_ObjectArgument: {fileID: 0}

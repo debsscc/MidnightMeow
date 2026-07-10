@@ -31,6 +31,13 @@
 | **Overlay** (pause) | `SceneOverlayController` + `PauseMenuActions` |
 | Bootstrap por cena | `ScreenFlowSceneBootstrap` |
 | UI placeholder 1920×1080 | `ScreenFlowPlaceholderFactory` |
+| Seleção UI (teclado/gamepad) | `UiSelectionUtility` + `GamepadUiAutoSelect` + `UiSelectOnEnable` |
+
+### Navegação de UI sem mouse
+
+O `GlobalEventSystem` (DDOL) substitui o EventSystem das cenas — `firstSelected` da cena **não** é usado. Ao abrir menu/painel/popup, o código chama `EventSystem.SetSelectedGameObject` via `UiSelectionUtility` (Menu2, pause, Preparation, GameOver/Victory, Controles, abas). `GamepadUiAutoSelect` completa a navegação com stick/setas e limpa seleção inválida (objeto desativado).
+
+No **Menu2**, `UiSelectableFocusVisual` (adicionado por `MainMenuController`) copia/ajusta `Highlighted`/`Selected` do ColorTint para o foco de gamepad e o hover do mouse ficarem visíveis. Cursor de hover usa o sprite de gameplay quando o hover estava igual ao default.
 
 ## Fluxo completo
 

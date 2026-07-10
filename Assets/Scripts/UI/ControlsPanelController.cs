@@ -94,6 +94,13 @@ public class ControlsPanelController : MonoBehaviour
 
         if (gamepadTexts != null)
             gamepadTexts.SetActive(!keyboard);
+
+        if (keyboard && keyboardMouseTabButton != null)
+            UiSelectionUtility.Select(keyboardMouseTabButton);
+        else if (!keyboard && gamepadTabButton != null)
+            UiSelectionUtility.Select(gamepadTabButton);
+        else
+            UiSelectionUtility.SelectFirstUnder(transform);
     }
 
     public void OpenKeyboardMouseTab() => OpenTab(ControlsTab.KeyboardMouse);

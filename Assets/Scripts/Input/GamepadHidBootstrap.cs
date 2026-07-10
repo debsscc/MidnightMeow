@@ -59,6 +59,10 @@ public static class GamepadHidBootstrap
         if (device == null)
             return;
 
+        // Mouse/Keyboard/Pen nunca são controles — tratá-los como HID quebra mira e ataque.
+        if (IsPointerOrKeyboardDevice(device))
+            return;
+
         HidDeviceIdentity identity = HidDeviceIdentity.FromDescription(device.description);
         LogDeviceDetected(device, identity, change);
 
@@ -101,9 +105,18 @@ public static class GamepadHidBootstrap
         LogGenericFallback(device, identity);
     }
 
+    private static bool IsPointerOrKeyboardDevice(InputDevice device)
+    {
+        return device is Mouse
+            || device is Keyboard
+            || device is Pen
+            || device is Touchscreen
+            || device is Pointer;
+    }
+
     private static bool ShouldUseGenericHidFallback(InputDevice device)
     {
-        if (device is Gamepad || device is Joystick)
+        if (device is Gamepad || device is Joystick || IsPointerOrKeyboardDevice(device))
             return false;
 
         if (!string.Equals(device.description.interfaceName, "HID", StringComparison.OrdinalIgnoreCase))

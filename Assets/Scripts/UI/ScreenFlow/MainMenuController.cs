@@ -67,6 +67,9 @@ public class MainMenuController : MonoBehaviour
         ApplyResponsiveCanvasScalers();
         ApplyMenuCanvasGammaSpace();
 
+        if (GetComponent<UiSelectableFocusVisual>() == null)
+            gameObject.AddComponent<UiSelectableFocusVisual>();
+
         if (buildPlaceholderIfMissing && mainMenuPanel == null)
             BuildPlaceholderUI();
 
@@ -200,6 +203,25 @@ public class MainMenuController : MonoBehaviour
         if (mainMenuPanel != null) mainMenuPanel.SetActive(true);
         if (legacyHubPanel != null) legacyHubPanel.SetActive(false);
         ScreenFlowPlaceholderFactory.ApplyMenuCursor();
+        SelectDefaultMainMenuButton();
+    }
+
+    private void SelectDefaultMainMenuButton()
+    {
+        if (newGameButton != null && newGameButton.isActiveAndEnabled && newGameButton.IsInteractable())
+        {
+            UiSelectionUtility.Select(newGameButton);
+            return;
+        }
+
+        if (continueButton != null && continueButton.isActiveAndEnabled && continueButton.IsInteractable())
+        {
+            UiSelectionUtility.Select(continueButton);
+            return;
+        }
+
+        if (mainMenuPanel != null)
+            UiSelectionUtility.SelectFirstUnder(mainMenuPanel.transform);
     }
 
     private static void HideControlsPanel()
@@ -292,6 +314,10 @@ public class MainMenuController : MonoBehaviour
         MidnightMeowAnalyticsTracker.NotifyUiClick("main_menu", "options");
         RefreshAudioVolumeSlidersUi();
         navigator?.ShowPanel(PanelOptions);
+        if (masterVolumeSlider != null)
+            UiSelectionUtility.Select(masterVolumeSlider);
+        else if (optionsBackButton != null)
+            UiSelectionUtility.Select(optionsBackButton);
     }
 
     private void OnResetAudioDefaultsRequested()
@@ -392,6 +418,11 @@ public class MainMenuController : MonoBehaviour
             deleteConfirmationRoot.transform.SetAsLastSibling();
             deleteConfirmationRoot.SetActive(true);
         }
+
+        if (deleteCancelButton != null)
+            UiSelectionUtility.Select(deleteCancelButton);
+        else if (deleteConfirmButton != null)
+            UiSelectionUtility.Select(deleteConfirmButton);
     }
 
     private static bool CanRequestSaveDeletion()

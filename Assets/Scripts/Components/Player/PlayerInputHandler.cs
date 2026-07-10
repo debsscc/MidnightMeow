@@ -30,7 +30,6 @@ public class PlayerInputHandler : MonoBehaviour
     private InputAction _fireAction;
     private InputAction _interactAction;
     private bool _isPaused = false;
-    private bool _mouseFireHeld;
     private bool _firePublishedHeld;
 
     private void Awake()
@@ -40,8 +39,11 @@ public class PlayerInputHandler : MonoBehaviour
 
     private void OnEnable()
     {
+        _firePublishedHeld = false;
         ResolveInputActions();
         ActivateGameplayInput();
+        // Evita subscribe duplicado (OnEnable + Start / enable toggle do NetworkPlayerController).
+        UnsubscribeInputActions();
         SubscribeInputActions();
         GameEvents.OnPauseChanged += HandlePauseChanged;
         InputSystem.onDeviceChange += HandleDeviceChange;
@@ -53,6 +55,7 @@ public class PlayerInputHandler : MonoBehaviour
     {
         EnsureKeyboardMousePaired();
         ResolveInputActions();
+        UnsubscribeInputActions();
         SubscribeInputActions();
     }
 
@@ -161,11 +164,9 @@ public class PlayerInputHandler : MonoBehaviour
         EnsureKeyboardMousePaired();
 
         if (ShouldUseGenericPoll())
-        {
             PollGenericController();
-            return;
-        }
 
+        // Mouse fire must run even when generic HID/joystick poll is active (refactor 09/07).
         PollKeyboardMouseFire();
     }
 
@@ -249,15 +250,28 @@ public class PlayerInputHandler : MonoBehaviour
 
     private void PollKeyboardMouseFire()
     {
-        if (Mouse.current == null)
-            return;
+        // Level poll (não wasPressed): evita travar _firePublishedHeld quando press+release
+        // caem no mesmo frame, e cobre Mouse/Pen/Pointer (Windows pode rotear clique p/ Pen).
+        PublishFireInput(IsPointerFireHeld());
+    }
 
-        bool held = Mouse.current.rightButton.isPressed || Mouse.current.leftButton.isPressed;
-        if (held == _mouseFireHeld)
-            return;
+    private static bool IsPointerFireHeld()
+    {
+        if (Mouse.current != null
+            && (Mouse.current.leftButton.isPressed || Mouse.current.rightButton.isPressed))
+            return true;
 
-        _mouseFireHeld = held;
-        PublishFireInput(held);
+        if (Pointer.current != null && Pointer.current.press.isPressed)
+            return true;
+
+        if (Pen.current != null && Pen.current.tip.isPressed)
+            return true;
+
+        // Fallback teclado: se o mouse/pointer falhar no Editor, F ainda dispara o ataque.
+        if (Keyboard.current != null && Keyboard.current.fKey.isPressed)
+            return true;
+
+        return false;
     }
 
     private void PublishFireInput(bool pressed)
@@ -281,9 +295,9 @@ public class PlayerInputHandler : MonoBehaviour
             AimInput = aim;
 
         if (GenericControllerInput.WasFirePressedThisFrame())
-            OnFireInput?.Invoke(true);
+            PublishFireInput(true);
         else if (GenericControllerInput.WasFireReleasedThisFrame())
-            OnFireInput?.Invoke(false);
+            PublishFireInput(false);
 
         if (GenericControllerInput.WasDashPressedThisFrame())
             OnDashInput?.Invoke();
@@ -354,17 +368,11 @@ public class PlayerInputHandler : MonoBehaviour
 
     private void OnFireStarted(InputAction.CallbackContext ctx)
     {
-        if (ctx.control?.device is Mouse)
-            return;
-
         PublishFireInput(true);
     }
 
     private void OnFireCanceled(InputAction.CallbackContext ctx)
     {
-        if (ctx.control?.device is Mouse)
-            return;
-
         PublishFireInput(false);
     }
 
@@ -434,7 +442,6 @@ public class PlayerInputHandler : MonoBehaviour
         if (paused)
         {
             OnMoveInput?.Invoke(Vector2.zero);
-            _mouseFireHeld = false;
             if (_firePublishedHeld)
             {
                 _firePublishedHeld = false;

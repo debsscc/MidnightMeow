@@ -68,6 +68,7 @@ public class ScreenPanelNavigator : MonoBehaviour
 
         _currentPanelId = panelId;
         OnPanelChanged?.Invoke(panelId);
+        UiSelectionUtility.SelectFirstUnder(target.transform);
     }
 
     public void HideAll()

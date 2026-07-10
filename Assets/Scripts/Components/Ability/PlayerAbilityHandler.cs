@@ -161,10 +161,13 @@ public class PlayerAbilityHandler : MonoBehaviour
 
     public bool TryRequestPrimaryAttack()
     {
+        bool result;
         if (dash != null && dash.IsDashing)
-            return CanExecuteDashAttack();
+            result = CanExecuteDashAttack();
+        else
+            result = CanExecute(AbilitySlot.PrimaryAttack);
 
-        return CanExecute(AbilitySlot.PrimaryAttack);
+        return result;
     }
 
     private bool CanExecuteDashAttack()

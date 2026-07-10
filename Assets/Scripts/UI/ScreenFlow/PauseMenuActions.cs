@@ -36,6 +36,15 @@ public class PauseMenuActions : MonoBehaviour
     {
         HideQuitConfirmation();
         RefreshForCurrentMode();
+        SelectDefaultPauseButton();
+    }
+
+    private void SelectDefaultPauseButton()
+    {
+        if (_resumeButton != null)
+            UiSelectionUtility.Select(_resumeButton);
+        else
+            UiSelectionUtility.SelectFirstUnder(transform);
     }
 
     public void ClosePauseMenu()
@@ -89,12 +98,20 @@ public class PauseMenuActions : MonoBehaviour
     {
         if (quitConfirmationRoot != null)
             quitConfirmationRoot.SetActive(true);
+
+        if (_cancelQuitAppButton != null)
+            UiSelectionUtility.Select(_cancelQuitAppButton);
+        else if (_confirmQuitAppButton != null)
+            UiSelectionUtility.Select(_confirmQuitAppButton);
     }
 
     public void HideQuitConfirmation()
     {
         if (quitConfirmationRoot != null)
             quitConfirmationRoot.SetActive(false);
+
+        if (isActiveAndEnabled)
+            SelectDefaultPauseButton();
     }
 
     public void QuitApplication()

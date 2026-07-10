@@ -42,6 +42,10 @@ public class EndGameScreenController : MonoBehaviour
     {
         ScreenFlowPlaceholderFactory.ApplyMenuCursor();
         RefreshPrimaryActionLabel();
+        if (continueButton != null)
+            UiSelectionUtility.Select(continueButton);
+        else if (exitButton != null)
+            UiSelectionUtility.Select(exitButton);
     }
 
     private void OnEnable() => LocalizationSettings.SelectedLocaleChanged += HandleLocaleChanged;

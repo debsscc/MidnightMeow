@@ -325,6 +325,9 @@ public class NetworkPlayerController : NetworkBehaviour
         if (playerInput == null)
             TryGetComponent(out playerInput);
 
+        if (inputHandler == null)
+            TryGetComponent(out inputHandler);
+
         if (playerInput != null)
             playerInput.enabled = active;
 

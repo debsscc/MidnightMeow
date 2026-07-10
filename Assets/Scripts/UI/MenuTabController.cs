@@ -36,6 +36,9 @@ public class MenuTabController : MonoBehaviour
 
             tab.SetActive(tab == targetTab);
         }
+
+        if (targetTab != null && targetTab.activeInHierarchy)
+            UiSelectionUtility.SelectFirstUnder(targetTab.transform);
     }
 
     public void ResetToDefaultTab()
