@@ -85,7 +85,7 @@ Config em `Assets/Data/Audio/Player/Nix/NixiePlayerAudioConfig.asset` — todos 
 | Empurrão (Q) — área | `Nix Ataque em Area.wav` | `PlayerAbilityHandler` → `NixPush` |
 | Investida (R) | `Nix Investida.wav` | `PlayerAbilityHandler` → `NixCharge` |
 | Tomando dano | `Nix Tomando Dano.wav` | `HealthComponent.OnTakeDamage` (solo) / `NetworkPlayerHealth` ClientRpc (MP) |
-| Pouca vida (< 50%) | `Coracao Batida.wav` (`PlayerHeartbeatAudioEvent`) | `PlayerAudioController` — só jogador local; para se downed/morto |
+| Pouca vida (≤ 50%) | `Coracao Batida.wav` (`PlayerHeartbeatAudioEvent`) | `PlayerAudioController` — loop contínuo no jogador local (mesma vida da HUD); para se >50%, downed ou morto |
 
 Em MP, aliados ouvem ataque/habilidades via `NetworkPlayerAbilityRelay`.
 

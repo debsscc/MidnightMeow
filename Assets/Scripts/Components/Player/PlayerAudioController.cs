@@ -50,6 +50,9 @@ public class PlayerAudioController : MonoBehaviour
     [Tooltip("Toca heartbeat do PlayerAudioConfigSO quando current/max fica abaixo deste valor.")]
     [SerializeField] [Range(0.05f, 1f)] private float heartbeatHealthThreshold = DefaultHeartbeatHealthThreshold;
 
+    [Tooltip("Ganho extra do heartbeat (AudioSource.volume maxa em 1; isto amplifica o sinal).")]
+    [SerializeField] [Range(1f, 5f)] private float heartbeatVolumeGain = 3f;
+
     private Rigidbody2D _rb;
     private PlayerMeleeCombat _meleeCombat;
     private PlayerAbilityHandler _abilityHandler;
@@ -57,7 +60,12 @@ public class PlayerAudioController : MonoBehaviour
     private NetworkPlayerHealth _networkHealth;
     private float _stepTimer;
     private float _healthRatio = 1f;
-    private bool _heartbeatBeatArmed = true;
+    private AudioSource _heartbeatSource;
+    private HeartbeatAudioGain _heartbeatGain;
+    private bool _heartbeatLoopActive;
+    private AudioClip _heartbeatClip;
+    private float _heartbeatBaseVolume = 1f;
+    private float _heartbeatBasePitch = 1f;
 
     public void ApplyConfig(PlayerAudioConfigSO config) => audioConfig = config;
 
@@ -75,7 +83,7 @@ public class PlayerAudioController : MonoBehaviour
         _networkHealth = GetComponent<NetworkPlayerHealth>();
 
         ConfigureSources();
-        SyncHealthRatioFromComponent();
+        SyncHealthRatio();
     }
 
     private void OnEnable()
@@ -101,7 +109,9 @@ public class PlayerAudioController : MonoBehaviour
             _healthComponent.OnHealthChanged.AddListener(HandleHealthChanged);
         }
 
-        SyncHealthRatioFromComponent();
+        NetworkPlayerHealth.OnNetworkHealthChanged += HandleNetworkHealthChanged;
+
+        SyncHealthRatio();
     }
 
     private void OnDisable()
@@ -127,12 +137,15 @@ public class PlayerAudioController : MonoBehaviour
             _healthComponent.OnHealthChanged.RemoveListener(HandleHealthChanged);
         }
 
+        NetworkPlayerHealth.OnNetworkHealthChanged -= HandleNetworkHealthChanged;
+
         _stepTimer = 0f;
-        _heartbeatBeatArmed = true;
+        StopLowHealthHeartbeat();
     }
 
     private void Update()
     {
+        SyncHealthRatio();
         UpdateFootsteps();
         UpdateLowHealthHeartbeat();
     }
@@ -263,43 +276,110 @@ public class PlayerAudioController : MonoBehaviour
 
     private void HandleHealthChanged(float current, float max)
     {
-        _healthRatio = max > 0f ? Mathf.Clamp01(current / max) : 0f;
-        if (!ShouldPlayLowHealthHeartbeat())
-            _heartbeatBeatArmed = true;
+        ApplyHealthRatio(current, max);
     }
 
-    private void SyncHealthRatioFromComponent()
+    private void HandleNetworkHealthChanged(ulong clientId, float current, float max)
     {
+        if (!IsLocalPlayerClientId(clientId))
+            return;
+
+        ApplyHealthRatio(current, max);
+    }
+
+    private void SyncHealthRatio()
+    {
+        // Mesma fonte da barra de vida do HUD: NetworkPlayerHealth quando spawnado.
+        if (_networkHealth != null && _networkHealth.IsSpawned)
+        {
+            ApplyHealthRatio(_networkHealth.CurrentHealth, _networkHealth.MaxHealth);
+            return;
+        }
+
         if (_healthComponent == null || _healthComponent.MaxHealth <= 0f)
         {
             _healthRatio = 1f;
             return;
         }
 
-        _healthRatio = Mathf.Clamp01(_healthComponent.CurrentHealth / _healthComponent.MaxHealth);
+        ApplyHealthRatio(_healthComponent.CurrentHealth, _healthComponent.MaxHealth);
+    }
+
+    private void ApplyHealthRatio(float current, float max)
+    {
+        _healthRatio = max > 0f ? Mathf.Clamp01(current / max) : 0f;
     }
 
     private void UpdateLowHealthHeartbeat()
     {
         if (!ShouldPlayLowHealthHeartbeat())
         {
-            _heartbeatBeatArmed = true;
+            StopLowHealthHeartbeat();
             return;
         }
 
+        EnsureHeartbeatSource();
+        if (_heartbeatSource == null)
+            return;
+
+        if (!_heartbeatLoopActive || _heartbeatClip == null)
+        {
+            if (!audioConfig.heartbeat.TryResolvePlayback(out AudioClip clip, out float volume, out float pitch))
+            {
+                StopLowHealthHeartbeat();
+                return;
+            }
+
+            _heartbeatClip = clip;
+            _heartbeatBaseVolume = volume;
+            _heartbeatBasePitch = pitch;
+        }
+
         float urgency = ComputeHeartbeatUrgency(_healthRatio);
-        float pulse = GameplayVignetteController.SampleDownedHeartbeatPulse(urgency);
-        bool beatPeak = pulse > 0.88f;
-        if (beatPeak && _heartbeatBeatArmed)
-        {
-            float volumeScale = Mathf.Lerp(0.55f, 1f, urgency);
-            PlayConfiguredEventScaled(audioConfig.heartbeat, volumeScale);
-            _heartbeatBeatArmed = false;
-        }
-        else if (!beatPeak)
-        {
-            _heartbeatBeatArmed = true;
-        }
+        BindSourceOutput(_heartbeatSource);
+        _heartbeatSource.loop = true;
+        _heartbeatSource.playOnAwake = false;
+        _heartbeatSource.spatialBlend = 0f;
+        _heartbeatSource.mute = false;
+        // Volume do source fica no teto; o ganho real vem do HeartbeatAudioGain.
+        _heartbeatSource.volume = 1f;
+        _heartbeatSource.pitch = _heartbeatBasePitch;
+        if (_heartbeatGain != null)
+            _heartbeatGain.Gain = heartbeatVolumeGain * _heartbeatBaseVolume * Mathf.Lerp(0.9f, 1f, urgency);
+
+        if (_heartbeatSource.clip != _heartbeatClip)
+            _heartbeatSource.clip = _heartbeatClip;
+
+        if (!_heartbeatSource.isPlaying)
+            _heartbeatSource.Play();
+
+        _heartbeatLoopActive = true;
+    }
+
+    private void StopLowHealthHeartbeat()
+    {
+        if (_heartbeatSource != null && _heartbeatSource.isPlaying)
+            _heartbeatSource.Stop();
+
+        _heartbeatLoopActive = false;
+        _heartbeatClip = null;
+    }
+
+    private void EnsureHeartbeatSource()
+    {
+        if (_heartbeatSource != null)
+            return;
+
+        var go = new GameObject("HeartbeatAudio");
+        go.transform.SetParent(transform, false);
+        _heartbeatSource = go.AddComponent<AudioSource>();
+        _heartbeatSource.playOnAwake = false;
+        _heartbeatSource.loop = true;
+        _heartbeatSource.spatialBlend = 0f;
+        _heartbeatSource.bypassListenerEffects = false;
+        _heartbeatGain = go.AddComponent<HeartbeatAudioGain>();
+        _heartbeatGain.Gain = heartbeatVolumeGain;
+        BindSourceOutput(_heartbeatSource);
     }
 
     private bool ShouldPlayLowHealthHeartbeat()
@@ -316,7 +396,14 @@ public class PlayerAudioController : MonoBehaviour
         if (_healthComponent != null && _healthComponent.IsDead)
             return false;
 
-        return _healthRatio > 0f && _healthRatio < heartbeatHealthThreshold;
+        // <= 50%: inclui exatamente metade da vida.
+        return _healthRatio > 0f && _healthRatio <= heartbeatHealthThreshold;
+    }
+
+    private static bool IsLocalPlayerClientId(ulong clientId)
+    {
+        NetworkManager networkManager = NetworkManager.Singleton;
+        return networkManager != null && clientId == networkManager.LocalClientId;
     }
 
     private bool IsLocalPlayerForAudio()
@@ -350,20 +437,21 @@ public class PlayerAudioController : MonoBehaviour
         PlayerSfxUtility.PlayOneShot(source, audioEvent);
     }
 
-    private void PlayConfiguredEventScaled(AudioEventSO audioEvent, float volumeScale)
+    /// <summary>
+    /// Amplifica o heartbeat além do teto 0–1 do AudioSource.volume.
+    /// </summary>
+    private sealed class HeartbeatAudioGain : MonoBehaviour
     {
-        if (sfxSource == null || audioEvent == null)
-            return;
+        public float Gain = 1f;
 
-        if (!audioEvent.TryResolvePlayback(out AudioClip clip, out float volume, out float pitch))
-            return;
+        private void OnAudioFilterRead(float[] data, int channels)
+        {
+            float gain = Gain;
+            if (gain <= 1.0001f)
+                return;
 
-        if (!GameAudioSettings.BindSfxOutput(sfxSource) && sfxMixerGroup != null)
-            sfxSource.outputAudioMixerGroup = sfxMixerGroup;
-
-        float previousPitch = sfxSource.pitch;
-        sfxSource.pitch = pitch;
-        sfxSource.PlayOneShot(clip, volume * Mathf.Clamp01(volumeScale));
-        sfxSource.pitch = previousPitch;
+            for (int i = 0; i < data.Length; i++)
+                data[i] *= gain;
+        }
     }
 }

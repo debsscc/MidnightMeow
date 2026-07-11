@@ -5628,6 +5628,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1cf0ea4ca7bedf34eaa01002ef1ab3f4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerAudioController
+  audioConfig: {fileID: 11400000, guid: c6a7b8c9dafb6cd3e4f5a6b7c8d10600, type: 2}
   sfxMixerGroup: {fileID: -7772116307795827482, guid: 0369658093ea21d40a1c846ecafdd511, type: 2}
   playerShooting: {fileID: 0}
   playerDash: {fileID: 6300129357974945871}
@@ -5643,6 +5644,7 @@ MonoBehaviour:
   footstepMinInterval: 0.22
   footstepMaxInterval: 0.55
   footstepVolume: 0.85
+  heartbeatHealthThreshold: 0.5
 --- !u!114 &6300129357974945871
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5653,7 +5655,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e3aea27445359754cad5777a5ab6dc44, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerDash
   inputHandler: {fileID: 5786198820618361475}
   stats: {fileID: 11400000, guid: 7f4fa052e88f8494f918e2f5d5b9cdd1, type: 2}

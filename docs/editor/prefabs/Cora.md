@@ -88,7 +88,7 @@ Config em `Assets/Data/Audio/Player/Cora/CoraPlayerAudioConfig.asset` — todos 
 | Barreira (Q) | `Cora Barreira.wav` | `PlayerAbilityHandler` → `CoraBarrier` |
 | Poça (R) | `Cora Poca.wav` | `PlayerAbilityHandler` → `CoraPool` |
 | Tomando dano | `Cora Tomando Dano.wav` | `HealthComponent` (solo) / `NetworkPlayerHealth` ClientRpc (MP) |
-| Pouca vida (< 50%) | `Coracao Batida.wav` (`PlayerHeartbeatAudioEvent`) | `PlayerAudioController` — só jogador local; para se downed/morto |
+| Pouca vida (≤ 50%) | `Coracao Batida.wav` (`PlayerHeartbeatAudioEvent`) | `PlayerAudioController` — loop contínuo no jogador local (mesma vida da HUD); para se >50%, downed ou morto |
 
 ## Timing do tiro (sync com animação)
 
