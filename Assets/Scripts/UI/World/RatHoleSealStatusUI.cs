@@ -155,6 +155,7 @@ public class RatHoleSealStatusUI : MonoBehaviour
         _label.alignment = TextAlignmentOptions.Center;
         _label.color = Color.white;
         _label.textWrappingMode = TextWrappingModes.NoWrap;
+        GameplayUiFonts.Apply(_label);
     }
 
     private static void Stretch(RectTransform rt, float inset = 0f)

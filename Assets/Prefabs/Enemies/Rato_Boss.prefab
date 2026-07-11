@@ -57,14 +57,14 @@ RectTransform:
   m_GameObject: {fileID: 6035384567781805069}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 14.354939, y: 2.32, z: 1.9333135}
+  m_LocalScale: {x: 57.00705, y: 9.2133, z: 7.677671}
   m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 6396371665158594734}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -0.36, y: -1.66}
+  m_AnchoredPosition: {x: 1.33, y: -7.5}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!212 &4149308233459731649
@@ -93,7 +93,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: a97c105638bdf8b4a8650670310a4cd3, type: 2}
+  - {fileID: -876546973899608171, guid: 0a66134f4be3fed458efd5493b8e9371, type: 3}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -117,7 +117,7 @@ SpriteRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_Sprite: {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
-  m_Color: {r: 0, g: 0, b: 0, a: 0.5019608}
+  m_Color: {r: 0.13207549, g: 0.13207549, b: 0.13207549, a: 0.5019608}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -287,6 +287,7 @@ GameObject:
   - component: {fileID: 764039431503846554}
   - component: {fileID: 5935593986608848345}
   - component: {fileID: 6112133685248922938}
+  - component: {fileID: 4803484565655714402}
   m_Layer: 10
   m_Name: Rato_Boss
   m_TagString: Enemy
@@ -338,7 +339,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: -876546973899608171, guid: 0a66134f4be3fed458efd5493b8e9371, type: 3}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -361,12 +362,12 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 2
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 21300000, guid: 00c07fbcac8a1ef49bb963a5a5186786, type: 3}
+  m_Sprite: {fileID: 21300000, guid: a3618b85a3594c64cb8d324b38d5f599, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
-  m_Size: {x: 8, y: 4.36}
+  m_Size: {x: 27.78, y: 16.19}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
@@ -432,8 +433,8 @@ CapsuleCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: -0.0708559, y: -0.24826032}
-  m_Size: {x: 3.8313634, y: 1.7896771}
+  m_Offset: {x: 2.1681294, y: -3.1548848}
+  m_Size: {x: 11.945796, y: 8.520834}
   m_Direction: 1
 --- !u!195 &1903391186630837853
 NavMeshAgent:
@@ -467,7 +468,7 @@ Animator:
   m_GameObject: {fileID: 8336658271261246405}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: 901ce2192fd08bb40907c2c9ca45c7ba, type: 2}
+  m_Controller: {fileID: 9100000, guid: 2bab1160ca2644db97a0ad1123703ca5, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
@@ -634,7 +635,6 @@ MonoBehaviour:
   damageClip: {fileID: 8300000, guid: e6fc90d509179fc4f96bb6acdf8065c2, type: 3}
   deathClip: {fileID: 8300000, guid: 5d5f0298823373748b0406b746e450e5, type: 3}
   volume: 1
-  isMelee: 1
 --- !u!114 &-8951183111382967495
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -647,7 +647,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
-  GlobalObjectIdHash: 2332569958
+  GlobalObjectIdHash: 55344956
   InScenePlacedSourceGlobalObjectIdHash: 0
   DeferredDespawnTick: 0
   Ownership: 1
@@ -791,6 +791,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: MidnightMeow::BossEnemyMarker
   healthBarWidthMultiplier: 1.6
   healthBarHeightMultiplier: 1.35
+  displayName: Rei Rato
 --- !u!114 &6112133685248922938
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -813,3 +814,16 @@ MonoBehaviour:
   fillColor: {r: 0.85, g: 0.2, b: 0.2, a: 0.95}
   hideWhenFull: 0
   sortingOrder: 200
+--- !u!114 &4803484565655714402
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8336658271261246405}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cb1606be9080ab140a1d02e5f054953b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SpriteBlink
+  blinkDecaySpeed: 7

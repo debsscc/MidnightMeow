@@ -85,6 +85,7 @@ Config em `Assets/Data/Audio/Player/Nix/NixiePlayerAudioConfig.asset` — todos 
 | Empurrão (Q) — área | `Nix Ataque em Area.wav` | `PlayerAbilityHandler` → `NixPush` |
 | Investida (R) | `Nix Investida.wav` | `PlayerAbilityHandler` → `NixCharge` |
 | Tomando dano | `Nix Tomando Dano.wav` | `HealthComponent.OnTakeDamage` (solo) / `NetworkPlayerHealth` ClientRpc (MP) |
+| Pouca vida (< 50%) | `Coracao Batida.wav` (`PlayerHeartbeatAudioEvent`) | `PlayerAudioController` — só jogador local; para se downed/morto |
 
 Em MP, aliados ouvem ataque/habilidades via `NetworkPlayerAbilityRelay`.
 
@@ -106,6 +107,7 @@ Em MP, aliados ouvem ataque/habilidades via `NetworkPlayerAbilityRelay`.
 
 | Data | Alteração |
 |------|-----------|
+| 2026-07-10 | Heartbeat de pouca vida (< 50%) via `PlayerHeartbeatAudioEvent` / `PlayerAudioController` |
 | 2026-06-17 | Melee polish: sync strike/recovery, burst, blink pulse, shake no acerto |
 | 2026-06-14 | Combo derrota: `DeathHordePresentation` (spawn off, slow-mo, fade ratos, vinheta/zoom) |
 | 2026-06-12 | Fluxo de morte B: presentation + dissolve MP; bleed-out pausado |

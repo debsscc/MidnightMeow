@@ -1,6 +1,6 @@
 # Prefabs: Variantes de Rato
 
-Última revisão: 2026-06-28
+Última revisão: 2026-07-10
 
 Variantes compartilham a mesma hierarquia base (`Enemy` / ranged): `NetworkObject`, `NetworkEnemyController`, `EnemyMovement`, `EnemyAttack_Ranged` (ou melee em tipos especiais), `EnemyDropHandler`, etc.
 
@@ -8,12 +8,13 @@ Variantes compartilham a mesma hierarquia base (`Enemy` / ranged): `NetworkObjec
 
 Sprites desenhados olhando para a **direita**; `EnemyAnimationHandler` / `NetworkEnemyController` aplicam `flipX = !facingRight` (mesma convenção dos players).
 
-Controllers em `Assets/Data/Animacoes/Enemy_AC/` (`AC_Enemy`, `AC_Enemy_Acid`, `AC_Enemy_Helmet`):
+Controllers em `Assets/Data/Animacoes/Enemy_AC/` (`AC_Enemy`, `AC_Enemy_Acid`, `AC_Enemy_Helmet`, `AC_Rato_Rei`):
 
-- **Default state:** `Running` (não `Idle`)
+- **Default state (horde):** `Running` (não `Idle`)
 - **`IsAttacking` (bool):** telegraph/pattern ativo (`EnemyTelegraphedAttacker.IsExecuting`)
 - **`Attacking` → locomotion:** só quando `IsAttacking == false`
 - Profile: `EnemyDefaultAnimationProfile.asset` → `isAttackingParameter: IsAttacking`
+- **Boss (`Rato_Boss`):** `AC_Rato_Rei` — default `Idle`; extras `Spell`/`OnSpell` (projétil) e `Charging`/`OnCharge`+`IsCharging` (investida). Ver [boss-phase.md](../../gameplay/boss-phase.md).
 
 **Morte:** `DissolveEffect` + material `EnemyDeathFade.mat` — animação `Dying` completa, depois fade out (sem reaparecer).
 
@@ -72,7 +73,7 @@ Entradas em `WaveSettings` / instância `_GameLoop` em **Fase-1** referenciam es
 
 ## SFX (ratos comuns)
 
-Clips em `Assets/Audio/AUDIOS ATUALIZADOS/SFXS/Ratos/`; config central em `Assets/Resources/EnemyCommonSfxConfig.asset`. Prefabs `Rato_*` deixam `damageClip`/`deathClip` vazios no Inspector — o `EnemyAudioController` resolve em runtime. Todos os SFX passam pelo bus global `EnemySfxBus` (grupo **SFX** do `NewAudioMixer`).
+Clips em `Assets/Audio/AUDIOS ATUALIZADOS/SFXS/Ratos/`; config central em `Assets/Resources/EnemyCommonSfxConfig.asset`. Prefabs `Rato_*` deixam `damageClip`/`deathClip` vazios no Inspector — o `EnemyAudioController` resolve em runtime. Todos os SFX passam pelo bus global `EnemySfxBus` (grupo **SFX** do `MidnightMeowAudioMixer`).
 
 ## Relacionados
 

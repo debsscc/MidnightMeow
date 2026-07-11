@@ -51,6 +51,7 @@ public class DamageIndicatorPresenter : MonoBehaviour
         tmp.alignment = TextAlignmentOptions.Center;
         tmp.color = damageColor;
         tmp.fontStyle = FontStyles.Bold;
+        GameplayUiFonts.Apply(tmp);
 
         var floater = go.AddComponent<DamageIndicatorFloater>();
         floater.Initialize(floatDistance, lifetime);

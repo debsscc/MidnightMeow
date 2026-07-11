@@ -590,7 +590,11 @@ public class PlayerAbilityHud : MonoBehaviour
         if (_runtimeFont != null)
             return _runtimeFont;
 
-        _runtimeFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        GameplayUiFontConfig config = Resources.Load<GameplayUiFontConfig>("GameplayUiFontConfig");
+        if (config != null && config.LegacyFont != null)
+            _runtimeFont = config.LegacyFont;
+        else
+            _runtimeFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         return _runtimeFont;
     }
 

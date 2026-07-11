@@ -1,13 +1,15 @@
 # Estrutura de Assets
 
-Última revisão: 2026-06-14
+Última revisão: 2026-07-10
 
 ## Visão geral
 
 ```
 Assets/
 ├── Art/                 # Sprites, Materials, Shaders, Fonts, Models
-├── Audio/               # Música e SFX (consolidação gradual)
+├── Audio/               # Música e SFX (clips)
+├── Resources/
+│   └── MidnightMeowAudioMixer.mixer  # Mixer único (Master / Music / SFX)
 ├── Data/                # Instâncias ScriptableObject (balanceamento)
 │   ├── Characters/      # GameplayProfile + AnimationProfile por personagem
 │   ├── Abilities/
@@ -50,7 +52,7 @@ Assets/
 | `ScriptableObjects/` | Definições de SO (código) |
 | `UI/` | HUD, menus, botões |
 | `VFX/` | Efeitos visuais |
-| `Audio/` | Scripts de áudio de menu |
+| `Audio/` | Mixer settings, buses (`UiSfxPlayer`, `EnemySfxBus`), configs SO |
 
 **Removido:** `_Scripts/Scriptables/` (pasta vazia duplicada de `ScriptableObjects`).
 

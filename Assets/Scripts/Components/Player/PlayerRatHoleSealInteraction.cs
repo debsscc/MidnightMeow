@@ -66,6 +66,7 @@ public class PlayerRatHoleSealInteraction : MonoBehaviour
             return;
 
         manager.RequestStartSealRpc(_targetHole.HoleId);
+        GameplayInteractAudio.PlayConfirm();
     }
 
     private RatHoleSpawnPoint FindNearestUnsealedHole()

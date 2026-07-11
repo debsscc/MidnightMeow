@@ -52,7 +52,9 @@ Criar perfis em `Assets/Data/Gameplay/` → menu **MidnightMeow/Gameplay/Rat Hol
 
 | Campo | Descrição |
 |-------|-----------|
-| `sealCompleteClip` | SFX ao concluir selamento (`Buraco Selado.wav`). Grupo **SFX** do `NewAudioMixer` — controlado pelo slider **SFX** nas opções. |
+| `sealCompleteClip` | SFX ao concluir selamento (`Buraco Selado.wav`). Grupo **SFX** do `MidnightMeowAudioMixer` — controlado pelo slider **SFX** nas opções. |
+
+Ao **iniciar** o selamento com E: `GameplayInteractAudio.PlayConfirm()` → `Interacao.wav` (`InteractEAudioEvent`).
 
 ### Textos (pt-BR / en-US)
 

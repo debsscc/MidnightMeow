@@ -77,7 +77,7 @@ public class HordeIndicator : MonoBehaviour
         Text label = textGo.GetComponent<Text>();
         label.alignment = TextAnchor.UpperCenter;
         label.color = Color.white;
-        label.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        GameplayUiFonts.Apply(label);
         label.fontSize = 24;
         label.horizontalOverflow = HorizontalWrapMode.Overflow;
         label.text = BuildText();

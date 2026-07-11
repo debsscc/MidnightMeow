@@ -28,6 +28,15 @@ public class EnemyHealthBarDisplay : MonoBehaviour
     private void Awake()
     {
         _health = GetComponent<HealthComponent>();
+
+        // Fase-3: barra world-space some — a vida do boss vai para o HUD de tela.
+        if (BossPhaseUtility.UsesCinematicBossPresentation(gameObject))
+        {
+            buildIfMissing = false;
+            enabled = false;
+            return;
+        }
+
         ApplyBossOverrides();
 
         if (buildIfMissing && _barRoot == null)

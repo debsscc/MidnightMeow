@@ -2,6 +2,7 @@
 // FEITO POR: Debs Carvalho
 // DATA: 09/07/2026
 // DESCRIÇÃO: Pulso de tela + SFX cardíaco + timer durante janela de reviver no multiplayer.
+// Ao concluir o revive: SFX Reviver.wav + pulso breve de vinheta (só MP).
 // ----------------------------------------------------------------
 using Unity.Netcode;
 using UnityEngine;
@@ -11,6 +12,10 @@ using UnityEngine.SceneManagement;
 [DefaultExecutionOrder(120)]
 public class DownedReviveScreenFeedback : MonoBehaviour
 {
+    private const float ReviveSuccessPulsePeak = 0.18f;
+    private const float ReviveSuccessPulseDuration = 0.55f;
+    private const float ReviveCompleteSfxVolume = 0.95f;
+
     private static DownedReviveScreenFeedback _instance;
     private AudioSource _audioSource;
     private DownedReviveTimerHud _timerHud;
@@ -102,30 +107,42 @@ public class DownedReviveScreenFeedback : MonoBehaviour
     // Handler para evento de jogador downed (garante feedback).
     private static void HandlePlayerDowned(ulong clientId)
     {
+        if (!IsMultiplayerReviveContext())
+            return;
         EnsureExists();
     }
 
-    // Handler para evento de revive (aplica feedback de sucesso).
+    // Handler para evento de revive (SFX + pulso de sucesso — só MP).
     private static void HandlePlayerRevived(ulong clientId)
     {
+        if (!IsMultiplayerReviveContext())
+            return;
+
+        EnsureExists();
         if (_instance == null)
             return;
-        _instance.ClearFeedback();
+
+        _instance.ClearFeedback(stopAudio: false);
         DownedPlayerConfig config = DownedPlayerConfigUtility.Resolve();
-        if (config != null && config.reviveCompleteClip != null)
-            _instance.PlayClip(config.reviveCompleteClip, 0.95f);
+        AudioClip reviveClip = config != null ? config.reviveCompleteClip : null;
+        if (reviveClip != null)
+            _instance.PlayClip(reviveClip, ReviveCompleteSfxVolume);
+
+        GameplayVignetteController.TriggerReviveSuccessPulse(ReviveSuccessPulsePeak, ReviveSuccessPulseDuration);
     }
 
     // Handler para evento de bleed out (limpa feedback).
     private static void HandlePlayerBleedOut(ulong clientId)
     {
+        if (!IsMultiplayerReviveContext())
+            return;
         _instance?.ClearFeedback();
     }
 
     // Atualiza HUD e efeitos na tela a cada frame.
     private void LateUpdate()
     {
-        if (!ShouldRunInCurrentScene())
+        if (!IsMultiplayerReviveContext() || !ShouldRunInCurrentScene())
         {
             ClearFeedback();
             return;
@@ -161,7 +178,7 @@ public class DownedReviveScreenFeedback : MonoBehaviour
         UpdateHeartbeatAudio(config, urgency, pulse);
     }
 
-    // Gera efeito e áudio do batimento cardíaco.
+    // Gera efeito e áudio do batimento cardíaco (janela de downed — só MP).
     private void UpdateHeartbeatAudio(DownedPlayerConfig config, float urgency, float pulse)
     {
         AudioClip clip = config != null ? config.downedHeartbeatClip : null;
@@ -214,11 +231,12 @@ public class DownedReviveScreenFeedback : MonoBehaviour
         _timerHud.transform.SetAsFirstSibling();
     }
 
-    // Limpa feedback visual e sonoro.
-    private void ClearFeedback()
+    // Limpa feedback visual e sonoro da janela de downed.
+    private void ClearFeedback(bool stopAudio = true)
     {
         _heartbeatBeatArmed = true;
-        StopHeartbeatAudio();
+        if (stopAudio)
+            StopHeartbeatAudio();
         if (GameplayVignetteController.Instance != null)
             GameplayVignetteController.SetDownedRevivePulse(false, 0f, 0f);
         _timerHud?.SetVisible(false);
@@ -237,6 +255,16 @@ public class DownedReviveScreenFeedback : MonoBehaviour
     {
         Scene scene = SceneManager.GetActiveScene();
         return scene.IsValid() && GameplaySceneBootstrap.IsGameplayScene(scene.name);
+    }
+
+    /// Revive cooperativo / feedback de downed só existem em sessão multiplayer.
+    private static bool IsMultiplayerReviveContext()
+    {
+        if (GameSessionContext.IsSinglePlayer)
+            return false;
+
+        NetworkManager networkManager = NetworkManager.Singleton;
+        return networkManager != null && networkManager.IsListening;
     }
 
     // Procura jogador downed revivível, retorna bool se há aliado lutando.

@@ -176,6 +176,7 @@ public class DownedReviveTimerHud : MonoBehaviour
         label.fontStyle = style;
         label.raycastTarget = false;
         label.text = string.Empty;
+        GameplayUiFonts.Apply(label);
         return label;
     }
 

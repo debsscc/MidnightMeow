@@ -100,6 +100,8 @@ Artistas podem ajustar **timing** e **curves** no Animation window; mudanças de
 
 - Fontes brutas: `Assets/Art/Fonts/` (ex.: FiraSans).
 - TextMesh Pro SDF: gerados em `Assets/Fonts/` ou subpasta TMP — **não mover** pasta `TextMesh Pro/` do pacote.
+- **Gameplay:** Fira Sans via `Assets/Resources/GameplayUiFontConfig.asset` (`GameplayUiFonts.Apply`).
+- **Menu / títulos / créditos (título):** Inknut Antiqua Black. Corpo dos créditos: Fira Sans (mesmo SO `CreditsVisualConfig`).
 
 **UI sprites:** `Art/Sprites/id visual/UI/` — HUD, Book/menu, Defeat&Victory, Controls, Upgrades.
 

@@ -42,6 +42,8 @@ Igual ao Menu2: `Light` e `ParticleSystem` ficam na **cena** `Lobby.unity`, não
 - Canvas do lobby em **Screen Space - Camera** (não Overlay), senão o UI cobre partículas e ignora profundidade da cena.
 - `TorchLight` na layer **UI** (não Collectable).
 
+O mesmo checklist foi aplicado nas cenas **Loading1**, **Loading2**, **Preparation** e **Characters** (objetos na raiz da cena, sem prefab compartilhado).
+
 
 - Prefab muito grande (muitos elementos TMP/UI). Priorize validar referências quebradas no Inspector após reimport.
 - Histórico: erro de GUID do PauseMenu corrigido restaurando `.meta` original.

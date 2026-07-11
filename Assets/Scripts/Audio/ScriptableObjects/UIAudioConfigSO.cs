@@ -11,6 +11,10 @@ public class UIAudioConfigSO : ScriptableObject
     public AudioEventSO lobbyKey2;
     public AudioEventSO lobbyKey3;
 
+    [Header("Botões (hover / click)")]
+    public AudioEventSO buttonHover;
+    public AudioEventSO buttonClick;
+
     [Header("Interações")]
     public AudioEventSO interactE;
     public AudioEventSO reviveComplete;

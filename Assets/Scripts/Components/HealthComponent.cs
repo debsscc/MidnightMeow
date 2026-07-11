@@ -96,7 +96,8 @@ public class HealthComponent : MonoBehaviour, IDamageable
             PlayerCameraFeedback.ShakeOnLocalPlayerDamage();
 
         //quando leva dano, faz o sprite piscar (SpriteBlink.cs)
-        if (gameObject.TryGetComponent<SpriteBlink>(out var spriteBlink))
+        if (gameObject.TryGetComponent<SpriteBlink>(out var spriteBlink)
+            && BossPhaseUtility.ShouldPlayBossBlink(gameObject, amount))
         {
             spriteBlink.Blink();
         }

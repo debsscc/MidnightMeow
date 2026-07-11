@@ -1,6 +1,6 @@
 ///* ----------------------------------------------------------------
-// DESCRIÇÃO: Gerenciador de áudio local para a cena de Menu.
-// Reproduz clipes de som (SFX) solicitados por eventos externos.
+// DESCRIÇÃO: Legado — hover/click de UI migraram para UiSfxPlayer + UiButtonSfx.
+// Métodos mantidos como no-op para UnityEvents antigos em cenas/prefabs.
 // ---------------------------------------------------------------- */
 
 using UnityEngine;
@@ -9,62 +9,28 @@ using UnityEngine;
 [RequireComponent(typeof(AudioSource))]
 public class MenuAudioManager : MonoBehaviour
 {
-    [Header("Audio Clips - UI")]
-    [Tooltip("Som reproduzido ao passar o mouse sobre elementos interativos.")]
+#pragma warning disable CS0414 // Serializados só para compatibilidade com YAML de cenas antigas.
+    [Header("Audio Clips - UI (legado, ignorados)")]
     [SerializeField] private AudioClip hoverClip;
-    
-    [Tooltip("Som reproduzido ao clicar em elementos interativos.")]
     [SerializeField] private AudioClip clickClip;
 
     [Header("Settings")]
-    [Tooltip("Volume global para os efeitos sonoros da UI.")]
     [Range(0f, 1f)]
     [SerializeField] private float sfxVolume = 1f;
-
-    private AudioSource _sfxSource;
+#pragma warning restore CS0414
 
     private void Awake()
     {
-        _sfxSource = GetComponent<AudioSource>();
-
-        GameAudioSettings.EnsureExists();
-        GameAudioSettings settings = GameAudioSettings.Instance;
-        if (settings != null && settings.SfxGroup != null)
-            _sfxSource.outputAudioMixerGroup = settings.SfxGroup;
-
-        _sfxSource.playOnAwake = false;
-        _sfxSource.loop = false;
-        _sfxSource.spatialBlend = 0f; // 2D sound
+        UiSfxPlayer.EnsureExists();
     }
 
-    /// <summary>
-    /// Reproduz o som de Hover. Deve ser chamado via UnityEvent (ex: UIButtonInteractionEvents).
-    /// </summary>
+    /// <summary>No-op — use UiSfxPlayer / UiButtonSfx.</summary>
     public void PlayHoverSound()
     {
-        if (hoverClip != null)
-        {
-            _sfxSource.PlayOneShot(hoverClip, sfxVolume);
-        }
-        else
-        {
-            Debug.LogWarning("MenuAudioManager: Hover Clip não atribuído.");
-        }
     }
 
-    /// <summary>
-    /// Reproduz o som de Click. Deve ser chamado via UnityEvent.
-    /// </summary>
+    /// <summary>No-op — use UiSfxPlayer / UiButtonSfx.</summary>
     public void PlayClickSound()
     {
-        if (clickClip != null)
-        {
-            _sfxSource.PlayOneShot(clickClip, sfxVolume);
-            Debug.Log("MenuAudioManager: Click sound played.");
-        }
-        else
-        {
-            Debug.LogWarning("MenuAudioManager: Click Clip não atribuído.");
-        }
     }
 }

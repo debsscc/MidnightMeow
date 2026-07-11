@@ -30,6 +30,8 @@ Bookmarks na tela Continuar: permanecem visíveis com sprites **tucked** (`MenuB
 
 **Música:** objeto raiz `Sound Track` (`menu.wav`, grupo **Music**). O `MusicCrossfadeController` lê o clip, desliga o `AudioSource` da cena e toca via crossfade persistente **no mesmo grupo Music**, controlável pelo slider Música (`GameAudioSettings` → `MusicVolume`).
 
+**SFX de botões:** global via `UiSfxPlayer` / `UiButtonSfx` (hover + click; auto-inject). Clips em `UIAudioConfig.buttonHover` / `buttonClick`.
+
 Layout: botões canto inferior esquerdo com offset (ref. `docs/reference_imgs/menu.png`).
 
 ## Lobby

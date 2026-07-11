@@ -1,6 +1,6 @@
 # Tarefas de manutenção pendentes
 
-_Última revisão: 2026-07-05_
+_Última revisão: 2026-07-10_
 
 ---
 
@@ -26,11 +26,11 @@ _Última revisão: 2026-07-05_
 
 ## [TASK CONCLUÍDA] Sliders de Áudio Inoperantes na Build
 
-- **O que foi feito:** Cópia de `NewAudioMixer.mixer` em `Assets/Resources/`; `GameAudioSettings.FindProjectMixer()` prioriza `Resources.Load<AudioMixer>("NewAudioMixer")`. Script: `GameAudioSettings.cs`.
+- **O que foi feito (2026-07-10):** Mixer único `MidnightMeowAudioMixer` em `Assets/Resources/MidnightMeowAudioMixer.mixer` (GUID `0369658093ea21d40a1c846ecafdd511` — mesmas refs de prefabs/cenas). Removidas as cópias duplicadas `Assets/Audio/NewAudioMixer` e `Assets/Resources/NewAudioMixer`. `GameAudioSettings` carrega só `Resources.Load("MidnightMeowAudioMixer")`.
 
 - **Como testar:** Build → Menu2 → Opções → mover sliders Master/Music/SFX → volume audível muda; reabrir menu mantém valores.
 
-- **Resultado Esperado:** Mixer resolvido em runtime na build; `SetFloat` aplica nos grupos expostos.
+- **Resultado Esperado:** Um único mixer no projeto; slider SFX afeta interação, heartbeat, inimigos e boss.
 
 ---
 

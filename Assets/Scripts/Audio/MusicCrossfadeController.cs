@@ -48,11 +48,9 @@ public class MusicCrossfadeController : Singleton<MusicCrossfadeController>
 
     private void ResolveMusicMixerGroup()
     {
-        if (musicMixerGroup != null)
-            return;
-
+        GameAudioSettings.EnsureExists();
         GameAudioSettings settings = GameAudioSettings.Instance;
-        if (settings != null)
+        if (settings != null && settings.MusicGroup != null)
             musicMixerGroup = settings.MusicGroup;
     }
 
@@ -75,9 +73,16 @@ public class MusicCrossfadeController : Singleton<MusicCrossfadeController>
         if (source == null)
             return;
 
-        ResolveMusicMixerGroup();
-        if (musicMixerGroup != null)
-            source.outputAudioMixerGroup = musicMixerGroup;
+        if (!GameAudioSettings.BindMusicOutput(source))
+        {
+            ResolveMusicMixerGroup();
+            if (musicMixerGroup != null)
+                source.outputAudioMixerGroup = musicMixerGroup;
+        }
+        else
+        {
+            musicMixerGroup = source.outputAudioMixerGroup;
+        }
     }
 
     private void OnEnable()

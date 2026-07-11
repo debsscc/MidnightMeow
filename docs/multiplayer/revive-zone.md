@@ -1,6 +1,6 @@
 # Reviver por zona (área cooperativa)
 
-Última revisão: 2026-07-08
+Última revisão: 2026-07-10
 
 ## Máquina de estados
 
@@ -41,6 +41,19 @@ Asset: `Assets/Data/Multiplayer/DownedPlayerConfig.asset`
 | `ownerWaitingText` / `allyApproachText` / `allyPressEText` | Strings do label |
 | `reviveProgressTextFormat` | Ex.: `{0}%` |
 | `revivePromptPrefab` | Prefab world-space (`DownedRevivePromptUI`) |
+| `downedHeartbeatClip` | SFX de batida durante downed (`Coracao Batida.wav`) — **só MP** |
+| `reviveCompleteClip` | SFX ao concluir revive (`Reviver.wav`) — **só MP** |
+| `downedScreenPulseIntensity` | Intensidade da vinheta pulsante enquanto há caído |
+
+## Feedback de tela (só multiplayer)
+
+| Momento | Áudio | Visual |
+|---------|-------|--------|
+| Aliado inconsciente (janela de revive) | Batidas `downedHeartbeatClip` | Vinheta pulsante + timer HUD |
+| Revive concluído | `reviveCompleteClip` (`Reviver.wav`) | Pulso breve de vinheta (`TriggerReviveSuccessPulse`) |
+| Início da interação (E) | `Interacao.wav` via `GameplayInteractAudio` | — |
+
+Singleplayer não entra em downed cooperativo (`CanUseCooperativeRevive` = false), então esse feedback não roda.
 
 ## Código
 
@@ -53,6 +66,7 @@ Asset: `Assets/Data/Multiplayer/DownedPlayerConfig.asset`
 | `PlayerDownedReviveInteraction` | Interact (E) no aliado vivo |
 | `DownedPlayerWorldUI` | Label world-space no caído — máquina de estados por observador |
 | `DownedReviveUILabelView` | Referência TMP no prefab (sem UI procedural) |
+| `DownedReviveScreenFeedback` | Heartbeat/pulso downed + SFX/pulso de sucesso no revive |
 | `PlayerDeathPresentation` | Animação caída / freeze no último frame |
 | `RevivePromptWorldUI` | **Obsoleto** — substituído por `DownedPlayerWorldUI` |
 

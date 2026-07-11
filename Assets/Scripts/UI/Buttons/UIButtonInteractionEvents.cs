@@ -1,6 +1,7 @@
 ///* ----------------------------------------------------------------
-// DESCRIÇÃO: Emissor genérico de eventos de interação de UI. 
-// Atua como um canal desacoplado para disparar feedback (ex: Áudio).
+// DESCRIÇÃO: Emissor genérico de eventos de interação de UI (legado).
+// SFX de botão: UiButtonSfx + UiSfxPlayer. UnityEvents podem permanecer
+// ligados a MenuAudioManager (no-op) sem duplicar áudio.
 // ---------------------------------------------------------------- */
 
 using UnityEngine;
@@ -23,25 +24,18 @@ public class UIButtonInteractionEvents : MonoBehaviour, IPointerEnterHandler, IP
 
     private void Awake()
     {
-        // Usa Selectable ao invés de Button para garantir escalabilidade (funciona com Toggles, Sliders, etc.)
         _selectable = GetComponent<Selectable>();
     }
 
     public void OnPointerEnter(PointerEventData eventData)
     {
-        // Evita disparar som de hover se o botão estiver desabilitado
         if (_selectable != null && !_selectable.interactable) return;
-
         onHover?.Invoke();
-        Debug.Log($"{gameObject.name} was hovered.");
     }
 
     public void OnPointerClick(PointerEventData eventData)
     {
-        // Evita disparar som de clique se o botão estiver desabilitado
         if (_selectable != null && !_selectable.interactable) return;
-
         onClick?.Invoke();
-        Debug.Log($"{gameObject.name} was clicked.");
     }
 }

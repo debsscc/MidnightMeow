@@ -517,7 +517,8 @@ public class NetworkEnemyController : NetworkBehaviour
         if (!_health.IsDead)
         {
             _hitStun?.ApplyStun();
-            PlayTakeDamageVisualClientRpc(damageType);
+            float dealtForVisual = Mathf.Max(0f, before - _health.CurrentHealth);
+            PlayTakeDamageVisualClientRpc(dealtForVisual, damageType);
         }
 
         EmitDamageDiagnostic(amount, before, _health.CurrentHealth, _health.IsDead,
@@ -606,7 +607,7 @@ public class NetworkEnemyController : NetworkBehaviour
     }
 
     [ClientRpc]
-    private void PlayTakeDamageVisualClientRpc(DamageType damageType)
+    private void PlayTakeDamageVisualClientRpc(float dealtDamage, DamageType damageType)
     {
         if (_deathVisualsPlayed || _health == null || !_health.IsAlive || _health.CurrentHealth <= 0f)
             return;
@@ -616,7 +617,8 @@ public class NetworkEnemyController : NetworkBehaviour
 
         if (damageType == DamageType.Melee && TryGetComponent<EnemySwordHitFlash>(out var swordFlash))
             swordFlash.PlayFlash();
-        else if (TryGetComponent<SpriteBlink>(out var blink))
+        else if (TryGetComponent<SpriteBlink>(out var blink)
+                 && BossPhaseUtility.ShouldPlayBossBlink(gameObject, dealtDamage))
             blink.Blink();
 
         if (TryGetComponent<EnemyAudioController>(out var audio))

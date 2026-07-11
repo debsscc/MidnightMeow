@@ -108,6 +108,7 @@ public class DownedPlayerWorldUI : MonoBehaviour
         label.textWrappingMode = TextWrappingModes.NoWrap;
         label.overflowMode = TextOverflowModes.Overflow;
         label.alignment = TextAlignmentOptions.Center;
+        GameplayUiFonts.Apply(label);
     }
 
     private void LateUpdate()

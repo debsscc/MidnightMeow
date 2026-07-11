@@ -58,7 +58,8 @@ public static class EnemySfxBus
         source.spatialBlend = kind == EnemySfxKind.Attack ? 0.45f : 0.25f;
         source.minDistance = 2.5f;
         source.maxDistance = 22f;
-        GameAudioSettings.BindSfxOutput(source);
+        if (!GameAudioSettings.BindSfxOutput(source))
+            Debug.LogWarning($"[EnemySfxBus] Falha ao rotear {kind} para o grupo SFX do AudioMixer.");
         source.PlayOneShot(clip, baseVolume * stackAttenuation);
     }
 

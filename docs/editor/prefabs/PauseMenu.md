@@ -1,6 +1,6 @@
 # Prefab: PauseMenu
 
-Última revisão: 2026-06-08  
+Última revisão: 2026-07-10  
 **Caminho:** `Assets/Prefabs/UI/PauseMenu.prefab`  
 **GUID:** `2542914e2b637bb4b871cad284433d66`
 
@@ -19,18 +19,20 @@ Menu de pausa (UI). Usado como **nested prefab** em `Lobby.prefab` e em cenas de
 | Tipo | Uso |
 |------|-----|
 | `Image`, `Button`, TMP | UI |
-| `EventTrigger` | Hover/click custom |
+| `EventTrigger` | Hover visual custom (SFX de botão é global: `UiButtonSfx`) |
 | `PauseMenuActions` | Continuar, Reiniciar fase (solo), Abandonar, Créditos, Sair do jogo |
 
 ## Comportamento (playtest)
 
 | Botão | Solo | Multiplayer |
 |-------|------|-------------|
-| **Continuar** | Retoma (`timeScale = 1`) | Pause global retoma para todos |
+| **Continuar / Resume** | Retoma na hora (`PauseMenuActions` → `GameFlowOrchestrator`) | Countdown 3→1 global, depois retoma |
 | **Reiniciar fase** | Recarrega fase via NGO + reset de round | Oculto |
 | **Abandonar** | `ScreenFlowStateMachine.ExitToMainMenu()` | Igual (desconecta NGO) |
 | **Créditos** | `CreditsOverlayController.OpenFromPause()` — rola, escurece, fecha; volta ao pause | Igual (UI local; jogo continua pausado) |
 | **Sair** (Buttons2) | Abre confirmação → fecha o aplicativo | Igual |
+
+**Importante:** o OnClick do Resume no prefab fica **vazio** — `PauseMenuActions` recria o `Button.onClick` em runtime (limpa calls persistentes quebradas de cena com `GameManager2` nulo).
 
 Painel de **Controles** no pause: removido por enquanto (sem `controlsPanel` em `PauseMenuActions`).
 

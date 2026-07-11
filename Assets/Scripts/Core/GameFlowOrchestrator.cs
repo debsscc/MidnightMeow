@@ -128,7 +128,7 @@ public class GameFlowOrchestrator : MonoBehaviour
         if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening)
         {
             MultiplayerGameManager mp = MultiplayerGameManager.Instance;
-            if (mp != null)
+            if (mp != null && mp.IsSpawned)
             {
                 if (mp.IsResumeCountdownActive)
                     return;
@@ -158,20 +158,46 @@ public class GameFlowOrchestrator : MonoBehaviour
 
     public void RequestResume()
     {
+        // Solo com NGO local: não usar countdown de rede — retoma na hora.
+        if (GameSessionContext.IsSinglePlayer)
+        {
+            ResumeLocal();
+            return;
+        }
+
         if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening)
         {
             MultiplayerGameManager mp = MultiplayerGameManager.Instance;
-            if (mp != null)
+            if (mp != null && mp.IsSpawned)
             {
                 mp.RequestResumeRpc();
                 return;
             }
         }
 
+        ResumeLocal();
+    }
+
+    private void ResumeLocal()
+    {
+        GameManager2 local = FindFirstObjectByType<GameManager2>();
+        if (local != null && local.CurrentState == GameStates.Paused)
+        {
+            local.ResumeGame();
+            IsPauseActive = false;
+            OnPauseOrchestrated?.Invoke(false);
+
+            // Mantém NetworkVariable alinhada se o host solo tiver MGM spawnado.
+            MultiplayerGameManager mp = MultiplayerGameManager.Instance;
+            if (mp != null && mp.IsSpawned && mp.IsServer)
+                mp.ServerForceResumeImmediate();
+
+            return;
+        }
+
         if (!IsPauseActive)
             return;
 
-        GameManager2 local = FindFirstObjectByType<GameManager2>();
         if (local != null)
         {
             local.ResumeGame();

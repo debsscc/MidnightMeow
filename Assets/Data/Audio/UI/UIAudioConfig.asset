@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bd80ab8e417a33e4f8caa2d2e43c20ad, type: 3}
+  m_Name: UIAudioConfig
+  m_EditorClassIdentifier: MidnightMeow::UIAudioConfigSO
+  lobbyKey1: {fileID: 0}
+  lobbyKey2: {fileID: 0}
+  lobbyKey3: {fileID: 0}
+  buttonHover: {fileID: 11400000, guid: ef0519c7e16e5c49ad7fa951f303a92d, type: 2}
+  buttonClick: {fileID: 11400000, guid: c31c9c1dea815845914c990ce13afad1, type: 2}
+  interactE: {fileID: 11400000, guid: b1c2d3e4f5a6477889a0b1c2d3e4f501, type: 2}
+  reviveComplete: {fileID: 0}

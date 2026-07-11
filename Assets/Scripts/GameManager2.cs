@@ -161,6 +161,13 @@ public class GameManager2 : MonoBehaviour
         if (currentState != GameStates.Paused) return;
         if (_resumeCountdownRoutine != null) return;
 
+        // Solo (mesmo com NGO host local): retoma na hora. Countdown só em MP real.
+        if (GameSessionContext.IsSinglePlayer)
+        {
+            CompleteResumeImmediately();
+            return;
+        }
+
         BeginResumeCountdown();
     }
 
@@ -367,6 +374,7 @@ public class GameManager2 : MonoBehaviour
         _runtimeResumeCountdownText.fontSize = 96f;
         _runtimeResumeCountdownText.color = Color.white;
         _runtimeResumeCountdownText.raycastTarget = false;
+        GameplayUiFonts.Apply(_runtimeResumeCountdownText);
         _runtimeResumeCountdownText.gameObject.SetActive(false);
         return _runtimeResumeCountdownText;
     }

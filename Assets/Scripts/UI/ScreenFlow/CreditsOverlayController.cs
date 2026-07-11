@@ -5,6 +5,7 @@ DESCRIÇÃO: Overlay global de créditos — rolagem automática, trilha e fundo
 ---------------------------------------------------------------- */
 
 using System.Collections;
+using System.Text.RegularExpressions;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Localization;
@@ -19,12 +20,20 @@ public class CreditsOverlayController : Singleton<CreditsOverlayController>
     private const string CreditsBodyResourcePath = "CreditsBody";
     private const string CreditsBodyResourcePathEn = "CreditsBody_en";
     private const string CreditsMusicResourcePath = "CreditsMusicClip";
+    private const string CreditsVisualConfigResourcePath = "CreditsVisualConfig";
+
+    private static readonly Regex TitleSizeBlockRegex = new(
+        @"<size=(\d+%)>([\s\S]*?)</size>",
+        RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
     [Header("Rolagem")]
     [SerializeField] private float scrollSpeedPixelsPerSecond = 55f;
 
     [Header("Fim (padrão menu/pause)")]
     [SerializeField] private CreditsPresentationConfig defaultPresentation = CreditsPresentationConfig.DefaultMenu;
+
+    [Header("Visual")]
+    [SerializeField] private CreditsVisualConfig visualConfig;
 
     [Header("Áudio (opcional)")]
     [SerializeField] private AudioClip creditsMusic;
@@ -36,6 +45,7 @@ public class CreditsOverlayController : Singleton<CreditsOverlayController>
     private RectTransform _topSpacer;
     private RectTransform _bottomSpacer;
     private TMP_Text _bodyText;
+    private Button _closeButton;
     private bool _overlayBuilt;
     private bool _isScrolling;
     private float _endNormalizedScroll = 0f;
@@ -334,10 +344,11 @@ public class CreditsOverlayController : Singleton<CreditsOverlayController>
 
         BuildScrollArea(_panel.transform);
 
-        Button close = ScreenFlowPlaceholderFactory.CreateButton(_panel.transform, "Fechar",
+        _closeButton = ScreenFlowPlaceholderFactory.CreateButton(_panel.transform, "Fechar",
             new Vector2(0.5f, 0f), new Vector2(0.5f, 0f),
             new Vector2(-160f, 40f), new Vector2(160f, 120f));
-        close.onClick.AddListener(Hide);
+        _closeButton.onClick.AddListener(Hide);
+        ApplyCloseButtonVisual();
 
         _overlayBuilt = true;
     }
@@ -392,7 +403,7 @@ public class CreditsOverlayController : Singleton<CreditsOverlayController>
         _scrollRect.inertia = false;
     }
 
-    private static TMP_Text CreateBodyText(Transform parent)
+    private TMP_Text CreateBodyText(Transform parent)
     {
         GameObject go = new GameObject("CreditsBodyText", typeof(RectTransform), typeof(TextMeshProUGUI));
         go.transform.SetParent(parent, false);
@@ -405,12 +416,74 @@ public class CreditsOverlayController : Singleton<CreditsOverlayController>
         tmp.overflowMode = TextOverflowModes.Overflow;
         tmp.margin = new Vector4(48f, 0f, 48f, 0f);
         tmp.raycastTarget = false;
+        ApplyBodyTypography(tmp);
 
         ContentSizeFitter bodyFitter = go.AddComponent<ContentSizeFitter>();
         bodyFitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
         bodyFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
         go.AddComponent<LayoutElement>();
         return tmp;
+    }
+
+    private void ApplyBodyTypography(TMP_Text tmp)
+    {
+        if (tmp == null)
+            return;
+
+        CreditsVisualConfig config = ResolveVisualConfig();
+        if (config == null)
+            return;
+
+        if (config.BodyFont != null)
+        {
+            MaterialReferenceManager.AddFontAsset(config.BodyFont);
+            tmp.font = config.BodyFont;
+        }
+
+        if (config.BodyFontSize > 0f)
+            tmp.fontSize = config.BodyFontSize;
+
+        if (config.TitleFont != null)
+            MaterialReferenceManager.AddFontAsset(config.TitleFont);
+    }
+
+    private void ApplyCloseButtonVisual()
+    {
+        if (_closeButton == null)
+            return;
+
+        CreditsVisualConfig config = ResolveVisualConfig();
+        if (config == null)
+            return;
+
+        ScreenThemeApplier.ApplyButton(_closeButton, config.CloseButtonSprite, config.CloseButtonColor);
+        if (config.CloseButtonSprite != null)
+        {
+            Image image = _closeButton.GetComponent<Image>();
+            if (image != null)
+                image.color = config.CloseButtonColor;
+        }
+    }
+
+    private CreditsVisualConfig ResolveVisualConfig()
+    {
+        if (visualConfig != null)
+            return visualConfig;
+
+        visualConfig = Resources.Load<CreditsVisualConfig>(CreditsVisualConfigResourcePath);
+        return visualConfig;
+    }
+
+    private static string ApplyTitleFontTags(string text, TMP_FontAsset titleFont)
+    {
+        if (string.IsNullOrEmpty(text) || titleFont == null)
+            return text;
+
+        MaterialReferenceManager.AddFontAsset(titleFont);
+        string fontName = titleFont.name;
+        return TitleSizeBlockRegex.Replace(
+            text,
+            match => $"<font=\"{fontName}\"><size={match.Groups[1].Value}>{match.Groups[2].Value}</size></font>");
     }
 
     private static RectTransform CreateSpacer(Transform parent, string name)
@@ -439,7 +512,12 @@ public class CreditsOverlayController : Singleton<CreditsOverlayController>
             return;
         }
 
-        _bodyText.text = source.text;
+        CreditsVisualConfig config = ResolveVisualConfig();
+        ApplyBodyTypography(_bodyText);
+        string body = source.text;
+        if (config != null)
+            body = ApplyTitleFontTags(body, config.TitleFont);
+        _bodyText.text = body;
     }
 
     private static bool IsPortuguese()

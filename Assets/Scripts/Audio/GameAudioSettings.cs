@@ -1,11 +1,13 @@
 using UnityEngine;
 using UnityEngine.Audio;
 
-/// Volumes persistidos (PlayerPrefs) aplicados ao <see cref="AudioMixer"/> do projeto.
+/// Volumes persistidos (PlayerPrefs) aplicados ao mixer único do projeto:
+/// <c>Assets/Resources/MidnightMeowAudioMixer.mixer</c> (grupos Master / Music / SFX).
 [DisallowMultipleComponent]
 [DefaultExecutionOrder(-200)]
 public class GameAudioSettings : Singleton<GameAudioSettings>
 {
+    public const string MixerResourceName = "MidnightMeowAudioMixer";
     public const string PrefMasterVolume = "midnightmeow.audio.master";
     public const string PrefMusicVolume = "midnightmeow.audio.music";
     public const string PrefSfxVolume = "midnightmeow.audio.sfx";
@@ -24,8 +26,7 @@ public class GameAudioSettings : Singleton<GameAudioSettings>
     public AudioMixerGroup MusicGroup => _musicGroup;
     public AudioMixerGroup SfxGroup => _sfxGroup;
 
-    /// Roteia um <see cref="AudioSource"/> para o grupo SFX do <see cref="AudioMixer"/>
-
+    /// Roteia um <see cref="AudioSource"/> para o grupo SFX do mixer do projeto.
     public static bool BindSfxOutput(AudioSource source)
     {
         if (source == null)
@@ -33,21 +34,56 @@ public class GameAudioSettings : Singleton<GameAudioSettings>
 
         EnsureExists();
         GameAudioSettings settings = Instance;
-        if (settings == null || settings.SfxGroup == null)
+        if (settings == null)
+            return false;
+
+        if (settings.SfxGroup == null)
+            settings.ResolveMixerReferences();
+
+        if (settings.SfxGroup == null)
             return false;
 
         source.outputAudioMixerGroup = settings.SfxGroup;
         return true;
     }
 
+    /// Roteia um <see cref="AudioSource"/> para o grupo Music.
+    public static bool BindMusicOutput(AudioSource source)
+    {
+        if (source == null)
+            return false;
+
+        EnsureExists();
+        GameAudioSettings settings = Instance;
+        if (settings == null)
+            return false;
+
+        if (settings.MusicGroup == null)
+            settings.ResolveMixerReferences();
+
+        if (settings.MusicGroup == null)
+            return false;
+
+        source.outputAudioMixerGroup = settings.MusicGroup;
+        return true;
+    }
+
     public static void EnsureExists()
     {
         if (Instance != null)
+        {
+            if (Instance.SfxGroup == null)
+                Instance.ResolveMixerReferences();
             return;
+        }
 
         GameAudioSettings existing = FindFirstObjectByType<GameAudioSettings>(FindObjectsInactive.Include);
         if (existing != null)
+        {
+            if (existing.SfxGroup == null)
+                existing.ResolveMixerReferences();
             return;
+        }
 
         var go = new GameObject(nameof(GameAudioSettings));
         go.AddComponent<GameAudioSettings>();
@@ -111,10 +147,13 @@ public class GameAudioSettings : Singleton<GameAudioSettings>
         }
 
         if (audioMixer == null)
+            ResolveMixerReferences();
+
+        if (audioMixer == null)
             return;
 
         if (!audioMixer.SetFloat(mixerParam, LinearToDecibels(linear)))
-            Debug.LogWarning($"[GameAudioSettings] Parâmetro '{mixerParam}' não encontrado no mixer.");
+            Debug.LogWarning($"[GameAudioSettings] Parâmetro '{mixerParam}' não encontrado em {MixerResourceName}.");
     }
 
     private void ResolveMixerReferences()
@@ -124,7 +163,7 @@ public class GameAudioSettings : Singleton<GameAudioSettings>
 
         if (audioMixer == null)
         {
-            Debug.LogWarning("[GameAudioSettings] NewAudioMixer não encontrado.");
+            Debug.LogWarning($"[GameAudioSettings] {MixerResourceName} não encontrado em Resources.");
             return;
         }
 
@@ -143,18 +182,11 @@ public class GameAudioSettings : Singleton<GameAudioSettings>
 
     private static AudioMixer FindProjectMixer()
     {
-        AudioMixer fromResources = Resources.Load<AudioMixer>("NewAudioMixer");
-        if (fromResources != null)
-            return fromResources;
+        AudioMixer mixer = Resources.Load<AudioMixer>(MixerResourceName);
+        if (mixer != null)
+            return mixer;
 
-        AudioMixer[] mixers = Resources.FindObjectsOfTypeAll<AudioMixer>();
-        for (int i = 0; i < mixers.Length; i++)
-        {
-            AudioMixer mixer = mixers[i];
-            if (mixer != null && mixer.name == "NewAudioMixer")
-                return mixer;
-        }
-
-        return null;
+        // Fallback só se o asset ainda estiver com nome antigo em alguma build residual.
+        return Resources.Load<AudioMixer>("NewAudioMixer");
     }
 }

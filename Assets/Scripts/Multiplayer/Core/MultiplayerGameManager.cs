@@ -222,7 +222,34 @@ public class MultiplayerGameManager : NetworkBehaviour
         if (_networkGameState.Value != GameState.Paused) return;
         if (_resumeCountdownRoutine != null) return;
 
+        if (GameSessionContext.IsSinglePlayer)
+        {
+            ServerForceResumeImmediate();
+            return;
+        }
+
         _resumeCountdownRoutine = StartCoroutine(ResumeCountdownRoutine());
+    }
+
+    /// <summary>Retoma sem countdown (solo / recuperação). Só servidor.</summary>
+    public void ServerForceResumeImmediate()
+    {
+        if (!IsServer)
+            return;
+
+        if (_resumeCountdownRoutine != null)
+        {
+            StopCoroutine(_resumeCountdownRoutine);
+            _resumeCountdownRoutine = null;
+        }
+
+        _resumeCountdown.Value = -1;
+        if (_networkGameState.Value != GameState.Paused)
+            return;
+
+        _networkGameState.Value = GameState.Playing;
+        GameEvents.InvokePauseChanged(false);
+        ApplyPauseClientRpc(false);
     }
 
     private IEnumerator ResumeCountdownRoutine()

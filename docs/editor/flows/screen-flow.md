@@ -1,6 +1,6 @@
 # Fluxo de telas unificado
 
-Última revisão: 2026-06-08
+Última revisão: 2026-07-10
 
 > Requisitos completos: [screen-flow.md](../screen-flow.md)  
 > Diagrama visual: [screen-flow-diagram.md](./screen-flow-diagram.md)  
@@ -12,10 +12,10 @@
 |------|------------------|
 | **Menu2** | Novo jogo, continuar (saves de host), opções, sair |
 | **Lobby** | Hostear, entrar, jogar solo, consultar personagens |
-| **Loading1** | Progresso de carregamento (Lobby → Preparação) |
-| **Preparation** | Contrato + personagem + pronto (sem ordem obrigatória) |
-| **Characters** | Skills/upgrades (em save) ou consulta (menu/lobby) |
-| **Loading2** | Progresso de carregamento (Preparação → Gameplay) |
+| **Loading1** | Progresso de carregamento (Lobby → Preparação) — ambience Menu2/Lobby (Light + partículas, Canvas Camera) |
+| **Loading2** | Progresso de carregamento (Preparação → gameplay) — mesmo ambience |
+| **Preparation** | Contrato + personagem + pronto (sem ordem obrigatória) — mesmo ambience |
+| **Characters** | Skills/upgrades (em save) ou consulta (menu/lobby) — mesmo ambience |
 | **Fase-1** | Gameplay principal |
 | **VictoryScene** | Vitória — continuar ou sair |
 | **GameOver** | Derrota — continuar ou sair |
@@ -121,7 +121,8 @@ Fase-1 → [vitória/derrota] → VictoryScene / GameOver
 - Magículas e tiers por personagem via `CharacterSaveData`
 - **Apagar save (slot):** painel Saves → botão **Apagar Save N** → confirmação (data, magículas)
 - **Apagar todos:** painel Saves (Continuar) → **Apagar todos os saves** → confirmação
-- **Áudio (placeholder):** Opções → sliders Volume geral / Música / SFX → `GameAudioSettings` + `NewAudioMixer`; botão **Restaurar padrões de áudio** (75% em cada canal).
+- **Áudio:** Opções → sliders Volume geral / Música / SFX → `GameAudioSettings` + mixer único `MidnightMeowAudioMixer` (`Assets/Resources/MidnightMeowAudioMixer.mixer`); botão **Restaurar padrões de áudio** (75% em cada canal).
+- **SFX de botões (global):** `UiSfxPlayer` + `UiButtonSfx` (auto-inject em `Button`/`Toggle` via `UiButtonSfxBootstrap`). Clips `Hover.wav` / `Click.wav` via `UIAudioConfig` (`buttonHover` / `buttonClick`). Opt-out: componente `UiSfxIgnore` ou `playSfx = false`. `MenuAudioManager` / UnityEvents antigos são no-op (sem duplicar).
 - API: `SaveProfileStore.DeleteSlot(int)`, `DeleteAllSlots()` — só no menu (`GameFlowOrchestrator.CanRequestTransition`)
 
 ## Contratos

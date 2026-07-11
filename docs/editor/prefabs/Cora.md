@@ -88,6 +88,7 @@ Config em `Assets/Data/Audio/Player/Cora/CoraPlayerAudioConfig.asset` — todos 
 | Barreira (Q) | `Cora Barreira.wav` | `PlayerAbilityHandler` → `CoraBarrier` |
 | Poça (R) | `Cora Poca.wav` | `PlayerAbilityHandler` → `CoraPool` |
 | Tomando dano | `Cora Tomando Dano.wav` | `HealthComponent` (solo) / `NetworkPlayerHealth` ClientRpc (MP) |
+| Pouca vida (< 50%) | `Coracao Batida.wav` (`PlayerHeartbeatAudioEvent`) | `PlayerAudioController` — só jogador local; para se downed/morto |
 
 ## Timing do tiro (sync com animação)
 
@@ -130,6 +131,7 @@ Config em `Assets/Data/Audio/Player/Cora/CoraPlayerAudioConfig.asset` — todos 
 
 | Data | Alteração |
 |------|-----------|
+| 2026-07-10 | Heartbeat de pouca vida (< 50%) via `PlayerHeartbeatAudioEvent` / `PlayerAudioController` |
 | 2026-06-21 | Tiro sincronizado via Animation Event `PerformFire` em `Cora_Base_Attack`; `attackAnimClipLength` 0,517 |
 | 2026-06-14 | Animador dedicado `AC_CORA.controller` + clips em `Assets/Art/Sprites/Animations/Cora/` via `CoraAnimationProfile` |
 | 2026-06-14 | `CharacterProfileApplier` + `AnimatorProfileBinder`; SOs em `Assets/Data/Characters/` |

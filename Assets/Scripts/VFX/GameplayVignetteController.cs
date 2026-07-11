@@ -121,6 +121,12 @@ public class GameplayVignetteController : MonoBehaviour
         _instance._damagePulse = _instance._damagePulsePeak;
     }
 
+    /// <summary>Pulso breve de vinheta ao concluir revive (multiplayer).</summary>
+    public static void TriggerReviveSuccessPulse(float peakIntensity = 0.18f, float duration = 0.55f)
+    {
+        TriggerDamagePulse(peakIntensity, duration);
+    }
+
     public static void SetDownedRevivePulse(bool active, float stress, float urgency)
     {
         EnsureExists();

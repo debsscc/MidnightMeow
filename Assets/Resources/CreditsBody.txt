@@ -31,16 +31,16 @@ Vitor Emanoel
 Vitor Emanoel
 
 <b>Sprites e Animação Cora</b>
-Luiz x
+Luiz Silva 
 
 <b>Sprites e Animação Inimigos (Ratos)</b>
-Luiz x
+Luiz Silva 
 
 <b>Sprites e Animação Inimigos (BossRato)</b>
 Vitor Emanoel
 
 <b>Arte de Ambiente e UI</b>
-Luiz x
+Luiz Silva 
 Vitor Emanoel
 
 <b>Efeitos Visuais e Shaders</b>

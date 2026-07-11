@@ -89,6 +89,7 @@ public class RatHoleSealPromptUI : MonoBehaviour
         _label.overflowMode = TextOverflowModes.Overflow;
         _label.alignment = TextAlignmentOptions.Center;
         _label.color = new Color(0.85f, 0.95f, 1f, 1f);
+        GameplayUiFonts.Apply(_label);
         RefreshLabel();
     }
 }

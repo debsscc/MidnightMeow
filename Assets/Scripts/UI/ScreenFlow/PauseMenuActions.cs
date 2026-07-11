@@ -282,7 +282,10 @@ public class PauseMenuActions : MonoBehaviour
         if (button == null || action == null)
             return;
 
-        button.onClick.RemoveAllListeners();
+        // Substitui o UnityEvent inteiro: RemoveAllListeners NÃO limpa calls persistentes
+        // do prefab/cena (ex.: Resume → GameManager2 com m_Target nulo), que podem
+        // abortar o onClick antes do listener de runtime.
+        button.onClick = new Button.ButtonClickedEvent();
         button.onClick.AddListener(action);
     }
 

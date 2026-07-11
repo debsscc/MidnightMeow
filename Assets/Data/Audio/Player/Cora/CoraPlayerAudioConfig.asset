@@ -17,4 +17,4 @@ MonoBehaviour:
   abilityR: {fileID: 11400000, guid: d4a5b6c7d8e94ab1d2e3f4a5b6c10400, type: 2}
   dash: {fileID: 11400000, guid: d2a3b4c5d6e748990b1c2d3e4f5a1020, type: 2}
   damage: {fileID: 11400000, guid: d5a6b7c8d9ea5bc2e3f4a5b6c7d10500, type: 2}
-  heartbeat: {fileID: 0}
+  heartbeat: {fileID: 11400000, guid: a7b8c9d0e1f2435566778899aabbcc01, type: 2}

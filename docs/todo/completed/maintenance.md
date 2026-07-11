@@ -6,4 +6,4 @@
 
 ## Debug Dash / shaders build / áudio / menu escuro
 
-**Implementação:** Debug visuals off por padrão; `CombatVisualMaterials` + Resources; mixer em `Resources/NewAudioMixer`; gamma space no Menu2. Ver `docs/todo/maintenance.md` (TASK CONCLUÍDA).
+**Implementação:** Debug visuals off por padrão; `CombatVisualMaterials` + Resources; mixer único `MidnightMeowAudioMixer` em Resources; gamma space no Menu2. Ver `docs/todo/maintenance.md` (TASK CONCLUÍDA).

@@ -52,6 +52,7 @@ public class GameplayHudController : MonoBehaviour
 
         EnsureWaveIndicator();
         EnsurePhaseObjectiveHud();
+        EnsureBossHealthBarHud();
         EnsureAbilityHud(visualTheme != null ? visualTheme.abilityHudTheme : null);
         DisableOffscreenIndicators();
         EnsureFeedbackButton();
@@ -189,8 +190,20 @@ public class GameplayHudController : MonoBehaviour
 
         PhaseWaveSettingsCatalog catalog = PhaseWaveSettingsCatalog.LoadCached();
         string sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+        bool isKillBoss = catalog != null &&
+                          catalog.TryGetEntry(sceneName, out PhaseWaveSettingsCatalog.PhaseEntry entry) &&
+                          entry.winCondition == PhaseWaveSettingsCatalog.PhaseWinCondition.KillBoss;
+
+        // Fase-3: sem HUD de buracos/poças — o foco é o boss (barra cinematográfica).
+        if (isKillBoss)
+        {
+            if (phaseObjectiveHud != null)
+                phaseObjectiveHud.gameObject.SetActive(false);
+            return;
+        }
+
         bool useObjectiveHud = catalog == null ||
-                               !catalog.TryGetEntry(sceneName, out PhaseWaveSettingsCatalog.PhaseEntry entry) ||
+                               !catalog.TryGetEntry(sceneName, out entry) ||
                                !entry.useWaveSpawning;
 
         if (!useObjectiveHud)
@@ -210,6 +223,27 @@ public class GameplayHudController : MonoBehaviour
         go.transform.SetParent(GetLayer(ObjectiveLayerName), false);
         phaseObjectiveHud = go.GetComponent<PhaseObjectiveHud>();
         phaseObjectiveHud.EnsureConfigured();
+    }
+
+    private void EnsureBossHealthBarHud()
+    {
+        Transform objectiveLayer = GetLayer(ObjectiveLayerName);
+        BossHealthBarHud existing = GetComponentInChildren<BossHealthBarHud>(true);
+
+        if (!BossPhaseUtility.IsKillBossPhaseActive())
+        {
+            if (existing != null)
+                existing.gameObject.SetActive(false);
+            return;
+        }
+
+        if (existing != null)
+        {
+            existing.gameObject.SetActive(true);
+            return;
+        }
+
+        BossHealthBarHud.EnsureOnLayer(objectiveLayer);
     }
 
     private void EnsureAbilityHud(PlayerAbilityHudTheme theme)

@@ -47,6 +47,10 @@ public class PlayerMeleeHitFeedback : MonoBehaviour
             if (target == null)
                 continue;
 
+            // Fase-3 boss: melee básico (1) não pisca — só hits marcantes via pipeline de dano.
+            if (BossPhaseUtility.UsesCinematicBossPresentation(target))
+                continue;
+
             if (target.TryGetComponent<SpriteBlink>(out var blink))
                 blink.Pulse(pulse);
         }

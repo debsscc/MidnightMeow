@@ -68,6 +68,7 @@ public class PlayerDownedReviveInteraction : MonoBehaviour
             return;
 
         manager.RequestStartReviveRpc(_targetDowned.OwnerClientId);
+        GameplayInteractAudio.PlayConfirm();
     }
 
     private NetworkPlayerHealth FindNearestRevivableTeammate()
@@ -163,6 +164,7 @@ public class PlayerCarriageRepairInteraction : MonoBehaviour
             return;
 
         repairManager.RequestStartRepairRpc();
+        GameplayInteractAudio.PlayConfirm();
     }
 
     private CarriageController ResolveRepairableCarriage()
