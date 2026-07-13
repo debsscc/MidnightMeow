@@ -49,6 +49,9 @@ public class PlayerGameplayModuleInstaller : MonoBehaviour
 
         if (GetComponent<PlayerFacingController>() == null)
             gameObject.AddComponent<PlayerFacingController>();
+
+        if (GetComponent<PlayerCameraJuice>() == null)
+            gameObject.AddComponent<PlayerCameraJuice>();
     }
 
     private static bool ShouldInstallAbilityDebugVisual()

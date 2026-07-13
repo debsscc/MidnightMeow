@@ -18,7 +18,7 @@ Canvas de HUD principal (vida, upgrades, magículas da fase) durante gameplay si
 
 | Script | Função |
 |--------|--------|
-| `healthBarUi` | Barra de vida do jogador local |
+| `healthBarUi` | Barra de vida do jogador local — tremor leve abaixo de ~50% HP (junto com a vinheta) |
 | `ScienceIndicator` | Contador de magículas coletadas na fase (`RoundMagiculaTracker`) |
 | `GameplayHudController` | Orquestra widgets de HUD no `Awake` (cooldowns, wave, feedback, indicadores) |
 | `HordeIndicator` | Wave atual, inimigos restantes e kills — topo central |

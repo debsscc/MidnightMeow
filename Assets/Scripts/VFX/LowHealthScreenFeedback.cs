@@ -20,6 +20,24 @@ public static class LowHealthScreenFeedback
 
         NetworkPlayerHealth.OnNetworkPlayerRevived -= HandleLocalPlayerRevived;
         NetworkPlayerHealth.OnNetworkPlayerRevived += HandleLocalPlayerRevived;
+
+        GameEvents.OnPlayerHealthChanged -= HandleLegacyHealthChanged;
+        GameEvents.OnPlayerHealthChanged += HandleLegacyHealthChanged;
+    }
+
+    private static void HandleLegacyHealthChanged(float current, float max)
+    {
+        // Offline / legado sem NetworkPlayerHealth.
+        if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening)
+            return;
+
+        if (max <= 0f)
+        {
+            GameplayVignetteController.SetHealthRatio(0f);
+            return;
+        }
+
+        GameplayVignetteController.SetHealthRatio(current / max);
     }
 
     private static void HandleNetworkHealthChanged(ulong clientId, float current, float max)

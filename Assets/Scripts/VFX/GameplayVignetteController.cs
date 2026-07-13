@@ -14,8 +14,9 @@ using UnityEngine.SceneManagement;
 
 public class GameplayVignetteController : MonoBehaviour
 {
-    private const float LowHealthStartRatio = 0.42f;
-    private const float CriticalHealthRatio = 0.18f;
+    // Começa ~metade da vida (alinha com tremor da HUD).
+    private const float LowHealthStartRatio = 0.5f;
+    private const float CriticalHealthRatio = 0.22f;
     private const float MaxLowHealthVignette = 0.52f;
     private const float MaxCriticalVignetteBoost = 0.12f;
     private const float MaxChromaticAberration = 0.06f;

@@ -24,12 +24,22 @@ MonoBehaviour:
   playIntroZoom: 1
   introZoomInAmount: 2
   introZoomDuration: 2.5
-  shakeLightIntensity: 0
-  shakeLightDuration: 0
+  shakeLightIntensity: 0.08
+  shakeLightDuration: 0.12
   shakeMediumIntensity: 0.2
   shakeMediumDuration: 0.25
-  shakeHeavyIntensity: 0.8
-  shakeHeavyDuration: 0.956
+  shakeHeavyIntensity: 0.4
+  shakeHeavyDuration: 0.4
+  shakePerlinFrequency: 18
+  zoomPunchAmount: 0.32
+  zoomPunchRecoverSpeed: 7
+  moveLeanDistance: 0.55
+  moveLeanSmoothing: 8
+  moveLeanMinInput: 0.12
+  breathingAmplitude: 0.035
+  breathingSpeed: 0.65
+  breathingIdleInputThreshold: 0.18
+  breathingBlendSpeed: 3.5
   cutscenePanSpeed: 6
   cutsceneReturnSpeed: 10
   cutscenePanCurve:

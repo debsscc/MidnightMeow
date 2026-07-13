@@ -195,6 +195,8 @@ public class PlayerDeathPresentation : MonoBehaviour
         if (!dissolveAfterHold)
             GameplayVignetteController.PlayDeathSequence(defeatUiDelay, ResolveDeathVignettePeak());
 
+        PlayerCameraFeedback.ShakeOnLocalDeath();
+
         if (dissolveAfterHold)
             DeathHordePresentation.TryBeginSpectatorDeath(this, transform, settings);
         else

@@ -87,6 +87,49 @@ public class CameraConfig : ScriptableObject
     [Range(0f, 1f)]
     public float shakeHeavyDuration = 0.5f;
 
+    [Tooltip("Frequência do Perlin no shake (maior = mais nervoso).")]
+    [Range(4f, 40f)]
+    public float shakePerlinFrequency = 18f;
+
+    [Header("Juice — Zoom Punch")]
+    [Tooltip("Quanto a câmera aproxima no punch (unidades ortográficas).")]
+    [Range(0f, 2f)]
+    public float zoomPunchAmount = 0.32f;
+
+    [Tooltip("Velocidade de retorno do zoom punch ao tamanho base.")]
+    [Range(1f, 20f)]
+    public float zoomPunchRecoverSpeed = 7f;
+
+    [Header("Juice — Lean no movimento")]
+    [Tooltip("Offset máximo da câmera na direção do movimento.")]
+    [Range(0f, 2f)]
+    public float moveLeanDistance = 0.55f;
+
+    [Tooltip("Suavização do lean.")]
+    [Range(1f, 20f)]
+    public float moveLeanSmoothing = 8f;
+
+    [Tooltip("Velocidade mínima (input) para começar o lean.")]
+    [Range(0.01f, 1f)]
+    public float moveLeanMinInput = 0.12f;
+
+    [Header("Juice — Breathing idle")]
+    [Tooltip("Amplitude do micro drift quando parado (leve).")]
+    [Range(0f, 0.25f)]
+    public float breathingAmplitude = 0.035f;
+
+    [Tooltip("Velocidade do ciclo de breathing.")]
+    [Range(0.1f, 3f)]
+    public float breathingSpeed = 0.65f;
+
+    [Tooltip("Abaixo desta velocidade de input o breathing entra.")]
+    [Range(0.01f, 1f)]
+    public float breathingIdleInputThreshold = 0.18f;
+
+    [Tooltip("Quão rápido o breathing liga/desliga ao parar/andar.")]
+    [Range(0.5f, 12f)]
+    public float breathingBlendSpeed = 3.5f;
+
     [Header("Cutscene")]
     [Tooltip("Velocidade de deslocamento da câmera ao se mover para um ponto de cutscene.")]
     [Range(1f, 20f)]

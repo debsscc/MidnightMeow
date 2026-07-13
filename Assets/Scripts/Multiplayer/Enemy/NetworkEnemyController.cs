@@ -254,12 +254,13 @@ public class NetworkEnemyController : NetworkBehaviour
         if (_dropHandler != null)
             _dropHandler.TrySpawnDrop();
 
+        // Host/dedicated: dispara já no servidor. Clientes remotos recebem no ClientRpc.
         GameEvents.InvokeEnemyKilledByPlayer(_lastInstigatorClientId);
 
         _animMoveSpeed.Value = 0f;
         _animIsAttacking.Value = false;
 
-        PlayDeathVisualClientRpc();
+        PlayDeathVisualClientRpc(_lastInstigatorClientId);
         ScheduleDeathPresentationFallback();
     }
 
@@ -626,12 +627,18 @@ public class NetworkEnemyController : NetworkBehaviour
     }
 
     [ClientRpc]
-    private void PlayDeathVisualClientRpc()
+    private void PlayDeathVisualClientRpc(ulong killerClientId)
     {
         PlayDeathVisuals();
 
         if (TryGetComponent<EnemyAudioController>(out var audio))
             audio.PlayDeathSfx();
+
+        // Host já recebeu o evento no FinalizeDeathOnServer; só clientes remotos.
+        if (IsServer)
+            return;
+
+        GameEvents.InvokeEnemyKilledByPlayer(killerClientId);
     }
 
     public void BroadcastTelegraphToClients(

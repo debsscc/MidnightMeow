@@ -1,7 +1,8 @@
 /* ----------------------------------------------------------------
 AUTOR: Débora Carvalho
 DATA: 2026-06-23
-DESCRIÇÃO: Barra de vida do HUD com animação de damage trail e flash ao tomar dano.
+DESCRIÇÃO: Barra de vida do HUD com animação de damage trail, flash ao tomar dano
+e tremor leve quando a vida está baixa.
 ---------------------------------------------------------------- */
 
 using System.Collections;
@@ -30,6 +31,15 @@ public class healthBarUi : MonoBehaviour
     [Tooltip("Intensidade do brilho somado à cor do trail (0 = sem brilho).")]
     [SerializeField] private float trailGlowStrength = 0.3f;
 
+    [Header("Vida baixa — tremor do HUD")]
+    [Range(0.05f, 0.6f)]
+    [Tooltip("Abaixo deste % de vida a barra começa a tremer (alinhar com vinheta ~50%).")]
+    [SerializeField] private float lowHealthThreshold = 0.5f;
+    [Tooltip("Amplitude máxima do tremor em pixels (no pico de vida crítica).")]
+    [SerializeField] private float lowHealthShakeAmplitude = 2.2f;
+    [Tooltip("Frequência do tremor.")]
+    [SerializeField] private float lowHealthShakeSpeed = 22f;
+
     [Header("Fundo da barra")]
     [Tooltip("Imagem de fundo do slider; se vazio, tenta achar 'Background' filho do slider.")]
     [SerializeField] private Graphic backgroundGraphic;
@@ -37,6 +47,9 @@ public class healthBarUi : MonoBehaviour
 
     private Graphic _mainFillGraphic;
     private Color _mainFillDefaultColor;
+    private RectTransform _shakeTarget;
+    private Vector2 _shakeRestAnchoredPosition;
+    private bool _shakeRestCached;
 
     private float _targetNormalized = 1f;
     private float _displayNormalized = 1f;
@@ -52,6 +65,7 @@ public class healthBarUi : MonoBehaviour
         CacheFillReferences();
         EnsureDamageTrailFill();
         ResolveAndApplyBackground();
+        CacheShakeTarget();
     }
 
     private void OnEnable()
@@ -59,6 +73,7 @@ public class healthBarUi : MonoBehaviour
         GameplaySceneBootstrap.TryEnsureGameplayHud();
         NetworkPlayerHealth.OnNetworkHealthChanged += HandleNetworkHealthChanged;
         NetworkPlayerController.OnLocalPlayerSpawned += HandleLocalPlayerSpawned;
+        GameEvents.OnPlayerHealthChanged += HandleLegacyHealthChanged;
         QueueRefresh();
     }
 
@@ -66,6 +81,8 @@ public class healthBarUi : MonoBehaviour
     {
         NetworkPlayerHealth.OnNetworkHealthChanged -= HandleNetworkHealthChanged;
         NetworkPlayerController.OnLocalPlayerSpawned -= HandleLocalPlayerSpawned;
+        GameEvents.OnPlayerHealthChanged -= HandleLegacyHealthChanged;
+        ResetShakeOffset();
 
         if (_refreshRoutine != null)
         {
@@ -81,11 +98,13 @@ public class healthBarUi : MonoBehaviour
 
     private void Update()
     {
-        if (!_needsVisualUpdate || healthSlider == null)
-            return;
+        if (healthSlider != null && _needsVisualUpdate)
+        {
+            TickHealthAnimation();
+            ApplyBars();
+        }
 
-        TickHealthAnimation();
-        ApplyBars();
+        TickLowHealthShake();
     }
 
     private void HandleLocalPlayerSpawned(NetworkPlayerController _)
@@ -96,6 +115,15 @@ public class healthBarUi : MonoBehaviour
     private void HandleNetworkHealthChanged(ulong clientId, float current, float max)
     {
         if (!IsLocalPlayerClientId(clientId))
+            return;
+
+        UpdateHealthBar(current, max);
+    }
+
+    private void HandleLegacyHealthChanged(float current, float max)
+    {
+        // Offline / legado sem NetworkPlayerHealth.
+        if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening)
             return;
 
         UpdateHealthBar(current, max);
@@ -180,7 +208,6 @@ public class healthBarUi : MonoBehaviour
         bool isDamage = _targetNormalized < _displayNormalized - 0.0001f;
         bool isHeal = _targetNormalized > _displayNormalized + 0.0001f;
 
-        // Barra principal: desce rápido no dano, sobe suave na cura.
         if (isDamage)
         {
             _displayNormalized = Mathf.Lerp(_displayNormalized, _targetNormalized, dt * damageMainLerpSpeed);
@@ -194,8 +221,6 @@ public class healthBarUi : MonoBehaviour
                 _displayNormalized = _targetNormalized;
         }
 
-        // Trail (barra clara) desce sozinho — independente de o main já ter assentado —,
-        // segurando um instante e depois deslizando devagar até o HP atual.
         if (_trailNormalized > _targetNormalized + 0.001f)
         {
             if (isHeal)
@@ -215,7 +240,6 @@ public class healthBarUi : MonoBehaviour
                 _trailNormalized = _targetNormalized;
         }
 
-        // O trail nunca pode ficar atrás da barra principal.
         if (_trailNormalized < _displayNormalized)
             _trailNormalized = _displayNormalized;
 
@@ -228,6 +252,50 @@ public class healthBarUi : MonoBehaviour
             || _trailHoldTimer > 0f
             || _damageFlashTimer > 0f
             || Mathf.Abs(_trailNormalized - _targetNormalized) > 0.001f;
+    }
+
+    private void TickLowHealthShake()
+    {
+        if (_shakeTarget == null)
+            return;
+
+        if (!_shakeRestCached)
+            CacheShakeTarget();
+
+        float threshold = Mathf.Clamp(lowHealthThreshold, 0.05f, 0.6f);
+        if (_targetNormalized > threshold || lowHealthShakeAmplitude <= 0f)
+        {
+            ResetShakeOffset();
+            return;
+        }
+
+        // Quanto mais baixa a vida, mais forte o tremor (0 no limiar → 1 perto de 0).
+        float critical = 1f - Mathf.Clamp01(_targetNormalized / threshold);
+        float amplitude = lowHealthShakeAmplitude * critical;
+        float t = Time.unscaledTime * lowHealthShakeSpeed;
+        Vector2 offset = new Vector2(
+            Mathf.Sin(t * 1.7f) * amplitude,
+            Mathf.Cos(t * 2.1f) * amplitude * 0.65f);
+
+        _shakeTarget.anchoredPosition = _shakeRestAnchoredPosition + offset;
+    }
+
+    private void CacheShakeTarget()
+    {
+        _shakeTarget = transform as RectTransform;
+        if (_shakeTarget == null)
+            return;
+
+        _shakeRestAnchoredPosition = _shakeTarget.anchoredPosition;
+        _shakeRestCached = true;
+    }
+
+    private void ResetShakeOffset()
+    {
+        if (_shakeTarget == null || !_shakeRestCached)
+            return;
+
+        _shakeTarget.anchoredPosition = _shakeRestAnchoredPosition;
     }
 
     private void ApplyBars()

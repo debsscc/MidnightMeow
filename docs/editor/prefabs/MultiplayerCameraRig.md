@@ -15,7 +15,8 @@ Rig de câmera com Cinemachine para follow multiplayer, shake e cutscenes.
 | `CinemachineCamera` | VCams |
 | `CinemachinePositionComposer` | Composição 2D |
 | `MultiplayerCameraController` | Follow de jogadores |
-| `CameraShakeController` | Shake |
+| `CameraShakeController` | Shake com Perlin + decay (trauma²) |
+| `PlayerCameraFeedback` / `PlayerCameraJuice` | Juice local (SP/MP): dash/hab = shake+zoom punch; kill; morte; lean no move + breathing idle leve |
 | `CameraCutsceneController` | Cutscenes |
 | `UniversalAdditionalCameraData` | URP |
 

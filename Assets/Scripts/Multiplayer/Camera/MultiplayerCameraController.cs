@@ -85,6 +85,16 @@ public class MultiplayerCameraController : MonoBehaviour
     private bool _introZoomActive;
     private float _introZoomTimer;
 
+    // Juice: lean / breathing / zoom punch
+    private Vector2 _leanOffset;
+    private Vector2 _targetLean;
+    private float _breathWeight;
+    private float _breathPhase;
+    private float _locomotionInputMagnitude;
+    private float _zoomPunchOffset;
+    private float _zoomPunchRecoverOverride = -1f;
+    private float _zoomBaseSize;
+
     public Transform CurrentTarget => _currentTarget;
     public bool HasTarget => _currentTarget != null;
 
@@ -321,12 +331,16 @@ public class MultiplayerCameraController : MonoBehaviour
         else if (_isZooming && virtualCamera != null)
             AnimateZoom();
 
+        UpdateZoomPunch();
+
         if (_currentTarget == null && _findPlayerCoroutine == null)
             _findPlayerCoroutine = StartCoroutine(FindLocalPlayerRoutine());
     }
 
     private void LateUpdate()
     {
+        TickLocomotionFeel();
+
         if (_currentTarget == null)
             return;
 
@@ -340,6 +354,7 @@ public class MultiplayerCameraController : MonoBehaviour
             return;
 
         Vector3 desired = ComputeEdgeFollowPosition();
+        desired += (Vector3)(_leanOffset + ComputeBreathingOffset());
         desired = ClampCameraPosition(desired);
         float smoothing = config != null ? config.edgePanSmoothing : 15f;
         Vector3 next = Vector3.Lerp(
@@ -407,6 +422,7 @@ public class MultiplayerCameraController : MonoBehaviour
         lens.OrthographicSize = config.defaultOrthographicSize;
         virtualCamera.Lens = lens;
         _targetOrthographicSize = config.defaultOrthographicSize;
+        _zoomBaseSize = config.defaultOrthographicSize;
 
         if (_mainCam != null && _mainCam.orthographic)
             _mainCam.orthographicSize = config.defaultOrthographicSize;
@@ -459,12 +475,14 @@ public class MultiplayerCameraController : MonoBehaviour
         float smoothT = SmoothIntroZoomT(t);
         float startSize = config.defaultOrthographicSize + config.introZoomInAmount;
         float size = Mathf.Lerp(startSize, config.defaultOrthographicSize, smoothT);
+        _zoomBaseSize = size;
         ApplyOrthographicSize(size);
 
         if (t >= 1f)
         {
             ApplyOrthographicSize(config.defaultOrthographicSize);
             _targetOrthographicSize = config.defaultOrthographicSize;
+            _zoomBaseSize = config.defaultOrthographicSize;
             _introZoomActive = false;
         }
     }
@@ -782,10 +800,9 @@ public class MultiplayerCameraController : MonoBehaviour
         if (virtualCamera == null || config == null) return;
         float clamped = Mathf.Clamp(orthographicSize, config.minOrthographicSize, config.maxOrthographicSize);
         _targetOrthographicSize = clamped;
-        var lens = virtualCamera.Lens;
-        lens.OrthographicSize = clamped;
-        virtualCamera.Lens = lens;
+        _zoomBaseSize = clamped;
         _isZooming = false;
+        ApplyDisplayedZoom();
     }
 
     private void AnimateZoom()
@@ -795,29 +812,15 @@ public class MultiplayerCameraController : MonoBehaviour
 
         float speed = config != null ? config.zoomLerpSpeed : 5f;
         float delta = speed * Time.deltaTime;
+        float currentBase = _zoomBaseSize > 0f ? _zoomBaseSize : GetActiveOrthographicSize();
+        float nextBase = Mathf.Lerp(currentBase, _targetOrthographicSize, delta);
+        _zoomBaseSize = nextBase;
+        ApplyDisplayedZoom();
 
-        if (virtualCamera != null)
+        if (Mathf.Abs(_zoomBaseSize - _targetOrthographicSize) < 0.01f)
         {
-            var lens = virtualCamera.Lens;
-            lens.OrthographicSize = Mathf.Lerp(lens.OrthographicSize, _targetOrthographicSize, delta);
-            virtualCamera.Lens = lens;
-        }
-
-        if (_mainCam != null && (useDirectCameraFollow || _deathFocusActive))
-            _mainCam.orthographicSize = Mathf.Lerp(_mainCam.orthographicSize, _targetOrthographicSize, delta);
-
-        float currentSize = GetActiveOrthographicSize();
-        if (Mathf.Abs(currentSize - _targetOrthographicSize) < 0.01f)
-        {
-            if (virtualCamera != null)
-            {
-                var lens = virtualCamera.Lens;
-                lens.OrthographicSize = _targetOrthographicSize;
-                virtualCamera.Lens = lens;
-            }
-
-            if (_mainCam != null && (useDirectCameraFollow || _deathFocusActive))
-                _mainCam.orthographicSize = _targetOrthographicSize;
+            _zoomBaseSize = _targetOrthographicSize;
+            ApplyDisplayedZoom();
 
             if (!_deathFocusActive)
                 _isZooming = false;
@@ -842,6 +845,110 @@ public class MultiplayerCameraController : MonoBehaviour
     public void ShakeCustom(float intensity, float duration)
     {
         shakeController?.ShakeCustom(intensity, duration);
+    }
+
+    /// <summary>
+    /// Atualiza lean/breathing a partir do input/velocidade do jogador local.
+    /// </summary>
+    public void SetLocomotionFeel(Vector2 moveInput, float speedMagnitude)
+    {
+        float inputMag = moveInput.magnitude;
+        _locomotionInputMagnitude = Mathf.Max(inputMag, speedMagnitude * 0.05f);
+
+        if (config == null || _deathFocusActive)
+        {
+            _targetLean = Vector2.zero;
+            return;
+        }
+
+        if (inputMag < config.moveLeanMinInput)
+        {
+            _targetLean = Vector2.zero;
+            return;
+        }
+
+        Vector2 dir = moveInput / inputMag;
+        _targetLean = dir * config.moveLeanDistance * Mathf.Clamp01(inputMag);
+    }
+
+    /// <summary>Zoom punch curto (aproxima e volta). Usado em dash/habilidades.</summary>
+    public void PunchZoom(float amount = -1f, float recoverSpeed = -1f)
+    {
+        if (_deathFocusActive || _introZoomActive || config == null)
+            return;
+
+        float punch = amount > 0f ? amount : config.zoomPunchAmount;
+        if (punch <= 0f)
+            return;
+
+        _zoomPunchOffset = Mathf.Max(_zoomPunchOffset, punch);
+        _zoomPunchOffset = Mathf.Min(_zoomPunchOffset, punch * 1.35f);
+
+        _zoomPunchRecoverOverride = recoverSpeed > 0f ? recoverSpeed : -1f;
+        ApplyDisplayedZoom();
+    }
+
+    private void TickLocomotionFeel()
+    {
+        float dt = Time.deltaTime;
+        float leanSmooth = config != null ? config.moveLeanSmoothing : 8f;
+        _leanOffset = Vector2.Lerp(_leanOffset, _targetLean, dt * leanSmooth);
+
+        float idleThreshold = config != null ? config.breathingIdleInputThreshold : 0.18f;
+        float breathTarget = (!_deathFocusActive && _locomotionInputMagnitude < idleThreshold) ? 1f : 0f;
+        float breathBlend = config != null ? config.breathingBlendSpeed : 3.5f;
+        _breathWeight = Mathf.MoveTowards(_breathWeight, breathTarget, dt * breathBlend);
+
+        float breathSpeed = config != null ? config.breathingSpeed : 0.65f;
+        _breathPhase += dt * breathSpeed;
+    }
+
+    private Vector2 ComputeBreathingOffset()
+    {
+        if (_breathWeight <= 0.001f || config == null || config.breathingAmplitude <= 0f)
+            return Vector2.zero;
+
+        float amp = config.breathingAmplitude * _breathWeight;
+        return new Vector2(
+            Mathf.Sin(_breathPhase * Mathf.PI * 2f) * amp,
+            Mathf.Cos(_breathPhase * Mathf.PI * 2f * 0.73f) * amp * 0.55f);
+    }
+
+    private void UpdateZoomPunch()
+    {
+        if (_deathFocusActive || _introZoomActive)
+        {
+            if (_zoomPunchOffset > 0f)
+            {
+                _zoomPunchOffset = 0f;
+                ApplyDisplayedZoom();
+            }
+
+            return;
+        }
+
+        if (_zoomPunchOffset <= 0f)
+            return;
+
+        float recover = _zoomPunchRecoverOverride > 0f
+            ? _zoomPunchRecoverOverride
+            : (config != null ? config.zoomPunchRecoverSpeed : 7f);
+
+        _zoomPunchOffset = Mathf.MoveTowards(_zoomPunchOffset, 0f, Time.deltaTime * recover);
+        ApplyDisplayedZoom();
+    }
+
+    private void ApplyDisplayedZoom()
+    {
+        float baseSize = _zoomBaseSize > 0.01f
+            ? _zoomBaseSize
+            : (_targetOrthographicSize > 0.01f
+                ? _targetOrthographicSize
+                : (config != null ? config.defaultOrthographicSize : 8f));
+
+        float minSize = config != null ? config.minOrthographicSize : 1f;
+        float size = Mathf.Max(minSize, baseSize - _zoomPunchOffset);
+        ApplyOrthographicSize(size);
     }
 
     // ── API Pública — Cutscene ─────────────────────────────────────────────────
@@ -880,11 +987,13 @@ public class MultiplayerCameraController : MonoBehaviour
             SetTarget(focusBody);
 
         _deathFocusActive = true;
+        _zoomPunchOffset = 0f;
 
         if (_savedOrthographicSize <= 0f)
             _savedOrthographicSize = GetActiveOrthographicSize();
 
         _targetOrthographicSize = targetOrthographicSize;
+        _zoomBaseSize = GetActiveOrthographicSize();
         _isZooming = true;
     }
 
