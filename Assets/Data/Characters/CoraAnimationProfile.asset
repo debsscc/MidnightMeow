@@ -31,5 +31,8 @@ MonoBehaviour:
   meleeAttackAnimatorStateName: 
   attackAnimClipLength: 0.517
   deathDestroyDelay: 4
+  deathAnimatorStateName: Dying
+  postDeathHoldSeconds: 2
+  deathClipLengthFallback: 0.85
   sortingOrderOffset: 5000
   sortingPrecision: 100

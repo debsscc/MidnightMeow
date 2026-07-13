@@ -5,8 +5,8 @@ using UnityEngine;
 /// </summary>
 public static class ProjectileAimUtility
 {
-    /// <summary>Sprite com frente no +Y (projétil do jogador / Cora).</summary>
-    public const float PlayerForwardOffsetDegrees = -90f;
+    /// <summary>Sprite com frente no +X (fireball Cora aponta para a direita).</summary>
+    public const float PlayerForwardOffsetDegrees = 0f;
 
     /// <summary>Sprite com frente no -X (PNG do rato: cabeça arredondada à esquerda).</summary>
     public const float EnemyRatProjectileForwardOffsetDegrees = -180f;

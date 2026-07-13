@@ -11,6 +11,8 @@ public class CoraDamagePool : MonoBehaviour
 {
     [SerializeField] private LayerMask enemyLayers;
     [SerializeField] private float tickInterval = 0.5f;
+    [Tooltip("Multiplicador visual da poça (1 = tamanho do raio da habilidade).")]
+    [SerializeField] private float visualScaleMultiplier = 0.8f;
 
     private AbilityTierData _tierData;
     private ulong _ownerClientId;
@@ -68,7 +70,7 @@ public class CoraDamagePool : MonoBehaviour
             spriteDiameter = Mathf.Max(bounds.x, bounds.y);
         }
 
-        float targetDiameter = worldRadius * 2f;
+        float targetDiameter = worldRadius * 2f * Mathf.Max(0.05f, visualScaleMultiplier);
         float uniformScale = targetDiameter / Mathf.Max(0.01f, spriteDiameter);
         transform.localScale = Vector3.one * uniformScale;
 

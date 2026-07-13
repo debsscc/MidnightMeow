@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b29d11c450a2f546a771a78aeccf653, type: 3}
+  m_Name: DefaultPlayerAbilityHudTheme
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerAbilityHudTheme
+  passiveIcon: {fileID: 0}
+  dashIcon: {fileID: 0}
+  ability1Icon: {fileID: 0}
+  ability2Icon: {fileID: 0}
+  backgroundColor: {r: 0.1, g: 0.1, b: 0.14, a: 0.92}
+  cooldownOverlayColor: {r: 0, g: 0, b: 0, a: 0.65}
+  passiveFallbackColor: {r: 0.85, g: 0.55, b: 0.15, a: 0.9}
+  dashFallbackColor: {r: 0.35, g: 0.75, b: 0.95, a: 0.9}
+  abilityFallbackColor: {r: 0.75, g: 0.55, b: 0.2, a: 0.9}
+  labelColor: {r: 0, g: 0, b: 0, a: 1}
+  labelLockedColor: {r: 0, g: 0, b: 0, a: 0.45}
+  passiveCounterColor: {r: 1, g: 1, b: 1, a: 1}
+  hudFont: {fileID: 11400000, guid: 7faf118ce2a110c439c07239d9436bcd, type: 2}
+  anchoredPosition: {x: 12, y: 10}
+  slotSize: 128
+  slotSpacing: 130
+  overlayInset: 0.18
+  overlayInsetY: 0.07
+  overlayShiftX: -0.10
+  labelBandMinX: -0.04
+  labelBandMaxX: 0.82
+  labelBandMinY: 0.14
+  labelBandMaxY: 0.30
+  cooldownTimerMinX: -0.03
+  cooldownTimerMaxX: 0.97
+  cooldownTimerMinY: 0.84
+  cooldownTimerMaxY: 1.14
+  labelFontSize: 17
+  timerFontSize: 22

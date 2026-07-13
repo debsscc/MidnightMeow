@@ -40,8 +40,10 @@ Canvas de HUD principal (vida, upgrades, magículas da fase) durante gameplay si
 
 - Posição padrão: **canto inferior esquerdo** (fallback procedural).
 - Slots: Passiva, Dash, Q, R — cada um com overlay de cooldown e timer.
-- Sprites opcionais no Inspector: `passiveIcon`, `dashIcon`, `ability1Icon`, `ability2Icon`.
-- SP e MP: vincula ao jogador local (`NetworkPlayerController.IsOwner` ou tag `Player`).
+- Ícones por personagem: campos `passiveHudIcon` / `dashHudIcon` / `ability1HudIcon` / `ability2HudIcon` em `CharacterAbilitySet` (`CoraAbilitySet`, `NixAbilitySet`).
+- Arte: `Assets/Art/Sprites/New_UI/HUD_ ability/Habilidades Cora|Nyx/`.
+- Fallback: sprites do theme / campos opcionais do componente; senão quadrados coloridos.
+- SP e MP: vincula ao jogador local (`NetworkPlayerController.IsOwner` ou tag `Player`) e troca a arte no bind.
 
 ## Magículas na fase
 

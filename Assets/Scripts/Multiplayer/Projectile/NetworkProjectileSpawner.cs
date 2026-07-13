@@ -128,10 +128,10 @@ public class NetworkProjectileSpawner : NetworkBehaviour
 
         Vector2 direction = fireDirection.sqrMagnitude > Mathf.Epsilon
             ? fireDirection.normalized
-            : (Vector2)localProjectile.transform.up;
+            : (Vector2)localProjectile.transform.right;
 
         Quaternion rotation = direction.sqrMagnitude > Mathf.Epsilon
-            ? Quaternion.Euler(0f, 0f, Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg - 90f)
+            ? ProjectileAimUtility.RotationFromDirection(direction)
             : shotRotation;
 
         float damageMultiplier = 1f;

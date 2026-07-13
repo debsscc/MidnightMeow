@@ -18,6 +18,7 @@ GameObject:
   - component: {fileID: -8816224521112349220}
   - component: {fileID: -1613598614666446919}
   - component: {fileID: 916346871332856415}
+  - component: {fileID: 4729183056182741501}
   m_Layer: 7
   m_Name: Projectile
   m_TagString: Untagged
@@ -35,7 +36,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -0.61315, y: -0.16493, z: 0}
-  m_LocalScale: {x: 0.9, y: 0.9, z: 0.9}
+  m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
   m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 0}
@@ -81,8 +82,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Projectile
   stats: {fileID: 11400000, guid: caabe74a63e4a0b489c486933be32f4c, type: 2}
   _projectileAnimator: {fileID: 837554023910005732}
-  _hitAnimDuration: 0.3
+  _hitAnimDuration: 1.15
   _playHitOnExpire: 0
+  _spriteFacingOffsetDegrees: 0
 --- !u!58 &8008792262262434319
 CircleCollider2D:
   m_ObjectHideFlags: 0
@@ -117,8 +119,8 @@ CircleCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: -0.08935255, y: -0.20604691}
-  m_Radius: 0.2174929
+  m_Offset: {x: 0, y: 0}
+  m_Radius: 0.28
 --- !u!58 &8185626848989403462
 CircleCollider2D:
   m_ObjectHideFlags: 0
@@ -153,8 +155,8 @@ CircleCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: -0.09025331, y: -0.18988629}
-  m_Radius: 0.3506
+  m_Offset: {x: 0, y: 0}
+  m_Radius: 0.4
 --- !u!212 &8560753116673330831
 SpriteRenderer:
   serializedVersion: 2
@@ -204,7 +206,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 1
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 21300000, guid: 3083c22ecab2ac54a90e9d8313315954, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 3a8e3e6357de4784195b2c55b99a671b, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -320,3 +322,21 @@ MonoBehaviour:
   SwitchTransformSpaceWhenParented: 0
   Interpolate: 1
   SlerpPosition: 0
+--- !u!114 &4729183056182741501
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 691743863976024828}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7151489631c34398bfb3c1c196efa99e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ProjectileSparkTrail
+  _coreColor: {r: 1, g: 0.35, b: 0.85, a: 1}
+  _edgeColor: {r: 1, g: 0.7, b: 0.95, a: 0.55}
+  _emissionRate: 28
+  _startSize: 0.12
+  _lifetime: 0.28
+  _speed: 0.55

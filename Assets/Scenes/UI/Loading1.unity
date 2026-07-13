@@ -914,7 +914,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -450, y: 2}
+  m_AnchoredPosition: {x: -450, y: 27}
   m_SizeDelta: {x: 200, y: 200}
   m_Pivot: {x: 0.5, y: 0}
 --- !u!114 &986531367
@@ -1303,7 +1303,7 @@ MonoBehaviour:
   progressTrack: {fileID: 2100010002}
   progressFill: {fileID: 2100010013}
   progressFollower: {fileID: 986531366}
-  followerYOffset: 72
+  followerYOffset: 15
   buildPlaceholderIfMissing: 0
 --- !u!1 &1597912045
 GameObject:

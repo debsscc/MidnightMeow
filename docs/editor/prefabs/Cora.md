@@ -101,15 +101,16 @@ Config em `Assets/Data/Audio/Player/Cora/CoraPlayerAudioConfig.asset` — todos 
 
 **Cadência vs animação:** `Animator.speed = clipLength × fireRate` no estado `Shooting` — acelera o clip (não o float `AttackSpeed`).
 
-**Facing ao atacar:** snap para a mira no início; flip **travado até o clip terminar**; depois mouse/movimento.
+**Facing (idle/mira):** parado segue `Mouse.current` no eixo X em tempo real; andando prioriza movimento. `PlayerAim` também prefere Mouse (não `Pointer.current` stale do UI/joystick).
 
 **Ajustar sync:** mover o evento `PerformFire` na timeline de `Cora_Base_Attack` (função no `PlayerAnimationHandler`).
 
 | Campo | Asset |
 |-------|--------|
 | `PlayerAbilityHandler.abilitySet` | `Assets/Data/Abilities/CoraAbilitySet.asset` |
-| `barrierPrefab` | `CoraBarrier.prefab` — `NetworkCoraBarrier`, `BoxCollider2D` (layer `Barrier`), `NavMeshObstacle.carveOnlyStationary: 0`, rotação Z via `NetworkTransform` |
-| `poolPrefab` | `Assets/Prefabs/Combat/CoraDamagePool.prefab` |
+| HUD ícones (Passiva/Dash/Q/R) | Campos `*HudIcon` no `CoraAbilitySet` → `Art/.../HUD_ ability/Habilidades Cora/` |
+| `barrierPrefab` | `CoraBarrier.prefab` — VFX `Cora_Barrier_VFX` (3 frames); cast da personagem continua em `Cora_Barrier.anim` |
+| `poolPrefab` | `CoraDamagePool.prefab` — VFX `Cora_DamagePool_VFX` (5 frames), `visualScaleMultiplier: 0.8` |
 | `progressionData` | Instância no prefab (GUID `b87f7c79296088641991071b4e517b5c`) |
 | `NetworkPlayerHealth` / revive | `MultiplayerConfig`, `DownedPlayerConfig` |
 
@@ -117,7 +118,7 @@ Config em `Assets/Data/Audio/Player/Cora/CoraPlayerAudioConfig.asset` — todos 
 
 | Campo | Prefab |
 |-------|--------|
-| `PlayerShooting.projectilePrefab` | `Assets/Prefabs/Combat/Projectile.prefab` |
+| `PlayerShooting.projectilePrefab` | `Assets/Prefabs/Combat/Projectile.prefab` (VFX Fire ball Cora: voo/splash/vanish; scale 0.5 + spark trail) |
 | `NetworkProjectileSpawner` | Mesmo Projectile |
 
 ## Multiplayer

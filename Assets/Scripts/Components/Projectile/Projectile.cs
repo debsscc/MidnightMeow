@@ -4,6 +4,7 @@
 // DESCRIÇÃO: Controla o comportamento de um projétil que pode quicar em paredes e ser coletado como munição.
 // ---------------------------------------------------------------- */
 
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -23,10 +24,14 @@ public class Projectile : MonoBehaviour
     [SerializeField] private Animator _projectileAnimator;
     [SerializeField] private float _hitAnimDuration = 0.3f;
     [SerializeField] private bool _playHitOnExpire = false;
+    [Tooltip("Added to Atan2 angle. 0 = art points right (+X); -90 = art points up (+Y).")]
+    [SerializeField] private float _spriteFacingOffsetDegrees;
 
     private bool _hasHit = false;
     private readonly HashSet<int> _damagedEnemyRootIds = new HashSet<int>();
     private static readonly int _hashOnHit = Animator.StringToHash("OnHit");
+    private const float DefaultHitClipLength = 0.5f;
+    private Coroutine _hitPresentationRoutine;
 
     private static int _enemyLayer = -1;
     private static int _wallLayer = -1;
@@ -81,7 +86,7 @@ public class Projectile : MonoBehaviour
     private void Start()
     {
         _spawnPosition = transform.position;
-        Vector2 initialDirection = _hasTravelDirection ? _travelDirection : (Vector2)transform.up;
+        Vector2 initialDirection = _hasTravelDirection ? _travelDirection : (Vector2)transform.right;
         SetTravelDirection(initialDirection, stats.moveSpeed);
     }
 
@@ -127,15 +132,16 @@ public class Projectile : MonoBehaviour
         {
             Vector2 direction = (_seekTarget.position - transform.position).normalized;
             _rb.linearVelocity = direction * _seekSpeed;
-            float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg - 90f;
-            transform.rotation = Quaternion.Euler(0, 0, angle);
+            _travelDirection = direction;
+            ApplyFacingRotation();
         }
     }
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
         if (_hasHit || _currentState == ProjectileState.Seeking) return;
-        if (IsOtherPlayerProjectile(collision.collider)) return;
+        if (collision.collider == null) return;
+        if (IsPlayerCollider(collision.collider) || IsOtherPlayerProjectile(collision.collider)) return;
 
         if (IsEnemyCollider(collision.collider))
         {
@@ -151,12 +157,8 @@ public class Projectile : MonoBehaviour
 
     private void TryTriggerInteraction(Collider2D other)
     {
-        if (_hasHit || IsOtherPlayerProjectile(other)) return;
-
-        if (IsEnemyCollider(other))
-            return;
-
-        if (other.gameObject.layer == LayerMask.NameToLayer("Player"))
+        if (_hasHit || other == null || IsOtherPlayerProjectile(other)) return;
+        if (IsPlayerCollider(other))
         {
             if (_canBeCollected && stats.collectable)
             {
@@ -165,6 +167,9 @@ public class Projectile : MonoBehaviour
             }
             return;
         }
+
+        if (IsEnemyCollider(other))
+            return;
 
         if (other.gameObject.layer == _wallLayer || other.gameObject.layer == _structureLayer)
             return;
@@ -188,13 +193,29 @@ public class Projectile : MonoBehaviour
 
         IgnorePhysicsWithCollider(hitCollider);
 
+        Vector2 impactDirection = ResolveImpactDirection();
         bool exhaustAfterThisHit = !stats.infinityBounces && (_currentBounces + 1 >= _maxBounces);
         _currentBounces++;
 
-        ApplyEnemyBounce(hitCollider, collision);
-
         if (exhaustAfterThisHit)
-            TriggerHitAndDestroy();
+        {
+            // Don't bounce first — that would rotate splash toward the reflection, not the hit.
+            TriggerHitAndDestroy(impactDirection);
+            return;
+        }
+
+        ApplyEnemyBounce(hitCollider, collision);
+    }
+
+    private Vector2 ResolveImpactDirection()
+    {
+        if (_rb != null && _rb.linearVelocity.sqrMagnitude > 0.01f)
+            return _rb.linearVelocity.normalized;
+
+        if (_travelDirection.sqrMagnitude > Mathf.Epsilon)
+            return _travelDirection.normalized;
+
+        return Vector2.right;
     }
 
     private bool TryApplyEnemyDamage(Collider2D hitCollider)
@@ -290,7 +311,7 @@ public class Projectile : MonoBehaviour
 
     private bool IsEnemyCollider(Collider2D col)
     {
-        if (col == null) return false;
+        if (col == null || IsPlayerCollider(col)) return false;
 
         if (col.GetComponentInParent<NetworkEnemyController>() != null)
             return true;
@@ -303,6 +324,17 @@ public class Projectile : MonoBehaviour
             _enemyLayer = LayerMask.NameToLayer("Enemy");
 
         return _enemyLayer >= 0 && col.gameObject.layer == _enemyLayer;
+    }
+
+    private static bool IsPlayerCollider(Collider2D col)
+    {
+        if (col == null) return false;
+        if (col.GetComponentInParent<NetworkPlayerHealth>() != null) return true;
+        if (col.GetComponentInParent<NetworkPlayerController>() != null) return true;
+        if (col.CompareTag("Player")) return true;
+
+        int playerLayer = LayerMask.NameToLayer("Player");
+        return playerLayer >= 0 && col.gameObject.layer == playerLayer;
     }
 
     private bool CanApplyGameplayHit(out NetworkProjectileController networkProjectile)
@@ -361,7 +393,7 @@ public class Projectile : MonoBehaviour
         _currentBounces++;
         if (!stats.infinityBounces && _currentBounces >= _maxBounces)
         {
-            TriggerHitAndDestroy();
+            TriggerHitAndDestroy(ResolveImpactDirection());
             return;
         }
 
@@ -375,27 +407,146 @@ public class Projectile : MonoBehaviour
         return other.gameObject.layer == LayerMask.NameToLayer("Projectile");
     }
 
-    private void TriggerHitAndDestroy()
+    private void TriggerHitAndDestroy() => TriggerHitAndDestroy(ResolveImpactDirection());
+
+    private void TriggerHitAndDestroy(Vector2 impactDirection)
     {
         if (_hasHit) return;
         _hasHit = true;
 
-        _rb.linearVelocity = Vector2.zero;
-        _rb.simulated = false;
-        float yFlip = _travelDirection.x >= 0f ? 180f : 0f;
-        transform.rotation = Quaternion.Euler(0f, yFlip, 0f);
-
-        foreach (var col in GetComponents<Collider2D>())
-            col.enabled = false;
-
-        if (_projectileAnimator != null)
-            _projectileAnimator.SetTrigger(_hashOnHit);
+        PlayHitPresentation(impactDirection);
 
         var networkProjectile = GetComponent<NetworkProjectileController>();
         if (networkProjectile != null && networkProjectile.IsSpawned)
-            networkProjectile.DespawnAfterHit(_hitAnimDuration);
+            networkProjectile.NotifyHitAndDespawn(_hitAnimDuration, impactDirection);
         else
             Destroy(gameObject, _hitAnimDuration);
+    }
+
+    public Vector2 TravelDirection => _travelDirection;
+
+    /// <summary>
+    /// Splash → vanish. Keeps impact flips from shot direction (base already rotates while flying).
+    /// Safe on clients even when this component is disabled.
+    /// </summary>
+    public void PlayHitPresentation() => PlayHitPresentation(_travelDirection);
+
+    public void PlayHitPresentation(Vector2 impactDirection)
+    {
+        Vector2 dir = impactDirection.sqrMagnitude > Mathf.Epsilon
+            ? impactDirection.normalized
+            : ResolveImpactDirection();
+        _travelDirection = dir;
+
+        if (_rb != null)
+        {
+            _rb.linearVelocity = Vector2.zero;
+            _rb.simulated = false;
+        }
+
+        ApplyImpactFacing();
+
+        var sparkTrail = GetComponent<ProjectileSparkTrail>();
+        if (sparkTrail != null)
+            sparkTrail.StopTrail();
+
+        foreach (var col in GetComponents<Collider2D>())
+        {
+            if (col != null)
+                col.enabled = false;
+        }
+
+        if (_projectileAnimator == null)
+            _projectileAnimator = GetComponent<Animator>();
+
+        if (_projectileAnimator == null)
+            return;
+
+        _projectileAnimator.enabled = true;
+        _projectileAnimator.ResetTrigger(_hashOnHit);
+        _projectileAnimator.Play("Hit", 0, 0f);
+        _projectileAnimator.Update(0f);
+
+        ScheduleVanishPresentation(ResolveHitClipLength());
+    }
+
+    /// <summary>Ignores physics with the shooter so the projectile never hits its owner on spawn.</summary>
+    public void IgnoreOwnerColliders(GameObject owner)
+    {
+        if (owner == null) return;
+
+        var ownerCols = owner.GetComponentsInChildren<Collider2D>(true);
+        foreach (var myCol in GetComponents<Collider2D>())
+        {
+            if (myCol == null) continue;
+            for (int i = 0; i < ownerCols.Length; i++)
+            {
+                if (ownerCols[i] != null)
+                    Physics2D.IgnoreCollision(myCol, ownerCols[i], true);
+            }
+        }
+    }
+
+    private void ApplyImpactFacing()
+    {
+        // Splash/vanish follow the same travel facing as the flying sprite.
+        if (_spriteRenderer == null)
+            _spriteRenderer = GetComponent<SpriteRenderer>();
+        if (_spriteRenderer != null)
+        {
+            _spriteRenderer.flipX = false;
+            _spriteRenderer.flipY = false;
+        }
+
+        ApplyFacingRotation();
+    }
+
+    private float ResolveHitClipLength()
+    {
+        if (_projectileAnimator == null)
+            return DefaultHitClipLength;
+
+        var info = _projectileAnimator.GetCurrentAnimatorStateInfo(0);
+        if (info.IsName("Hit") && info.length > 0.05f)
+            return info.length;
+
+        return DefaultHitClipLength;
+    }
+
+    private void ScheduleVanishPresentation(float hitClipLength)
+    {
+        var networkProjectile = GetComponent<NetworkProjectileController>();
+        if (networkProjectile != null && networkProjectile.isActiveAndEnabled)
+        {
+            networkProjectile.ScheduleVanishPresentation(hitClipLength);
+            return;
+        }
+
+        if (!isActiveAndEnabled)
+            return;
+
+        if (_hitPresentationRoutine != null)
+            StopCoroutine(_hitPresentationRoutine);
+        _hitPresentationRoutine = StartCoroutine(CoPlayVanishAfterHit(hitClipLength));
+    }
+
+    private IEnumerator CoPlayVanishAfterHit(float hitClipLength)
+    {
+        yield return new WaitForSeconds(Mathf.Max(0.05f, hitClipLength));
+        PlayVanishPresentation();
+        _hitPresentationRoutine = null;
+    }
+
+    public void PlayVanishPresentation()
+    {
+        if (_projectileAnimator == null)
+            _projectileAnimator = GetComponent<Animator>();
+        if (_projectileAnimator == null)
+            return;
+
+        _projectileAnimator.enabled = true;
+        _projectileAnimator.Play("Vanish", 0, 0f);
+        _projectileAnimator.Update(0f);
     }
 
     public void ActivatePull(Transform target, float speed)
@@ -433,9 +584,14 @@ public class Projectile : MonoBehaviour
         _travelDirection = normalizedDirection;
         _hasTravelDirection = true;
         _rb.linearVelocity = normalizedDirection * speed;
+        ApplyFacingRotation();
+    }
 
-        float angle = Mathf.Atan2(normalizedDirection.y, normalizedDirection.x) * Mathf.Rad2Deg - 90f;
-        transform.rotation = Quaternion.Euler(0, 0, angle);
+    private void ApplyFacingRotation()
+    {
+        float angle = Mathf.Atan2(_travelDirection.y, _travelDirection.x) * Mathf.Rad2Deg
+                      + _spriteFacingOffsetDegrees;
+        transform.rotation = Quaternion.Euler(0f, 0f, angle);
     }
 
     private void EnsureVisibleSprite()

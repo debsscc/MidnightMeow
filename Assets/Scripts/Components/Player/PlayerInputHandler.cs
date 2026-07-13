@@ -112,6 +112,10 @@ public class PlayerInputHandler : MonoBehaviour
 
         if (_playerInput.currentActionMap == null || _playerInput.currentActionMap.name != "Gameplay")
             _playerInput.SwitchCurrentActionMap("Gameplay");
+
+        // Garante Action Fire habilitada mesmo se o scheme auto-switchar para Gamepad.
+        if (_fireAction != null && !_fireAction.enabled)
+            _fireAction.Enable();
     }
 
     private void TryPairController(InputDevice device)
@@ -255,19 +259,15 @@ public class PlayerInputHandler : MonoBehaviour
         PublishFireInput(IsPointerFireHeld());
     }
 
-    private static bool IsPointerFireHeld()
+    private bool IsPointerFireHeld()
     {
-        if (Mouse.current != null
-            && (Mouse.current.leftButton.isPressed || Mouse.current.rightButton.isPressed))
+        if (PlayerPointerInput.IsFireHeld())
             return true;
 
-        if (Pointer.current != null && Pointer.current.press.isPressed)
+        // Action map (SendMessages / callbacks) — cobre caso o poll de device falhe.
+        if (_fireAction != null && _fireAction.IsPressed())
             return true;
 
-        if (Pen.current != null && Pen.current.tip.isPressed)
-            return true;
-
-        // Fallback teclado: se o mouse/pointer falhar no Editor, F ainda dispara o ataque.
         if (Keyboard.current != null && Keyboard.current.fKey.isPressed)
             return true;
 

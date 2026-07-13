@@ -26,13 +26,13 @@ Documentação completa em **[docs/README.md](docs/README.md)**:
 - Project name: MidnightMeow
 - Unity version: Unity 6000.3.13f1
 - Active scene:
-  - Name: Fase-1
+  - Name: Characters
   - Tags:
     - Untagged, Respawn, Finish, EditorOnly, MainCamera, Player, GameController, Structure, Enemy, Drop
   - Layers:
     - Default, TransparentFX, Ignore Raycast, Player, Water, UI, Wall, Projectile, ProjectileEnemy, Structure, Enemy, Collectable, DashableWall, Shadow, Barrier
 - Active game object:
-  - Name: PauseMenu
+  - Name: Skils_Cora
   - Tag: Untagged
   - Layer: UI
 <!-- UNITY CODE ASSIST INSTRUCTIONS END -->

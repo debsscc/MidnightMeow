@@ -353,6 +353,11 @@ public class PlayerAnimationHandler : MonoBehaviour
             _animator.SetFloat(_hashAttackSpeed, GetMeleeAttackSpeedMultiplier());
         else if (_hashAttackSpeed != 0)
             _animator.SetFloat(_hashAttackSpeed, 1f);
+
+        // Nunca deixar AttackSpeed em 0: no AC_NIXIE o estado Shooting usa isso como speed
+        // e congela a anim (não volta pro Idle).
+        if (_hashAttackSpeed != 0 && _animator.GetFloat(_hashAttackSpeed) <= 0.01f)
+            _animator.SetFloat(_hashAttackSpeed, 1f);
     }
 
     private void LateUpdate() => UpdateSortingOrder();

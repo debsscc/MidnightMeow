@@ -107,6 +107,7 @@ public class NetworkProjectileController : NetworkBehaviour
         _projectile.InitializeDirection(direction);
         _projectile.SetDamageMultiplier(damageMultiplier);
         if (bonusBounces > 0) _projectile.AddBonusBounces(bonusBounces);
+        IgnoreOwnerPlayerColliders(ownerClientId);
 
         // Ativa física no servidor
         _rb.simulated = true;
@@ -116,6 +117,18 @@ public class NetworkProjectileController : NetworkBehaviour
         SetAllCollidersEnabled(true);
 
         EmitProjectileNetworkSample("ServerApplySpawnData");
+    }
+
+    private void IgnoreOwnerPlayerColliders(ulong ownerClientId)
+    {
+        if (_projectile == null || NetworkManager.Singleton == null)
+            return;
+
+        if (!NetworkManager.Singleton.ConnectedClients.TryGetValue(ownerClientId, out var client))
+            return;
+
+        if (client.PlayerObject != null)
+            _projectile.IgnoreOwnerColliders(client.PlayerObject.gameObject);
     }
 
     private void SetAllCollidersEnabled(bool enabled)
@@ -218,5 +231,44 @@ public class NetworkProjectileController : NetworkBehaviour
     {
         if (!IsServer) return;
         Invoke(nameof(DespawnProjectile), Mathf.Max(0f, delay));
+    }
+
+    /// <summary>
+    /// Server: replicate splash/vanish to all clients, then despawn after the anim window.
+    /// </summary>
+    public void NotifyHitAndDespawn(float delay, Vector2 impactDirection)
+    {
+        if (!IsServer) return;
+        PlayHitPresentationClientRpc(impactDirection);
+        DespawnAfterHit(delay);
+    }
+
+    public void ScheduleVanishPresentation(float hitClipLength)
+    {
+        CancelInvoke(nameof(PlayVanishPresentationInvoked));
+        Invoke(nameof(PlayVanishPresentationInvoked), Mathf.Max(0.05f, hitClipLength));
+    }
+
+    private void PlayVanishPresentationInvoked()
+    {
+        if (_projectile != null)
+            _projectile.PlayVanishPresentation();
+        else if (TryGetComponent(out Projectile projectile))
+            projectile.PlayVanishPresentation();
+        else if (TryGetComponent(out Animator animator))
+            animator.Play("Vanish", 0, 0f);
+    }
+
+    [ClientRpc]
+    private void PlayHitPresentationClientRpc(Vector2 impactDirection)
+    {
+        // Host already ran PlayHitPresentation in TriggerHitAndDestroy; clients need this.
+        if (IsServer)
+            return;
+
+        if (_projectile != null)
+            _projectile.PlayHitPresentation(impactDirection);
+        else if (TryGetComponent(out Projectile projectile))
+            projectile.PlayHitPresentation(impactDirection);
     }
 }

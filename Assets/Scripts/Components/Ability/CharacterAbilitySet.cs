@@ -18,6 +18,16 @@ public class CharacterAbilitySet : ScriptableObject
     [Tooltip("Configuração da passiva.")]
     public PassiveAbilityConfig passive;
 
+    [Header("HUD de habilidades (canto inferior esquerdo)")]
+    [Tooltip("Ícone da passiva na barra de habilidades.")]
+    public Sprite passiveHudIcon;
+    [Tooltip("Ícone do dash na barra de habilidades.")]
+    public Sprite dashHudIcon;
+    [Tooltip("Ícone da habilidade Q (Ability1).")]
+    public Sprite ability1HudIcon;
+    [Tooltip("Ícone da habilidade R (Ability2).")]
+    public Sprite ability2HudIcon;
+
     [Header("Ataque Normal (escala com primaryTier)")]
     public AbilityTierData primaryAttackTier1;
     public AbilityTierData primaryAttackTier2;

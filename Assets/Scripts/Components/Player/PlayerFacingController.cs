@@ -1,14 +1,12 @@
 using System;
 using Unity.Netcode;
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 /// <summary>
-/// Orientação do sprite: parado = mira; andando = movimento.
-/// Durante o clip de ataque: trava no flip da mira (snap no início); libera ao terminar a anim.
+/// Orientação do sprite: andando no X → movimento; parado → mira/cursor.
 /// </summary>
 [DisallowMultipleComponent]
-[DefaultExecutionOrder(50)]
+[DefaultExecutionOrder(1000)]
 public class PlayerFacingController : MonoBehaviour
 {
     [SerializeField] private PlayerMovement playerMovement;
@@ -18,13 +16,19 @@ public class PlayerFacingController : MonoBehaviour
     [SerializeField] private PlayerDash playerDash;
     [SerializeField] private NixChargeAbilityExecutor chargeExecutor;
     [SerializeField] private PlayerAnimationHandler animationHandler;
+    [SerializeField] private SpriteRenderer spriteRenderer;
 
     [Header("Aim Facing")]
-    [Tooltip("Enquanto parado, só vira se |aim.x| passar deste valor.")]
-    [SerializeField] private float aimDeadZoneX = 0.15f;
+    [Tooltip("Em idle, só vira se |cursor.x - player.x| em pixels de tela passar deste valor.")]
+    [SerializeField] private float aimDeadZoneScreenPx = 8f;
 
-    [Tooltip("Enquanto correndo, só usa input horizontal se |move.x| passar deste valor.")]
-    [SerializeField] private float moveFacingThresholdX = 0.01f;
+    [Tooltip("Fallback se não houver câmera: |aim.x| normalizado.")]
+    [SerializeField] private float aimDeadZoneX = 0.08f;
+
+    [Tooltip("Só trata como 'andando no X' acima deste |move.x|.")]
+    [SerializeField] private float moveFacingThresholdX = 0.2f;
+
+    [SerializeField] private bool debugFacingLogs;
 
     public event Action<bool> OnFacingChanged;
 
@@ -33,8 +37,13 @@ public class PlayerFacingController : MonoBehaviour
     private NetworkObject _networkObject;
     private NetworkPlayerHealth _networkHealth;
     private HealthComponent _healthComponent;
+    private float _nextDebugLogTime;
 
-    private void Awake()
+    private void Awake() => ResolveRefs();
+
+    private void Start() => ResolveRefs();
+
+    private void ResolveRefs()
     {
         if (playerMovement == null) playerMovement = GetComponent<PlayerMovement>();
         if (playerAim == null) playerAim = GetComponent<PlayerAim>();
@@ -43,6 +52,7 @@ public class PlayerFacingController : MonoBehaviour
         if (playerDash == null) playerDash = GetComponent<PlayerDash>();
         if (chargeExecutor == null) chargeExecutor = GetComponent<NixChargeAbilityExecutor>();
         if (animationHandler == null) animationHandler = GetComponent<PlayerAnimationHandler>();
+        if (spriteRenderer == null) spriteRenderer = GetComponent<SpriteRenderer>();
         _networkObject = GetComponent<NetworkObject>();
         _networkHealth = GetComponent<NetworkPlayerHealth>();
         _healthComponent = GetComponent<HealthComponent>();
@@ -69,28 +79,31 @@ public class PlayerFacingController : MonoBehaviour
         if (_networkObject != null && _networkObject.IsSpawned && !_networkObject.IsOwner)
             return;
 
-        if (IsFacingLocked())
-            return;
-
-        if (animationHandler != null && animationHandler.IsPrimaryAttackAnimationPlaying())
+        if (IsFacingLockedByGameplay())
             return;
 
         bool? desiredFacing = ResolveDesiredFacing();
         if (!desiredFacing.HasValue)
+        {
+            ApplyFacingVisual(FacingRight);
             return;
+        }
 
         PublishFacing(desiredFacing.Value);
+        LogFacingDebug(desiredFacing.Value);
     }
 
     private void SnapFacingToAimAtAttackStart()
     {
-        if (IsFacingLocked())
+        if (IsFacingLockedByGameplay())
             return;
 
-        TryPublishAimFacing();
+        bool? aimFacing = ResolveAimFacing();
+        if (aimFacing.HasValue)
+            PublishFacing(aimFacing.Value);
     }
 
-    private bool IsFacingLocked()
+    private bool IsFacingLockedByGameplay()
     {
         if (TryGetComponent<NetworkPlayerRevive>(out var revive) && revive.IsReviving)
             return true;
@@ -114,62 +127,92 @@ public class PlayerFacingController : MonoBehaviour
             return null;
         }
 
-        if (ShouldPreferMouseAimFacing())
+        // Andando no X: movimento manda.
+        if (playerMovement != null
+            && playerMovement.IsMoving
+            && Mathf.Abs(playerMovement.MoveDirection.x) >= moveFacingThresholdX)
         {
-            bool? aimFacing = ResolveAimFacing();
-            if (aimFacing.HasValue)
-                return aimFacing;
+            return playerMovement.MoveDirection.x > 0f;
         }
 
-        if (playerMovement != null && playerMovement.IsMoving)
-        {
-            Vector2 move = playerMovement.MoveDirection;
-            if (Mathf.Abs(move.x) >= moveFacingThresholdX)
-                return move.x > 0f;
-        }
-
+        // Idle / só vertical: cursor na tela (não depende de mira mundo quebrada).
         return ResolveAimFacing();
-    }
-
-    private bool ShouldPreferMouseAimFacing()
-    {
-        if (Mouse.current == null || playerAim == null)
-            return false;
-
-        if (playerMovement != null && playerMovement.IsMoving)
-            return false;
-
-        return true;
     }
 
     private bool? ResolveAimFacing()
     {
-        if (playerAim != null && playerAim.TryGetAimDirection(out Vector2 aim, out _))
+        if (PlayerPointerInput.TryGetScreenPosition(out Vector2 mouseScreen))
         {
-            if (Mathf.Abs(aim.x) < aimDeadZoneX)
-                return null;
-            return aim.x > 0f;
+            Camera cam = ResolveFacingCamera();
+            if (cam != null)
+            {
+                Vector3 playerScreen = cam.WorldToScreenPoint(transform.position);
+                float dx = mouseScreen.x - playerScreen.x;
+                if (Mathf.Abs(dx) >= aimDeadZoneScreenPx)
+                    return dx > 0f;
+            }
         }
 
-        return null;
+        if (playerAim == null)
+            return null;
+
+        playerAim.RefreshAim();
+        if (!playerAim.TryGetAimDirection(out Vector2 aim, out _))
+            return null;
+
+        if (Mathf.Abs(aim.x) < aimDeadZoneX)
+            return null;
+
+        return aim.x > 0f;
     }
 
-    private void TryPublishAimFacing()
+    private Camera ResolveFacingCamera()
     {
-        bool? aimFacing = ResolveAimFacing();
-        if (aimFacing.HasValue)
-            PublishFacing(aimFacing.Value);
+        Camera multiplayerCamera = MultiplayerCameraController.Instance != null
+            ? MultiplayerCameraController.Instance.MainCamera
+            : null;
+
+        if (multiplayerCamera != null && multiplayerCamera.isActiveAndEnabled)
+            return multiplayerCamera;
+
+        return Camera.main;
+    }
+
+    private void LogFacingDebug(bool desired)
+    {
+        if (!debugFacingLogs || Time.unscaledTime < _nextDebugLogTime)
+            return;
+
+        _nextDebugLogTime = Time.unscaledTime + 0.5f;
+        bool flipX = spriteRenderer != null && spriteRenderer.flipX;
+        PlayerPointerInput.TryGetScreenPosition(out Vector2 mouse);
+        Debug.Log(
+            $"[PlayerFacing] desired={desired} FacingRight={FacingRight} flipX={flipX} mouseScreen={mouse} " +
+            $"isMoving={playerMovement != null && playerMovement.IsMoving}",
+            this);
     }
 
     private void PublishFacing(bool facingRight)
     {
-        if (FacingRight == facingRight)
-            return;
-
+        bool changed = FacingRight != facingRight;
         FacingRight = facingRight;
-        OnFacingChanged?.Invoke(facingRight);
 
-        if (_networkObject == null || !_networkObject.IsSpawned)
-            animationHandler?.ApplyNetworkFacing(facingRight);
+        if (changed)
+            OnFacingChanged?.Invoke(facingRight);
+
+        ApplyFacingVisual(facingRight);
+    }
+
+    private void ApplyFacingVisual(bool facingRight)
+    {
+        bool flipX = !facingRight;
+
+        if (spriteRenderer == null)
+            spriteRenderer = GetComponent<SpriteRenderer>();
+
+        if (spriteRenderer != null)
+            spriteRenderer.flipX = flipX;
+
+        animationHandler?.ApplyNetworkFacing(facingRight);
     }
 }

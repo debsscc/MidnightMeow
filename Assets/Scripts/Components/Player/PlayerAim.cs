@@ -219,28 +219,7 @@ public class PlayerAim : MonoBehaviour
     }
 
     private static bool TryReadPointerScreenPosition(out Vector2 screenPosition)
-    {
-        if (Pointer.current != null)
-        {
-            screenPosition = Pointer.current.position.ReadValue();
-            return true;
-        }
-
-        if (Mouse.current != null)
-        {
-            screenPosition = Mouse.current.position.ReadValue();
-            return true;
-        }
-
-        if (Pen.current != null)
-        {
-            screenPosition = Pen.current.position.ReadValue();
-            return true;
-        }
-
-        screenPosition = default;
-        return false;
-    }
+        => PlayerPointerInput.TryGetScreenPosition(out screenPosition);
 
     public void SetAimCamera(Camera camera)
     {
@@ -370,6 +349,31 @@ public class PlayerAim : MonoBehaviour
 
         usedFallback = false;
         return true;
+    }
+
+    /// <summary>
+    /// Delta mundo do personagem até o ponto de mira (cursor). Usado no flip em idle.
+    /// </summary>
+    public bool TryGetAimWorldDelta(out Vector2 worldDelta)
+    {
+        RefreshAim("AimWorldDelta", false);
+
+        if (_lastDebugSnapshot.UsedRayPlane || _lastDebugSnapshot.MouseScreenPosition.sqrMagnitude > 0f)
+        {
+            worldDelta = (Vector2)_lastDebugSnapshot.MouseWorldPosition - (Vector2)transform.position;
+            if (worldDelta.sqrMagnitude > Mathf.Epsilon)
+                return true;
+        }
+
+        if (_currentAimDirection.sqrMagnitude > Mathf.Epsilon)
+        {
+            // Fallback: direção normalizada (não é delta em unidades de mundo).
+            worldDelta = _currentAimDirection;
+            return true;
+        }
+
+        worldDelta = Vector2.zero;
+        return false;
     }
 
     public bool TryGetDebugSnapshot(out AimDebugSnapshot snapshot)

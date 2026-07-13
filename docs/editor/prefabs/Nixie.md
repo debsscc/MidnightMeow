@@ -71,6 +71,7 @@ Nixie
 | `stats` (legado, espelhado pelo profile) | `Assets/Data/Stats/Player/PlayerCoreStats.asset` |
 | `PlayerMeleeCombat.combatStats` (via profile) | `Assets/Data/Stats/Player/NixieMeleeCombatStats.asset` |
 | `PlayerAbilityHandler.abilitySet` | `Assets/Data/Abilities/NixAbilitySet.asset` |
+| HUD ícones (Passiva/Dash/Q/R) | Campos `*HudIcon` no `NixAbilitySet` → `Art/.../HUD_ ability/Habilidades Nyx/` |
 | `audioConfig` (via profile) | `Assets/Data/Audio/Player/Nix/NixiePlayerAudioConfig.asset` |
 | `enemyLayers` | Layer Enemy (1024) |
 

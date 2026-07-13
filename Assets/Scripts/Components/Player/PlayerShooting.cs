@@ -266,7 +266,8 @@ public class PlayerShooting : MonoBehaviour
         if (firePoint != null)
             firePoint.SetPositionAndRotation(spawnPosition, fireRotation);
 
-        GameObject projectileInstance = Instantiate(projectilePrefab, spawnPosition, fireRotation);
+        Quaternion projectileRotation = ProjectileAimUtility.RotationFromDirection(fireDirection);
+        GameObject projectileInstance = Instantiate(projectilePrefab, spawnPosition, projectileRotation);
         EmitShootingPipeline(
             "AfterLocalInstantiate",
             true,
@@ -275,11 +276,12 @@ public class PlayerShooting : MonoBehaviour
             projectileInstance.transform.position,
             projectileInstance.transform.eulerAngles,
             fireDirection,
-            fireRotation.eulerAngles.z
+            projectileRotation.eulerAngles.z
         );
 
         if (projectileInstance.TryGetComponent<Projectile>(out Projectile projectile))
         {
+            projectile.IgnoreOwnerColliders(gameObject);
             projectile.InitializeDirection(fireDirection);
             projectile.SetDamageMultiplier(DamageMultiplier);
             int bonusBounces = 0;
@@ -292,7 +294,7 @@ public class PlayerShooting : MonoBehaviour
         }
 
         OnShoot?.Invoke();
-        OnProjectileInstantiated?.Invoke(projectileInstance, spawnPosition, fireRotation, fireDirection);
+        OnProjectileInstantiated?.Invoke(projectileInstance, spawnPosition, projectileRotation, fireDirection);
     }
 
     private void EmitShootingPipeline(
