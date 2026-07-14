@@ -45,6 +45,9 @@ public struct TelegraphClientSnapshot : INetworkSerializable
     public Color OutlineColor;
     public float OutlineWidth;
     public int SortingOrder;
+    public float ConeInnerRadius;
+    public float ConeOuterRadius;
+    public float ConeOpeningAngleDegrees;
 
     public static TelegraphClientSnapshot From(
         TelegraphStrikeDefinition strike,
@@ -72,7 +75,10 @@ public struct TelegraphClientSnapshot : INetworkSerializable
             FillDuration = strike.fillDuration,
             TravelSpawnPosition = travelSpawnPosition,
             TravelSpeed = travelSpeed,
-            HasTravelVisual = hasTravel ? (byte)1 : (byte)0
+            HasTravelVisual = hasTravel ? (byte)1 : (byte)0,
+            ConeInnerRadius = strike.coneInnerRadius,
+            ConeOuterRadius = strike.coneOuterRadius,
+            ConeOpeningAngleDegrees = strike.coneOpeningAngleDegrees
         };
 
         if (style != null)
@@ -104,7 +110,10 @@ public struct TelegraphClientSnapshot : INetworkSerializable
             resolution = (EnemyTelegraphResolution)Resolution,
             size = Size,
             fillDuration = FillDuration,
-            damage = 0
+            damage = 0,
+            coneInnerRadius = ConeInnerRadius,
+            coneOuterRadius = ConeOuterRadius,
+            coneOpeningAngleDegrees = ConeOpeningAngleDegrees
         };
     }
 
@@ -136,5 +145,8 @@ public struct TelegraphClientSnapshot : INetworkSerializable
         serializer.SerializeValue(ref OutlineColor);
         serializer.SerializeValue(ref OutlineWidth);
         serializer.SerializeValue(ref SortingOrder);
+        serializer.SerializeValue(ref ConeInnerRadius);
+        serializer.SerializeValue(ref ConeOuterRadius);
+        serializer.SerializeValue(ref ConeOpeningAngleDegrees);
     }
 }

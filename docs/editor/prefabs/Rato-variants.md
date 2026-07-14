@@ -14,7 +14,7 @@ Controllers em `Assets/Data/Animacoes/Enemy_AC/` (`AC_Enemy`, `AC_Enemy_Acid`, `
 - **`IsAttacking` (bool):** telegraph/pattern ativo (`EnemyTelegraphedAttacker.IsExecuting`)
 - **`Attacking` → locomotion:** só quando `IsAttacking == false`
 - Profile: `EnemyDefaultAnimationProfile.asset` → `isAttackingParameter: IsAttacking`
-- **Boss (`Rato_Boss`):** `AC_Rato_Rei` — default `Idle`; extras `Spell`/`OnSpell` (projétil) e `Charging`/`OnCharge`+`IsCharging` (investida). Ver [boss-phase.md](../../gameplay/boss-phase.md).
+- **Boss (`Rato_Boss`):** `AC_Rato_Rei` + `RatKingController` (`RatKingBehaviorConfig`). Ver [boss-phase.md](../../gameplay/boss-phase.md) e [guia Editor](guides/rat-king-boss-setup.md).
 
 **Morte:** `DissolveEffect` + material `EnemyDeathFade.mat` — animação `Dying` completa, depois fade out (sem reaparecer).
 

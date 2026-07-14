@@ -3,13 +3,15 @@ using UnityEngine;
 public enum TelegraphShapeType
 {
     Circle = 0,
-    Rectangle = 1
+    Rectangle = 1,
+    /// <summary>Trapézio isósceles (tronco de cone 2D): base estreita no atacante, ponta larga.</summary>
+    ConeFrustum = 2
 }
 
 /// <summary>Como o preenchimento visual progride.</summary>
 public enum TelegraphFillMode
 {
-    /// <summary>Círculo: do centro para fora. Retângulo: ao longo do eixo local Y (comprimento).</summary>
+    /// <summary>Círculo: do centro para fora. Retângulo/cone: ao longo do eixo local Y (comprimento).</summary>
     ExpandFromOrigin = 0,
     /// <summary>Retângulo: preenche do fim (alvo) em direção à origem — útil para faixas de projétil.</summary>
     AlongLengthTowardOrigin = 1

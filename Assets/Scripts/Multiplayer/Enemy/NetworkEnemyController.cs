@@ -65,16 +65,37 @@ public class NetworkEnemyController : NetworkBehaviour
         NetworkVariableReadPermission.Everyone,
         NetworkVariableWritePermission.Server);
 
+    private readonly NetworkVariable<byte> _animSpellSequence = new NetworkVariable<byte>(
+        0,
+        NetworkVariableReadPermission.Everyone,
+        NetworkVariableWritePermission.Server);
+
+    private readonly NetworkVariable<byte> _animChargeSequence = new NetworkVariable<byte>(
+        0,
+        NetworkVariableReadPermission.Everyone,
+        NetworkVariableWritePermission.Server);
+
+    private readonly NetworkVariable<bool> _animIsCharging = new NetworkVariable<bool>(
+        false,
+        NetworkVariableReadPermission.Everyone,
+        NetworkVariableWritePermission.Server);
+
     private static readonly int HashMoveSpeed = Animator.StringToHash("MoveSpeed");
     private static readonly int HashOnAttack = Animator.StringToHash("OnAttack");
     private static readonly int HashOnTakeDamage = Animator.StringToHash("OnTakeDamage");
     private static readonly int HashOnDie = Animator.StringToHash("OnDie");
     private static readonly int HashIsAttacking = Animator.StringToHash("IsAttacking");
     private static readonly int HashIsStunned = Animator.StringToHash("IsStunned");
+    private static readonly int HashOnSpell = Animator.StringToHash("OnSpell");
+    private static readonly int HashOnCharge = Animator.StringToHash("OnCharge");
+    private static readonly int HashIsCharging = Animator.StringToHash("IsCharging");
 
     private Animator _animator;
     private SpriteRenderer _spriteRenderer;
     private byte _lastClientAttackSequence;
+    private byte _lastClientSpellSequence;
+    private byte _lastClientChargeSequence;
+    private RatKingController _ratKing;
 
     public bool DrivesAnimatorOnClient => IsSpawned && !IsServer;
 
@@ -106,6 +127,7 @@ public class NetworkEnemyController : NetworkBehaviour
         _agent = GetComponent<NavMeshAgent>();
         _animator = GetComponent<Animator>();
         _spriteRenderer = GetComponent<SpriteRenderer>();
+        _ratKing = GetComponent<RatKingController>();
 
         _health.SetAllowDestroyOnDeath(false);
         _health.OnDied.AddListener(HandleDied);
@@ -148,6 +170,9 @@ public class NetworkEnemyController : NetworkBehaviour
         _animFacingFlipX.OnValueChanged += HandleAnimFacingChanged;
         _animAttackSequence.OnValueChanged += HandleAnimAttackSequenceChanged;
         _animIsAttacking.OnValueChanged += HandleAnimIsAttackingChanged;
+        _animSpellSequence.OnValueChanged += HandleAnimSpellSequenceChanged;
+        _animChargeSequence.OnValueChanged += HandleAnimChargeSequenceChanged;
+        _animIsCharging.OnValueChanged += HandleAnimIsChargingChanged;
         _networkIsCombatStunned.OnValueChanged += HandleCombatStunChanged;
 
         if (IsServer)
@@ -155,6 +180,7 @@ public class NetworkEnemyController : NetworkBehaviour
             SetAIComponentsActive(true);
             WireTelegraphedAttackerProjectileSpawn();
             WireAnimationPublishers();
+            _ratKing?.ServerEnsureBrain();
 
             _health.OnHealthChanged.RemoveListener(HandleHealthChangedOnServer);
             _health.OnHealthChanged.AddListener(HandleHealthChangedOnServer);
@@ -169,6 +195,7 @@ public class NetworkEnemyController : NetworkBehaviour
                 _animAttackSequence.Value,
                 _animIsAttacking.Value,
                 false);
+            ApplyBossAnimatorFlags(_animIsCharging.Value, false, false);
         }
 
         _networkHealth.OnValueChanged += HandleNetworkHealthChanged;
@@ -193,6 +220,9 @@ public class NetworkEnemyController : NetworkBehaviour
         _animFacingFlipX.OnValueChanged -= HandleAnimFacingChanged;
         _animAttackSequence.OnValueChanged -= HandleAnimAttackSequenceChanged;
         _animIsAttacking.OnValueChanged -= HandleAnimIsAttackingChanged;
+        _animSpellSequence.OnValueChanged -= HandleAnimSpellSequenceChanged;
+        _animChargeSequence.OnValueChanged -= HandleAnimChargeSequenceChanged;
+        _animIsCharging.OnValueChanged -= HandleAnimIsChargingChanged;
         _networkIsCombatStunned.OnValueChanged -= HandleCombatStunChanged;
 
         if (TryGetComponent<EnemyHealthBarDisplay>(out var healthBarDisplay))
@@ -220,9 +250,15 @@ public class NetworkEnemyController : NetworkBehaviour
 
         if (_animationHandler != null)
         {
-            bool isAttacking = _animationHandler.IsAttackingForAnimator;
+            bool isAttacking = _animationHandler.IsAttackingForAnimator
+                              || (_ratKing != null && _ratKing.IsAttackBusy);
             if (_animIsAttacking.Value != isAttacking)
                 _animIsAttacking.Value = isAttacking;
+        }
+        else if (_ratKing != null)
+        {
+            if (_animIsAttacking.Value != _ratKing.IsAttackBusy)
+                _animIsAttacking.Value = _ratKing.IsAttackBusy;
         }
     }
 
@@ -713,6 +749,65 @@ public class NetworkEnemyController : NetworkBehaviour
         PlayTelegraphVisualClientRpc(snapshot);
     }
 
+    /// <summary>Dispara trigger OnSpell no Animator (servidor + clientes via NV).</summary>
+    public void ServerNotifySpellCast()
+    {
+        if (!IsServer)
+            return;
+
+        if (_animator != null && HasAnimatorTrigger(HashOnSpell))
+            _animator.SetTrigger(HashOnSpell);
+
+        if (IsSpawned)
+            _animSpellSequence.Value++;
+    }
+
+    /// <summary>Início da investida: OnCharge + IsCharging.</summary>
+    public void ServerNotifyChargeStart()
+    {
+        if (!IsServer)
+            return;
+
+        if (_animator != null)
+        {
+            if (HasAnimatorTrigger(HashOnCharge))
+                _animator.SetTrigger(HashOnCharge);
+            if (HasAnimatorBool(HashIsCharging))
+                _animator.SetBool(HashIsCharging, true);
+        }
+
+        if (IsSpawned)
+        {
+            _animIsCharging.Value = true;
+            _animChargeSequence.Value++;
+        }
+    }
+
+    public void ServerNotifyChargeEnd()
+    {
+        if (!IsServer)
+            return;
+
+        if (_animator != null && HasAnimatorBool(HashIsCharging))
+            _animator.SetBool(HashIsCharging, false);
+
+        if (IsSpawned)
+            _animIsCharging.Value = false;
+    }
+
+    /// <summary>Follow-up melee após o dash (usa OnAttack).</summary>
+    public void ServerNotifyMeleeAttack()
+    {
+        if (!IsServer)
+            return;
+
+        if (_animator != null)
+            _animator.SetTrigger(HashOnAttack);
+
+        if (IsSpawned)
+            _animAttackSequence.Value++;
+    }
+
     [ClientRpc]
     private void PlayTelegraphVisualClientRpc(TelegraphClientSnapshot snapshot)
     {
@@ -793,6 +888,55 @@ public class NetworkEnemyController : NetworkBehaviour
     private void HandleAnimIsAttackingChanged(bool _, bool current) =>
         ApplyClientAnimationState(_animMoveSpeed.Value, _animFacingFlipX.Value, _animAttackSequence.Value, current, false);
 
+    private void HandleAnimSpellSequenceChanged(byte _, byte current)
+    {
+        if (!IsSpawned || IsServer || _deathVisualsPlayed)
+            return;
+
+        if (current == _lastClientSpellSequence)
+            return;
+
+        _lastClientSpellSequence = current;
+        if (_animator != null && HasAnimatorTrigger(HashOnSpell))
+            _animator.SetTrigger(HashOnSpell);
+    }
+
+    private void HandleAnimChargeSequenceChanged(byte _, byte current)
+    {
+        if (!IsSpawned || IsServer || _deathVisualsPlayed)
+            return;
+
+        if (current == _lastClientChargeSequence)
+            return;
+
+        _lastClientChargeSequence = current;
+        if (_animator != null && HasAnimatorTrigger(HashOnCharge))
+            _animator.SetTrigger(HashOnCharge);
+    }
+
+    private void HandleAnimIsChargingChanged(bool _, bool current)
+    {
+        if (!IsSpawned || IsServer || _deathVisualsPlayed)
+            return;
+
+        ApplyBossAnimatorFlags(current, false, false);
+    }
+
+    private void ApplyBossAnimatorFlags(bool isCharging, bool triggerSpell, bool triggerCharge)
+    {
+        if (_animator == null)
+            return;
+
+        if (HasAnimatorBool(HashIsCharging))
+            _animator.SetBool(HashIsCharging, isCharging);
+
+        if (triggerSpell && HasAnimatorTrigger(HashOnSpell))
+            _animator.SetTrigger(HashOnSpell);
+
+        if (triggerCharge && HasAnimatorTrigger(HashOnCharge))
+            _animator.SetTrigger(HashOnCharge);
+    }
+
     private void ApplyClientAnimationState(
         float moveSpeed,
         bool facingRight,
@@ -810,6 +954,8 @@ public class NetworkEnemyController : NetworkBehaviour
         {
             _animator.SetFloat(HashMoveSpeed, moveSpeed);
             _animator.SetBool(HashIsAttacking, isAttacking);
+            if (HasAnimatorBool(HashIsCharging))
+                _animator.SetBool(HashIsCharging, _animIsCharging.Value);
         }
 
         if (_spriteRenderer != null)
@@ -823,6 +969,38 @@ public class NetworkEnemyController : NetworkBehaviour
             if (TryGetComponent<EnemyAudioController>(out var audio))
                 audio.PlayAttackSfx();
         }
+    }
+
+    private static bool HasAnimatorTrigger(Animator animator, int hash)
+    {
+        if (animator == null || animator.runtimeAnimatorController == null)
+            return false;
+
+        AnimatorControllerParameter[] parameters = animator.parameters;
+        for (int i = 0; i < parameters.Length; i++)
+        {
+            if (parameters[i].type == AnimatorControllerParameterType.Trigger && parameters[i].nameHash == hash)
+                return true;
+        }
+
+        return false;
+    }
+
+    private bool HasAnimatorTrigger(int hash) => HasAnimatorTrigger(_animator, hash);
+
+    private bool HasAnimatorBool(int hash)
+    {
+        if (_animator == null || _animator.runtimeAnimatorController == null)
+            return false;
+
+        AnimatorControllerParameter[] parameters = _animator.parameters;
+        for (int i = 0; i < parameters.Length; i++)
+        {
+            if (parameters[i].type == AnimatorControllerParameterType.Bool && parameters[i].nameHash == hash)
+                return true;
+        }
+
+        return false;
     }
 
     private IEnumerator SyncHealthAfterConfigsRoutine()
@@ -843,13 +1021,17 @@ public class NetworkEnemyController : NetworkBehaviour
         if (_movement != null) _movement.enabled = active;
         if (_targetFinder != null) _targetFinder.enabled = active;
 
-        bool useTelegraph = _telegraphedAttacker != null && _telegraphedAttacker.HasActivePattern;
-        if (_meleAttack != null) _meleAttack.enabled = active && !useTelegraph;
-        if (_rangedAttack != null) _rangedAttack.enabled = active && !useTelegraph;
+        bool hasBossBrain = _ratKing != null;
+        bool useTelegraph = !hasBossBrain
+                            && _telegraphedAttacker != null
+                            && _telegraphedAttacker.HasActivePattern;
+        if (_meleAttack != null) _meleAttack.enabled = active && !useTelegraph && !hasBossBrain;
+        if (_rangedAttack != null) _rangedAttack.enabled = active && !useTelegraph && !hasBossBrain;
         if (_telegraphedAttacker != null) _telegraphedAttacker.enabled = active && useTelegraph;
 
         if (_dropHandler != null) _dropHandler.enabled = active;
         if (_hitStun != null) _hitStun.enabled = active;
+        if (_ratKing != null) _ratKing.enabled = active;
         if (_agent != null && active) _agent.enabled = true;
     }
 

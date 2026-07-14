@@ -178,6 +178,9 @@ public class EnemyAnimationHandler : MonoBehaviour
         if (_telegraphedAttacker != null && _telegraphedAttacker.IsExecuting)
             return true;
 
+        if (TryGetComponent<RatKingController>(out var ratKing) && ratKing.IsAttackBusy)
+            return true;
+
         if (enemyMovement != null && enemyMovement.IsAttackPaused)
             return true;
 

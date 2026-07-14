@@ -9,9 +9,11 @@ Shader "MidnightMeow/TelegraphFill"
         _OutlineColor ("Borda (vermelho)", Color) = (0.95, 0.15, 0.1, 1)
         _FillAmount ("Fill Amount", Range(0, 1)) = 0
         _OutlineWidth ("Outline Width", Range(0.001, 0.2)) = 0.06
-        _Shape ("Shape 0=Circle 1=Rect", Float) = 0
+        _Shape ("Shape 0=Circle 1=Rect 2=ConeFrustum", Float) = 0
         _FillMode ("Fill Mode", Float) = 0
         _FillOriginSide ("Fill Origin Side 0=LowY 1=HighY", Float) = 0
+        _ConeInnerRatio ("Cone Inner Half-Width UV", Range(0.01, 0.5)) = 0.15
+        _ConeOuterRatio ("Cone Outer Half-Width UV", Range(0.01, 0.5)) = 0.5
     }
 
     SubShader
@@ -62,6 +64,8 @@ Shader "MidnightMeow/TelegraphFill"
             float _Shape;
             float _FillMode;
             float _FillOriginSide;
+            float _ConeInnerRatio;
+            float _ConeOuterRatio;
 
             v2f vert(appdata_t v)
             {
@@ -99,6 +103,30 @@ Shader "MidnightMeow/TelegraphFill"
                     if (fillMetric >= 1.0 - _OutlineWidth)
                         return _OutlineColor;
 
+                    if (fillMetric <= _FillAmount)
+                        return _FillColor;
+
+                    return _BackgroundColor;
+                }
+
+                // Shape ~2: tronco de cone (trapézio). Y=0 base (raio menor), Y=1 ponta (raio maior).
+                if (_Shape > 1.5)
+                {
+                    float nearHalf = max(0.01, _ConeInnerRatio);
+                    float farHalf = max(nearHalf, _ConeOuterRatio);
+                    float halfW = lerp(nearHalf, farHalf, saturate(uv.y));
+                    float dx = abs(uv.x - 0.5);
+
+                    if (dx > halfW || uv.y < 0.0 || uv.y > 1.0)
+                        discard;
+
+                    float edgeToSide = halfW - dx;
+                    float edgeToEnds = min(uv.y, 1.0 - uv.y);
+                    float edgeDist = min(edgeToSide, edgeToEnds);
+                    if (edgeDist < _OutlineWidth)
+                        return _OutlineColor;
+
+                    fillMetric = rectFillMetric(uv);
                     if (fillMetric <= _FillAmount)
                         return _FillColor;
 

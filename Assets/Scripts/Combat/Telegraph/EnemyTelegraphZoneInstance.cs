@@ -62,7 +62,7 @@ public class EnemyTelegraphZoneInstance : MonoBehaviour
             _view = gameObject.AddComponent<EnemyTelegraphZoneView>();
 
         _view.ApplyStyle(style, strike.shape, strike.fillMode);
-        _view.SetWorldPose(worldPosition, rotationDegrees, strike.shape, strike.size);
+        _view.SetWorldPose(worldPosition, rotationDegrees, strike.shape, strike.size, strike);
         _view.ConfigureFillOrigin(ResolveFillOriginWorldPosition(worldPosition));
         _view.SetFill(0f);
 
@@ -308,9 +308,7 @@ public class EnemyTelegraphZoneInstance : MonoBehaviour
             ? (LayerMask)(1 << LayerMask.NameToLayer("Player"))
             : _strike.damageLayers;
 
-        Collider2D[] results = _strike.shape == TelegraphShapeType.Circle
-            ? Physics2D.OverlapCircleAll(worldPosition, _strike.size.x, mask)
-            : Physics2D.OverlapBoxAll(worldPosition, _strike.size, rotationDegrees, mask);
+        Collider2D[] results = QueryOverlapColliders(worldPosition, rotationDegrees, mask);
 
         int count = 0;
         foreach (var col in results)
@@ -318,11 +316,41 @@ public class EnemyTelegraphZoneInstance : MonoBehaviour
             if (col == null || hits.Contains(col)) continue;
             hits.Add(col);
 
+            if (_strike.shape == TelegraphShapeType.ConeFrustum
+                && !IsColliderInsideConeFrustum(col, worldPosition, rotationDegrees))
+                continue;
+
             if (PlayerCombatUtility.TryApplyDamage(col, _strike.damage, _instigator))
                 count++;
         }
 
         return count;
+    }
+
+    private Collider2D[] QueryOverlapColliders(Vector2 worldPosition, float rotationDegrees, LayerMask mask)
+    {
+        switch (_strike.shape)
+        {
+            case TelegraphShapeType.Circle:
+                return Physics2D.OverlapCircleAll(worldPosition, _strike.size.x, mask);
+
+            case TelegraphShapeType.ConeFrustum:
+            {
+                TelegraphConeFrustumUtility.ResolveRadii(_strike, out float inner, out float outer, out float length);
+                Vector2 aabb = TelegraphConeFrustumUtility.GetAabbSize(inner, outer, length);
+                return Physics2D.OverlapBoxAll(worldPosition, aabb, rotationDegrees, mask);
+            }
+
+            default:
+                return Physics2D.OverlapBoxAll(worldPosition, _strike.size, rotationDegrees, mask);
+        }
+    }
+
+    private bool IsColliderInsideConeFrustum(Collider2D col, Vector2 worldPosition, float rotationDegrees)
+    {
+        TelegraphConeFrustumUtility.ResolveRadii(_strike, out float inner, out float outer, out float length);
+        Vector2 point = col.bounds.center;
+        return TelegraphConeFrustumUtility.ContainsPoint(point, worldPosition, rotationDegrees, inner, outer, length);
     }
 
     private TelegraphEventData BuildEventData(Vector2 worldPosition, float rotationDegrees)

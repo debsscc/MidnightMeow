@@ -24,6 +24,16 @@ public static class TelegraphPoseUtility
         rotationDegrees = aimAngle + strike.rotationOffsetDegrees;
 
         Vector2 offset = strike.localOffset;
+
+        // ConeFrustum sem offset explícito: centro na metade do comprimento, saindo do atacante.
+        if (strike.shape == TelegraphShapeType.ConeFrustum
+            && offset.sqrMagnitude < 0.0001f
+            && !strike.anchorToTargetOnStart)
+        {
+            TelegraphConeFrustumUtility.ResolveRadii(strike, out _, out _, out float length);
+            offset = new Vector2(0f, length * 0.5f);
+        }
+
         if (offset.sqrMagnitude > 0.0001f)
         {
             var rot = Quaternion.Euler(0f, 0f, rotationDegrees);

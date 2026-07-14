@@ -12,6 +12,8 @@ public class EnemyTelegraphZoneView : MonoBehaviour
     private static readonly int ShapeId = Shader.PropertyToID("_Shape");
     private static readonly int FillModeId = Shader.PropertyToID("_FillMode");
     private static readonly int FillOriginSideId = Shader.PropertyToID("_FillOriginSide");
+    private static readonly int ConeInnerRatioId = Shader.PropertyToID("_ConeInnerRatio");
+    private static readonly int ConeOuterRatioId = Shader.PropertyToID("_ConeOuterRatio");
 
     private static readonly Color DefaultBackgroundColor = new Color(1f, 0.92f, 0.22f, 0.55f);
     private static readonly Color DefaultFillColor = new Color(0.9f, 0.12f, 0.08f, 0.85f);
@@ -21,6 +23,10 @@ public class EnemyTelegraphZoneView : MonoBehaviour
 
     private SpriteRenderer _renderer;
     private Material _materialInstance;
+    private TelegraphShapeType _activeShape = TelegraphShapeType.Circle;
+    private float _coneInnerRadius;
+    private float _coneOuterRadius;
+    private float _coneLength;
 
     private void Awake()
     {
@@ -31,7 +37,15 @@ public class EnemyTelegraphZoneView : MonoBehaviour
     {
         EnsureMaterial();
 
-        _materialInstance.SetFloat(ShapeId, shape == TelegraphShapeType.Circle ? 0f : 1f);
+        _activeShape = shape;
+        float shapeValue = shape switch
+        {
+            TelegraphShapeType.Circle => 0f,
+            TelegraphShapeType.Rectangle => 1f,
+            TelegraphShapeType.ConeFrustum => 2f,
+            _ => 1f
+        };
+        _materialInstance.SetFloat(ShapeId, shapeValue);
         _materialInstance.SetFloat(FillModeId, (float)fillMode);
 
         if (style != null)
@@ -59,6 +73,17 @@ public class EnemyTelegraphZoneView : MonoBehaviour
 
     public void SetWorldPose(Vector2 position, float rotationDegrees, TelegraphShapeType shape, Vector2 size)
     {
+        SetWorldPose(position, rotationDegrees, shape, size, null);
+    }
+
+    /// <summary>Pose com parâmetros opcionais de tronco de cone.</summary>
+    public void SetWorldPose(
+        Vector2 position,
+        float rotationDegrees,
+        TelegraphShapeType shape,
+        Vector2 size,
+        TelegraphStrikeDefinition strike)
+    {
         transform.position = new Vector3(position.x, position.y, 0f);
         transform.rotation = Quaternion.Euler(0f, 0f, rotationDegrees);
         transform.localScale = Vector3.one;
@@ -76,6 +101,15 @@ public class EnemyTelegraphZoneView : MonoBehaviour
             return;
         }
 
+        if (shape == TelegraphShapeType.ConeFrustum && strike != null)
+        {
+            TelegraphConeFrustumUtility.ResolveRadii(strike, out _coneInnerRadius, out _coneOuterRadius, out _coneLength);
+            Vector2 aabb = TelegraphConeFrustumUtility.GetAabbSize(_coneInnerRadius, _coneOuterRadius, _coneLength);
+            transform.localScale = new Vector3(aabb.x, aabb.y, 1f);
+            ApplyConeShaderRatios(_coneInnerRadius, _coneOuterRadius);
+            return;
+        }
+
         transform.localScale = new Vector3(Mathf.Max(0.1f, size.x), Mathf.Max(0.1f, size.y), 1f);
     }
 
@@ -88,6 +122,19 @@ public class EnemyTelegraphZoneView : MonoBehaviour
         Vector3 local = transform.InverseTransformPoint(worldOrigin);
         float side = local.y >= 0f ? 1f : 0f;
         _materialInstance.SetFloat(FillOriginSideId, side);
+    }
+
+    private void ApplyConeShaderRatios(float innerRadius, float outerRadius)
+    {
+        EnsureMaterial();
+        if (_materialInstance == null)
+            return;
+
+        float maxR = Mathf.Max(innerRadius, outerRadius, 0.01f);
+        float innerHalfUv = 0.5f * (innerRadius / maxR);
+        float outerHalfUv = 0.5f * (outerRadius / maxR);
+        _materialInstance.SetFloat(ConeInnerRatioId, Mathf.Clamp(innerHalfUv, 0.01f, 0.5f));
+        _materialInstance.SetFloat(ConeOuterRatioId, Mathf.Clamp(outerHalfUv, 0.01f, 0.5f));
     }
 
     private void EnsureMaterial()
@@ -121,4 +168,20 @@ public class EnemyTelegraphZoneView : MonoBehaviour
         if (_materialInstance != null)
             Destroy(_materialInstance);
     }
+
+#if UNITY_EDITOR
+    private void OnDrawGizmosSelected()
+    {
+        if (_activeShape != TelegraphShapeType.ConeFrustum)
+            return;
+
+        TelegraphConeFrustumUtility.DrawGizmos(
+            transform.position,
+            transform.eulerAngles.z,
+            _coneInnerRadius,
+            _coneOuterRadius,
+            _coneLength,
+            new Color(1f, 0.4f, 0.1f, 0.9f));
+    }
+#endif
 }

@@ -1,7 +1,7 @@
 ///* ----------------------------------------------------------------
-// ATUALIZADO EM: 22-05-2026
-// DESCRIÇÃO: Movimento via NavMesh: persegue alvo ou patrulha (random walk) sem alvo no raio.
-// Respeita stun de dano.
+// ATUALIZADO EM: 14-07-2026
+// DESCRIÇÃO: Movimento via NavMesh: persegue alvo, patrulha, ou navegação manual (boss).
+// Respeita stun de dano e multiplicador de velocidade.
 // ---------------------------------------------------------------- */
 
 using UnityEngine;
@@ -29,6 +29,10 @@ public class EnemyMovement : MonoBehaviour
     private float _nextRandomWalkTime;
     private bool _hasRandomDestination;
     private bool _attackPaused;
+    private float _speedMultiplier = 1f;
+    private bool _manualNavigation;
+    private Vector3 _manualDestination;
+    private bool _hasManualDestination;
 
     private void Awake()
     {
@@ -62,6 +66,72 @@ public class EnemyMovement : MonoBehaviour
     }
 
     public bool IsAttackPaused => _attackPaused;
+    public bool IsManualNavigation => _manualNavigation;
+
+    /// <summary>Multiplicador temporário de velocidade (ex.: buff de investida do boss). 1 = normal.</summary>
+    public void SetSpeedMultiplier(float multiplier)
+    {
+        _speedMultiplier = Mathf.Max(0.05f, multiplier);
+    }
+
+    public void ResetSpeedMultiplier() => SetSpeedMultiplier(1f);
+
+    /// <summary>
+    /// Assume o destino do NavMesh (perseguição/patrulha pausadas). Usar em bosses server-side.
+    /// </summary>
+    public void BeginManualNavigation()
+    {
+        _manualNavigation = true;
+        _hasManualDestination = false;
+        _hasRandomDestination = false;
+    }
+
+    public void SetManualDestination(Vector3 worldPosition)
+    {
+        if (!_manualNavigation || _agent == null)
+            return;
+
+        _manualDestination = worldPosition;
+        _hasManualDestination = true;
+        _agent.isStopped = false;
+        if (_agent.isOnNavMesh)
+            _agent.SetDestination(worldPosition);
+    }
+
+    /// <summary>Movimento em direção (unidade) por distância aproximada via NavMesh sample.</summary>
+    public void SetManualDirection(Vector2 direction, float sampleDistance = 4f)
+    {
+        if (direction.sqrMagnitude < 0.0001f)
+            return;
+
+        Vector2 dir = direction.normalized;
+        Vector3 sample = transform.position + (Vector3)(dir * sampleDistance);
+        if (NavMesh.SamplePosition(sample, out NavMeshHit hit, sampleDistance, NavMesh.AllAreas))
+            SetManualDestination(hit.position);
+        else
+            SetManualDestination(sample);
+    }
+
+    public void EndManualNavigation()
+    {
+        _manualNavigation = false;
+        _hasManualDestination = false;
+        if (_agent == null) return;
+        _agent.ResetPath();
+    }
+
+    public void FaceDirection(Vector2 direction)
+    {
+        if (Mathf.Abs(direction.x) <= FlipThreshold)
+            return;
+
+        bool shouldFaceRight = direction.x > 0f;
+        if (shouldFaceRight == _isFacingRight)
+            return;
+
+        _isFacingRight = shouldFaceRight;
+        OnFlipSprite?.Invoke(_isFacingRight);
+    }
 
     public void SetAttackPaused(bool paused)
     {
@@ -72,6 +142,7 @@ public class EnemyMovement : MonoBehaviour
         _agent.velocity = Vector3.zero;
         _agent.ResetPath();
         _hasRandomDestination = false;
+        _hasManualDestination = false;
     }
 
     public void FreezeForPause()
@@ -83,6 +154,7 @@ public class EnemyMovement : MonoBehaviour
         _agent.velocity = Vector3.zero;
         _agent.ResetPath();
         _hasRandomDestination = false;
+        _hasManualDestination = false;
     }
 
     private void Update()
@@ -116,7 +188,13 @@ public class EnemyMovement : MonoBehaviour
             slowMultiplier = slowEffect.SpeedMultiplier;
 
         if (stats != null)
-            _agent.speed = stats.moveSpeed * slowMultiplier;
+            _agent.speed = stats.moveSpeed * slowMultiplier * _speedMultiplier;
+
+        if (_manualNavigation)
+        {
+            UpdateManualNavigation();
+            return;
+        }
 
         if (!_targetFinder.HasTarget)
         {
@@ -151,6 +229,24 @@ public class EnemyMovement : MonoBehaviour
             _agent.isStopped = false;
             OnDestinationLost?.Invoke();
         }
+    }
+
+    private void UpdateManualNavigation()
+    {
+        if (!_hasManualDestination)
+        {
+            _agent.isStopped = true;
+            _agent.velocity = Vector3.zero;
+            return;
+        }
+
+        _agent.isStopped = false;
+        if (_agent.isOnNavMesh)
+            _agent.SetDestination(_manualDestination);
+
+        Vector2 delta = (Vector2)(_manualDestination - transform.position);
+        if (Mathf.Abs(delta.x) > FlipThreshold)
+            FaceDirection(delta);
     }
 
     private void PatrolRandomWalk()

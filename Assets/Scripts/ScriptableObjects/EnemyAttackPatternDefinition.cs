@@ -6,12 +6,20 @@ public class TelegraphStrikeDefinition
 {
     [Header("Forma")]
     public TelegraphShapeType shape = TelegraphShapeType.Circle;
-    [Tooltip("Círculo: X = raio. Retângulo: X = largura, Y = comprimento (eixo local Y).")]
+    [Tooltip("Círculo: X = raio. Retângulo: X = largura, Y = comprimento (eixo local Y). ConeFrustum: Y = comprimento (altura).")]
     public Vector2 size = new Vector2(1.2f, 1.2f);
     [Tooltip("Deslocamento local em relação à origem do ataque (antes da rotação).")]
     public Vector2 localOffset;
-    [Tooltip("Rotação extra em graus (eixo Z). Para retângulos, Y local aponta na direção do ataque.")]
+    [Tooltip("Rotação extra em graus (eixo Z). Para retângulos/cone, Y local aponta na direção do ataque.")]
     public float rotationOffsetDegrees;
+
+    [Header("Tronco de Cone (ConeFrustum)")]
+    [Tooltip("Raio menor na base (próximo ao boss/atacante).")]
+    public float coneInnerRadius = 0.4f;
+    [Tooltip("Raio maior na ponta. Se <= 0, deriva de coneOpeningAngleDegrees + comprimento.")]
+    public float coneOuterRadius = 1.6f;
+    [Tooltip("Meio-ângulo de abertura (graus) do eixo central até a borda. Usado se coneOuterRadius <= 0.")]
+    public float coneOpeningAngleDegrees = 35f;
 
     [Header("Tempo")]
     [Tooltip("Espera antes de iniciar este strike (útil para rajadas / destroços).")]

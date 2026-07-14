@@ -135,8 +135,23 @@ public class EnemyTelegraphedAttacker : MonoBehaviour
         return dist <= pattern.attackRange;
     }
 
+    /// <summary>Dispara um padrão arbitrário (útil para scripts de boss).</summary>
+    public void TriggerPattern(EnemyAttackPatternDefinition overridePattern)
+    {
+        if (!IsServerAuthority() || _isExecuting || overridePattern == null) return;
+        _patternRoutine = StartCoroutine(ExecutePatternRoutine(overridePattern));
+    }
+
     private IEnumerator ExecutePatternRoutine()
     {
+        yield return ExecutePatternRoutine(pattern);
+    }
+
+    private IEnumerator ExecutePatternRoutine(EnemyAttackPatternDefinition activePattern)
+    {
+        if (activePattern == null)
+            yield break;
+
         _isExecuting = true;
         OnAttackWindup?.Invoke();
 
@@ -144,16 +159,16 @@ public class EnemyTelegraphedAttacker : MonoBehaviour
             _movement.SetAttackPaused(true);
 
         var target = _targetFinder.CurrentTarget;
-        var style = pattern.visualStyle != null ? pattern.visualStyle : fallbackVisualStyle;
+        var style = activePattern.visualStyle != null ? activePattern.visualStyle : fallbackVisualStyle;
 
         EnsureTelegraphWiring();
 
-        if (pattern.strikes != null)
+        if (activePattern.strikes != null)
         {
             if (telegraphFactory == null)
                 telegraphFactory = GetComponent<EnemyTelegraphZoneFactory>();
 
-            foreach (var strike in pattern.strikes)
+            foreach (var strike in activePattern.strikes)
             {
                 if (strike == null) continue;
 
@@ -190,7 +205,7 @@ public class EnemyTelegraphedAttacker : MonoBehaviour
             }
         }
 
-        _cooldownTimer = pattern.cooldown;
+        _cooldownTimer = activePattern.cooldown;
         OnAttackResolved?.Invoke();
 
         if (_movement != null)
@@ -217,15 +232,5 @@ public class EnemyTelegraphedAttacker : MonoBehaviour
         }
 
         _relay?.BroadcastTelegraph(strike, style, worldPos, rotation, travelSpawnPosition);
-    }
-
-    /// <summary>Dispara um padrão arbitrário (útil para scripts de boss).</summary>
-    public void TriggerPattern(EnemyAttackPatternDefinition overridePattern)
-    {
-        if (!IsServerAuthority() || _isExecuting) return;
-        var previous = pattern;
-        pattern = overridePattern;
-        _patternRoutine = StartCoroutine(ExecutePatternRoutine());
-        pattern = previous;
     }
 }

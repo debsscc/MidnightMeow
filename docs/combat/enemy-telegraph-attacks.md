@@ -1,6 +1,6 @@
 # Ataques inimigos com telegraph (estilo Hades)
 
-Última revisão: 2026-06-28
+Última revisão: 2026-07-14
 
 ## Objetivo
 
@@ -19,7 +19,9 @@ Dar ao jogador (especialmente **melee**) tempo de reação: a área de dano apar
 | `NetworkEnemyTelegraphRelay` | `Multiplayer/Enemy/` | Encaminha para `NetworkEnemyController` (ClientRpc no prefab) |
 | `NetworkEnemyController` | `Multiplayer/Enemy/` | `PlayTelegraphVisualClientRpc` — visual nos clientes |
 | `EnemyTelegraphEvents` | `Combat/Telegraph/` | Eventos globais (SFX/VFX) |
-| Shader | `Assets/Art/Shaders/TelegraphFill.shader` | Círculo ou retângulo preenchível |
+| Shader | `Assets/Art/Shaders/TelegraphFill.shader` | Círculo, retângulo ou tronco de cone preenchível |
+| `TelegraphConeFrustumUtility` | `Combat/Telegraph/` | Matemática + overlap do `ConeFrustum` |
+| `RatKingController` | `Components/Enemy/` | FSM do boss (sorteio / ranged / investida) |
 
 ## Configurar um inimigo
 
@@ -40,7 +42,8 @@ Cada entrada em `strikes[]` é independente:
 |-------|-----|
 | `delayBeforeStart` | Rajada / destroços em sequência |
 | `fillDuration` | Janela de esquiva |
-| `shape` + `size` | Círculo (raio = X) ou retângulo (largura × comprimento) |
+| `shape` + `size` | Círculo (raio = X), retângulo (largura × comprimento) ou **ConeFrustum** (Y = comprimento + raios do cone) |
+| `coneInnerRadius` / `coneOuterRadius` / `coneOpeningAngleDegrees` | Só `ConeFrustum`: raio menor (base), maior (ponta); ângulo deriva o outer se ≤ 0 |
 | `resolution` | `AreaDamage` (dano + `effectPrefab` na zona) ou `ProjectileToZone` (visual do inimigo → zona, dano só na zona) |
 | `travelVisualPrefab` / `travelSpeed` | Só em `ProjectileToZone` |
 | `effectPrefab` | Só em `AreaDamage` (ex.: pedras caindo, sem projétil) |
@@ -78,7 +81,11 @@ Exemplo: `EnemyTelegraphFeedbackListener` (áudio).
 
 - Círculo raio ~1,2, `anchorToTarget` false, offset local, `AreaDamage`, `fillDuration` ~0,5s.
 
-### Boss — vários destroços
+### Boss — Rei Rato
+
+Ver [boss-phase.md](../gameplay/boss-phase.md) e [guia Editor](../editor/guides/rat-king-boss-setup.md). O `RatKingController` spawna 5 retângulos simultâneos e um `ConeFrustum` no follow-up melee; não depende do `Update` do `EnemyTelegraphedAttacker`.
+
+### Boss — vários destroços (pattern genérico)
 
 - Vários strikes com `delayBeforeStart` escalonado (0, 0,3, 0,6…) e posições `localOffset` aleatórias (via script custom chamando `TriggerPattern`).
 
@@ -98,7 +105,8 @@ Instalador: `EnemyTelegraphModuleInstaller` em cada prefab `Rato_*`.
 
 1. **Borda vermelha** fixa no limite da zona.
 2. **Interior amarelo** estático (área ainda não “liberada”).
-3. **`_FillAmount` 0→1:** vermelho cresce **do centro para a borda** até a zona ficar toda vermelha.
+3. **`_FillAmount` 0→1:** vermelho cresce **do centro para a borda** (círculo) ou ao longo do comprimento (retângulo/cone) até a zona ficar toda vermelha.
+4. **`_Shape`:** `0` círculo, `1` retângulo, `2` tronco de cone (`_ConeInnerRatio` / `_ConeOuterRatio`).
 
 Cores em `EnemyTelegraphVisualStyle`: `backgroundColor` = amarelo, `fillColor` / `outlineColor` = vermelho.
 

@@ -288,6 +288,8 @@ GameObject:
   - component: {fileID: 5935593986608848345}
   - component: {fileID: 6112133685248922938}
   - component: {fileID: 4803484565655714402}
+  - component: {fileID: 6107560113860713085}
+  - component: {fileID: 2445590046323781630}
   m_Layer: 10
   m_Name: Rato_Boss
   m_TagString: Enemy
@@ -433,8 +435,8 @@ CapsuleCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 2.1681294, y: -3.1548848}
-  m_Size: {x: 11.945796, y: 8.520834}
+  m_Offset: {x: 1.664511, y: -2.1538749}
+  m_Size: {x: 17.62308, y: 14.927433}
   m_Direction: 1
 --- !u!195 &1903391186630837853
 NavMeshAgent:
@@ -492,7 +494,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: db46669ddd5aabe4abf7314666d7b285, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyTargetFinder
-  stats: {fileID: 11400000, guid: 55c90a1f979222246933dfea1a1ca68e, type: 2}
+  stats: {fileID: 11400000, guid: 0bcfe6fa1e865644b93b72a9192e6610, type: 2}
 --- !u!114 &8492623029768286588
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -505,7 +507,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e34b202a0d336504c9ccd4882e95cee4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyMovement
-  stats: {fileID: 11400000, guid: 55c90a1f979222246933dfea1a1ca68e, type: 2}
+  stats: {fileID: 11400000, guid: 0bcfe6fa1e865644b93b72a9192e6610, type: 2}
 --- !u!114 &5704336305023549229
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -560,7 +562,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 97328372e5a8c6849ba699b2a8e05374, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyHealthConfig
-  stats: {fileID: 11400000, guid: 55c90a1f979222246933dfea1a1ca68e, type: 2}
+  stats: {fileID: 11400000, guid: 0bcfe6fa1e865644b93b72a9192e6610, type: 2}
 --- !u!114 &5316140801015922341
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -573,7 +575,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f02dea8fa59b9424495b3f3dc42ae17b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyScaleConfig
-  stats: {fileID: 11400000, guid: 55c90a1f979222246933dfea1a1ca68e, type: 2}
+  stats: {fileID: 11400000, guid: 0bcfe6fa1e865644b93b72a9192e6610, type: 2}
 --- !u!114 &8699465747872324352
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -586,7 +588,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 321b28bcba53502429e6b766fec6dde2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyDropHandler
-  stats: {fileID: 11400000, guid: 55c90a1f979222246933dfea1a1ca68e, type: 2}
+  stats: {fileID: 11400000, guid: 0bcfe6fa1e865644b93b72a9192e6610, type: 2}
 --- !u!114 &7307871085104724286
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -599,7 +601,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 47e52db4aeed7d046a1a2e7aa571e442, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyAttack_Melee
-  stats: {fileID: 11400000, guid: 55c90a1f979222246933dfea1a1ca68e, type: 2}
+  stats: {fileID: 11400000, guid: 0bcfe6fa1e865644b93b72a9192e6610, type: 2}
 --- !u!114 &5057817512247068887
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -612,7 +614,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5be99fa3d9900c04f841392385f87d10, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyAttack_Ranged
-  stats: {fileID: 11400000, guid: 55c90a1f979222246933dfea1a1ca68e, type: 2}
+  stats: {fileID: 11400000, guid: 0bcfe6fa1e865644b93b72a9192e6610, type: 2}
   projectilePrefab: {fileID: 3344960684203597567, guid: 6ededdb4f3eb7e143ae0a036319f5fd3, type: 3}
   firePoint: {fileID: 7769710525481836737}
 --- !u!114 &7387447173699667402
@@ -733,7 +735,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: abed497b0c3ace843bed4b3e6879b382, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyHitStun
-  stats: {fileID: 11400000, guid: 55c90a1f979222246933dfea1a1ca68e, type: 2}
+  stats: {fileID: 11400000, guid: 0bcfe6fa1e865644b93b72a9192e6610, type: 2}
 --- !u!114 &999000003000000003
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -827,3 +829,35 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SpriteBlink
   blinkDecaySpeed: 7
+--- !u!114 &6107560113860713085
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8336658271261246405}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ce06a4309986e0843a5db485f61a5ad7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MidnightMeow::EnemyTelegraphZoneFactory
+  zonePrefab: {fileID: 0}
+  defaultSprite: {fileID: 0}
+--- !u!114 &2445590046323781630
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8336658271261246405}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f64c787c3570eb445825dee47d62c7ae, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MidnightMeow::RatKingController
+  config: {fileID: 11400000, guid: 94a49890385be294696969d7104a503d, type: 2}
+  attackOrigin: {fileID: 0}
+  telegraphFactory: {fileID: 0}
+  telegraphedAttacker: {fileID: 0}
+  disableLegacyAttacks: 1
+  debugLogs: 0

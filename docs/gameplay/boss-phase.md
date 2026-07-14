@@ -1,6 +1,6 @@
 # Fase 3 — Boss
 
-Última revisão: 2026-07-10
+Última revisão: 2026-07-14
 
 ## Comportamento
 
@@ -9,6 +9,20 @@
 - Sem selamento de buracos nem carruagem
 - Vitória ao eliminar o boss (`GameEvents.OnNightEnded`)
 - Solo e multiplayer usam a mesma apresentação
+
+## IA do Rei Rato (`RatKingController`)
+
+FSM **somente no servidor**. Clientes recebem telegraphs (`ClientRpc`) e animações (`NetworkVariable`).
+
+| Estado | Fluxo |
+|--------|--------|
+| Decision | Alvo = jogador vivo mais próximo → roleta por pesos do SO |
+| Ranged | Foge até `maxRangedDistance * fleeDistanceThreshold` (ou timeout) → 5 faixas (±angle2, ±angle1, 0) |
+| Charge | Aproxima com buff de speed até `chargeRange * 0.6` → telegraph + dash com overlap → melee `ConeFrustum` |
+
+Config: `RatKingBehaviorConfig` (`MidnightMeow/Combat/Rat King Behavior Config`).
+
+Guia de setup no Editor: [rat-king-boss-setup.md](../editor/guides/rat-king-boss-setup.md).
 
 ## UI (só Fase-3 / `KillBoss`)
 
@@ -28,7 +42,7 @@ Helpers: `BossPhaseUtility`, criação via `GameplayHudController.EnsureBossHeal
 | Caminho | `Assets/Prefabs/Enemies/Rato_Boss.prefab` |
 | Base | `Rato_Padrao_Resistente` |
 | HP | 200 (`HealthComponent`) |
-| Componente extra | `BossEnemyMarker` (`displayName`: Rei Rato) |
+| Componentes | `BossEnemyMarker` + **`RatKingController`** + telegraph factory/relay |
 | Animator | `AC_Rato_Rei.controller` |
 | Rede | Registrado em `DefaultNetworkPrefabs.asset` |
 
@@ -40,23 +54,19 @@ Helpers: `BossPhaseUtility`, criação via `GameplayHudController.EnsureBossHeal
 | Clips | `Assets/Art/Sprites/Animations/Enemies/Rato_Rei/` |
 | Sprites | `Assets/Art/Sprites/Enemies/Rato rei/` |
 
-Estados: `Idle`, `Running`, `Attacking`, `Spell` (projétil), `Charging` (investida), `TakingDamage`, `Dying`.
-
-Parâmetros (além do padrão de inimigo):
+Estados: `Idle`, `Running`, `Attacking`, `Spell` (projétil/faixas), `Charging` (investida), `TakingDamage`, `Dying`.
 
 | Parâmetro | Tipo | Uso |
 |-----------|------|-----|
-| `OnSpell` | Trigger | Cast do projétil |
+| `OnSpell` | Trigger | Cast do ataque a distância |
 | `OnCharge` | Trigger | Início da investida |
 | `IsCharging` | Bool | Mantém `Charging` até a investida acabar |
+| `OnAttack` | Trigger | Melee pós-dash |
 
-`EnemyAnimationHandler` já dispara `OnAttack` / `OnTakeDamage` / `OnDie` / `MoveSpeed` / `IsAttacking`. `OnSpell` e `OnCharge` ficam para o código das habilidades do boss.
+Disparo de rede: `NetworkEnemyController.ServerNotifySpellCast` / `ServerNotifyChargeStart` / `ServerNotifyChargeEnd` / `ServerNotifyMeleeAttack`.
 
 ## Dados
 
 - `Assets/Data/Stats/Game/Fase3.asset` — 1 inimigo, 1 onda
 - Catálogo: `Resources/PhaseWaveSettingsCatalog.asset` → entrada `Fase-3`
-
-## Habilidades futuras
-
-`BossEnemyMarker` e `EnemyTelegraphedAttacker` estão prontos para extensão. Wire de `OnSpell` (projétil) e `OnCharge`/`IsCharging` (investida) no gameplay ainda pendente.
+- Behavior SO: criar via menu (ver guia) e atribuir em `RatKingController.config`
