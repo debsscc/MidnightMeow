@@ -22,7 +22,7 @@ Template de inimigo rato (ranged). Variantes de produção estão em `Rato_*.pre
 | `EnemyMovement` | Perseguição / patrulha (NavMesh rígido; auto-adiciona `EnemyPhysicsBody`) |
 | `EnemyPhysicsBody` | RB kinematic; **não colide com Player** (`excludeLayers`) |
 | `EnemySwordHitFlash` | Flash dourado no hit melee (shader `MidnightMeow/EnemySwordHitFlash`) |
-| `EnemyHitStun` | Parada após dano |
+| `EnemyHitStun` | Parada após dano / stun de combate (passiva Nix) |
 | `NetworkEnemyController` | IA servidor; vida; despawn; knockback RPC |
 | `EnemyHealthConfig` | `stats` → `EnemyStats` SO |
 | `HealthComponent` | Vida; `_allowDestroyOnDeath: false` em MP |
@@ -59,6 +59,7 @@ Sem sincronização de rede dedicada: como o prefab é instanciado em cada clien
 
 - Morte: `NetworkObject.Despawn` após `EnemyStats.deathDespawnDelay` (~0,4s)
 - Dano ao jogador: servidor autoritativo
+- Stun de combate (passiva Nix): `ApplyKnockbackThenStunRpc` + `NetworkVariable` `_networkIsCombatStunned`; Animator opcional `IsStunned`
 
 ## Ataques com telegraph
 

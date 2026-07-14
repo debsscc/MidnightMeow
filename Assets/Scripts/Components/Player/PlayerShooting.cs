@@ -58,6 +58,9 @@ public class PlayerShooting : MonoBehaviour
 
     [SerializeField] private GameObject projectilePrefab;
     [SerializeField] private Transform firePoint;
+    [Tooltip("Prefab do sub-projétil de respingo (offline). Em MP use NetworkProjectileSpawner.networkSplashProjectilePrefab.")]
+    [SerializeField] private GameObject splashProjectilePrefab;
+    [SerializeField] private LayerMask splashEnemyLayers;
 
     private PlayerInputHandler _input;
     private PlayerAmmo _ammo;
@@ -123,6 +126,13 @@ public class PlayerShooting : MonoBehaviour
         _animationHandler = GetComponent<PlayerAnimationHandler>();
         _mainCamera = Camera.main;
         CurrentFireRate = baseFireRate;
+
+        if (splashEnemyLayers.value == 0)
+        {
+            int enemyLayer = LayerMask.NameToLayer("Enemy");
+            if (enemyLayer >= 0)
+                splashEnemyLayers = 1 << enemyLayer;
+        }
     }
 
     private void OnEnable()
@@ -287,10 +297,20 @@ public class PlayerShooting : MonoBehaviour
             int bonusBounces = 0;
             if (_adrenaline != null && _adrenaline.IsFrenzyActive)
                 bonusBounces += _adrenaline.GetBonusBounces();
-            if (_passiveHandler != null)
-                bonusBounces += _passiveHandler.BonusProjectileBounces;
             if (bonusBounces > 0)
                 projectile.AddBonusBounces(bonusBounces);
+
+            if (_passiveHandler != null && _passiveHandler.HasSplashPassive)
+            {
+                GameObject splashPrefab = splashProjectilePrefab != null ? splashProjectilePrefab : projectilePrefab;
+                projectile.ConfigureSplashOnHit(
+                    splashPrefab,
+                    _passiveHandler.SplashCount,
+                    _passiveHandler.SplashRange,
+                    _passiveHandler.SplashDamagePercentage,
+                    _passiveHandler.PrioritizeDifferentEnemies,
+                    splashEnemyLayers);
+            }
         }
 
         OnShoot?.Invoke();

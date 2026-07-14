@@ -1,7 +1,7 @@
 using UnityEngine;
 
 /// <summary>
-/// Configuração da passiva por personagem (kill streak + duração).
+/// Configuração da passiva por personagem (kill streak + duração + efeitos por herói).
 /// </summary>
 [CreateAssetMenu(fileName = "PassiveAbilityConfig", menuName = "Abilities/Passive Ability Config")]
 public class PassiveAbilityConfig : ScriptableObject
@@ -14,17 +14,24 @@ public class PassiveAbilityConfig : ScriptableObject
     [Min(0.1f)]
     public float passiveDuration = 5f;
 
-    [Header("Nix — Cleave")]
-    [Tooltip("Máximo de inimigos atingidos pelo ataque normal com passiva ativa.")]
-    [Min(1)]
-    public int cleaveMaxTargets = 3;
+    [Header("Nix — Stun")]
+    [Tooltip("Duração do stun aplicado após o knockback do ataque normal com passiva ativa.")]
+    [Min(0f)]
+    public float stunDuration = 1.25f;
 
-    [Tooltip("Multiplicador de alcance e largura do ataque corpo a corpo com passiva ativa.")]
-    [Min(1f)]
-    public float cleaveAreaMultiplier = 1.35f;
-
-    [Header("Cora — Ricochete")]
-    [Tooltip("Bounces extras nos projéteis do ataque normal com passiva ativa.")]
+    [Header("Cora — Respingo / Splash")]
+    [Tooltip("Quantidade de sub-projéteis teleguiados gerados no impacto com passiva ativa.")]
     [Min(0)]
-    public int bonusBounces = 2;
+    public int splashCount = 3;
+
+    [Tooltip("Raio de busca de alvos para os respingos.")]
+    [Min(0.1f)]
+    public float splashRange = 4f;
+
+    [Tooltip("Fração do dano original aplicada em cada respingo (ex.: 0.5 = 50%).")]
+    [Range(0f, 2f)]
+    public float splashDamagePercentage = 0.5f;
+
+    [Tooltip("Se true, prioriza inimigos distintos. Se false (ou sem alvos extras), podem ir no mesmo.")]
+    public bool prioritizeDifferentEnemies = true;
 }

@@ -49,6 +49,7 @@ Documentação para desenvolvedores e **agentes de IA** que trabalham neste proj
 - [Cenas](editor/scenes.md) — Cenas de produção e bootstrap
 - [Diagnóstico modular](editor/diagnostics.md) — Hub de logs para combate/rede
 - [Prefabs](editor/README.md) — Inventário e template de documentação
+- [Guia: passiva Nix stun + Cora splash](editor/guides/nixie-cora-passive-refactor.md) — setup Editor pós-refatoração
 - [Estrutura de Assets](assets/STRUCTURE.md) — Pastas e convenções
 - [Erros comuns](troubleshooting/common-errors.md) — Console/compilador: causas e correções
 

@@ -16,18 +16,18 @@ Condição de Derrota (Game Over): Se ambos os jogadores chegarem a 0 pontos de 
 Nota de Contexto: Os nomes das habilidades listados abaixo são marcadores provisórios (Work In Progress).
 
 Personagem 1: Nix (Foco em Melee/Corpo-a-Corpo)
-Ataque Normal (LMB): Ataque corpo-a-corpo frontal (espadada). Causa dano a um único inimigo que esteja dentro da zona de colisão de curto alcance.
+Ataque Normal (LMB): Ataque corpo-a-corpo frontal (espadada) em trapézio. Causa dano a **todos** os inimigos dentro da zona de colisão.
 
-Passiva: Modifica o Ataque Normal para ter cleave/dano em área limitado, afetando até 3 inimigos simultaneamente dentro do seu alcance.
+Passiva: Após o knockback do ataque normal, aplica **Stun** nos inimigos atingidos (duração em `NixPassiveConfig.stunDuration`). O raio do ataque permanece o do ataque normal (sem cleave/área aumentada).
 
 Habilidade 1 - Empurrão (Q): Habilidade de controle de grupo (CC). Aplica força de repulsão (Knockback) aos inimigos e aplica um debuff de lentidão (Slow) com duração de 3 segundos.
 
 Habilidade 2 - Investida (R): Ataque em área direcional. Gera uma zona de dano em formato retangular à frente de Nix, causando dano a todos os inimigos que colidirem com o Hitbox.
 
 Personagem 2: Cora (Foco em Ranged/Distância e Zona)
-Ataque Normal (LMB): Ataque à distância (projétil). Dispara penas em direção ao alvo (comportamento balístico similar a um novelo de lã).
+Ataque Normal (LMB): Ataque à distância (projétil). Dispara penas em direção ao alvo (comportamento balístico similar a um novelo de lã). Destrói ao tocar inimigo/parede.
 
-Passiva: Confere a propriedade de "Ricochete" aos projéteis do Ataque Normal, permitindo que rebatam nos colisores do cenário.
+Passiva: No impacto com inimigo, destrói o projétil e instancia **respingos** (sub-projéteis teleguiados) que perseguem inimigos próximos (`splashCount` / `splashRange` / `splashDamagePercentage` em `CoraPassiveConfig`).
 
 Habilidade 1 - Barreira (Q): Instancia um obstáculo físico.
 

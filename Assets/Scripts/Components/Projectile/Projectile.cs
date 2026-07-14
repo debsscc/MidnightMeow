@@ -46,6 +46,15 @@ public class Projectile : MonoBehaviour
     private bool _hasTravelDirection;
     private Vector2 _spawnPosition;
 
+    private bool _splashOnHit;
+    private int _splashCount;
+    private float _splashRange;
+    private float _splashDamagePercentage;
+    private bool _prioritizeDifferentEnemies;
+    private GameObject _splashProjectilePrefab;
+    private LayerMask _splashEnemyLayers;
+    private bool _isSplashSeeker;
+
     private static Sprite _fallbackCircleSprite;
     private static float _fallbackCircleDiameter = -1f;
 
@@ -119,27 +128,68 @@ public class Projectile : MonoBehaviour
     {
         if (_spriteRenderer != null && _spriteRenderer.sprite == null)
             EnsureVisibleSprite();
-        if (stats.maxDistance > 0 && _currentState != ProjectileState.Seeking &&
-            Vector2.Distance(_spawnPosition, transform.position) >= stats.maxDistance)
+
+        if (ShouldExpireByMaxDistance())
         {
-            if (_playHitOnExpire)
+            if (_isSplashSeeker || _playHitOnExpire)
                 TriggerHitAndDestroy();
             else
                 Destroy(gameObject);
+            return;
         }
 
-        if (_currentState == ProjectileState.Seeking && _seekTarget != null)
+        if (_currentState == ProjectileState.Seeking)
         {
-            Vector2 direction = (_seekTarget.position - transform.position).normalized;
-            _rb.linearVelocity = direction * _seekSpeed;
-            _travelDirection = direction;
-            ApplyFacingRotation();
+            if (!IsValidSeekTarget(_seekTarget))
+            {
+                // Sem alvo: continua na direção atual (como o projétil normal).
+                _currentState = ProjectileState.Fired;
+                _seekTarget = null;
+                float speed = stats != null ? stats.moveSpeed : Mathf.Max(0.01f, _seekSpeed);
+                SetTravelDirection(
+                    _travelDirection.sqrMagnitude > 0.0001f ? _travelDirection : Vector2.up,
+                    speed);
+            }
+            else
+            {
+                Vector2 direction = (_seekTarget.position - transform.position).normalized;
+                _rb.linearVelocity = direction * _seekSpeed;
+                _travelDirection = direction;
+                ApplyFacingRotation();
+            }
         }
+    }
+
+    private bool ShouldExpireByMaxDistance()
+    {
+        if (_hasHit || stats == null || stats.maxDistance <= 0f)
+            return false;
+
+        // Pull de munição (Seeking legado) não expira por distância.
+        // Respingos (splash) sempre respeitam maxDistance, mesmo teleguiados.
+        if (!_isSplashSeeker && _currentState == ProjectileState.Seeking)
+            return false;
+
+        return Vector2.Distance(_spawnPosition, transform.position) >= stats.maxDistance;
+    }
+
+    private static bool IsValidSeekTarget(Transform target)
+    {
+        if (target == null)
+            return false;
+
+        if (target.TryGetComponent<HealthComponent>(out var health) && health.IsDead)
+            return false;
+
+        if (target.TryGetComponent<NetworkEnemyController>(out var networkEnemy) && networkEnemy.IsDeadOnNetwork)
+            return false;
+
+        return true;
     }
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        if (_hasHit || _currentState == ProjectileState.Seeking) return;
+        if (_hasHit) return;
         if (collision.collider == null) return;
         if (IsPlayerCollider(collision.collider) || IsOtherPlayerProjectile(collision.collider)) return;
 
@@ -194,17 +244,96 @@ public class Projectile : MonoBehaviour
         IgnorePhysicsWithCollider(hitCollider);
 
         Vector2 impactDirection = ResolveImpactDirection();
+
+        // Passiva Cora (splash): destrói o projétil original e instancia respingos teleguiados.
+        if (_splashOnHit && !_isSplashSeeker)
+        {
+            Transform primaryRoot = ResolveEnemyRootTransform(hitCollider);
+            TrySpawnSplashProjectiles(primaryRoot);
+            TriggerHitAndDestroy(impactDirection);
+            return;
+        }
+
+        // Splash seekers e ataque normal: sem ricochete em inimigo — destrói no impacto.
         bool exhaustAfterThisHit = !stats.infinityBounces && (_currentBounces + 1 >= _maxBounces);
         _currentBounces++;
 
-        if (exhaustAfterThisHit)
+        if (exhaustAfterThisHit || _isSplashSeeker)
         {
-            // Don't bounce first — that would rotate splash toward the reflection, not the hit.
             TriggerHitAndDestroy(impactDirection);
             return;
         }
 
         ApplyEnemyBounce(hitCollider, collision);
+    }
+
+    private static Transform ResolveEnemyRootTransform(Collider2D hitCollider)
+    {
+        var networkEnemy = hitCollider.GetComponentInParent<NetworkEnemyController>();
+        if (networkEnemy != null)
+            return networkEnemy.transform;
+
+        var health = hitCollider.GetComponentInParent<HealthComponent>();
+        return health != null ? health.transform : hitCollider.transform;
+    }
+
+    private void TrySpawnSplashProjectiles(Transform primaryHitRoot)
+    {
+        if (_splashProjectilePrefab == null || _splashCount <= 0)
+            return;
+
+        Vector2 fallbackDirection = ResolveImpactDirection();
+
+        var networkProjectile = GetComponent<NetworkProjectileController>();
+        if (networkProjectile != null && networkProjectile.IsSpawned)
+        {
+            if (networkProjectile.IsServer)
+            {
+                networkProjectile.ServerSpawnSplashProjectiles(
+                    transform.position,
+                    primaryHitRoot,
+                    _splashCount,
+                    _splashRange,
+                    _splashDamagePercentage,
+                    _prioritizeDifferentEnemies,
+                    _splashEnemyLayers,
+                    _splashProjectilePrefab,
+                    fallbackDirection);
+            }
+            return;
+        }
+
+        // Offline / singleplayer — sempre spawna splashCount; sem alvo = segue a direção do impacto.
+        var targets = new List<Transform>(_splashCount);
+        ProjectileSplashUtility.CollectSplashTargets(
+            transform.position,
+            _splashRange,
+            _splashCount,
+            _prioritizeDifferentEnemies,
+            _splashEnemyLayers,
+            primaryHitRoot,
+            targets);
+
+        float splashDamageMul = _damageMultiplier * _splashDamagePercentage;
+        for (int i = 0; i < _splashCount; i++)
+        {
+            Transform target = i < targets.Count ? targets[i] : null;
+            Vector2 dir = fallbackDirection;
+            if (target != null)
+            {
+                Vector2 toTarget = ((Vector2)target.position - (Vector2)transform.position);
+                if (toTarget.sqrMagnitude > 0.0001f)
+                    dir = toTarget.normalized;
+            }
+
+            Quaternion rotation = ProjectileAimUtility.RotationFromDirection(dir);
+            GameObject splashObj = Instantiate(_splashProjectilePrefab, transform.position, rotation);
+            if (splashObj.TryGetComponent<Projectile>(out var splash))
+            {
+                splash.InitializeDirection(dir);
+                splash.ConfigureAsSplashSeeker(target, splashDamageMul, dir);
+            }
+        }
     }
 
     private Vector2 ResolveImpactDirection()
@@ -577,6 +706,74 @@ public class Projectile : MonoBehaviour
     public void AddBonusBounces(int bonusBounces) => _maxBounces += bonusBounces;
 
     public void SetDamageMultiplier(float multiplier) => _damageMultiplier = Mathf.Max(0f, multiplier);
+
+    /// <summary>
+    /// Habilita respingos no impacto (passiva Cora). Prefab deve ter NetworkObject em MP.
+    /// </summary>
+    public void ConfigureSplashOnHit(
+        GameObject splashPrefab,
+        int splashCount,
+        float splashRange,
+        float splashDamagePercentage,
+        bool prioritizeDifferentEnemies,
+        LayerMask enemyLayers)
+    {
+        _splashOnHit = splashPrefab != null && splashCount > 0;
+        _splashProjectilePrefab = splashPrefab;
+        _splashCount = splashCount;
+        _splashRange = splashRange;
+        _splashDamagePercentage = Mathf.Max(0f, splashDamagePercentage);
+        _prioritizeDifferentEnemies = prioritizeDifferentEnemies;
+        _splashEnemyLayers = enemyLayers.value != 0 ? enemyLayers : (LayerMask)(1 << LayerMask.NameToLayer("Enemy"));
+    }
+
+    /// <summary>
+    /// Configura este projétil como respingo: teleguia se houver alvo válido;
+    /// caso contrário segue na direção informada e expira em parede / maxDistance.
+    /// </summary>
+    public void ConfigureAsSplashSeeker(Transform target, float damageMultiplier, Vector2 fallbackDirection)
+    {
+        _isSplashSeeker = true;
+        _splashOnHit = false;
+        _maxBounces = 1;
+        _canBeCollected = false;
+        SetDamageMultiplier(damageMultiplier);
+
+        float speed = stats != null ? stats.moveSpeed : 15f;
+        Vector2 dir = fallbackDirection.sqrMagnitude > 0.0001f
+            ? fallbackDirection.normalized
+            : (_travelDirection.sqrMagnitude > 0.0001f ? _travelDirection.normalized : Vector2.up);
+
+        if (IsValidSeekTarget(target))
+        {
+            _currentState = ProjectileState.Seeking;
+            _seekTarget = target;
+            _seekSpeed = speed;
+
+            Vector2 toTarget = ((Vector2)target.position - (Vector2)transform.position);
+            if (toTarget.sqrMagnitude > 0.0001f)
+                dir = toTarget.normalized;
+        }
+        else
+        {
+            _currentState = ProjectileState.Fired;
+            _seekTarget = null;
+        }
+
+        if (_rb != null)
+            SetTravelDirection(dir, speed);
+        else
+        {
+            _travelDirection = dir;
+            _hasTravelDirection = true;
+        }
+    }
+
+    /// <summary>Compat: respingo com direção atual já inicializada.</summary>
+    public void ConfigureAsSplashSeeker(Transform target, float damageMultiplier)
+    {
+        ConfigureAsSplashSeeker(target, damageMultiplier, _travelDirection);
+    }
 
     private void SetTravelDirection(Vector2 direction, float speed)
     {

@@ -7,6 +7,7 @@ importantes + lean/breathing contínuos. Tiro normal NÃO treme a câmera.
 
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 [DisallowMultipleComponent]
 public sealed class PlayerCameraJuice : MonoBehaviour
@@ -17,7 +18,9 @@ public sealed class PlayerCameraJuice : MonoBehaviour
     [SerializeField] private bool shakeOnDash = true;
     [SerializeField] private bool shakeOnAbilities = true;
     [SerializeField] private bool shakeOnEnemyKill = true;
-    [SerializeField] private bool locomotionFeel = true;
+    [Tooltip("Lean + breathing (camera bounce). Desmarque para desligar o feed de bounce deste jogador (acessibilidade).")]
+    [FormerlySerializedAs("locomotionFeel")]
+    [SerializeField] private bool enableCameraBounce = true;
 
     private NetworkObject _networkObject;
 
@@ -47,13 +50,13 @@ public sealed class PlayerCameraJuice : MonoBehaviour
 
         GameEvents.OnEnemyKilledByPlayer -= HandleEnemyKilled;
 
-        if (locomotionFeel && IsLocalAuthority())
+        if (enableCameraBounce && IsLocalAuthority())
             PlayerCameraFeedback.SetLocomotionFeel(Vector2.zero, 0f);
     }
 
     private void LateUpdate()
     {
-        if (!locomotionFeel || !IsLocalAuthority())
+        if (!enableCameraBounce || !IsLocalAuthority())
             return;
 
         Vector2 moveInput = movement != null ? movement.MoveDirection : Vector2.zero;

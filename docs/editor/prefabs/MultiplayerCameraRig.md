@@ -16,9 +16,26 @@ Rig de câmera com Cinemachine para follow multiplayer, shake e cutscenes.
 | `CinemachinePositionComposer` | Composição 2D |
 | `MultiplayerCameraController` | Follow de jogadores |
 | `CameraShakeController` | Shake com Perlin + decay (trauma²) |
-| `PlayerCameraFeedback` / `PlayerCameraJuice` | Juice local (SP/MP): dash/hab = shake+zoom punch; kill; morte; lean no move + breathing idle leve |
+| `PlayerCameraFeedback` / `PlayerCameraJuice` | Juice local (SP/MP): dash/hab = shake+zoom punch; kill; morte; lean + breathing (`enableCameraBounce`) |
 | `CameraCutsceneController` | Cutscenes |
 | `UniversalAdditionalCameraData` | URP |
+
+## Acessibilidade — Camera Bounce (motion sickness)
+
+O bounce contínuo (commit “Bounce camera…”) combina:
+
+| Efeito | Campos no `CameraConfig` | Quando ocorre |
+|--------|--------------------------|---------------|
+| Lean | `moveLeanDistance`, `moveLeanSmoothing`, `moveLeanMinInput` | Ao andar (câmera “empurra” na direção do input) |
+| Breathing | `breathingAmplitude` (amplitude), `breathingSpeed` (frequência) | Parado / idle (oscilação seno/cosseno) |
+
+**Desligar totalmente:** desmarque `Enable Camera Bounce` em **qualquer** destes (AND no controller + SO; o Juice também pode cortar o feed):
+
+1. `Assets/Data/Multiplayer/CameraConfig.asset` → **Enable Camera Bounce**
+2. Prefab/cena `MultiplayerCameraRig` → componente `MultiplayerCameraController` → **Enable Camera Bounce**
+3. Prefab do personagem → `PlayerCameraJuice` → **Enable Camera Bounce**
+
+**Ajuste fino sugerido (manter efeito ligado, mais suave):** ver tabela em “Valores a confirmar”.
 
 ## Diagnóstico `[CAM-DIAG]`
 
@@ -36,6 +53,10 @@ Para **silenciar** os logs da câmera: no SO, desmarque **Camera Diagnostics** (
 |-------|-----------|-------------|
 | Target group / follow | Como escolhe jogador local | |
 | CameraConfig SO | Se usado | `Assets/Data/Multiplayer/CameraConfig.asset` |
+| **Enable Camera Bounce** | Lean + breathing (acessibilidade) | `true` (desligar se causar tontura) |
+| **moveLeanDistance** | Amplitude do lean ao andar | `0.2` (antes ~0.55 — muito agressivo) |
+| **breathingAmplitude** | Amplitude do bounce idle | `0.012` |
+| **breathingSpeed** | Frequência do bounce idle | `0.4` |
 | **Intro zoom** | Zoom in ao iniciar fase | `playIntroZoom`, `introZoomInAmount` (2), `introZoomDuration` (2.5s) no SO |
 | Bounds / confiner | Limites do mapa | |
 | Prioridades Cinemachine | | |

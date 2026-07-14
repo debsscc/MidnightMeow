@@ -5585,6 +5585,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerShooting
   projectilePrefab: {fileID: 691743863976024828, guid: eadee2043abe1c540b4356dff9dbd9a7, type: 3}
   firePoint: {fileID: 874212205570085287}
+  splashProjectilePrefab: {fileID: 691743863976024828, guid: 1ab19e3173257604e9209e641fb6b1e9, type: 3}
+  splashEnemyLayers:
+    serializedVersion: 2
+    m_Bits: 1024
   baseFireRate: 1
   CurrentFireRate: 0
   DamageMultiplier: 1
@@ -5807,6 +5811,7 @@ MonoBehaviour:
   footstepMaxInterval: 0.55
   footstepVolume: 0.85
   heartbeatHealthThreshold: 0.5
+  heartbeatVolumeGain: 3
 --- !u!114 &6300129357974945871
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5993,6 +5998,7 @@ MonoBehaviour:
   enableDiagnosticsLogs: 1
   cameraBindRetryInterval: 0.25
   cameraBindTimeoutSeconds: 10
+  playerInput: {fileID: 0}
   inputHandler: {fileID: 5786198820618361475}
   movement: {fileID: 584514799452680066}
   shooting: {fileID: 8839670001696835616}
@@ -6067,6 +6073,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::NetworkProjectileSpawner
   ShowTopMostFoldoutHeaderGroup: 1
   networkProjectilePrefab: {fileID: 691743863976024828, guid: eadee2043abe1c540b4356dff9dbd9a7, type: 3}
+  networkSplashProjectilePrefab: {fileID: 691743863976024828, guid: 1ab19e3173257604e9209e641fb6b1e9, type: 3}
+  splashEnemyLayers:
+    serializedVersion: 2
+    m_Bits: 1024
 --- !u!114 &6829977954312598915
 MonoBehaviour:
   m_ObjectHideFlags: 0

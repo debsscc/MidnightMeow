@@ -171,21 +171,19 @@ public class PlayerMeleeCombat : MonoBehaviour
 
         direction = direction.sqrMagnitude > 0.0001f ? direction.normalized : Vector2.up;
         Vector2 origin = GetSwingOrigin(direction);
-        float areaMultiplier = _passiveHandler != null ? _passiveHandler.CleaveAreaMultiplier : 1f;
-        float attackRange = CombatStats.attackRange * areaMultiplier;
-        float nearHalfWidth = CombatStats.nearHalfWidth * areaMultiplier;
-        float farHalfWidth = CombatStats.farHalfWidth * areaMultiplier;
+        float attackRange = CombatStats.attackRange;
+        float nearHalfWidth = CombatStats.nearHalfWidth;
+        float farHalfWidth = CombatStats.farHalfWidth;
 
         OnAttackPerformed?.Invoke(origin, direction, CombatStats);
 
         float searchRadius = attackRange + farHalfWidth + 0.5f;
         Collider2D[] hits = Physics2D.OverlapCircleAll(origin, searchRadius, enemyLayers);
         HashSet<int> processed = new HashSet<int>();
-        int maxTargets = _passiveHandler != null ? _passiveHandler.CleaveMaxTargets : 1;
         int hitCount = 0;
 
-        List<Vector2> hitPoints = new List<Vector2>(maxTargets);
-        List<GameObject> targets = new List<GameObject>(maxTargets);
+        List<Vector2> hitPoints = new List<Vector2>();
+        List<GameObject> targets = new List<GameObject>();
 
         foreach (Collider2D hit in hits)
         {
@@ -212,7 +210,6 @@ public class PlayerMeleeCombat : MonoBehaviour
             hitPoints.Add(targetPoint);
             targets.Add(targetRoot);
             hitCount++;
-            if (hitCount >= maxTargets) break;
 
             if (drawDebugHits)
             {
@@ -259,11 +256,24 @@ public class PlayerMeleeCombat : MonoBehaviour
         if (knockDir.sqrMagnitude < 0.0001f)
             knockDir = attackDirection;
 
+        float stunDuration = _passiveHandler != null ? _passiveHandler.StunDuration : 0f;
+
         if (target.TryGetComponent<NetworkEnemyController>(out var networkEnemy) && networkEnemy.IsSpawned)
         {
             ulong localId = NetworkManager.Singleton != null ? NetworkManager.Singleton.LocalClientId : 0;
             networkEnemy.TakeDamageRpc(damage, localId, DamageType.Melee);
-            networkEnemy.ApplyKnockbackRpc(knockDir, CombatStats.knockbackDistance, CombatStats.knockbackDuration);
+            if (stunDuration > 0f)
+            {
+                networkEnemy.ApplyKnockbackThenStunRpc(
+                    knockDir,
+                    CombatStats.knockbackDistance,
+                    CombatStats.knockbackDuration,
+                    stunDuration);
+            }
+            else
+            {
+                networkEnemy.ApplyKnockbackRpc(knockDir, CombatStats.knockbackDistance, CombatStats.knockbackDuration);
+            }
         }
         else if (target.TryGetComponent<HealthComponent>(out var health))
         {
@@ -272,6 +282,18 @@ public class PlayerMeleeCombat : MonoBehaviour
             {
                 knockback.ApplyKnockback(knockDir, CombatStats.knockbackForce, CombatStats.knockbackDuration);
             }
+
+            if (stunDuration > 0f && target.TryGetComponent<EnemyHitStun>(out var hitStun))
+                StartCoroutine(ApplyOfflineStunAfterKnockback(hitStun, CombatStats.knockbackDuration, stunDuration));
         }
+    }
+
+    private static IEnumerator ApplyOfflineStunAfterKnockback(EnemyHitStun hitStun, float knockbackDuration, float stunDuration)
+    {
+        if (knockbackDuration > 0f)
+            yield return new WaitForSeconds(knockbackDuration);
+
+        if (hitStun != null)
+            hitStun.ApplyStun(stunDuration);
     }
 }

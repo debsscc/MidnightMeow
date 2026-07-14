@@ -100,27 +100,31 @@ public class CameraConfig : ScriptableObject
     [Range(1f, 20f)]
     public float zoomPunchRecoverSpeed = 7f;
 
-    [Header("Juice — Lean no movimento")]
-    [Tooltip("Offset máximo da câmera na direção do movimento.")]
-    [Range(0f, 2f)]
-    public float moveLeanDistance = 0.55f;
+    [Header("Acessibilidade — Camera Bounce")]
+    [Tooltip("Liga lean + breathing (head bob / trepidação). Desmarque para motion sickness / reduce motion: câmera segue o jogador estática e suave.")]
+    public bool enableCameraBounce = true;
 
-    [Tooltip("Suavização do lean.")]
+    [Header("Juice — Lean no movimento (bounce ao andar)")]
+    [Tooltip("Amplitude do lean: offset máximo da câmera na direção do movimento (unidades de mundo).")]
+    [Range(0f, 2f)]
+    public float moveLeanDistance = 0.2f;
+
+    [Tooltip("Suavização do lean (maior = alcança o offset mais rápido).")]
     [Range(1f, 20f)]
-    public float moveLeanSmoothing = 8f;
+    public float moveLeanSmoothing = 6f;
 
     [Tooltip("Velocidade mínima (input) para começar o lean.")]
     [Range(0.01f, 1f)]
     public float moveLeanMinInput = 0.12f;
 
-    [Header("Juice — Breathing idle")]
-    [Tooltip("Amplitude do micro drift quando parado (leve).")]
+    [Header("Juice — Breathing idle (bounce parado)")]
+    [Tooltip("Amplitude do bounce idle (breathing). Equivale a bounceAmplitude — micro drift em seno/cosseno quando parado.")]
     [Range(0f, 0.25f)]
-    public float breathingAmplitude = 0.035f;
+    public float breathingAmplitude = 0.012f;
 
-    [Tooltip("Velocidade do ciclo de breathing.")]
+    [Tooltip("Frequência do ciclo de breathing/bounce (Hz aproximado do seno). Equivale a bounceFrequency.")]
     [Range(0.1f, 3f)]
-    public float breathingSpeed = 0.65f;
+    public float breathingSpeed = 0.4f;
 
     [Tooltip("Abaixo desta velocidade de input o breathing entra.")]
     [Range(0.01f, 1f)]

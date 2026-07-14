@@ -92,11 +92,25 @@ public class NetworkProjectileSpawner : NetworkBehaviour
     [Tooltip("Prefab do projétil com NetworkObject e NetworkProjectileController.")]
     [SerializeField] private GameObject networkProjectilePrefab;
 
+    [Header("Respingo (Passiva Cora)")]
+    [Tooltip("Prefab de rede do sub-projétil teleguiado. Duplicata do projétil principal.")]
+    [SerializeField] private GameObject networkSplashProjectilePrefab;
+
+    [Tooltip("Layers consideradas inimigas na busca de alvos do splash.")]
+    [SerializeField] private LayerMask splashEnemyLayers;
+
     private PlayerShooting _shooting;
 
     private void Awake()
     {
         _shooting = GetComponent<PlayerShooting>();
+
+        if (splashEnemyLayers.value == 0)
+        {
+            int enemyLayer = LayerMask.NameToLayer("Enemy");
+            if (enemyLayer >= 0)
+                splashEnemyLayers = 1 << enemyLayer;
+        }
     }
 
     public override void OnNetworkSpawn()
@@ -136,6 +150,11 @@ public class NetworkProjectileSpawner : NetworkBehaviour
 
         float damageMultiplier = 1f;
         int bonusBounces = 0;
+        bool splashEnabled = false;
+        int splashCount = 0;
+        float splashRange = 0f;
+        float splashDamagePercentage = 0f;
+        bool prioritizeDifferent = true;
 
         var adrenaline = GetComponent<PlayerAdrenaline>();
         var passive = GetComponent<PlayerPassiveHandler>();
@@ -143,14 +162,30 @@ public class NetworkProjectileSpawner : NetworkBehaviour
         if (shooting != null) damageMultiplier = shooting.DamageMultiplier;
         if (adrenaline != null && adrenaline.IsFrenzyActive)
             bonusBounces = adrenaline.GetBonusBounces();
-        if (passive != null)
-            bonusBounces += passive.BonusProjectileBounces;
+        if (passive != null && passive.HasSplashPassive)
+        {
+            splashEnabled = true;
+            splashCount = passive.SplashCount;
+            splashRange = passive.SplashRange;
+            splashDamagePercentage = passive.SplashDamagePercentage;
+            prioritizeDifferent = passive.PrioritizeDifferentEnemies;
+        }
 
         OnOwnerShotPrepared?.Invoke(new OwnerShotSnapshot(shotPosition, direction, rotation, damageMultiplier, bonusBounces));
 
         Destroy(localProjectile);
 
-        SpawnProjectileRpc(shotPosition, rotation, direction, damageMultiplier, bonusBounces);
+        SpawnProjectileRpc(
+            shotPosition,
+            rotation,
+            direction,
+            damageMultiplier,
+            bonusBounces,
+            splashEnabled,
+            splashCount,
+            splashRange,
+            splashDamagePercentage,
+            prioritizeDifferent);
     }
 
     /// <summary>
@@ -162,9 +197,14 @@ public class NetworkProjectileSpawner : NetworkBehaviour
         Quaternion rotation,
         Vector2 direction,
         float damageMultiplier,
-        int bonusBounces)
+        int bonusBounces,
+        bool splashEnabled,
+        int splashCount,
+        float splashRange,
+        float splashDamagePercentage,
+        bool prioritizeDifferentEnemies)
     {
-        Debug.Log($"[MP-SHOT-RPC] Received owner={OwnerClientId} pos={position} rotZ={rotation.eulerAngles.z:0.###} dir={direction} dmgMul={damageMultiplier:0.###} bonusBounces={bonusBounces}");
+        Debug.Log($"[MP-SHOT-RPC] Received owner={OwnerClientId} pos={position} rotZ={rotation.eulerAngles.z:0.###} dir={direction} dmgMul={damageMultiplier:0.###} bonusBounces={bonusBounces} splash={splashEnabled}");
 
         if (networkProjectilePrefab == null)
         {
@@ -229,11 +269,27 @@ public class NetworkProjectileSpawner : NetworkBehaviour
         ));
         Debug.Log($"[MP-SHOT-SPAWN] Spawned owner={OwnerClientId} netObj={netObj.NetworkObjectId} prefab={networkProjectilePrefab.name} pos={projectileObj.transform.position} rot={projectileObj.transform.eulerAngles} dir={direction}");
 
-        // Inicializa o projétil após o spawn na rede
         var networkProjectile = projectileObj.GetComponent<NetworkProjectileController>();
         if (networkProjectile != null)
         {
-            networkProjectile.ServerApplySpawnData(direction, damageMultiplier, bonusBounces, OwnerClientId);
+            NetworkProjectileController.SplashSpawnConfig? splash = null;
+            if (splashEnabled && networkSplashProjectilePrefab != null && splashCount > 0)
+            {
+                splash = new NetworkProjectileController.SplashSpawnConfig(
+                    true,
+                    splashCount,
+                    splashRange,
+                    splashDamagePercentage,
+                    prioritizeDifferentEnemies,
+                    splashEnemyLayers,
+                    networkSplashProjectilePrefab);
+            }
+            else if (splashEnabled && networkSplashProjectilePrefab == null)
+            {
+                Debug.LogWarning("[NetworkProjectileSpawner] Passiva splash ativa, mas networkSplashProjectilePrefab não está atribuído.");
+            }
+
+            networkProjectile.ServerApplySpawnData(direction, damageMultiplier, bonusBounces, OwnerClientId, splash);
         }
 
         var clientRpcParams = new ClientRpcParams

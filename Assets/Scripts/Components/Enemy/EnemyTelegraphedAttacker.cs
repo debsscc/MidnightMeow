@@ -98,6 +98,12 @@ public class EnemyTelegraphedAttacker : MonoBehaviour
         _patternRoutine = StartCoroutine(ExecutePatternRoutine());
     }
 
+    private void LateUpdate()
+    {
+        if (_isExecuting && _hitStun != null && _hitStun.IsStunned)
+            FreezeForPause();
+    }
+
     public void FreezeForPause()
     {
         if (_patternRoutine != null)

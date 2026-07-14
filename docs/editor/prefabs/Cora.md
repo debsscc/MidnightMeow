@@ -39,7 +39,7 @@ Cora
 | `PlayerAbilityHandler` | `abilitySet` → CoraAbilitySet; prefabs barreira/poça |
 | `CoraBarrierAbilityExecutor` | Habilidade Q — posição do mouse + rotação pela mira (`AbilityPlacementUtility.RotationFromDirection`) |
 | `CoraPoolAbilityExecutor` | Habilidade R |
-| `PlayerPassiveHandler` | Kill streak / ricochete |
+| `PlayerPassiveHandler` | Kill streak / splash (respingo) |
 | `PlayerAbilityStatScaler` | Tiers do ataque normal |
 | `NetworkPlayerAbilityRelay` | Sync animações MP |
 | `NetworkAbilityObjectSpawner` | Spawn barreira/poça em rede |
@@ -57,7 +57,7 @@ Cora
 | `NetworkPlayerHealth` | |
 | `NetworkPlayerAdrenaline` | |
 | `NetworkPlayerSpectator` | |
-| `NetworkProjectileSpawner` | |
+| `NetworkProjectileSpawner` | `networkProjectilePrefab` + **`networkSplashProjectilePrefab`** (passiva) |
 | `MultiplayerCombatIntegrityLogger` | |
 | `NetworkPlayerRevive` | |
 | `Shadow` | Ghosting de dash (`Sombra` → `Assets/Prefabs/UI/Shadow.prefab`); filho **Shadow** = elipse no chão |

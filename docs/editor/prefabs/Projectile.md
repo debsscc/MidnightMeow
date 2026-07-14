@@ -62,6 +62,7 @@ No hit: splash/vanish usam a mesma rotação de voo (`ApplyFacingRotation`). Van
 
 - Layer `Projectile` ignora `Player` (projétil da Cora não acerta Nixie/aliado).
 - Dano em inimigos: servidor via `NetworkProjectileController.ServerApplyEnemyHit`.
+- **Passiva Cora (splash):** no impacto, o servidor busca alvos com `Physics2D.OverlapCircle` e faz `Instantiate` + `NetworkObject.Spawn` do prefab em `NetworkProjectileSpawner.networkSplashProjectilePrefab` (ver [guia](../guides/nixie-cora-passive-refactor.md)).
 
 ## Referenciado por
 

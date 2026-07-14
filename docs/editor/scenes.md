@@ -47,9 +47,10 @@ Assets de NavMesh baked por cena em subpastas (`NavMesh-*.asset`). Prefabs: `Nav
 - **Bootstrap:** `MultiplayerBootstrapper` valida `NetworkWaveManager` na cena de gameplay.
 - **Câmera:** `MultiplayerCameraRig` na raiz da Fase-1 (posição ~1.7, 8.58). Clientes aguardam spawn via `GameplayCameraRebindUtility` após `NetworkSceneSyncUtility.WaitForActiveScene`. Logs `[CAM-DIAG]` em `GameplayDiagnosticConfig.cameraDiagnostics` (ver [diagnostics.md](diagnostics.md)).
 - **Shake ao tomar dano:** `PlayerCameraFeedback` → `CameraShakeController` (preset Medium em `CameraConfig`); rede dispara no `PlayTakeDamageVisualClientRpc` só para `IsOwner`; cenas offline/legado usam `HealthComponent`.
-- **Juice (eventos importantes):** `PlayerCameraJuice` no jogador local (SP e MP) — dash/habilidades = micro-shake + zoom punch; kill = micro-shake (ClientRpc p/ killer); morte = shake médio-forte. Lean na direção do movimento + breathing idle leve. Shake usa Perlin + decay. **Tiro normal não treme.**
+- **Juice (eventos importantes):** `PlayerCameraJuice` no jogador local (SP e MP) — dash/habilidades = micro-shake + zoom punch; kill = micro-shake (ClientRpc p/ killer); morte = shake médio-forte. Lean + breathing (camera bounce) via `enableCameraBounce`. Shake usa Perlin + decay. **Tiro normal não treme.**
+- **Acessibilidade (motion sickness):** desligar bounce em `CameraConfig.enableCameraBounce` e/ou `MultiplayerCameraController.enableCameraBounce` e/ou `PlayerCameraJuice.enableCameraBounce`.
 - **Pouca vida:** vinheta vermelha + tremor da barra a partir de ~50% HP (mesmo fluxo em SP/MP via `NetworkPlayerHealth`).
-- **Tune:** `Assets/Data/Multiplayer/CameraConfig.asset` — `zoomPunch*`, `moveLean*`, `breathing*`, `shakePerlinFrequency`.
+- **Tune:** `Assets/Data/Multiplayer/CameraConfig.asset` — `enableCameraBounce`, `zoomPunch*`, `moveLean*` (amplitude ao andar), `breathing*` (amplitude/frequência idle), `shakePerlinFrequency`.
 - **Limites da câmera:** adicione um GameObject com `CameraBoundsVolume` + `PolygonCollider2D` na Fase-1; o `MultiplayerCameraController` liga ao `CinemachineConfiner2D` e aplica clamp manual via `CameraBoundsClampUtility` quando `useDirectCameraFollow` está ativo (Brain desligado).
 - **HUD habilidades:** `PlayerAbilityHud` é criado automaticamente no Canvas ao entrar em Fase-1/2 (cooldowns Dash/Q/R + barra da passiva, canto inferior direito).
 - **Magículas na fase:** posicione `ScienceIndicator` no Canvas/HUD pelo Editor (RectTransform); o script só atualiza o texto via `RoundMagiculaTracker`.

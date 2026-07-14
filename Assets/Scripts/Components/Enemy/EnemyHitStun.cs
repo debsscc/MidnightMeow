@@ -1,7 +1,9 @@
 /// <summary>
-/// Paralisa o inimigo por um tempo configurável em EnemyStats após tomar dano.
+/// Paralisa o inimigo por um tempo configurável (hit-stun curto em dano ou stun de combate).
+/// O timer roda localmente; em MP o servidor é a autoridade e NetworkEnemyController sincroniza o estado.
 /// </summary>
 
+using System;
 using UnityEngine;
 
 [RequireComponent(typeof(HealthComponent))]
@@ -13,7 +15,13 @@ public class EnemyHitStun : MonoBehaviour
 
     public bool IsStunned => Time.time < _stunEndTime;
 
+    public float StunTimeRemaining => Mathf.Max(0f, _stunEndTime - Time.time);
+
+    public event Action<float> OnStunApplied;
+    public event Action OnStunEnded;
+
     private HealthComponent _health;
+    private bool _wasStunned;
 
     private void Awake()
     {
@@ -32,6 +40,14 @@ public class EnemyHitStun : MonoBehaviour
             _health.OnTakeDamage.RemoveListener(HandleTakeDamage);
     }
 
+    private void Update()
+    {
+        bool stunned = IsStunned;
+        if (_wasStunned && !stunned)
+            OnStunEnded?.Invoke();
+        _wasStunned = stunned;
+    }
+
     private void HandleTakeDamage()
     {
         ApplyStun();
@@ -46,5 +62,7 @@ public class EnemyHitStun : MonoBehaviour
     {
         if (duration <= 0f) return;
         _stunEndTime = Mathf.Max(_stunEndTime, Time.time + duration);
+        _wasStunned = true;
+        OnStunApplied?.Invoke(duration);
     }
 }

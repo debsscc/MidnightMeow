@@ -220,10 +220,9 @@ public class MeleeAttackVisual : MonoBehaviour
         if (offset > 0f)
             origin += forward.normalized * offset;
 
-        float areaMultiplier = _passiveHandler != null ? _passiveHandler.CleaveAreaMultiplier : 1f;
-        attackRange = stats.attackRange * areaMultiplier;
-        nearHalfWidth = stats.nearHalfWidth * areaMultiplier;
-        farHalfWidth = stats.farHalfWidth * areaMultiplier;
+        attackRange = stats.attackRange;
+        nearHalfWidth = stats.nearHalfWidth;
+        farHalfWidth = stats.farHalfWidth;
         return attackRange > 0f;
     }
 

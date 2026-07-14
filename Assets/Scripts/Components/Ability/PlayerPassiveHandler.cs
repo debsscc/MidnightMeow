@@ -3,7 +3,7 @@ using Unity.Netcode;
 using UnityEngine;
 
 /// <summary>
-/// Gerencia kill streak e timer da passiva (cleave Nix / ricochete Cora).
+/// Gerencia kill streak e timer da passiva (stun Nix / splash Cora).
 /// </summary>
 [DisallowMultipleComponent]
 public class PlayerPassiveHandler : MonoBehaviour
@@ -18,14 +18,26 @@ public class PlayerPassiveHandler : MonoBehaviour
 
     public bool IsPassiveActive => abilitySet != null && abilitySet.passive != null && Time.time < _passiveEndTime;
 
-    public int CleaveMaxTargets =>
-        IsPassiveActive && abilitySet?.passive != null ? abilitySet.passive.cleaveMaxTargets : 1;
+    public float StunDuration =>
+        IsPassiveActive && abilitySet?.passive != null ? abilitySet.passive.stunDuration : 0f;
 
-    public int BonusProjectileBounces =>
-        IsPassiveActive && abilitySet?.passive != null ? abilitySet.passive.bonusBounces : 0;
+    public bool HasSplashPassive =>
+        IsPassiveActive && abilitySet?.passive != null && abilitySet.passive.splashCount > 0;
 
-    public float CleaveAreaMultiplier =>
-        IsPassiveActive && abilitySet?.passive != null ? abilitySet.passive.cleaveAreaMultiplier : 1f;
+    public int SplashCount =>
+        IsPassiveActive && abilitySet?.passive != null ? abilitySet.passive.splashCount : 0;
+
+    public float SplashRange =>
+        IsPassiveActive && abilitySet?.passive != null ? abilitySet.passive.splashRange : 0f;
+
+    public float SplashDamagePercentage =>
+        IsPassiveActive && abilitySet?.passive != null ? abilitySet.passive.splashDamagePercentage : 0f;
+
+    public bool PrioritizeDifferentEnemies =>
+        IsPassiveActive && abilitySet?.passive != null && abilitySet.passive.prioritizeDifferentEnemies;
+
+    public PassiveAbilityConfig ActivePassiveConfig =>
+        IsPassiveActive ? abilitySet?.passive : null;
 
     public int PassiveKillProgress => _killCounter;
 

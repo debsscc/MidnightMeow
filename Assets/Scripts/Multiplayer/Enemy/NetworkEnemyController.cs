@@ -60,11 +60,17 @@ public class NetworkEnemyController : NetworkBehaviour
         NetworkVariableReadPermission.Everyone,
         NetworkVariableWritePermission.Server);
 
+    private readonly NetworkVariable<bool> _networkIsCombatStunned = new NetworkVariable<bool>(
+        false,
+        NetworkVariableReadPermission.Everyone,
+        NetworkVariableWritePermission.Server);
+
     private static readonly int HashMoveSpeed = Animator.StringToHash("MoveSpeed");
     private static readonly int HashOnAttack = Animator.StringToHash("OnAttack");
     private static readonly int HashOnTakeDamage = Animator.StringToHash("OnTakeDamage");
     private static readonly int HashOnDie = Animator.StringToHash("OnDie");
     private static readonly int HashIsAttacking = Animator.StringToHash("IsAttacking");
+    private static readonly int HashIsStunned = Animator.StringToHash("IsStunned");
 
     private Animator _animator;
     private SpriteRenderer _spriteRenderer;
@@ -142,6 +148,7 @@ public class NetworkEnemyController : NetworkBehaviour
         _animFacingFlipX.OnValueChanged += HandleAnimFacingChanged;
         _animAttackSequence.OnValueChanged += HandleAnimAttackSequenceChanged;
         _animIsAttacking.OnValueChanged += HandleAnimIsAttackingChanged;
+        _networkIsCombatStunned.OnValueChanged += HandleCombatStunChanged;
 
         if (IsServer)
         {
@@ -170,6 +177,8 @@ public class NetworkEnemyController : NetworkBehaviour
 
         if (!IsServer)
             ApplyClientMirror(_networkHealth.Value, _networkMaxHealth.Value, _networkIsDead.Value);
+
+        HandleCombatStunChanged(false, _networkIsCombatStunned.Value);
     }
 
     public override void OnNetworkDespawn()
@@ -184,6 +193,7 @@ public class NetworkEnemyController : NetworkBehaviour
         _animFacingFlipX.OnValueChanged -= HandleAnimFacingChanged;
         _animAttackSequence.OnValueChanged -= HandleAnimAttackSequenceChanged;
         _animIsAttacking.OnValueChanged -= HandleAnimIsAttackingChanged;
+        _networkIsCombatStunned.OnValueChanged -= HandleCombatStunChanged;
 
         if (TryGetComponent<EnemyHealthBarDisplay>(out var healthBarDisplay))
             healthBarDisplay.HideImmediately();
@@ -199,6 +209,10 @@ public class NetworkEnemyController : NetworkBehaviour
 
         if (_deathFinalized || IsDeadOnNetwork)
             return;
+
+        bool stunned = _hitStun != null && _hitStun.IsStunned;
+        if (_networkIsCombatStunned.Value != stunned)
+            _networkIsCombatStunned.Value = stunned;
 
         float speed = _movement.GetCurrentSpeed();
         if (!Mathf.Approximately(_animMoveSpeed.Value, speed))
@@ -545,7 +559,7 @@ public class NetworkEnemyController : NetworkBehaviour
     public void ApplyStunRpc(float duration)
     {
         if (!IsServer || IsDeadOnNetwork || duration <= 0f) return;
-        _hitStun?.ApplyStun(duration);
+        ServerApplyCombatStun(duration);
     }
 
     [Rpc(SendTo.Server)]
@@ -556,10 +570,34 @@ public class NetworkEnemyController : NetworkBehaviour
         if (_knockbackCoroutine != null)
             StopCoroutine(_knockbackCoroutine);
 
-        _knockbackCoroutine = StartCoroutine(ServerKnockbackRoutine(direction, distance, duration));
+        _knockbackCoroutine = StartCoroutine(ServerKnockbackRoutine(direction, distance, duration, 0f));
     }
 
-    private IEnumerator ServerKnockbackRoutine(Vector2 direction, float distance, float duration)
+    /// <summary>
+    /// Knockback autoritativo; ao terminar, aplica stun de combate (passiva Nix).
+    /// </summary>
+    [Rpc(SendTo.Server)]
+    public void ApplyKnockbackThenStunRpc(Vector2 direction, float distance, float knockbackDuration, float stunDuration)
+    {
+        if (!IsServer || IsDeadOnNetwork || distance <= 0f || knockbackDuration <= 0f) return;
+
+        if (_knockbackCoroutine != null)
+            StopCoroutine(_knockbackCoroutine);
+
+        _knockbackCoroutine = StartCoroutine(
+            ServerKnockbackRoutine(direction, distance, knockbackDuration, stunDuration));
+    }
+
+    private void ServerApplyCombatStun(float duration)
+    {
+        if (duration <= 0f) return;
+
+        _hitStun?.ApplyStun(duration);
+        _telegraphedAttacker?.FreezeForPause();
+        _networkIsCombatStunned.Value = true;
+    }
+
+    private IEnumerator ServerKnockbackRoutine(Vector2 direction, float distance, float duration, float stunAfter)
     {
         direction = direction.sqrMagnitude > 0.0001f ? direction.normalized : Vector2.up;
 
@@ -580,12 +618,31 @@ public class NetworkEnemyController : NetworkBehaviour
             yield return null;
         }
 
+        if (stunAfter > 0f && !IsDeadOnNetwork)
+            ServerApplyCombatStun(stunAfter);
+
         if (_agent != null && !IsDeadOnNetwork)
             _agent.isStopped = false;
         if (_movement != null && !IsDeadOnNetwork)
             _movement.enabled = true;
 
         _knockbackCoroutine = null;
+    }
+
+    private void HandleCombatStunChanged(bool previous, bool current)
+    {
+        if (_animator == null)
+            return;
+
+        // Parâmetro opcional no Animator — se não existir, Unity ignora sem erro crítico.
+        foreach (var parameter in _animator.parameters)
+        {
+            if (parameter.nameHash == HashIsStunned && parameter.type == AnimatorControllerParameterType.Bool)
+            {
+                _animator.SetBool(HashIsStunned, current);
+                break;
+            }
+        }
     }
 
     [ClientRpc]

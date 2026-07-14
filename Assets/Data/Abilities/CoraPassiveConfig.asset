@@ -14,5 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PassiveAbilityConfig
   killsRequired: 5
   passiveDuration: 5
-  cleaveMaxTargets: 1
-  bonusBounces: 2
+  stunDuration: 0
+  splashCount: 3
+  splashRange: 4
+  splashDamagePercentage: 0.5
+  prioritizeDifferentEnemies: 1

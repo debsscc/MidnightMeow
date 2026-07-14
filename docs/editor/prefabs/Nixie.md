@@ -37,7 +37,7 @@ Nixie
 | `PlayerAbilityHandler` | `abilitySet` → NixAbilitySet; `unlockAllAbilitySlotsOnStart: false` (bloqueio por wave) |
 | `NixPushAbilityExecutor` | Habilidade Q |
 | `NixChargeAbilityExecutor` | Habilidade R — dano no corredor desde `Rigidbody2D.position` no início |
-| `PlayerPassiveHandler` | Kill streak / cleave |
+| `PlayerPassiveHandler` | Kill streak / stun pós-knockback |
 | `PlayerAbilityStatScaler` | Tiers do ataque normal |
 | `NetworkPlayerAbilityRelay` | Sync animações MP |
 | `NetworkAbilityObjectSpawner` | — (Nix não usa spawn) |

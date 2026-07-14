@@ -96,6 +96,16 @@ public class NetworkProjectileController : NetworkBehaviour
     /// </summary>
     public void ServerApplySpawnData(Vector2 direction, float damageMultiplier, int bonusBounces, ulong ownerClientId)
     {
+        ServerApplySpawnData(direction, damageMultiplier, bonusBounces, ownerClientId, splash: null);
+    }
+
+    public void ServerApplySpawnData(
+        Vector2 direction,
+        float damageMultiplier,
+        int bonusBounces,
+        ulong ownerClientId,
+        SplashSpawnConfig? splash)
+    {
         if (!IsServer) return;
 
         _direction = direction;
@@ -103,13 +113,23 @@ public class NetworkProjectileController : NetworkBehaviour
         _bonusBounces = bonusBounces;
         _ownerClientId = ownerClientId;
 
-        // Inicializa o Projectile existente no servidor
         _projectile.InitializeDirection(direction);
         _projectile.SetDamageMultiplier(damageMultiplier);
         if (bonusBounces > 0) _projectile.AddBonusBounces(bonusBounces);
+
+        if (splash.HasValue && splash.Value.Enabled)
+        {
+            _projectile.ConfigureSplashOnHit(
+                splash.Value.Prefab,
+                splash.Value.Count,
+                splash.Value.Range,
+                splash.Value.DamagePercentage,
+                splash.Value.PrioritizeDifferentEnemies,
+                splash.Value.EnemyLayers);
+        }
+
         IgnoreOwnerPlayerColliders(ownerClientId);
 
-        // Ativa física no servidor
         _rb.simulated = true;
         _rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
         _projectile.enabled = true;
@@ -117,6 +137,157 @@ public class NetworkProjectileController : NetworkBehaviour
         SetAllCollidersEnabled(true);
 
         EmitProjectileNetworkSample("ServerApplySpawnData");
+    }
+
+    /// <summary>
+    /// Inicializa um respingo no servidor (teleguiado se houver alvo; senão voo reto).
+    /// </summary>
+    public void ServerApplySplashSeekerData(
+        ulong targetNetworkObjectId,
+        float damageMultiplier,
+        ulong ownerClientId,
+        Vector2 fallbackDirection)
+    {
+        if (!IsServer) return;
+
+        _damageMultiplier = damageMultiplier;
+        _ownerClientId = ownerClientId;
+
+        Transform target = null;
+        if (targetNetworkObjectId != 0 &&
+            NetworkManager.Singleton != null &&
+            NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(targetNetworkObjectId, out var targetNetObj) &&
+            targetNetObj != null)
+        {
+            target = targetNetObj.transform;
+        }
+
+        Vector2 dir = fallbackDirection.sqrMagnitude > 0.0001f ? fallbackDirection.normalized : Vector2.up;
+        if (target != null)
+        {
+            Vector2 toTarget = ((Vector2)target.position - (Vector2)transform.position);
+            if (toTarget.sqrMagnitude > 0.0001f)
+                dir = toTarget.normalized;
+        }
+
+        _direction = dir;
+        _projectile.InitializeDirection(dir);
+        _projectile.ConfigureAsSplashSeeker(target, damageMultiplier, dir);
+        IgnoreOwnerPlayerColliders(ownerClientId);
+
+        _rb.simulated = true;
+        _rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
+        _projectile.enabled = true;
+        _projectile.ConfigureCombatColliders();
+        SetAllCollidersEnabled(true);
+
+        EmitProjectileNetworkSample("ServerApplySplashSeekerData");
+    }
+
+    public void ServerSpawnSplashProjectiles(
+        Vector3 origin,
+        Transform primaryHitRoot,
+        int splashCount,
+        float splashRange,
+        float splashDamagePercentage,
+        bool prioritizeDifferentEnemies,
+        LayerMask enemyLayers,
+        GameObject splashPrefab,
+        Vector2 fallbackDirection)
+    {
+        if (!IsServer || splashPrefab == null || splashCount <= 0)
+            return;
+
+        var targets = new System.Collections.Generic.List<Transform>(splashCount);
+        ProjectileSplashUtility.CollectSplashTargets(
+            origin,
+            splashRange,
+            splashCount,
+            prioritizeDifferentEnemies,
+            enemyLayers,
+            primaryHitRoot,
+            targets);
+
+        Vector2 safeFallback = fallbackDirection.sqrMagnitude > 0.0001f
+            ? fallbackDirection.normalized
+            : (_projectile != null && _projectile.TravelDirection.sqrMagnitude > 0.0001f
+                ? _projectile.TravelDirection.normalized
+                : Vector2.up);
+
+        float splashDamageMul = _damageMultiplier * Mathf.Max(0f, splashDamagePercentage);
+        for (int i = 0; i < splashCount; i++)
+        {
+            Transform target = i < targets.Count ? targets[i] : null;
+            ulong targetNetworkObjectId = 0;
+            Vector2 dir = safeFallback;
+
+            if (target != null)
+            {
+                var targetNetObj = target.GetComponent<NetworkObject>() ?? target.GetComponentInParent<NetworkObject>();
+                if (targetNetObj != null && targetNetObj.IsSpawned)
+                {
+                    targetNetworkObjectId = targetNetObj.NetworkObjectId;
+                    Vector2 toTarget = ((Vector2)target.position - (Vector2)origin);
+                    if (toTarget.sqrMagnitude > 0.0001f)
+                        dir = toTarget.normalized;
+                }
+                else
+                {
+                    target = null;
+                }
+            }
+
+            Quaternion rotation = ProjectileAimUtility.RotationFromDirection(dir);
+            GameObject splashObj = Instantiate(splashPrefab, origin, rotation);
+            var netObj = splashObj.GetComponent<NetworkObject>();
+            if (netObj == null)
+            {
+                Debug.LogError("[NetworkProjectileController] Splash prefab sem NetworkObject.");
+                Destroy(splashObj);
+                continue;
+            }
+
+            netObj.Spawn(true);
+
+            var splashController = splashObj.GetComponent<NetworkProjectileController>();
+            if (splashController != null)
+            {
+                splashController.ServerApplySplashSeekerData(
+                    targetNetworkObjectId,
+                    splashDamageMul,
+                    _ownerClientId,
+                    safeFallback);
+            }
+        }
+    }
+
+    public readonly struct SplashSpawnConfig
+    {
+        public readonly bool Enabled;
+        public readonly int Count;
+        public readonly float Range;
+        public readonly float DamagePercentage;
+        public readonly bool PrioritizeDifferentEnemies;
+        public readonly LayerMask EnemyLayers;
+        public readonly GameObject Prefab;
+
+        public SplashSpawnConfig(
+            bool enabled,
+            int count,
+            float range,
+            float damagePercentage,
+            bool prioritizeDifferentEnemies,
+            LayerMask enemyLayers,
+            GameObject prefab)
+        {
+            Enabled = enabled;
+            Count = count;
+            Range = range;
+            DamagePercentage = damagePercentage;
+            PrioritizeDifferentEnemies = prioritizeDifferentEnemies;
+            EnemyLayers = enemyLayers;
+            Prefab = prefab;
+        }
     }
 
     private void IgnoreOwnerPlayerColliders(ulong ownerClientId)

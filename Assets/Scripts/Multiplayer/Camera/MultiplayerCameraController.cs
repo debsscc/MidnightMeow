@@ -51,6 +51,10 @@ public class MultiplayerCameraController : MonoBehaviour
     [Header("Configuração")]
     [SerializeField] private CameraConfig config;
 
+    [Header("Acessibilidade — Camera Bounce")]
+    [Tooltip("Lean + breathing (head bob). Se desligado, a câmera segue o jogador sem bounce. Também respeita CameraConfig.enableCameraBounce.")]
+    [SerializeField] private bool enableCameraBounce = true;
+
     [Tooltip("Intervalo em segundos entre tentativas de achar o jogador local.")]
     [SerializeField] private float findPlayerRetryInterval = 0.5f;
 
@@ -354,7 +358,8 @@ public class MultiplayerCameraController : MonoBehaviour
             return;
 
         Vector3 desired = ComputeEdgeFollowPosition();
-        desired += (Vector3)(_leanOffset + ComputeBreathingOffset());
+        if (IsCameraBounceEnabled())
+            desired += (Vector3)(_leanOffset + ComputeBreathingOffset());
         desired = ClampCameraPosition(desired);
         float smoothing = config != null ? config.edgePanSmoothing : 15f;
         Vector3 next = Vector3.Lerp(
@@ -849,13 +854,21 @@ public class MultiplayerCameraController : MonoBehaviour
 
     /// <summary>
     /// Atualiza lean/breathing a partir do input/velocidade do jogador local.
+    /// Sem efeito se enableCameraBounce estiver desligado (acessibilidade).
     /// </summary>
     public void SetLocomotionFeel(Vector2 moveInput, float speedMagnitude)
     {
+        if (!IsCameraBounceEnabled() || _deathFocusActive)
+        {
+            _locomotionInputMagnitude = 0f;
+            _targetLean = Vector2.zero;
+            return;
+        }
+
         float inputMag = moveInput.magnitude;
         _locomotionInputMagnitude = Mathf.Max(inputMag, speedMagnitude * 0.05f);
 
-        if (config == null || _deathFocusActive)
+        if (config == null)
         {
             _targetLean = Vector2.zero;
             return;
@@ -890,8 +903,17 @@ public class MultiplayerCameraController : MonoBehaviour
 
     private void TickLocomotionFeel()
     {
+        if (!IsCameraBounceEnabled())
+        {
+            _targetLean = Vector2.zero;
+            _leanOffset = Vector2.zero;
+            _breathWeight = 0f;
+            _locomotionInputMagnitude = 0f;
+            return;
+        }
+
         float dt = Time.deltaTime;
-        float leanSmooth = config != null ? config.moveLeanSmoothing : 8f;
+        float leanSmooth = config != null ? config.moveLeanSmoothing : 6f;
         _leanOffset = Vector2.Lerp(_leanOffset, _targetLean, dt * leanSmooth);
 
         float idleThreshold = config != null ? config.breathingIdleInputThreshold : 0.18f;
@@ -899,19 +921,32 @@ public class MultiplayerCameraController : MonoBehaviour
         float breathBlend = config != null ? config.breathingBlendSpeed : 3.5f;
         _breathWeight = Mathf.MoveTowards(_breathWeight, breathTarget, dt * breathBlend);
 
-        float breathSpeed = config != null ? config.breathingSpeed : 0.65f;
+        float breathSpeed = config != null ? config.breathingSpeed : 0.4f;
         _breathPhase += dt * breathSpeed;
     }
 
     private Vector2 ComputeBreathingOffset()
     {
-        if (_breathWeight <= 0.001f || config == null || config.breathingAmplitude <= 0f)
+        if (!IsCameraBounceEnabled() || _breathWeight <= 0.001f || config == null || config.breathingAmplitude <= 0f)
             return Vector2.zero;
 
         float amp = config.breathingAmplitude * _breathWeight;
         return new Vector2(
             Mathf.Sin(_breathPhase * Mathf.PI * 2f) * amp,
             Mathf.Cos(_breathPhase * Mathf.PI * 2f * 0.73f) * amp * 0.55f);
+    }
+
+    /// <summary>
+    /// Bounce = lean no movimento + breathing idle. Ambos devem estar ligados
+    /// no Inspector do rig e no CameraConfig (AND).
+    /// </summary>
+    private bool IsCameraBounceEnabled()
+    {
+        if (!enableCameraBounce)
+            return false;
+        if (config != null && !config.enableCameraBounce)
+            return false;
+        return true;
     }
 
     private void UpdateZoomPunch()
