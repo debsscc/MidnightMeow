@@ -52,6 +52,19 @@
 
 ---
 
+## Props com profundidade (flor, pedra, árvore)
+
+Colisão **não** controla quem fica na frente. Players/inimigos recalculam `sortingOrder` pelo Y dos pés; props estáticos ficam com order fixo (geralmente 0) → sempre atrás ou sempre na frente.
+
+**Fix:** no prefab/objeto do prop:
+
+1. `CircleCollider2D` na base (layer `Wall`)
+2. Add Component → **`StaticSpriteYSort`** (mesma fórmula: `5000 - Y*100`)
+
+O personagem passa **atrás** da flor se os pés estiverem “mais baixo” na tela (Y maior no mundo top-down do projeto) e **na frente** no caso contrário.
+
+---
+
 ## Walkable.prefab
 
 **Caminho:** `Assets/Prefabs/Environment/Walkable.prefab`

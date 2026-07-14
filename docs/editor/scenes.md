@@ -29,6 +29,8 @@ Gameplay: `GameplayPrefabCatalog` em `Resources/` instancia `MultiplayerCameraRi
 | Fase 1            | `Assets/Scenes/Fases/Fase-1.unity`                  | Ondas + selamento de buracos              |
 | Fase 2            | `Assets/Scenes/Fases/Fase-2.unity`                  | Ondas + selamento + carruagem horizontal. **Sem** prefabs Cora/Nixie na hierarquia — jogador só via `PlayerSpawnManager`. |
 | Fase 3            | `Assets/Scenes/Fases/Fase-3.unity`                  | Boss (`Rato_Boss`)                        |
+
+**Fase-3 — fogo ambiente:** prefab `Assets/Prefabs/VFX/AmbientFire2D.prefab` (ver [AmbientFire2D.md](prefabs/AmbientFire2D.md)). Arrastar na cena; presets Ember/Torch/Bonfire.
 | Game Over         | `Assets/Scenes/UI/GameOver.unity`                   | `EndGameScreenController` — derrota (Continuar / Sair) |
 | Vitória           | `Assets/Scenes/UI/VictoryScene.unity`               | `EndGameScreenController` — vitória (Continuar / Sair) |
 

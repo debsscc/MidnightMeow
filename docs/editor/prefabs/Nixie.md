@@ -92,7 +92,8 @@ Em MP, aliados ouvem ataque/habilidades via `NetworkPlayerAbilityRelay`.
 
 ## Debug / combate
 
-- `MeleeAttackVisual` — onda shader do hit melee (`NixieMeleeHitVisual.asset` via `NixieMeleeCombatStats.hitVisual`)
+- `MeleeAttackVisual` — onda/trail shader do hit (`NixieMeleeHitVisual.asset` via `NixieMeleeCombatStats.hitVisual`)
+- `PlayerMeleeHitFeedback` — swing: afterimage 1 frame + poeira nos pés; hit: spark aço + blink + shake
 - Knockback: `NetworkEnemyController.ApplyKnockbackRpc` no servidor
 - Ver [Player_Melee.md](Player_Melee.md) (guia de setup) e [diagnostics.md](../diagnostics.md)
 
@@ -108,6 +109,7 @@ Em MP, aliados ouvem ataque/habilidades via `NetworkPlayerAbilityRelay`.
 
 | Data | Alteração |
 |------|-----------|
+| 2026-07-13 | Melee juice: afterimage + dust no swing; spark reforçado no hit (trail/onda já existia) |
 | 2026-07-10 | Heartbeat de pouca vida (< 50%) via `PlayerHeartbeatAudioEvent` / `PlayerAudioController` |
 | 2026-06-17 | Melee polish: sync strike/recovery, burst, blink pulse, shake no acerto |
 | 2026-06-14 | Combo derrota: `DeathHordePresentation` (spawn off, slow-mo, fade ratos, vinheta/zoom) |

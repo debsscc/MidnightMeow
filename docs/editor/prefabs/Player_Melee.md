@@ -18,13 +18,16 @@ Personagem **corpo a corpo**: sem tiro, com dash, ataque em trapézio na direç�
 
 Cálculo: `MeleeStrikeTimingUtility` + `PlayerAnimationHandler.GetMeleeStrikeDelay()` / `GetMeleeRecoveryDelay()`.
 
-## Juice no acerto
+## Juice do swing / acerto
 
 | Sistema | Comportamento |
 |---------|----------------|
+| `MeleeAttackVisual` | Onda/trail shader no cone (já existia; `NixieMeleeHitVisual`) |
 | `PlayerMeleeHitFeedback` | Instalado via `PlayerGameplayModuleInstaller` |
-| `MeleeHitBurstVfx` | 4 partículas amarelo/branco no `hitPoint` |
-| `SpriteBlink.Pulse` | Reforço no rato acertado |
+| `MeleeSwingAfterimageVfx` | Ghost 1 frame no início do swing (atrás da mira) |
+| `MeleeSwingDustVfx` | Poeira nos pés no início do swing |
+| `MeleeHitBurstVfx` | Faíscas aço/ciano no `hitPoint` |
+| `SpriteBlink.Pulse` | Flash no inimigo acertado |
 | `PlayerCameraFeedback.ShakeOnMeleeHit` | Light (~0,08 / 0,08s) só se `hitCount > 0`; suprimido 0,15s após shake de dano |
 
 ## Passo a passo no Unity (se criar variante nova)
@@ -48,7 +51,7 @@ Cálculo: `MeleeStrikeTimingUtility` + `PlayerAnimationHandler.GetMeleeStrikeDel
 | Script                          | Função                                         |
 | ------------------------------- | ---------------------------------------------- |
 | `PlayerMeleeCombat`             | Cone + dano + knockback via `MeleeCombatStats` |
-| `PlayerMeleeHitFeedback`        | Burst, blink pulse, shake leve no acerto       |
+| `PlayerMeleeHitFeedback`        | Swing (ghost+dust) + hit (spark/blink/shake) |
 | `MeleeStrikeTimingUtility`      | Strike/recovery normalizados no clip           |
 | `MeleeCombatStats`              | SO: dano, cone, range, knockback               |
 | `KnockbackReceiver`             | `ApplyKnockback(direction, force, duration)`   |
