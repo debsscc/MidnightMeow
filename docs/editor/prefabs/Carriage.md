@@ -1,6 +1,6 @@
 # Carriage.prefab
 
-Última revisão: 2026-07-14
+Última revisão: 2026-07-15
 
 | Campo | Valor |
 |-------|--------|
@@ -16,11 +16,12 @@
 Carriage (tag Structure, layer Structure)
 ├── NetworkObject
 ├── NetworkTransform (AuthorityMode = Server)
-├── HealthComponent
+├── HealthComponent (IDamageable)
 ├── CarriageController → CarriageConfig
+│   └── NetworkVariable<CarriageState> Idle | Moving | Broken
 ├── NetworkCarriageHealth
 ├── NetworkCarriageRepairManager → CarriageConfig
-├── CarriageRepairWorldUI
+├── CarriageRepairWorldUI (labels escolta + conserto)
 ├── CarriageWheelSpinner (giro local das rodas)
 ├── BoxCollider2D (tamanho via CarriageConfig)
 └── VisualRoot                          ← escala uniforme (visualRootScale)
@@ -52,9 +53,14 @@ Import: Sprite Single, **PPU 100**, Filter **Point**, pivot **centro** (0.5, 0.5
 - `CarriageConfig.useOfficialArt = true` → **não** força placeholder marrom.
 - Rodas giram em **todos os peers** via `CarriageWheelSpinner` (sem sync de ângulo).
 - Progresso HUD: `NetworkVariable<float> _pathProgress`.
+- Estado de escolta: `NetworkVariable<CarriageState> _carriageState` (servidor).
+- Presença de jogadores: `Physics2D.OverlapCircle` + `playerPresenceRadius` (gizmo no Scene).
 - Posição: `NetworkTransform` (servidor).
-- Conserto: `PlayerCarriageRepairInteraction` + `CarriageRepairWorldUI` + zonas.
+- Conserto: `PlayerCarriageRepairInteraction` + `NetworkCarriageRepairManager` (arquivo próprio) + `CarriageRepairWorldUI` + zonas `SealZoneRingVisual`.
+- Fix Input E: [guides/carriage-repair-fix.md](../guides/carriage-repair-fix.md).
 - Spawn: servidor (`CarriageSpawner`); não colocar carruagem fixa na cena Fase-2.
+- Setup Inspector: [guia escolta/aggro/telegraph](../guides/carriage-phase2-aggro-setup.md).
+- Conserto E / zonas: [guia repair fix](../guides/carriage-repair-fix.md).
 
 ## Ver também
 

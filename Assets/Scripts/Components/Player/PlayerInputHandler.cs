@@ -113,9 +113,11 @@ public class PlayerInputHandler : MonoBehaviour
         if (_playerInput.currentActionMap == null || _playerInput.currentActionMap.name != "Gameplay")
             _playerInput.SwitchCurrentActionMap("Gameplay");
 
-        // Garante Action Fire habilitada mesmo se o scheme auto-switchar para Gamepad.
+        // Garante Action Fire/Interact habilitadas mesmo se o scheme auto-switchar para Gamepad.
         if (_fireAction != null && !_fireAction.enabled)
             _fireAction.Enable();
+        if (_interactAction != null && !_interactAction.enabled)
+            _interactAction.Enable();
     }
 
     private void TryPairController(InputDevice device)

@@ -1,13 +1,18 @@
 # Carruagem (Fase 2)
 
-Última revisão: 2026-07-14
+Última revisão: 2026-07-15
 
 ## Comportamento
 
-- Objeto com tag **Structure**, vida em `CarriageConfig.maxHealth`, movimento ao longo de `CarriagePath`.
-- Inimigos priorizam Player mas atacam Structure (`EnemyTargetFinder`).
-- Vida = 0 → para (`NetworkCarriageHealth.IsBroken`); label **"Aperte E para consertar"**.
-- Conserto cooperativo (mesmo padrão do selamento).
+- Objeto com tag **Structure** e layer **Structure**, vida em `CarriageConfig.maxHealth`, movimento ao longo de `CarriagePath`.
+- **Estados de rede** (`NetworkVariable<CarriageState>` no `CarriageController`):
+  - `Idle` — nenhum jogador vivo no raio de presença → parado; label “Se aproximem da Carruagem”
+  - `Moving` — ≥1 jogador com `CanFight` no raio (`Physics2D.OverlapCircle`) → avança no path; label “Protejam a Carruagem”
+  - `Broken` — HP 0 (`NetworkCarriageHealth.IsBroken`) → movimento parado; label “Consertem…” / Press E / progresso
+- **Aggro dos ratos** via `EnemyStats.aggroType` (`PlayersOnly` / `StructuresOnly` / `Dynamic`) — ver [guia Editor](../editor/guides/carriage-phase2-aggro-setup.md).
+- Conserto cooperativo (mesmo padrão do selamento): **E** → zonas → progresso no servidor → restaura `repairRestoreHealthFraction` da vida.
+  - Manager isolado: `NetworkCarriageRepairManager` (arquivo próprio — RPC NGO).
+  - Guia de correção do E: [carriage-repair-fix.md](../editor/guides/carriage-repair-fix.md)
 - Chegada ao fim → `PhaseObjectiveManager.NotifyCarriageArrived()` + `GameEvents.OnCarriageArrived` → vitória Fase 2.
 - **HUD:** `PhaseObjectiveHud` mostra `Carruagem: X%` (lê `_pathProgress`).
 - **Arte oficial:** hierarquia `VisualRoot` com 3 camadas (Body / Wheels / Back). Ver [prefabs/Carriage.md](../editor/prefabs/Carriage.md).
@@ -21,17 +26,17 @@
 | Giro das rodas | `CarriageWheelSpinner` (local; pausa / quebrada / chegada param) |
 | Raios | `frontWheelRadius` / `backWheelRadius` no config |
 | Collider | `colliderSize` / `colliderOffset` no config |
-| Label conserto | `repairLabelOffset` |
+| Label escolta/conserto | `repairLabelOffset` + textos `escort*` / repair |
 
 Não sincronizar ângulo de roda na rede — deriva do progresso/movimento já replicado.
 
 ## Trajeto
 
-Em `CarriageConfig`: `pathStartX` (-42), `pathEndX` (18), `moveSpeed`, `arrivalZoneRadius`.
+Em `CarriageConfig`: `pathStartX` (-42), `pathEndX` (18), `moveSpeed`, `arrivalZoneRadius`, `playerPresenceRadius`.
 
 1. **`PhaseGameplayContentInstaller`** — cria/atualiza `CarriagePath` em todos os peers.
 2. **`CarriageSpawner`** (servidor) — instancia o prefab, `NetworkObject.Spawn()`.
-3. **`CarriageController`** — servidor avança `_pathProgress`; clientes seguem via `NetworkTransform`.
+3. **`CarriageController`** — servidor avança `_pathProgress` só em `Moving`; clientes seguem via `NetworkTransform`.
 
 **Solo:** host inicia em Loading2 antes da fase. Não abrir `Fase-2` sem host.
 
@@ -41,12 +46,14 @@ Em `CarriageConfig`: `pathStartX` (-42), `pathEndX` (18), `moveSpeed`, `arrivalZ
 - Prefab: `Assets/Prefabs/Gameplay/Carriage.prefab`
 - Sprites: `Assets/Art/Sprites/Carriage/`
 - Catálogo: `GameplayPrefabCatalog.carriagePrefab`
+- Setup pós-código: [guia Editor escolta/aggro](../editor/guides/carriage-phase2-aggro-setup.md)
 
 Setup Editor: **MidnightMeow → Phases → Setup Active Phase Scene** (Fase-2).
 
 ## Código ativo
 
-- `CarriageController`, `CarriageSpawner`, `CarriagePath`, `CarriageWheelSpinner`
+- `CarriageController`, `CarriageState`, `CarriageSpawner`, `CarriagePath`, `CarriageWheelSpinner`
 - `NetworkCarriageHealth`, `NetworkCarriageRepairManager`, `CarriageDamageFilter`
 - `CarriageRepairWorldUI`, `CarriageRepairZoneVisualHost`
 - `PhaseGameplayContentInstaller.ConfigureCarriage()` / `EnsureCarriageSetup()`
+- `EnemyTargetFinder` + `EnemyStats.AggroType` (busca de alvos)

@@ -42,6 +42,8 @@ Documentação para desenvolvedores e **agentes de IA** que trabalham neste proj
 - [Carruagem (Fase 2)](gameplay/carriage.md)
 - [Boss (Fase 3)](gameplay/boss-phase.md)
 - [Guia: setup Rei Rato (Editor)](editor/guides/rat-king-boss-setup.md)
+- [Guia: escolta carruagem + aggro + telegraph Structure](editor/guides/carriage-phase2-aggro-setup.md)
+- [Guia: conserto carruagem (fix E / zonas)](editor/guides/carriage-repair-fix.md)
 - [Plano de implementação Fases 1–3](todo/phases-implementation.md)
 
 ### Editor (para agentes sem acesso ao Unity)

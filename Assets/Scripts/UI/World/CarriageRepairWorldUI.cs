@@ -3,17 +3,22 @@ using Unity.Netcode;
 using UnityEngine;
 
 /// <summary>
-/// Label world-space acima da carruagem quebrada. Estados: aproximar → E → progresso (%).
+/// Label world-space acima da carruagem. Reage a <see cref="CarriageState"/> (escolta)
+/// e, quando Broken, aos prompts de conserto (aproximar → E → fique na área / %).
 /// </summary>
 [DisallowMultipleComponent]
 [RequireComponent(typeof(CarriageController), typeof(NetworkCarriageHealth))]
 public class CarriageRepairWorldUI : MonoBehaviour
 {
-    public enum CarriageRepairLabelMode
+    public enum CarriageLabelMode
     {
         Hidden,
+        EscortIdle,
+        EscortMoving,
+        EscortBroken,
         AllyApproach,
         AllyPressE,
+        StayInArea,
         RepairProgress
     }
 
@@ -24,27 +29,92 @@ public class CarriageRepairWorldUI : MonoBehaviour
 
     private CarriageController _carriage;
     private NetworkCarriageHealth _health;
+    private NetworkCarriageRepairManager _repairManager;
     private GameObject _promptInstance;
     private Transform _promptTransform;
     private TextMeshProUGUI _label;
-    private CarriageRepairLabelMode _lastMode = CarriageRepairLabelMode.Hidden;
+    private CarriageLabelMode _lastMode = CarriageLabelMode.Hidden;
+    private bool _subscribedToState;
+    private bool _subscribedToRepair;
 
     private void Awake()
     {
         _carriage = GetComponent<CarriageController>();
         _health = GetComponent<NetworkCarriageHealth>();
+        _repairManager = GetComponent<NetworkCarriageRepairManager>();
         TryResolvePrefabReference();
         InstantiatePromptIfNeeded();
         SetVisible(false);
     }
 
+    private void OnEnable()
+    {
+        TrySubscribeCarriageState();
+        TrySubscribeRepairProgress();
+    }
+
+    private void OnDisable()
+    {
+        UnsubscribeCarriageState();
+        UnsubscribeRepairProgress();
+    }
+
     private void OnDestroy()
     {
+        UnsubscribeCarriageState();
+        UnsubscribeRepairProgress();
         if (_promptInstance != null)
             Destroy(_promptInstance);
     }
 
     private CarriageConfig ResolveConfig() => CarriageConfigUtility.Resolve(_carriage != null ? _carriage.Config : null);
+
+    private void TrySubscribeCarriageState()
+    {
+        if (_subscribedToState || _carriage == null || !_carriage.IsSpawned)
+            return;
+
+        _carriage.CarriageStateVariable.OnValueChanged += HandleCarriageStateChanged;
+        _subscribedToState = true;
+    }
+
+    private void UnsubscribeCarriageState()
+    {
+        if (!_subscribedToState || _carriage == null)
+            return;
+
+        _carriage.CarriageStateVariable.OnValueChanged -= HandleCarriageStateChanged;
+        _subscribedToState = false;
+    }
+
+    private void TrySubscribeRepairProgress()
+    {
+        if (_subscribedToRepair || _repairManager == null || !_repairManager.IsSpawned)
+            return;
+
+        _repairManager.RepairProgressVariable.OnValueChanged += HandleRepairProgressChanged;
+        _repairManager.RepairActiveVariable.OnValueChanged += HandleRepairActiveChanged;
+        _subscribedToRepair = true;
+    }
+
+    private void UnsubscribeRepairProgress()
+    {
+        if (!_subscribedToRepair || _repairManager == null)
+            return;
+
+        _repairManager.RepairProgressVariable.OnValueChanged -= HandleRepairProgressChanged;
+        _repairManager.RepairActiveVariable.OnValueChanged -= HandleRepairActiveChanged;
+        _subscribedToRepair = false;
+    }
+
+    private void HandleCarriageStateChanged(CarriageState previous, CarriageState current) =>
+        _lastMode = CarriageLabelMode.Hidden;
+
+    private void HandleRepairProgressChanged(float previous, float current) =>
+        _lastMode = CarriageLabelMode.Hidden;
+
+    private void HandleRepairActiveChanged(bool previous, bool current) =>
+        _lastMode = CarriageLabelMode.Hidden;
 
     private void TryResolvePrefabReference()
     {
@@ -113,9 +183,15 @@ public class CarriageRepairWorldUI : MonoBehaviour
     {
         if (_carriage == null || !_carriage.IsSpawned || _health == null)
         {
-            ApplyMode(CarriageRepairLabelMode.Hidden);
+            ApplyMode(CarriageLabelMode.Hidden);
             return;
         }
+
+        if (_repairManager == null)
+            _repairManager = GetComponent<NetworkCarriageRepairManager>();
+
+        TrySubscribeCarriageState();
+        TrySubscribeRepairProgress();
 
         if (_promptInstance == null)
         {
@@ -124,41 +200,55 @@ public class CarriageRepairWorldUI : MonoBehaviour
                 return;
         }
 
-        CarriageRepairLabelMode mode = ResolveLabelModeForLocalViewer();
+        CarriageLabelMode mode = ResolveLabelModeForLocalViewer();
         ApplyMode(mode);
 
-        if (mode == CarriageRepairLabelMode.Hidden)
+        if (mode == CarriageLabelMode.Hidden)
             return;
 
         _promptTransform.position = transform.position + offset;
         _promptTransform.rotation = Quaternion.identity;
     }
 
-    private CarriageRepairLabelMode ResolveLabelModeForLocalViewer()
+    private CarriageLabelMode ResolveLabelModeForLocalViewer()
     {
-        if (_health == null || !_health.IsBroken)
-            return CarriageRepairLabelMode.Hidden;
-
         CarriageConfig config = ResolveConfig();
         if (config == null)
-            return CarriageRepairLabelMode.Hidden;
+            return CarriageLabelMode.Hidden;
 
-        if (_health.IsRepairActive)
-            return CarriageRepairLabelMode.RepairProgress;
+        // Interação e UI usam a mesma fonte: IsBroken (NetworkVariable autoritativa).
+        if (_health.IsBroken)
+        {
+            if (_health.IsRepairActive)
+            {
+                float progress = _health.RepairProgress;
+                // Enquanto progresso ainda é 0 no início, mostra "fique na área";
+                // depois exibe a porcentagem.
+                return progress > 0.001f
+                    ? CarriageLabelMode.RepairProgress
+                    : CarriageLabelMode.StayInArea;
+            }
 
-        NetworkPlayerHealth localAlly = ResolveLocalFightingPlayer();
-        if (localAlly == null)
-            return CarriageRepairLabelMode.Hidden;
+            NetworkPlayerHealth localAlly = ResolveLocalFightingPlayer();
+            if (localAlly == null)
+                return CarriageLabelMode.EscortBroken;
 
-        float dist = Vector2.Distance(localAlly.transform.position, transform.position);
-        if (dist <= config.repairPromptRadius)
-            return CarriageRepairLabelMode.AllyPressE;
+            float dist = Vector2.Distance(localAlly.transform.position, transform.position);
+            if (dist <= config.repairPromptRadius)
+                return CarriageLabelMode.AllyPressE;
 
-        float visibilityRadius = config.GetRepairLabelVisibilityRadius();
-        if (dist <= visibilityRadius)
-            return CarriageRepairLabelMode.AllyApproach;
+            float visibilityRadius = config.GetRepairLabelVisibilityRadius();
+            if (dist <= visibilityRadius)
+                return CarriageLabelMode.AllyApproach;
 
-        return CarriageRepairLabelMode.Hidden;
+            return CarriageLabelMode.EscortBroken;
+        }
+
+        return _carriage.CurrentState switch
+        {
+            CarriageState.Moving => CarriageLabelMode.EscortMoving,
+            _ => CarriageLabelMode.EscortIdle
+        };
     }
 
     private static NetworkPlayerHealth ResolveLocalFightingPlayer()
@@ -175,9 +265,9 @@ public class CarriageRepairWorldUI : MonoBehaviour
             : null;
     }
 
-    private void ApplyMode(CarriageRepairLabelMode mode)
+    private void ApplyMode(CarriageLabelMode mode)
     {
-        bool visible = mode != CarriageRepairLabelMode.Hidden;
+        bool visible = mode != CarriageLabelMode.Hidden;
         SetVisible(visible);
 
         if (!visible || _label == null)
@@ -187,14 +277,18 @@ public class CarriageRepairWorldUI : MonoBehaviour
         }
 
         CarriageConfig config = ResolveConfig();
-        if (mode == CarriageRepairLabelMode.RepairProgress || mode != _lastMode)
+        if (mode == CarriageLabelMode.RepairProgress || mode == CarriageLabelMode.StayInArea || mode != _lastMode)
         {
             float progress = _health.RepairProgress;
             _label.text = mode switch
             {
-                CarriageRepairLabelMode.AllyApproach => config.GetApproachText(),
-                CarriageRepairLabelMode.AllyPressE => config.GetPressEText(),
-                CarriageRepairLabelMode.RepairProgress => config.FormatRepairProgressText(
+                CarriageLabelMode.EscortIdle => config.GetEscortIdleText(),
+                CarriageLabelMode.EscortMoving => config.GetEscortMovingText(),
+                CarriageLabelMode.EscortBroken => config.GetEscortBrokenText(),
+                CarriageLabelMode.AllyApproach => config.GetApproachText(),
+                CarriageLabelMode.AllyPressE => config.GetPressEText(),
+                CarriageLabelMode.StayInArea => config.GetStayInAreaText(),
+                CarriageLabelMode.RepairProgress => config.FormatRepairProgressText(
                     Mathf.Clamp(Mathf.RoundToInt(progress * 100f), 0, 100)),
                 _ => string.Empty
             };

@@ -27,6 +27,10 @@ MonoBehaviour:
   useCustomPathY: 0
   pathY: 0
   moveSpeed: 0.9
+  playerPresenceRadius: 8
+  playerPresenceLayerMask:
+    serializedVersion: 2
+    m_Bits: 8
   arrivalZoneRadius: 2
   repairPromptRadius: 3.3
   repairZoneRadius: 1.2
@@ -47,4 +51,8 @@ MonoBehaviour:
   repairLabelVisibilityRadiusMultiplier: 2
   approachText: Aproxime-se para consertar
   pressEText: Aperte E para consertar
+  stayInAreaText: Fique na área para consertar
   repairProgressTextFormat: '{0}%'
+  escortIdleText: Se aproximem da Carruagem
+  escortMovingText: Protejam a Carruagem
+  escortBrokenText: Consertem a Carruagem

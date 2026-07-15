@@ -1,6 +1,6 @@
 # Ataques inimigos com telegraph (estilo Hades)
 
-Última revisão: 2026-07-14
+Última revisão: 2026-07-15
 
 ## Objetivo
 
@@ -67,6 +67,7 @@ Exemplo: `EnemyTelegraphFeedbackListener` (áudio).
 - **Clientes:** `EnemyTelegraphedAttacker` → `BroadcastTelegraphToClients` → `PlayTelegraphVisualClientRpc` com `TelegraphClientSnapshot` (`INetworkSerializable`: forma, fill, posição de spawn do voo, velocidade).
 - **Visual no cliente:** `EnemyTelegraphZoneFactory.SpawnClientVisual` instancia zona + voo até o impacto. Prefab de voo: pattern (`travelVisualPrefab`) ou fallback `GameplayPrefabCatalog.enemyTelegraphTravelPrefab`.
 - **Dano ao jogador:** servidor usa `PlayerCombatUtility` → `NetworkPlayerHealth.ServerApplyExternalDamage` (vida via `NetworkVariable` + número de dano / blink via `ClientRpc`).
+- **Dano à carruagem (Structure):** mesmo `PlayerCombatUtility` / `HealthComponent`; configure `damageLayers` do strike com **Player e Structure**. Se a mask for 0, o runtime fallback inclui ambas. Guia: [carriage-phase2-aggro-setup.md](../editor/guides/carriage-phase2-aggro-setup.md).
 - `EnemyTelegraphModuleInstaller` + `NetworkEnemyController.OnNetworkSpawn` garantem factory/relay no inimigo em todos os peers.
 - Projéteis inimigos **autônomos** (não telegraph): `NetworkEnemyProjectileController.DespawnAfterHit` no servidor após colisão.
 

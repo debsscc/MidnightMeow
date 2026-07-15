@@ -51,6 +51,14 @@ public class CarriageConfig : ScriptableObject
     [Tooltip("Unidades por segundo ao longo do trajeto.")]
     public float moveSpeed = 1.8f;
 
+    [Header("Presença de jogadores (escolta)")]
+    [Tooltip("Raio em que pelo menos um jogador vivo deve estar para a carruagem avançar.")]
+    [Min(0.5f)]
+    public float playerPresenceRadius = 8f;
+
+    [Tooltip("Layers consideradas na detecção de presença. Se 0, usa a layer Player.")]
+    public LayerMask playerPresenceLayerMask;
+
     [Header("Chegada")]
     public float arrivalZoneRadius = 2f;
 
@@ -82,13 +90,35 @@ public class CarriageConfig : ScriptableObject
     public float repairLabelVisibilityRadiusMultiplier = 2f;
     public string approachText = "Aproxime-se para consertar";
     public string pressEText = "Aperte E para consertar";
+    public string stayInAreaText = "Fique na área para consertar";
     public string repairProgressTextFormat = "{0}%";
+
+    [Header("UI — escolta (estados de rede)")]
+    [Tooltip("Idle: nenhum jogador vivo no raio de presença.")]
+    public string escortIdleText = "Se aproximem da Carruagem";
+
+    [Tooltip("Moving: pelo menos um jogador vivo no raio.")]
+    public string escortMovingText = "Protejam a Carruagem";
+
+    [Tooltip("Broken: carruagem destruída aguardando conserto (label distante).")]
+    public string escortBrokenText = "Consertem a Carruagem";
 
     public float GetRepairZoneVisualDiameter() =>
         Mathf.Max(0.5f, repairZoneRadius * 2f * Mathf.Max(0.85f, repairZoneVisualScaleMultiplier));
 
     public float GetRepairLabelVisibilityRadius() =>
         Mathf.Max(repairPromptRadius, repairPromptRadius * Mathf.Max(1f, repairLabelVisibilityRadiusMultiplier));
+
+    public float GetPlayerPresenceRadius() => Mathf.Max(0.5f, playerPresenceRadius);
+
+    public LayerMask ResolvePlayerPresenceLayerMask()
+    {
+        if (playerPresenceLayerMask.value != 0)
+            return playerPresenceLayerMask;
+
+        int playerLayer = LayerMask.NameToLayer("Player");
+        return playerLayer >= 0 ? (LayerMask)(1 << playerLayer) : (LayerMask)~0;
+    }
 
     public string GetApproachText() => string.IsNullOrWhiteSpace(approachText)
         ? "Aproxime-se para consertar"
@@ -98,6 +128,22 @@ public class CarriageConfig : ScriptableObject
         ? "Aperte E para consertar"
         : pressEText;
 
+    public string GetStayInAreaText() => string.IsNullOrWhiteSpace(stayInAreaText)
+        ? "Fique na área para consertar"
+        : stayInAreaText;
+
+    public string GetEscortIdleText() => string.IsNullOrWhiteSpace(escortIdleText)
+        ? "Se aproximem da Carruagem"
+        : escortIdleText;
+
+    public string GetEscortMovingText() => string.IsNullOrWhiteSpace(escortMovingText)
+        ? "Protejam a Carruagem"
+        : escortMovingText;
+
+    public string GetEscortBrokenText() => string.IsNullOrWhiteSpace(escortBrokenText)
+        ? "Consertem a Carruagem"
+        : escortBrokenText;
+
     public string FormatRepairProgressText(int percent) =>
         string.IsNullOrWhiteSpace(repairProgressTextFormat) ? $"{percent}%" : string.Format(repairProgressTextFormat, percent);
 
@@ -106,5 +152,6 @@ public class CarriageConfig : ScriptableObject
         if (repairPromptRadius <= 0f) repairPromptRadius = repairZoneRadius * 3f;
         if (repairAbandonTimeout <= 0f) repairAbandonTimeout = 2.5f;
         if (repairLabelVisibilityRadiusMultiplier < 1f) repairLabelVisibilityRadiusMultiplier = 2f;
+        if (playerPresenceRadius < 0.5f) playerPresenceRadius = 8f;
     }
 }

@@ -20,7 +20,7 @@ public static class CooperativeZonePlacementUtility
         float maxDistance,
         float minSeparation)
     {
-        zoneCount = Mathf.Clamp(zoneCount, 1, 2);
+        zoneCount = Mathf.Clamp(zoneCount, 1, 4);
         Vector2 biasDir = ResolveCameraBiasDirection(anchor);
         float distance = Mathf.Clamp(Mathf.Lerp(minDistance, maxDistance, 0.7f), minDistance, maxDistance);
 
@@ -30,19 +30,63 @@ public static class CooperativeZonePlacementUtility
             return new PlacementResult { Success = true, Positions = new[] { single } };
         }
 
-        Vector2 perpendicular = new Vector2(-biasDir.y, biasDir.x);
-        float lateral = Mathf.Max(minSeparation * 0.5f, zoneRadius * 0.9f);
-        Vector2 center = anchor + biasDir * distance;
-        Vector2 first = center + perpendicular * lateral;
-        Vector2 second = center - perpendicular * lateral;
-
-        if (Vector2.Distance(first, second) < minSeparation)
+        if (zoneCount == 2)
         {
-            first = center + perpendicular * minSeparation;
-            second = center - perpendicular * minSeparation;
+            Vector2 perpendicular = new Vector2(-biasDir.y, biasDir.x);
+            float lateral = Mathf.Max(minSeparation * 0.5f, zoneRadius * 0.9f);
+            Vector2 center = anchor + biasDir * distance;
+            Vector2 first = center + perpendicular * lateral;
+            Vector2 second = center - perpendicular * lateral;
+
+            if (Vector2.Distance(first, second) < minSeparation)
+            {
+                first = center + perpendicular * (minSeparation * 0.5f);
+                second = center - perpendicular * (minSeparation * 0.5f);
+            }
+
+            return new PlacementResult { Success = true, Positions = new[] { first, second } };
         }
 
-        return new PlacementResult { Success = true, Positions = new[] { first, second } };
+        // 3–4 zonas: leque na direção da câmera com espaçamento mínimo.
+        var positions = new Vector2[zoneCount];
+        float arcDegrees = zoneCount == 3 ? 90f : 120f;
+        float startAngle = -arcDegrees * 0.5f;
+        float step = zoneCount > 1 ? arcDegrees / (zoneCount - 1) : 0f;
+        float baseAngle = Mathf.Atan2(biasDir.y, biasDir.x) * Mathf.Rad2Deg;
+
+        for (int i = 0; i < zoneCount; i++)
+        {
+            float angle = (baseAngle + startAngle + step * i) * Mathf.Deg2Rad;
+            Vector2 dir = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle));
+            positions[i] = anchor + dir * distance;
+        }
+
+        EnforceMinSeparation(positions, minSeparation);
+        return new PlacementResult { Success = true, Positions = positions };
+    }
+
+    private static void EnforceMinSeparation(Vector2[] positions, float minSeparation)
+    {
+        if (positions == null || positions.Length < 2 || minSeparation <= 0f)
+            return;
+
+        for (int iter = 0; iter < 4; iter++)
+        {
+            for (int i = 0; i < positions.Length; i++)
+            {
+                for (int j = i + 1; j < positions.Length; j++)
+                {
+                    Vector2 delta = positions[j] - positions[i];
+                    float dist = delta.magnitude;
+                    if (dist >= minSeparation || dist < 0.0001f)
+                        continue;
+
+                    Vector2 push = (delta / dist) * ((minSeparation - dist) * 0.5f);
+                    positions[i] -= push;
+                    positions[j] += push;
+                }
+            }
+        }
     }
 
     private static Vector2 ResolveCameraBiasDirection(Vector2 anchor)

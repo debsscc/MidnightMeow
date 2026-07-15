@@ -570,6 +570,8 @@ public class NetworkEnemyController : NetworkBehaviour
             _hitStun?.ApplyStun();
             float dealtForVisual = Mathf.Max(0f, before - _health.CurrentHealth);
             PlayTakeDamageVisualClientRpc(dealtForVisual, damageType);
+
+            NotifyTargetFinderDamagedByPlayer(instigatorClientId);
         }
 
         EmitDamageDiagnostic(amount, before, _health.CurrentHealth, _health.IsDead,
@@ -580,6 +582,29 @@ public class NetworkEnemyController : NetworkBehaviour
             ShowDamageNumberClientRpc(dealt);
 
         return true;
+    }
+
+    private void NotifyTargetFinderDamagedByPlayer(ulong instigatorClientId)
+    {
+        if (_targetFinder == null || !IsServer)
+            return;
+
+        Transform attacker = ResolvePlayerTransformByClientId(instigatorClientId);
+        if (attacker != null)
+            _targetFinder.NotifyDamagedBy(attacker);
+    }
+
+    private static Transform ResolvePlayerTransformByClientId(ulong clientId)
+    {
+        NetworkManager networkManager = NetworkManager.Singleton;
+        if (networkManager == null)
+            return null;
+
+        if (networkManager.ConnectedClients.TryGetValue(clientId, out NetworkClient client)
+            && client.PlayerObject != null)
+            return client.PlayerObject.transform;
+
+        return null;
     }
 
     [Rpc(SendTo.Server)]

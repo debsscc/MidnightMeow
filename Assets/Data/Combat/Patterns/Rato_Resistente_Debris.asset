@@ -20,6 +20,9 @@ MonoBehaviour:
     size: {x: 1.26, y: 1.26}
     localOffset: {x: -1.2, y: 0.8}
     rotationOffsetDegrees: 0
+    coneInnerRadius: 0.4
+    coneOuterRadius: 1.6
+    coneOpeningAngleDegrees: 35
     delayBeforeStart: 0
     fillDuration: 0.65
     anchorToTargetOnStart: 1
@@ -28,7 +31,10 @@ MonoBehaviour:
     damage: 1
     damageLayers:
       serializedVersion: 2
-      m_Bits: 8
+      m_Bits: 520
+    effectPrefab: {fileID: 0}
+    travelVisualPrefab: {fileID: 0}
+    travelSpeed: 12
     projectilePrefab: {fileID: 0}
     projectileSpeedOverride: 0
     fillMode: 0
@@ -36,6 +42,9 @@ MonoBehaviour:
     size: {x: 1.26, y: 1.26}
     localOffset: {x: 1.1, y: -0.6}
     rotationOffsetDegrees: 0
+    coneInnerRadius: 0.4
+    coneOuterRadius: 1.6
+    coneOpeningAngleDegrees: 35
     delayBeforeStart: 0.25
     fillDuration: 0.65
     anchorToTargetOnStart: 1
@@ -45,6 +54,9 @@ MonoBehaviour:
     damageLayers:
       serializedVersion: 2
       m_Bits: 8
+    effectPrefab: {fileID: 0}
+    travelVisualPrefab: {fileID: 0}
+    travelSpeed: 12
     projectilePrefab: {fileID: 0}
     projectileSpeedOverride: 0
     fillMode: 0
@@ -52,6 +64,9 @@ MonoBehaviour:
     size: {x: 1.4, y: 1.4}
     localOffset: {x: 0, y: -1.3}
     rotationOffsetDegrees: 0
+    coneInnerRadius: 0.4
+    coneOuterRadius: 1.6
+    coneOpeningAngleDegrees: 35
     delayBeforeStart: 0.5
     fillDuration: 0.7
     anchorToTargetOnStart: 1
@@ -61,7 +76,10 @@ MonoBehaviour:
     damageLayers:
       serializedVersion: 2
       m_Bits: 8
+    effectPrefab: {fileID: 0}
+    travelVisualPrefab: {fileID: 0}
+    travelSpeed: 12
     projectilePrefab: {fileID: 0}
     projectileSpeedOverride: 0
     fillMode: 0
-  visualStyle: {fileID: 11400000, guid: a1b2c3d4e5f6789012345678abcdef01, type: 2}
+  visualStyle: {fileID: 0}

@@ -68,10 +68,18 @@ Agentes de IA **não veem o Inspector**. Esta pasta descreve prefabs, cenas e as
 | 5 | UI |
 | 6 | Wall |
 | 7 | Projectile |
-| 8 | Structure |
+| 8 | ProjectileEnemy |
+| 9 | Structure |
 | 10 | Collectable (tag `Drop` na Science) |
 | 11 | Enemy |
 | 12 | DashableWall |
+
+## Guias
+
+- [Escolta carruagem + aggro + telegraph Structure](guides/carriage-phase2-aggro-setup.md)
+- [Conserto carruagem (fix E / zonas)](guides/carriage-repair-fix.md)
+- [Passiva Nix stun + Cora splash](guides/nixie-cora-passive-refactor.md)
+- [Setup Rei Rato](guides/rat-king-boss-setup.md)
 
 ## Template
 

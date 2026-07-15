@@ -5,8 +5,16 @@ using Unity.Netcode.Components;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
+/// <summary>Estado autoritativo da carruagem (replicado via NetworkVariable).</summary>
+public enum CarriageState : byte
+{
+    Idle = 0,
+    Moving = 1,
+    Broken = 2
+}
+
 /// <summary>
-/// Carruagem da Fase 2: movimento autoritativo no servidor, progresso replicado via <see cref="NetworkVariable{T}"/>.
+/// Carruagem da Fase 2: movimento autoritativo no servidor, progresso e estado replicados via NetworkVariable.
 /// </summary>
 [DisallowMultipleComponent]
 [RequireComponent(typeof(NetworkObject), typeof(NetworkTransform), typeof(NetworkCarriageHealth))]
@@ -22,6 +30,7 @@ public class CarriageController : NetworkBehaviour
     private NetworkCarriageHealth _health;
     private static Sprite _cachedPlaceholderSprite;
     private Coroutine _clientVisualRefreshRoutine;
+    private readonly Collider2D[] _presenceHits = new Collider2D[16];
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
     private float _movementDebugNextLogTime;
@@ -42,11 +51,18 @@ public class CarriageController : NetworkBehaviour
         NetworkVariableReadPermission.Everyone,
         NetworkVariableWritePermission.Server);
 
+    private readonly NetworkVariable<CarriageState> _carriageState = new NetworkVariable<CarriageState>(
+        CarriageState.Idle,
+        NetworkVariableReadPermission.Everyone,
+        NetworkVariableWritePermission.Server);
+
     public float PathProgress => _pathProgress.Value;
     public bool HasArrived => _hasArrived.Value;
+    public CarriageState CurrentState => _carriageState.Value;
     public CarriageConfig Config => config;
     public CarriagePath Path => path;
     public NetworkVariable<float> PathProgressVariable => _pathProgress;
+    public NetworkVariable<CarriageState> CarriageStateVariable => _carriageState;
     public NetworkCarriageHealth Health => _health;
 
     private void Awake()
@@ -130,6 +146,15 @@ public class CarriageController : NetworkBehaviour
 
     private void Update()
     {
+        if (!IsServer || !IsSpawned)
+            return;
+
+        if (_health != null && _health.IsBroken)
+        {
+            SetCarriageState(CarriageState.Broken);
+            return;
+        }
+
         if (!CanAdvanceMovement())
         {
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
@@ -145,7 +170,10 @@ public class CarriageController : NetworkBehaviour
         if (GameEvents.IsPaused || _hasArrived.Value)
             return;
 
-        if (_health != null && _health.IsBroken)
+        bool playersNearby = HasLivingPlayerNearby();
+        SetCarriageState(playersNearby ? CarriageState.Moving : CarriageState.Idle);
+
+        if (!playersNearby)
             return;
 
         float totalLength = Mathf.Max(0.1f, path.GetTotalLength());
@@ -170,6 +198,66 @@ public class CarriageController : NetworkBehaviour
         {
             CompleteArrival();
         }
+    }
+
+    /// <summary>Servidor: vida zerada — interrompe movimento e replica Broken.</summary>
+    public void ServerNotifyBroken()
+    {
+        if (!IsServer)
+            return;
+
+        SetCarriageState(CarriageState.Broken);
+    }
+
+    /// <summary>Servidor: após conserto — reavalia Idle/Moving pela presença de jogadores.</summary>
+    public void ServerNotifyRepaired()
+    {
+        if (!IsServer)
+            return;
+
+        if (_health != null && _health.IsBroken)
+            return;
+
+        bool playersNearby = HasLivingPlayerNearby();
+        SetCarriageState(playersNearby ? CarriageState.Moving : CarriageState.Idle);
+    }
+
+    private void SetCarriageState(CarriageState next)
+    {
+        if (_carriageState.Value == next)
+            return;
+
+        _carriageState.Value = next;
+    }
+
+    private bool HasLivingPlayerNearby()
+    {
+        if (config == null)
+            return false;
+
+        float radius = config.GetPlayerPresenceRadius();
+        LayerMask mask = config.ResolvePlayerPresenceLayerMask();
+        int hitCount = Physics2D.OverlapCircleNonAlloc(transform.position, radius, _presenceHits, mask);
+
+        for (int i = 0; i < hitCount; i++)
+        {
+            Collider2D hit = _presenceHits[i];
+            if (hit == null)
+                continue;
+
+            NetworkPlayerHealth playerHealth = hit.GetComponentInParent<NetworkPlayerHealth>();
+            if (playerHealth != null && playerHealth.IsSpawned && playerHealth.CanFight)
+                return true;
+        }
+
+        return false;
+    }
+
+    private void OnDrawGizmos()
+    {
+        float radius = config != null ? config.GetPlayerPresenceRadius() : 8f;
+        Gizmos.color = new Color(0.2f, 0.85f, 1f, 0.65f);
+        Gizmos.DrawWireSphere(transform.position, radius);
     }
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD

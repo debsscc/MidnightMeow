@@ -20,6 +20,9 @@ MonoBehaviour:
     size: {x: 0.77, y: 7}
     localOffset: {x: 0, y: 2.2}
     rotationOffsetDegrees: 0
+    coneInnerRadius: 0.4
+    coneOuterRadius: 1.6
+    coneOpeningAngleDegrees: 35
     delayBeforeStart: 0
     fillDuration: 0.85
     anchorToTargetOnStart: 1
@@ -28,7 +31,7 @@ MonoBehaviour:
     damage: 1
     damageLayers:
       serializedVersion: 2
-      m_Bits: 8
+      m_Bits: 520
     effectPrefab: {fileID: 0}
     travelVisualPrefab: {fileID: 3344960684203597567, guid: 6ededdb4f3eb7e143ae0a036319f5fd3, type: 3}
     travelSpeed: 12

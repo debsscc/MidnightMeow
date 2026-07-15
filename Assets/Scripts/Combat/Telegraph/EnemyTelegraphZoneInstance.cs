@@ -304,9 +304,7 @@ public class EnemyTelegraphZoneInstance : MonoBehaviour
         if (_strike.damage <= 0) return 0;
 
         var hits = new HashSet<Collider2D>();
-        LayerMask mask = _strike.damageLayers.value == 0
-            ? (LayerMask)(1 << LayerMask.NameToLayer("Player"))
-            : _strike.damageLayers;
+        LayerMask mask = ResolveDamageLayerMask(_strike.damageLayers);
 
         Collider2D[] results = QueryOverlapColliders(worldPosition, rotationDegrees, mask);
 
@@ -325,6 +323,25 @@ public class EnemyTelegraphZoneInstance : MonoBehaviour
         }
 
         return count;
+    }
+
+    /// <summary>
+    /// Se a mask do strike estiver vazia, inclui Player e Structure (carruagem).
+    /// Patterns devem configurar ambos no Inspector — ver guia Editor.
+    /// </summary>
+    private static LayerMask ResolveDamageLayerMask(LayerMask configured)
+    {
+        if (configured.value != 0)
+            return configured;
+
+        int mask = 0;
+        int playerLayer = LayerMask.NameToLayer("Player");
+        int structureLayer = LayerMask.NameToLayer("Structure");
+        if (playerLayer >= 0)
+            mask |= 1 << playerLayer;
+        if (structureLayer >= 0)
+            mask |= 1 << structureLayer;
+        return mask;
     }
 
     private Collider2D[] QueryOverlapColliders(Vector2 worldPosition, float rotationDegrees, LayerMask mask)
