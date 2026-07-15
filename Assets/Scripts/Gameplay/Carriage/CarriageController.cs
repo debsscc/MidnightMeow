@@ -69,9 +69,17 @@ public class CarriageController : NetworkBehaviour
 
     public void EnsureRuntimePresentation()
     {
-        EnsurePlaceholderSprite();
-        ApplyVisualScale();
+        if (config != null && config.useOfficialArt)
+            EnsureOfficialPresentation();
+        else
+        {
+            EnsurePlaceholderSprite();
+            ApplyPlaceholderVisualScale();
+        }
+
+        EnsureWheelSpinner();
         EnsureHealthBar();
+        ApplyRepairLabelOffset();
     }
 
     public override void OnNetworkSpawn()
@@ -288,20 +296,66 @@ public class CarriageController : NetworkBehaviour
             gameObject.AddComponent<EnemyHealthBarDisplay>();
     }
 
-    private Transform ResolveVisualTransform()
+    private Transform ResolveVisualRoot()
     {
-        Transform visual = transform.Find("Visual");
-        if (visual != null)
-            return visual;
+        Transform root = transform.Find("VisualRoot");
+        if (root != null)
+            return root;
+
+        Transform legacy = transform.Find("Visual");
+        if (legacy != null)
+            return legacy;
 
         SpriteRenderer[] renderers = GetComponentsInChildren<SpriteRenderer>(true);
         for (int i = 0; i < renderers.Length; i++)
         {
-            if (renderers[i] != null && renderers[i].gameObject.name == "Visual")
+            if (renderers[i] == null)
+                continue;
+
+            string name = renderers[i].gameObject.name;
+            if (name == "VisualRoot" || name == "Visual" || name == "Body")
                 return renderers[i].transform;
         }
 
         return renderers.Length > 0 ? renderers[0].transform : null;
+    }
+
+    private void EnsureOfficialPresentation()
+    {
+        if (!gameObject.activeSelf)
+            gameObject.SetActive(true);
+
+        Transform visualRoot = ResolveVisualRoot();
+        if (visualRoot == null)
+            return;
+
+        if (!visualRoot.gameObject.activeSelf)
+            visualRoot.gameObject.SetActive(true);
+
+        float scale = config != null ? Mathf.Max(0.05f, config.visualRootScale) : 0.3f;
+        visualRoot.localScale = new Vector3(scale, scale, 1f);
+        visualRoot.gameObject.layer = gameObject.layer;
+
+        SpriteRenderer[] renderers = visualRoot.GetComponentsInChildren<SpriteRenderer>(true);
+        for (int i = 0; i < renderers.Length; i++)
+        {
+            SpriteRenderer sr = renderers[i];
+            if (sr == null)
+                continue;
+
+            sr.enabled = true;
+            sr.forceRenderingOff = false;
+            sr.gameObject.layer = gameObject.layer;
+        }
+
+        Vector3 rootPos = transform.position;
+        if (Mathf.Abs(rootPos.z) > 0.001f)
+        {
+            rootPos.z = 0f;
+            transform.position = rootPos;
+        }
+
+        ApplyConfiguredCollider();
     }
 
     private void EnsurePlaceholderSprite()
@@ -309,7 +363,7 @@ public class CarriageController : NetworkBehaviour
         if (!gameObject.activeSelf)
             gameObject.SetActive(true);
 
-        Transform visual = ResolveVisualTransform();
+        Transform visual = ResolveVisualRoot();
         if (visual == null)
             return;
 
@@ -323,6 +377,8 @@ public class CarriageController : NetworkBehaviour
         visual.localPosition = localPos;
 
         SpriteRenderer spriteRenderer = visual.GetComponent<SpriteRenderer>();
+        if (spriteRenderer == null)
+            spriteRenderer = visual.GetComponentInChildren<SpriteRenderer>();
         if (spriteRenderer == null)
             return;
 
@@ -371,13 +427,15 @@ public class CarriageController : NetworkBehaviour
         return Sprite.Create(texture, new Rect(0f, 0f, 4f, 4f), new Vector2(0.5f, 0.5f), 4f);
     }
 
-    private void ApplyVisualScale()
+    private void ApplyPlaceholderVisualScale()
     {
-        Transform visual = ResolveVisualTransform();
+        Transform visual = ResolveVisualRoot();
         if (visual == null)
             return;
 
         SpriteRenderer spriteRenderer = visual.GetComponent<SpriteRenderer>();
+        if (spriteRenderer == null)
+            spriteRenderer = visual.GetComponentInChildren<SpriteRenderer>();
         if (spriteRenderer == null || spriteRenderer.sprite == null)
             return;
 
@@ -393,6 +451,41 @@ public class CarriageController : NetworkBehaviour
             box.size = new Vector2(bounds.size.x * 0.9f, bounds.size.y * 0.85f);
             box.offset = transform.InverseTransformPoint(bounds.center);
         }
+    }
+
+    private void ApplyConfiguredCollider()
+    {
+        if (config == null || !TryGetComponent<BoxCollider2D>(out var box))
+            return;
+
+        box.size = config.colliderSize;
+        box.offset = config.colliderOffset;
+    }
+
+    private void ApplyRepairLabelOffset()
+    {
+        if (config == null || !config.useOfficialArt)
+            return;
+
+        if (!TryGetComponent<CarriageRepairWorldUI>(out var repairUi))
+            return;
+
+        repairUi.SetOffset(config.repairLabelOffset);
+    }
+
+    private void EnsureWheelSpinner()
+    {
+        if (config == null || !config.useOfficialArt)
+            return;
+
+        CarriageWheelSpinner spinner = GetComponent<CarriageWheelSpinner>();
+        if (spinner == null)
+            spinner = gameObject.AddComponent<CarriageWheelSpinner>();
+
+        Transform visualRoot = ResolveVisualRoot();
+        Transform front = visualRoot != null ? visualRoot.Find("Layer_Wheels/Wheel_Front") : null;
+        Transform back = visualRoot != null ? visualRoot.Find("Layer_Wheels/Wheel_Back") : null;
+        spinner.Configure(front, back, config.frontWheelRadius, config.backWheelRadius);
     }
 }
 

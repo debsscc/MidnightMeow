@@ -14,7 +14,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CarriageConfig
   maxHealth: 20
   repairRestoreHealthFraction: 0.5
+  useOfficialArt: 1
+  visualRootScale: 0.3
   visualScale: 1
+  frontWheelRadius: 0.28
+  backWheelRadius: 0.36
+  colliderSize: {x: 3, y: 1.8}
+  colliderOffset: {x: 0.15, y: -0.25}
+  repairLabelOffset: {x: 0, y: 1.85, z: 0}
   pathStartX: -42
   pathEndX: 18
   useCustomPathY: 0

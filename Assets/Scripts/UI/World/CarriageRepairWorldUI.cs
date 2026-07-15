@@ -20,6 +20,8 @@ public class CarriageRepairWorldUI : MonoBehaviour
     [SerializeField] private GameObject repairUIPrefab;
     [SerializeField] private Vector3 offset = new Vector3(0f, 1.6f, 0f);
 
+    public void SetOffset(Vector3 worldOffset) => offset = worldOffset;
+
     private CarriageController _carriage;
     private NetworkCarriageHealth _health;
     private GameObject _promptInstance;

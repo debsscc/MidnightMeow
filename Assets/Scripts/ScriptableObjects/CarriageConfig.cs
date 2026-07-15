@@ -15,8 +15,31 @@ public class CarriageConfig : ScriptableObject
     public float repairRestoreHealthFraction = 0.5f;
 
     [Header("Visual")]
-    [Tooltip("Multiplicador opcional sobre o tamanho alvo do placeholder (~2,4×1,6 uu).")]
+    [Tooltip("Se true, usa a arte oficial do prefab (VisualRoot) e não força o placeholder marrom.")]
+    public bool useOfficialArt = true;
+
+    [Tooltip("Escala uniforme do VisualRoot quando useOfficialArt (PPU 100 → ~0.28–0.35).")]
+    [Min(0.05f)]
+    public float visualRootScale = 0.3f;
+
+    [Tooltip("Multiplicador legado do placeholder (~2,4×1,6 uu). Ignorado com arte oficial.")]
     public float visualScale = 1f;
+
+    [Tooltip("Raio da roda dianteira em unidades de mundo (após escala do VisualRoot).")]
+    [Min(0.05f)]
+    public float frontWheelRadius = 0.28f;
+
+    [Tooltip("Raio da roda traseira em unidades de mundo (após escala do VisualRoot).")]
+    [Min(0.05f)]
+    public float backWheelRadius = 0.36f;
+
+    [Header("Collider (arte oficial)")]
+    public Vector2 colliderSize = new Vector2(3.0f, 1.8f);
+    public Vector2 colliderOffset = new Vector2(0.15f, -0.25f);
+
+    [Header("UI offsets (arte oficial)")]
+    [Tooltip("Offset local do label de conserto acima da carruagem.")]
+    public Vector3 repairLabelOffset = new Vector3(0f, 1.85f, 0f);
 
     [Header("Trajeto (Fase 2)")]
     public float pathStartX = -42f;
