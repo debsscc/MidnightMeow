@@ -93,6 +93,13 @@ public class MainMenuController : MonoBehaviour
 
         if (save != null)
             save.OnProfileChanged += RefreshContinueState;
+
+        ApplyMenuButtonFeedback();
+    }
+
+    private void ApplyMenuButtonFeedback()
+    {
+        UiButtonFeedbackUtility.ApplyToScene(gameObject.scene);
     }
 
     private void OnEnable()
@@ -147,6 +154,7 @@ public class MainMenuController : MonoBehaviour
 
     private void Start()
     {
+        ApplyMenuButtonFeedback();
         ShowMainMenu();
         ScreenFlowSceneReadiness.MarkReadyIfPending("Menu2");
     }

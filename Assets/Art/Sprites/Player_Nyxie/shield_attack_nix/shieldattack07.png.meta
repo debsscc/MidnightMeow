@@ -1,10 +1,13 @@
 fileFormatVersion: 2
-guid: 2ff1a4f4756b41a428b219416515d463
+guid: 13e8952e16978394598db5329f7e1883
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 2540260041662673544
-    second: dash attack01_0
+      213: -2249333937150213515
+    second: shieldattack07_0
+  - first:
+      213: -8210743778641711341
+    second: shieldattack07_1
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -126,13 +129,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: dash attack01_0
+      name: shieldattack07_0
       rect:
         serializedVersion: 2
-        x: 305
-        y: 230
-        width: 492
-        height: 495
+        x: 216
+        y: 183
+        width: 605
+        height: 556
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -141,8 +144,30 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 8823c6c8c01d04320800000000000000
-      internalID: 2540260041662673544
+      spriteID: 5724eee93b2c8c0e0800000000000000
+      internalID: -2249333937150213515
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: shieldattack07_1
+      rect:
+        serializedVersion: 2
+        x: 806
+        y: 502
+        width: 16
+        height: 31
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 31fef4429049d0e80800000000000000
+      internalID: -8210743778641711341
       vertices: []
       indices: 
       edges: []
@@ -161,7 +186,8 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      dash attack01_0: 2540260041662673544
+      shieldattack07_0: -2249333937150213515
+      shieldattack07_1: -8210743778641711341
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

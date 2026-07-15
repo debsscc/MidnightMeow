@@ -122,7 +122,7 @@ Fase-1 → [vitória/derrota] → VictoryScene / GameOver
 - **Apagar save (slot):** painel Saves → botão **Apagar Save N** → confirmação (data, magículas)
 - **Apagar todos:** painel Saves (Continuar) → **Apagar todos os saves** → confirmação
 - **Áudio:** Opções → sliders Volume geral / Música / SFX → `GameAudioSettings` + mixer único `MidnightMeowAudioMixer` (`Assets/Resources/MidnightMeowAudioMixer.mixer`); botão **Restaurar padrões de áudio** (75% em cada canal).
-- **SFX de botões (global):** `UiSfxPlayer` + `UiButtonSfx` (auto-inject em `Button`/`Toggle` via `UiButtonSfxBootstrap`). Clips `Hover.wav` / `Click.wav` via `UIAudioConfig` (`buttonHover` / `buttonClick`). Opt-out: componente `UiSfxIgnore` ou `playSfx = false`. `MenuAudioManager` / UnityEvents antigos são no-op (sem duplicar).
+- **SFX de botões (global):** `UiSfxPlayer` + `UiButtonSfx` (auto-inject em `Button`/`Toggle` via `UiButtonSfxBootstrap`). Clips `Hover.wav` / `Click.wav` via `UIAudioConfig` (`buttonHover` / `buttonClick`). Menu2 também aplica `Button_Juiceness` + tint reforçado via `UiButtonFeedbackUtility` (`MainMenuController`). UnityEvents legados em `UIButtonInteractionEvents` → `MenuAudioManager.PlayHoverSound` delegam ao `UiSfxPlayer`. Opt-out: `UiSfxIgnore` ou `playSfx = false`.
 - API: `SaveProfileStore.DeleteSlot(int)`, `DeleteAllSlots()` — só no menu (`GameFlowOrchestrator.CanRequestTransition`)
 
 ## Contratos

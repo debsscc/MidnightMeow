@@ -24,13 +24,15 @@ public class MenuAudioManager : MonoBehaviour
         UiSfxPlayer.EnsureExists();
     }
 
-    /// <summary>No-op — use UiSfxPlayer / UiButtonSfx.</summary>
+    /// <summary>Delega para UiSfxPlayer (UnityEvents legados em Menu2/Lobby).</summary>
     public void PlayHoverSound()
     {
+        UiSfxPlayer.EnsureExists().PlayHover();
     }
 
-    /// <summary>No-op — use UiSfxPlayer / UiButtonSfx.</summary>
+    /// <summary>Delega para UiSfxPlayer (UnityEvents legados em Menu2/Lobby).</summary>
     public void PlayClickSound()
     {
+        UiSfxPlayer.EnsureExists().PlayClick();
     }
 }
