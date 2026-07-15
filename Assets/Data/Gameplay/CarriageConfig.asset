@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: CarriageConfig
   m_EditorClassIdentifier: Assembly-CSharp::CarriageConfig
   maxHealth: 20
-  repairRestoreHealthFraction: 0.5
+  repairRestoreHealthFraction: 1
   useOfficialArt: 1
   visualRootScale: 0.3
   visualScale: 1
@@ -51,7 +51,7 @@ MonoBehaviour:
   repairLabelVisibilityRadiusMultiplier: 2
   approachText: Aproxime-se para consertar
   pressEText: Aperte E para consertar
-  stayInAreaText: Fique na área para consertar
+  stayInAreaText: "Fique na \xE1rea para consertar"
   repairProgressTextFormat: '{0}%'
   escortIdleText: Se aproximem da Carruagem
   escortMovingText: Protejam a Carruagem
