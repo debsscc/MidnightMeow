@@ -82,7 +82,7 @@ public class NightManager : MonoBehaviour
                 service = host.AddComponent<LocalRatHoleSpawnService>();
         }
 
-        service.Configure(nightConfiguration, entry.maxEnemiesAlive, entry.firstSpawnDelay);
+        service.Configure(nightConfiguration, entry.maxRatsAlive, entry.firstSpawnDelay);
         service.Begin();
         return true;
     }

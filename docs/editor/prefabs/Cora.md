@@ -1,6 +1,6 @@
 # Prefab: Cora
 
-Última revisão: 2026-07-09  
+Última revisão: 2026-07-16  
 **Caminho:** `Assets/Prefabs/Characters/Cora.prefab`  
 **GUID:** `b18ed4e45e4d20a4dbdac339b666e689`
 
@@ -110,7 +110,7 @@ Config em `Assets/Data/Audio/Player/Cora/CoraPlayerAudioConfig.asset` — todos 
 | `PlayerAbilityHandler.abilitySet` | `Assets/Data/Abilities/CoraAbilitySet.asset` |
 | HUD ícones (Passiva/Dash/Q/R) | Campos `*HudIcon` no `CoraAbilitySet` → `Art/.../HUD_ ability/Habilidades Cora/` |
 | `barrierPrefab` | `CoraBarrier.prefab` — VFX `Cora_Barrier_VFX` (3 frames); cast da personagem continua em `Cora_Barrier.anim` |
-| `poolPrefab` | `CoraDamagePool.prefab` — VFX `Cora_DamagePool_VFX` (5 frames), `visualScaleMultiplier: 0.8` |
+| `poolPrefab` | `CoraDamagePool.prefab` — VFX `Cora_DamagePool_VFX` (5 frames), `visualScaleMultiplier: 0.8`; raio de AoE = `puddleRadius` em `CoraPoolAbility.asset` |
 | `progressionData` | Instância no prefab (GUID `b87f7c79296088641991071b4e517b5c`) |
 | `NetworkPlayerHealth` / revive | `MultiplayerConfig`, `DownedPlayerConfig` |
 

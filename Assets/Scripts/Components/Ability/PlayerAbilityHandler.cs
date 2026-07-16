@@ -222,7 +222,10 @@ public class PlayerAbilityHandler : MonoBehaviour
             return;
 
         Vector2 aimDirection = ResolveAimDirection();
-        Vector2 placement = ResolvePlacement(tierData.range, aimDirection);
+        float placementRange = definition.abilityType == CharacterAbilityType.CoraPool
+            ? tierData.ResolveCastRange()
+            : tierData.range;
+        Vector2 placement = ResolvePlacement(placementRange, aimDirection);
         Vector2 origin = definition.abilityType == CharacterAbilityType.NixCharge
             ? (Vector2)transform.position
             : ResolveAbilityOrigin();

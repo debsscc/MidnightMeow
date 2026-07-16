@@ -21,7 +21,7 @@ MonoBehaviour:
     useWaveSpawning: 0
     useHoleSpawning: 1
     holeSpawnInterval: 4
-    maxEnemiesAlive: 35
+    maxRatsAlive: 35
     firstSpawnDelay: 3
     winCondition: 0
   - sceneName: Fase-2
@@ -32,7 +32,7 @@ MonoBehaviour:
     useWaveSpawning: 0
     useHoleSpawning: 1
     holeSpawnInterval: 3.5
-    maxEnemiesAlive: 40
+    maxRatsAlive: 40
     firstSpawnDelay: 3
     winCondition: 1
   - sceneName: Fase-3
@@ -43,6 +43,6 @@ MonoBehaviour:
     useWaveSpawning: 0
     useHoleSpawning: 0
     holeSpawnInterval: 4
-    maxEnemiesAlive: 1
+    maxRatsAlive: 1
     firstSpawnDelay: 2
     winCondition: 2

@@ -20,6 +20,11 @@ public class RatHoleSpawnPoint : MonoBehaviour
     public float SpawnScatterRadius => spawnScatterRadius;
     public bool CanSpawn => !IsSealed;
 
+    /// <summary>
+    /// True enquanto o buraco está em sessão de selamento ativa (pausar spawn local).
+    /// </summary>
+    public bool IsBeingSealed { get; set; }
+
     public bool IsSealed =>
         NetworkRatHoleSealManager.Instance != null &&
         NetworkRatHoleSealManager.Instance.IsHoleSealed(holeId);

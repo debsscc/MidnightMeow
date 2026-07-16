@@ -4,6 +4,7 @@ using UnityEngine;
 
 /// <summary>
 /// Loop de spawn por buraco: aguarda intervalo sorteado do SO e spawna um rato da tabela de probabilidade.
+/// Pausa o timer enquanto o buraco está sendo selado ou o jogo está pausado.
 /// </summary>
 [DisallowMultipleComponent]
 [RequireComponent(typeof(RatHoleSpawnPoint))]
@@ -74,7 +75,7 @@ public class RatHoleSpawnController : MonoBehaviour
 
         while (_running)
         {
-            if (_spawnPaused || GameEvents.IsPaused)
+            if (ShouldHoldSpawnTimer())
             {
                 yield return new WaitForSecondsRealtime(0.25f);
                 continue;
@@ -86,6 +87,7 @@ public class RatHoleSpawnController : MonoBehaviour
                 continue;
             }
 
+            // Guarda de limite global (maxRatsAlive): não consome o timer de delay.
             if (_canSpawnMore != null && !_canSpawnMore())
             {
                 yield return new WaitForSeconds(0.35f);
@@ -93,9 +95,31 @@ public class RatHoleSpawnController : MonoBehaviour
             }
 
             float wait = spawnProfile.RollSpawnDelay();
-            yield return new WaitForSeconds(wait);
+            float elapsed = 0f;
 
-            if (!_running || _hole == null || !_hole.CanSpawn)
+            // Timer pausável: selamento / pause / limite não avançam o delay.
+            while (elapsed < wait)
+            {
+                if (!_running)
+                    yield break;
+
+                if (ShouldHoldSpawnTimer() || _hole == null || !_hole.CanSpawn)
+                {
+                    yield return new WaitForSecondsRealtime(0.1f);
+                    continue;
+                }
+
+                if (_canSpawnMore != null && !_canSpawnMore())
+                {
+                    yield return new WaitForSeconds(0.1f);
+                    continue;
+                }
+
+                elapsed += Time.deltaTime;
+                yield return null;
+            }
+
+            if (!_running || _hole == null || !_hole.CanSpawn || _hole.IsBeingSealed)
                 continue;
 
             if (_canSpawnMore != null && !_canSpawnMore())
@@ -108,5 +132,12 @@ public class RatHoleSpawnController : MonoBehaviour
             Vector3 spawnPosition = _hole.GetSpawnPosition();
             _spawnRequest.Invoke(_hole, prefab, spawnPosition);
         }
+    }
+
+    private bool ShouldHoldSpawnTimer()
+    {
+        return _spawnPaused ||
+               GameEvents.IsPaused ||
+               (_hole != null && _hole.IsBeingSealed);
     }
 }

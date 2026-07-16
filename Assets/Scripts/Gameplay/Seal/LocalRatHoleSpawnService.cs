@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 
 /// <summary>
 /// Spawn local por buracos para single player (sem NGO).
@@ -7,7 +8,10 @@ using UnityEngine;
 public class LocalRatHoleSpawnService : MonoBehaviour
 {
     [SerializeField] private WaveSettings fallbackWaveSettings;
-    [SerializeField] private int maxEnemiesAlive = 35;
+
+    [Tooltip("Limite global de ratos vivos.")]
+    [FormerlySerializedAs("maxEnemiesAlive")]
+    [SerializeField] private int maxRatsAlive = 35;
     [SerializeField] private float firstSpawnDelay = 3f;
 
     private int _enemiesAlive;
@@ -19,7 +23,7 @@ public class LocalRatHoleSpawnService : MonoBehaviour
         if (settings != null)
             fallbackWaveSettings = settings;
 
-        maxEnemiesAlive = Mathf.Max(1, maxAlive);
+        maxRatsAlive = Mathf.Max(1, maxAlive);
         firstSpawnDelay = Mathf.Max(0f, initialDelay);
     }
 
@@ -32,7 +36,8 @@ public class LocalRatHoleSpawnService : MonoBehaviour
         EnsureFallbackProfiles();
         _orchestrator = EnsureOrchestrator();
         _orchestrator.Configure(firstSpawnDelay);
-        _orchestrator.Begin(SpawnLocalEnemy, () => _enemiesAlive < maxEnemiesAlive);
+        // Guarda: não spawna se já atingiu o teto de ratos vivos da fase.
+        _orchestrator.Begin(SpawnLocalEnemy, () => _enemiesAlive < maxRatsAlive);
     }
 
     public void Stop()

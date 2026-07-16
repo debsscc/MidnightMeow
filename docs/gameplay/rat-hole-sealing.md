@@ -1,6 +1,6 @@
 # Selamento de buracos de spawn
 
-Última revisão: 2026-06-30
+Última revisão: 2026-07-16
 
 ## Spawn data-driven por buraco
 
@@ -16,6 +16,8 @@ O buraco (`RatHoleSpawnController`) sorteia o delay, aguarda, sorteia o rato e p
 - **Multiplayer:** `NetworkWaveManager` + `RatHoleSpawnOrchestrator` (servidor)
 - **Single player:** `LocalRatHoleSpawnService` + mesmo orquestrador
 - **Fallback:** se o buraco não tiver SO, o servidor monta perfil temporário a partir do `WaveSettings` legado da fase
+- **Teto global:** `PhaseWaveSettingsCatalog.PhaseEntry.maxRatsAlive` — spawn aborta enquanto `vivos >= maxRatsAlive`
+- **Pausa no selamento:** com sessão ativa, `RatHoleSpawnPoint.IsBeingSealed = true` e o timer daquele buraco não avança
 
 Perfil padrão opcional por fase: `PhaseWaveSettingsCatalog.PhaseEntry.defaultHoleSpawnProfile`.
 
@@ -30,6 +32,8 @@ Criar perfis em `Assets/Data/Gameplay/` → menu **MidnightMeow/Gameplay/Rat Hol
 | Rato Resistente | 0.10 |
 
 `minSpawnTime`: 8s · `maxSpawnTime`: 14s
+
+Guia Editor (teto + Poça): [rat-holes-and-cora-puddle-balance.md](../editor/guides/rat-holes-and-cora-puddle-balance.md)
 
 ## Fluxo de selamento (resumo)
 

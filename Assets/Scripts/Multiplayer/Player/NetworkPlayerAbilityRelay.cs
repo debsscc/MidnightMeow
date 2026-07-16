@@ -231,7 +231,8 @@ public class NetworkPlayerAbilityRelay : NetworkBehaviour
             return;
 
         AbilityTierData tierData = ResolveTierDataForAbility(abilityType);
-        if (tierData.range <= 0f && tierData.damage <= 0f && tierData.areaWidth <= 0f)
+        if (tierData.ResolveCastRange() <= 0f && tierData.ResolvePuddleRadius() <= 0f &&
+            tierData.range <= 0f && tierData.damage <= 0f && tierData.areaWidth <= 0f)
             return;
 
         Vector2 origin = transform.position;

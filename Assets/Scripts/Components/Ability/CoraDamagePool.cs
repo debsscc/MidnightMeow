@@ -39,7 +39,7 @@ public class CoraDamagePool : MonoBehaviour
     {
         _tierData = tierData;
         _ownerClientId = ownerClientId;
-        _worldRadius = Mathf.Max(0.25f, tierData.range);
+        _worldRadius = Mathf.Max(0.25f, tierData.ResolvePuddleRadius());
 
         SyncPoolVisualAndCollider(_worldRadius);
 
@@ -121,7 +121,7 @@ public class CoraDamagePool : MonoBehaviour
 
         if (damage <= 0f) return;
 
-        float radius = _worldRadius > 0f ? _worldRadius : _tierData.range;
+        float radius = _worldRadius > 0f ? _worldRadius : _tierData.ResolvePuddleRadius();
         var hits = Physics2D.OverlapCircleAll(transform.position, radius, enemyLayers);
         foreach (var hit in hits)
         {

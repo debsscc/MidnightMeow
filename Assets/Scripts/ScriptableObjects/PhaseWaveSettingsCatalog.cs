@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 
 /// <summary>
 /// Mapeia cenas Fase-* para spawn, mecânicas e condição de vitória.
@@ -29,7 +30,12 @@ public class PhaseWaveSettingsCatalog : ScriptableObject
         [Tooltip("Spawn contínuo por buracos não selados.")]
         public bool useHoleSpawning = true;
         public float holeSpawnInterval = 4f;
-        public int maxEnemiesAlive = 35;
+
+        [Tooltip("Limite global de ratos vivos na fase. Spawn por buraco aborta se o contador atingir este valor.")]
+        [Min(1)]
+        [FormerlySerializedAs("maxEnemiesAlive")]
+        public int maxRatsAlive = 35;
+
         public float firstSpawnDelay = 3f;
 
         [Header("Vitória")]

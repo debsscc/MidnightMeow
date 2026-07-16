@@ -34,7 +34,7 @@ public class NetworkWaveManager : NetworkBehaviour
     private bool _isSpawning;
     private bool _hasStarted;
     private SpawnMode _spawnMode = SpawnMode.Waves;
-    private int _maxEnemiesAlive = 35;
+    private int _maxRatsAlive = 35;
     private float _firstSpawnDelay = 3f;
     private RatHoleSpawnOrchestrator _holeOrchestrator;
 
@@ -146,7 +146,8 @@ public class NetworkWaveManager : NetworkBehaviour
         EnsureHoleProfilesFromLegacySettings();
         _holeOrchestrator = EnsureHoleOrchestrator();
         _holeOrchestrator.Configure(_firstSpawnDelay);
-        _holeOrchestrator.Begin(SpawnNetworkEnemyFromHole, () => _enemiesAlive < _maxEnemiesAlive);
+        // Guarda: não spawna se já atingiu o teto de ratos vivos da fase.
+        _holeOrchestrator.Begin(SpawnNetworkEnemyFromHole, () => _enemiesAlive < _maxRatsAlive);
     }
 
     private RatHoleSpawnOrchestrator EnsureHoleOrchestrator()
@@ -471,7 +472,7 @@ public class NetworkWaveManager : NetworkBehaviour
         if (entry.waveSettings != null)
             waveSettings = entry.waveSettings;
 
-        _maxEnemiesAlive = Mathf.Max(1, entry.maxEnemiesAlive);
+        _maxRatsAlive = Mathf.Max(1, entry.maxRatsAlive);
         _firstSpawnDelay = Mathf.Max(0f, entry.firstSpawnDelay);
 
         if (entry.winCondition == PhaseWaveSettingsCatalog.PhaseWinCondition.KillBoss)

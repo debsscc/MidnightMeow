@@ -113,6 +113,8 @@ public class NetworkAbilityObjectSpawner : NetworkBehaviour
         return new AbilityTierPayload
         {
             Range = data.range,
+            CastRange = data.castRange,
+            PuddleRadius = data.puddleRadius,
             Damage = data.damage,
             SlowMultiplier = data.slowMultiplier,
             SlowDuration = data.slowDuration,
@@ -130,6 +132,8 @@ public class NetworkAbilityObjectSpawner : NetworkBehaviour
         return new AbilityTierData
         {
             range = payload.Range,
+            castRange = payload.CastRange,
+            puddleRadius = payload.PuddleRadius,
             damage = payload.Damage,
             slowMultiplier = payload.SlowMultiplier,
             slowDuration = payload.SlowDuration,
@@ -145,6 +149,8 @@ public class NetworkAbilityObjectSpawner : NetworkBehaviour
     private struct AbilityTierPayload : INetworkSerializable
     {
         public float Range;
+        public float CastRange;
+        public float PuddleRadius;
         public float Damage;
         public float SlowMultiplier;
         public float SlowDuration;
@@ -158,6 +164,8 @@ public class NetworkAbilityObjectSpawner : NetworkBehaviour
         public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
         {
             serializer.SerializeValue(ref Range);
+            serializer.SerializeValue(ref CastRange);
+            serializer.SerializeValue(ref PuddleRadius);
             serializer.SerializeValue(ref Damage);
             serializer.SerializeValue(ref SlowMultiplier);
             serializer.SerializeValue(ref SlowDuration);

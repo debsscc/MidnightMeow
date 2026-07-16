@@ -53,6 +53,7 @@ Documentação para desenvolvedores e **agentes de IA** que trabalham neste proj
 - [Diagnóstico modular](editor/diagnostics.md) — Hub de logs para combate/rede
 - [Prefabs](editor/README.md) — Inventário e template de documentação
 - [Guia: passiva Nix stun + Cora splash](editor/guides/nixie-cora-passive-refactor.md) — setup Editor pós-refatoração
+- [Guia: limite Rat Holes + Poça Cora](editor/guides/rat-holes-and-cora-puddle-balance.md) — `maxRatsAlive`, `castRange` / `puddleRadius`
 - [Estrutura de Assets](assets/STRUCTURE.md) — Pastas e convenções
 - [Erros comuns](troubleshooting/common-errors.md) — Console/compilador: causas e correções
 

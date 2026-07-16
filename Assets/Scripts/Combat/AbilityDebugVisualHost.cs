@@ -222,7 +222,8 @@ public class AbilityDebugVisualHost : MonoBehaviour
                 origin = origin,
                 aimDirection = aimDirection,
                 placement = placement,
-                range = tierData.range,
+                // Telegraph visual da Poça usa exclusivamente o raio de AoE.
+                range = tierData.ResolvePuddleRadius(),
                 areaWidth = tierData.areaWidth,
                 isCircle = true
             },

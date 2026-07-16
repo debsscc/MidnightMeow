@@ -103,6 +103,9 @@ public class NetworkRatHoleSealManager : NetworkBehaviour
             if (session.Equals(before))
                 continue;
 
+            if (before.IsActive != session.IsActive || before.IsSealed != session.IsSealed)
+                SyncHoleBeingSealedState(session.HoleId, session.IsActive && !session.IsSealed);
+
             if (!before.IsSealed && session.IsSealed)
             {
                 objectiveDirty = true;
@@ -218,6 +221,7 @@ public class NetworkRatHoleSealManager : NetworkBehaviour
         };
 
         UpsertSession(session);
+        SyncHoleBeingSealedState(holeId, isBeingSealed: true);
         BroadcastObjectiveStatus();
 
         RatHoleSealSession started = session;
@@ -280,6 +284,18 @@ public class NetworkRatHoleSealManager : NetworkBehaviour
         }
 
         _sessions.Add(session);
+    }
+
+    /// <summary>
+    /// Marca o buraco local para pausar spawn durante selamento ativo (servidor).
+    /// </summary>
+    private static void SyncHoleBeingSealedState(ushort holeId, bool isBeingSealed)
+    {
+        RatHoleSpawnPoint hole = RatHoleSpawnPoint.FindById(holeId);
+        if (hole == null)
+            return;
+
+        hole.IsBeingSealed = isBeingSealed;
     }
 
     private static int CountAlivePlayers()

@@ -1,6 +1,6 @@
 # Implementação — Habilidades de Personagem
 
-Última revisão: 2026-06-30
+Última revisão: 2026-07-16
 
 ## Arquitetura
 
@@ -12,6 +12,18 @@
 | `IAbilityExecutor` + executores | Lógica por habilidade (Nix/Cora) |
 | `NetworkPlayerAbilityRelay` | ClientRpc para animações em clientes remotos |
 | `NetworkAbilityObjectSpawner` | Spawn servidor de barreira/poça |
+
+## Poça (Cora R) — cast vs raio
+
+Em `AbilityTierData` / `CoraPoolAbility.asset`:
+
+| Campo | Uso |
+|-------|-----|
+| `castRange` | Distância máxima de conjuração (`PlayerAbilityHandler`) |
+| `puddleRadius` | Raio de dano + telegraph (`CoraDamagePool`, `AbilityDebugVisualHost`) |
+| `range` | Fallback legado se os campos acima forem `0` |
+
+Guia Editor: [rat-holes-and-cora-puddle-balance.md](../editor/guides/rat-holes-and-cora-puddle-balance.md)
 
 ## Inputs
 
