@@ -1,6 +1,6 @@
 # Prefabs: UI diversos
 
-Última revisão: 2026-05-22
+Última revisão: 2026-07-16
 
 ## Defeat.prefab
 
@@ -36,7 +36,7 @@
 | Painéis | `Panel_KeyboardMouse`, `Panel_Gamepad` |
 | Labels | TMP + `LocalizeStringEvent` (tabela `UI`, chaves `controls.action.*`) |
 | Rebuild | Menu Unity: **MidnightMeow → UI → Rebuild Controls Panel Prefab** |
-| Menu2 | Abre via Opções → Controles (`UIActionBridge.OpenControlsFromSettings`); **não** é aba do `MenuTabController` |
+| Menu2 | Abre via Opções → Controles (`UIActionBridge.OpenControlsFromSettings`) ou Saves (`OpenSaveFromSettings` → `ContinueSavePanelController.OpenFromSettings`). O `ControlsPanelController` fica no `UIManager` e só liga/desliga o prefab `Controls` (`panelRoot`); `MainMenuController` não desativa mais o `UIManager` nem o prefab por nome. |
 | PauseMenu | `PauseMenuActions.ShowControls()` reutiliza o mesmo prefab |
 
 ---

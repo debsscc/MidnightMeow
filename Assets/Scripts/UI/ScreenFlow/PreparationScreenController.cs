@@ -44,6 +44,12 @@ public class PreparationScreenController : MonoBehaviour
         BindSceneReferences();
         EnsureUi();
         WireButtons();
+        ApplyMenuButtonFeedback();
+    }
+
+    private void ApplyMenuButtonFeedback()
+    {
+        UiButtonFeedbackUtility.ApplyToScene(gameObject.scene);
     }
 
     private void Start()
@@ -52,6 +58,7 @@ public class PreparationScreenController : MonoBehaviour
         if (!_buttonsWired)
             WireButtons();
 
+        ApplyMenuButtonFeedback();
         EnsureDefaultContract();
         RefreshView();
         ScreenFlowSceneReadiness.MarkReadyIfPending("Preparation");

@@ -50,6 +50,12 @@ public class LobbyFlowController : MonoBehaviour
             BuildPlaceholderUI();
 
         WireButtons();
+        ApplyLobbyButtonFeedback();
+    }
+
+    private void ApplyLobbyButtonFeedback()
+    {
+        UiButtonFeedbackUtility.ApplyToScene(gameObject.scene);
     }
 
     private void OnEnable()
@@ -59,6 +65,8 @@ public class LobbyFlowController : MonoBehaviour
 
     private void Start()
     {
+        ApplyLobbyButtonFeedback();
+
         if (GameSessionContext.AutoHostOnLobbyEnter)
             StartCoroutine(AutoContinueRoutine());
         else

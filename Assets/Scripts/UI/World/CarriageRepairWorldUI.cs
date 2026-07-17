@@ -161,7 +161,7 @@ public class CarriageRepairWorldUI : MonoBehaviour
         canvasRect.localScale = Vector3.one;
     }
 
-    private static void NormalizeLabelLayout(TextMeshProUGUI label)
+    private void NormalizeLabelLayout(TextMeshProUGUI label)
     {
         if (label == null)
             return;
@@ -171,7 +171,8 @@ public class CarriageRepairWorldUI : MonoBehaviour
         labelRect.anchorMax = Vector2.one;
         labelRect.offsetMin = Vector2.zero;
         labelRect.offsetMax = Vector2.zero;
-        label.fontSize = 1.65f;
+        CarriageConfig config = ResolveConfig();
+        label.fontSize = config != null ? Mathf.Max(0.1f, config.worldLabelFontSize) : 1.4f;
         label.enableAutoSizing = false;
         label.textWrappingMode = TextWrappingModes.NoWrap;
         label.overflowMode = TextOverflowModes.Overflow;

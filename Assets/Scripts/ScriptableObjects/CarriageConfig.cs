@@ -18,7 +18,7 @@ public class CarriageConfig : ScriptableObject
     [Tooltip("Se true, usa a arte oficial do prefab (VisualRoot) e não força o placeholder marrom.")]
     public bool useOfficialArt = true;
 
-    [Tooltip("Escala uniforme do VisualRoot quando useOfficialArt (PPU 100 → ~0.28–0.35).")]
+    [Tooltip("Escala uniforme do VisualRoot quando useOfficialArt.")]
     [Min(0.05f)]
     public float visualRootScale = 0.3f;
 
@@ -86,6 +86,10 @@ public class CarriageConfig : ScriptableObject
     [Header("UI")]
     [Tooltip("Prefab world-space do label acima da carruagem (reutiliza DownedRevivePromptUI).")]
     public GameObject repairPromptPrefab;
+
+    [Tooltip("Tamanho da fonte do label world-space da carruagem.")]
+    [Min(0.1f)]
+    public float worldLabelFontSize = 1.4f;
 
     public float repairLabelVisibilityRadiusMultiplier = 2f;
     public string approachText = "Aproxime-se para consertar";

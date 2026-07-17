@@ -142,4 +142,7 @@ public static class UiLocalization
 
     public static string FormatObjectiveDefeatBoss(int enemiesAlive) =>
         Format("objective.defeat_boss", "Derrote o Boss  |  Inimigos: {0}", enemiesAlive);
+
+    public static string FormatMagiculaCount(int count) =>
+        Format("hud.magiculas_count", "{0} magículas", count);
 }

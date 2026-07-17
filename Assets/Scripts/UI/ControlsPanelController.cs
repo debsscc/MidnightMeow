@@ -33,10 +33,16 @@ public class ControlsPanelController : MonoBehaviour
     [Header("Comportamento")]
     [SerializeField] private ControlsTab defaultTab = ControlsTab.KeyboardMouse;
 
+    [Tooltip("Root visual do prefab Controls na cena. Se vazio, busca um GameObject \"Controls\" que não seja botão.")]
+    [SerializeField] private GameObject panelRoot;
+
     public static ControlsPanelController Instance { get; private set; }
+
+    public bool IsPanelVisible => panelRoot != null && panelRoot.activeSelf;
 
     private void Awake()
     {
+        AutoWirePanelRoot();
         AutoWireIfMissing();
 
         if (keyboardMouseTabButton != null)
@@ -66,8 +72,21 @@ public class ControlsPanelController : MonoBehaviour
 
     public void Show()
     {
-        gameObject.SetActive(true);
+        if (!gameObject.activeSelf)
+            gameObject.SetActive(true);
+
+        AutoWirePanelRoot();
+        if (panelRoot != null)
+            panelRoot.SetActive(true);
+
         OpenTab(defaultTab);
+    }
+
+    public void HidePanel()
+    {
+        AutoWirePanelRoot();
+        if (panelRoot != null)
+            panelRoot.SetActive(false);
     }
 
     /// <summary>Abre o painel escondendo o painel de retorno (ex.: Opções do menu).</summary>
@@ -115,9 +134,35 @@ public class ControlsPanelController : MonoBehaviour
         return FindFirstObjectByType<ControlsPanelController>(FindObjectsInactive.Include);
     }
 
+    private void AutoWirePanelRoot()
+    {
+        if (panelRoot != null)
+            return;
+
+        GameObject[] all = FindObjectsByType<GameObject>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        for (int i = 0; i < all.Length; i++)
+        {
+            GameObject candidate = all[i];
+            if (candidate == null || candidate.name != "Controls")
+                continue;
+
+            if (candidate.GetComponent<ControlsPanelController>() != null)
+                continue;
+
+            if (candidate.GetComponent<Button>() != null)
+                continue;
+
+            if (candidate.GetComponent<RectTransform>() == null)
+                continue;
+
+            panelRoot = candidate;
+            return;
+        }
+    }
+
     private void AutoWireIfMissing()
     {
-        Transform root = transform;
+        Transform root = panelRoot != null ? panelRoot.transform : transform;
 
         if (keyboardMouseBackground == null)
             keyboardMouseBackground = FindDeepChild(root, "Image_MOUSE")?.gameObject;

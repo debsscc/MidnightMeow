@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UI;
 using System;
 using System.Collections;
 
@@ -128,6 +129,25 @@ public class UIActionBridge : MonoBehaviour
 
         GameObject settings = GameObject.Find("Setings");
         panel.ShowFrom(settings);
+    }
+
+    /// <summary>Abre o painel de saves a partir de Opções (Menu2).</summary>
+    public void OpenSaveFromSettings()
+    {
+        GameObject settings = GameObject.Find("Setings");
+        ContinueSavePanelController savePanel = FindFirstObjectByType<ContinueSavePanelController>();
+        if (savePanel != null)
+        {
+            savePanel.OpenFromSettings(settings);
+            return;
+        }
+
+        if (settings != null)
+            settings.SetActive(false);
+
+        GameObject saveRoot = GameObject.Find("Save");
+        if (saveRoot != null && saveRoot.GetComponent<Button>() == null)
+            saveRoot.SetActive(true);
     }
 
     public void ToggleScreen(GameObject screenDesactivate, GameObject screenActivate)

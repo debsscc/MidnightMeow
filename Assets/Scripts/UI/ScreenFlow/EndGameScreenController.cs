@@ -36,10 +36,17 @@ public class EndGameScreenController : MonoBehaviour
         TryAutoResolveReferences();
         RewireLegacyMenuButton();
         WireButtons();
+        ApplyEndGameButtonFeedback();
+    }
+
+    private void ApplyEndGameButtonFeedback()
+    {
+        UiButtonFeedbackUtility.ApplyToScene(gameObject.scene);
     }
 
     private void Start()
     {
+        ApplyEndGameButtonFeedback();
         ScreenFlowPlaceholderFactory.ApplyMenuCursor();
         RefreshPrimaryActionLabel();
         if (continueButton != null)

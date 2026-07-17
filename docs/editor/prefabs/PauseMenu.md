@@ -1,6 +1,6 @@
 # Prefab: PauseMenu
 
-Última revisão: 2026-07-10  
+Última revisão: 2026-07-16  
 **Caminho:** `Assets/Prefabs/UI/PauseMenu.prefab`  
 **GUID:** `2542914e2b637bb4b871cad284433d66`
 
@@ -20,7 +20,7 @@ Menu de pausa (UI). Usado como **nested prefab** em `Lobby.prefab` e em cenas de
 |------|-----|
 | `Image`, `Button`, TMP | UI |
 | `EventTrigger` | Hover visual custom (SFX de botão é global: `UiButtonSfx`) |
-| `PauseMenuActions` | Continuar, Reiniciar fase (solo), Abandonar, Créditos, Sair do jogo |
+| `PauseMenuActions` | Continuar, Reiniciar fase (solo), Abandonar, Créditos, Sair do jogo; aplica `UiButtonFeedbackUtility` na hierarquia (SFX + `Button_Juiceness` + tint) |
 
 ## Comportamento (playtest)
 

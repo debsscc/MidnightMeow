@@ -1,9 +1,13 @@
+//--------------------------------
+// FEITO POR: DEBS CARVALHO
+// DATA: 16/07/2026
+// DESCRIÇÃO: Botão de feedback do playtest posicionado no canto inferior direito.
+//--------------------------------
+
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// Botão de feedback do playtest posicionado no canto inferior direito.
-/// </summary>
+
 [DisallowMultipleComponent]
 public class PlaytestFeedbackButton : MonoBehaviour
 {

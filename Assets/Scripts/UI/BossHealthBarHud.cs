@@ -16,6 +16,7 @@ public class BossHealthBarHud : MonoBehaviour
     [SerializeField] private float trailDelay = 0.12f;
 
     private RectTransform _root;
+    private CanvasGroup _canvasGroup;
     private Image _fill;
     private Image _trail;
     private TextMeshProUGUI _nameLabel;
@@ -85,20 +86,24 @@ public class BossHealthBarHud : MonoBehaviour
     private void TryBindBoss()
     {
         BossEnemyMarker[] bosses = Object.FindObjectsByType<BossEnemyMarker>(
-            FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+            FindObjectsInactive.Include, FindObjectsSortMode.None);
 
         BossEnemyMarker best = null;
+        HealthComponent bestHealth = null;
         for (int i = 0; i < bosses.Length; i++)
         {
             BossEnemyMarker marker = bosses[i];
-            if (marker == null || !marker.isActiveAndEnabled)
+            if (marker == null)
                 continue;
 
             if (!marker.TryGetComponent<HealthComponent>(out var health) || health.IsDead)
                 continue;
 
-            best = marker;
-            break;
+            if (bestHealth == null || health.CurrentHealth > bestHealth.CurrentHealth)
+            {
+                best = marker;
+                bestHealth = health;
+            }
         }
 
         if (best == null)
@@ -188,8 +193,18 @@ public class BossHealthBarHud : MonoBehaviour
 
     private void SetVisible(bool visible)
     {
-        if (_root != null && _root.gameObject.activeSelf != visible)
-            _root.gameObject.SetActive(visible);
+        // Nunca desativar este GameObject: o boss spawna com delay e o Update
+        // precisa continuar fazendo poll via TryBindBoss.
+        if (_canvasGroup == null)
+            _canvasGroup = GetComponent<CanvasGroup>() ?? gameObject.AddComponent<CanvasGroup>();
+
+        _canvasGroup.ignoreParentGroups = true;
+        float alpha = visible ? 1f : 0f;
+        if (!Mathf.Approximately(_canvasGroup.alpha, alpha))
+            _canvasGroup.alpha = alpha;
+
+        _canvasGroup.blocksRaycasts = false;
+        _canvasGroup.interactable = false;
     }
 
     private static string ResolveBossName(BossEnemyMarker marker)
@@ -203,7 +218,13 @@ public class BossHealthBarHud : MonoBehaviour
     private void BuildUi()
     {
         _root = GetComponent<RectTransform>();
-        StretchTopBar(_root, height: 72f, top: 28f, sidePad: 220f);
+        StretchCenterBar(_root, height: 72f, widthPad: 120f);
+
+        _canvasGroup = GetComponent<CanvasGroup>() ?? gameObject.AddComponent<CanvasGroup>();
+        _canvasGroup.alpha = 0f;
+        _canvasGroup.blocksRaycasts = false;
+        _canvasGroup.interactable = false;
+        _canvasGroup.ignoreParentGroups = true;
 
         Image frame = EnsureImage(gameObject, new Color(0.08f, 0.06f, 0.08f, 0.82f));
         frame.raycastTarget = false;
@@ -268,13 +289,13 @@ public class BossHealthBarHud : MonoBehaviour
         return image;
     }
 
-    private static void StretchTopBar(RectTransform rt, float height, float top, float sidePad)
+    private static void StretchCenterBar(RectTransform rt, float height, float widthPad)
     {
-        rt.anchorMin = new Vector2(0f, 1f);
-        rt.anchorMax = new Vector2(1f, 1f);
-        rt.pivot = new Vector2(0.5f, 1f);
-        rt.sizeDelta = new Vector2(-(sidePad * 2f), height);
-        rt.anchoredPosition = new Vector2(0f, -top);
+        rt.anchorMin = new Vector2(0.5f, 0.5f);
+        rt.anchorMax = new Vector2(0.5f, 0.5f);
+        rt.pivot = new Vector2(0.5f, 0.5f);
+        rt.sizeDelta = new Vector2(Mathf.Max(320f, 900f - widthPad * 2f), height);
+        rt.anchoredPosition = Vector2.zero;
     }
 
     private static void Stretch(RectTransform rt, float left, float top, float right, float bottom)

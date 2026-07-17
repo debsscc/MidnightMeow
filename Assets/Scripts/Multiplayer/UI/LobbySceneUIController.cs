@@ -83,6 +83,13 @@ public class LobbySceneUIController : MonoBehaviour
 
         if (instructionText != null)
             instructionText.gameObject.SetActive(false);
+
+        ApplyLobbyButtonFeedback();
+    }
+
+    private void ApplyLobbyButtonFeedback()
+    {
+        UiButtonFeedbackUtility.ApplyToScene(gameObject.scene);
     }
 
     private void OnEnable()
@@ -93,6 +100,8 @@ public class LobbySceneUIController : MonoBehaviour
 
     private void Start()
     {
+        ApplyLobbyButtonFeedback();
+
         if (GameSessionContext.AutoHostOnLobbyEnter)
             StartCoroutine(AutoContinueRoutine());
 

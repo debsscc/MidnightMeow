@@ -1,6 +1,6 @@
 # Credits Overlay
 
-Última revisão: 2026-07-10
+Última revisão: 2026-07-16
 
 ## Resumo
 
@@ -26,6 +26,8 @@ Menu: `Create → MidnightMeow/UI/Credits Visual Config`
 | `closeButtonColor` | Cor do botão (com sprite, multiplica; sem sprite, cor sólida) |
 
 O controller também aceita `visualConfig` no Inspector; se vazio, carrega o asset de Resources.
+
+Botão **Fechar**: label em **preto**, **bold**, tipografia do corpo dos créditos (`bodyFont`); fundo/tamanho do botão inalterados. Recebe `UiButtonFeedbackUtility` (SFX + `Button_Juiceness` + tint).
 
 ## Abrir
 

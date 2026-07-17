@@ -1,6 +1,6 @@
 # Prefab: Gameplay_UI
 
-Última revisão: 2026-06-14  
+Última revisão: 2026-07-16  
 **Caminho:** `Assets/Prefabs/UI/Gameplay_UI.prefab`
 
 ## Resumo
@@ -48,6 +48,7 @@ Canvas de HUD principal (vida, upgrades, magículas da fase) durante gameplay si
 ## Magículas na fase
 
 - Coleta via `Ciencia` / `NetworkCienciaController` → `RoundMagiculaTracker` (por jogador local).
+- HUD (`ScienceIndicator`) mostra só o número. A tela de personagens exibe `{count} magículas` / `{count} magicules` via `UiLocalization.FormatMagiculaCount` (`hud.magiculas_count`).
 - Ao vencer ou perder: `CommitToSave()` grava em `SaveProfileStore.Active.magiculas`.
 - Multiplayer: `sharedSciencePool` desligado por padrão em `MultiplayerConfig`.
 

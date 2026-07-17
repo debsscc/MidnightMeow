@@ -81,17 +81,35 @@ public static class GameplaySceneBootstrap
                 return canvases[i];
         }
 
+        Canvas best = null;
+        int bestScore = int.MinValue;
         for (int i = 0; i < canvases.Length; i++)
         {
             Canvas canvas = canvases[i];
             if (canvas == null)
                 continue;
 
-            if (canvas.GetComponent<GameplayHudController>() != null
-                || canvas.GetComponentInChildren<HordeIndicator>(true) != null
-                || canvas.GetComponentInChildren<healthBarUi>(true) != null)
-                return canvas;
+            if (canvas.transform.localScale.sqrMagnitude < 0.01f)
+                continue;
+
+            int score = 0;
+            if (canvas.GetComponent<GameplayHudController>() != null)
+                score += 100;
+            if (canvas.GetComponentInChildren<HordeIndicator>(true) != null)
+                score += 50;
+            if (canvas.GetComponentInChildren<healthBarUi>(true) != null)
+                score += 25;
+            score += canvas.sortingOrder;
+
+            if (score > bestScore)
+            {
+                bestScore = score;
+                best = canvas;
+            }
         }
+
+        if (best != null)
+            return best;
 
         return Object.FindFirstObjectByType<Canvas>();
     }

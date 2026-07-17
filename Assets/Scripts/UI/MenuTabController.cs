@@ -23,6 +23,8 @@ public class MenuTabController : MonoBehaviour
 
     public void OpenTab(GameObject targetTab)
     {
+        CloseOverlayPanels();
+
         if (menuTabs == null || menuTabs.Length == 0)
         {
             Debug.LogWarning("MenuTabController: Nenhuma aba foi configurada no array 'menuTabs'.");
@@ -45,5 +47,14 @@ public class MenuTabController : MonoBehaviour
     {
         if (defaultTab != null)
             OpenTab(defaultTab);
+    }
+
+    private static void CloseOverlayPanels()
+    {
+        ContinueSavePanelController savePanel = FindFirstObjectByType<ContinueSavePanelController>();
+        savePanel?.HideSavePanel();
+
+        ControlsPanelController controls = ControlsPanelController.FindInScene();
+        controls?.HidePanel();
     }
 }

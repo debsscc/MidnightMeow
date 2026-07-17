@@ -64,6 +64,12 @@ public class CharactersScreenController : MonoBehaviour
         SetupPortraitVisuals();
         WireButtons();
         ShowPanel(PanelHub);
+        ApplyMenuButtonFeedback();
+    }
+
+    private void ApplyMenuButtonFeedback()
+    {
+        UiButtonFeedbackUtility.ApplyToScene(gameObject.scene);
     }
 
     private void ResolveAbilitySets()
@@ -97,6 +103,7 @@ public class CharactersScreenController : MonoBehaviour
         TrySubscribeSessions();
         RefreshView();
         ScreenFlowPlaceholderFactory.ApplyMenuCursor();
+        ApplyMenuButtonFeedback();
     }
 
     private void OnDisable()
@@ -548,7 +555,7 @@ public class CharactersScreenController : MonoBehaviour
         }
 
         int magiculaCount = save?.Active?.magiculas ?? 0;
-        string magiculaLabel = magiculaCount.ToString();
+        string magiculaLabel = UiLocalization.FormatMagiculaCount(magiculaCount);
         for (int i = 0; i < _magiculasTexts.Length; i++)
         {
             TMP_Text text = _magiculasTexts[i];

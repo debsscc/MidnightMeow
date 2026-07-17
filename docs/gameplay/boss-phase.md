@@ -1,6 +1,6 @@
 # Fase 3 — Boss
 
-Última revisão: 2026-07-14
+Última revisão: 2026-07-16
 
 ## Comportamento
 
@@ -28,12 +28,14 @@ Guia de setup no Editor: [rat-king-boss-setup.md](../editor/guides/rat-king-boss
 
 | Elemento | Comportamento |
 |----------|----------------|
-| `BossHealthBarHud` | Barra grande no **topo** da tela (nome + fill + trail) |
+| `BossHealthBarHud` | Barra grande **centralizada no meio da tela** (nome + fill + trail) |
 | `EnemyHealthBarDisplay` | **Desligada** no boss (evita barra duplicada na cabeça) |
 | `PhaseObjectiveHud` | **Oculta** (sem texto de buracos/poças seladas) |
 | `SpriteBlink` | Só em hits **marcantes** (`dano > 1` ou `≥ 5%` da vida máx.) |
 
 Helpers: `BossPhaseUtility`, criação via `GameplayHudController.EnsureBossHealthBarHud()`.
+
+**Nota (2026-07-16):** a barra fica oculta via `CanvasGroup.alpha` (não `SetActive(false)` no root). O boss spawna com `firstSpawnDelay`; o HUD faz poll com `FindObjectsInactive.Include`. `GameplayHudLayers` é trazido para frente no canvas; `ignoreParentGroups` evita herdar alpha zero de pais. Em `Fase-3`, havia um segundo `Canvas` com `localScale (0,0,0)` — ignorado pelo bootstrap e corrigido no disco.
 
 ## Prefab
 

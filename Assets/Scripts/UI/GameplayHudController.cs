@@ -88,9 +88,16 @@ public class GameplayHudController : MonoBehaviour
         if (canvas == null)
             return;
 
+        // Canvas com scale zero some a HUD inteira (Fase-3 chegou assim no disco).
+        if (canvas.transform.localScale.sqrMagnitude < 0.01f)
+            canvas.transform.localScale = Vector3.one;
+
         CanvasScaler scaler = canvas.GetComponent<CanvasScaler>();
-        if (scaler == null || scaler.uiScaleMode != CanvasScaler.ScaleMode.ScaleWithScreenSize)
-            return;
+        if (scaler == null)
+            scaler = canvas.gameObject.AddComponent<CanvasScaler>();
+
+        if (scaler.uiScaleMode != CanvasScaler.ScaleMode.ScaleWithScreenSize)
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
 
         if (scaler.referenceResolution.x < 1f || scaler.referenceResolution.y < 1f)
             scaler.referenceResolution = ResponsiveReferenceResolution;
@@ -133,6 +140,7 @@ public class GameplayHudController : MonoBehaviour
         if (existing != null)
         {
             _layersRoot = existing as RectTransform;
+            _layersRoot.SetAsLastSibling();
             return;
         }
 
@@ -140,6 +148,7 @@ public class GameplayHudController : MonoBehaviour
         root.transform.SetParent(transform, false);
         _layersRoot = root.GetComponent<RectTransform>();
         Stretch(_layersRoot);
+        _layersRoot.SetAsLastSibling();
     }
 
     private Transform GetLayer(string layerName)
@@ -227,23 +236,23 @@ public class GameplayHudController : MonoBehaviour
 
     private void EnsureBossHealthBarHud()
     {
-        Transform objectiveLayer = GetLayer(ObjectiveLayerName);
-        BossHealthBarHud existing = GetComponentInChildren<BossHealthBarHud>(true);
-
         if (!BossPhaseUtility.IsKillBossPhaseActive())
         {
-            if (existing != null)
-                existing.gameObject.SetActive(false);
+            BossHealthBarHud existingInactive = GetComponentInChildren<BossHealthBarHud>(true);
+            if (existingInactive != null)
+                existingInactive.gameObject.SetActive(false);
             return;
         }
 
-        if (existing != null)
-        {
-            existing.gameObject.SetActive(true);
-            return;
-        }
+        Transform objectiveLayer = GetLayer(ObjectiveLayerName);
+        BossHealthBarHud hud = GetComponentInChildren<BossHealthBarHud>(true);
+        if (hud == null)
+            hud = BossHealthBarHud.EnsureOnLayer(objectiveLayer);
+        else if (hud.transform.parent != objectiveLayer)
+            hud.transform.SetParent(objectiveLayer, false);
 
-        BossHealthBarHud.EnsureOnLayer(objectiveLayer);
+        hud.gameObject.SetActive(true);
+        hud.transform.SetAsLastSibling();
     }
 
     private void EnsureAbilityHud(PlayerAbilityHudTheme theme)

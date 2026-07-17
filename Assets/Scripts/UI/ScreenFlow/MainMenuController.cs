@@ -235,22 +235,10 @@ public class MainMenuController : MonoBehaviour
     private static void HideControlsPanel()
     {
         ControlsPanelController controls = ControlsPanelController.FindInScene();
-        if (controls != null)
-            controls.gameObject.SetActive(false);
+        controls?.HidePanel();
     }
 
-    private static void HideControlsOverlayScreen()
-    {
-        GameObject[] all = FindObjectsByType<GameObject>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-        for (int i = 0; i < all.Length; i++)
-        {
-            GameObject go = all[i];
-            if (go == null || go.name != "Controls" || go.GetComponent<ControlsPanelController>() != null)
-                continue;
-
-            go.SetActive(false);
-        }
-    }
+    private static void HideControlsOverlayScreen() => HideControlsPanel();
 
     private static void ResetMenuTabs()
     {

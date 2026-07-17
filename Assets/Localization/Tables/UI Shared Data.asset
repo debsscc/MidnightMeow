@@ -553,6 +553,10 @@ MonoBehaviour:
     m_Key: objective.defeat_boss
     m_Metadata:
       m_Items: []
+  - m_Id: 9200000000000007
+    m_Key: hud.magiculas_count
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

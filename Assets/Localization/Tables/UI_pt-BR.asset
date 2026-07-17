@@ -542,6 +542,10 @@ MonoBehaviour:
     m_Localized: "Derrote o Boss  |  Inimigos: {0}"
     m_Metadata:
       m_Items: []
+  - m_Id: 9200000000000007
+    m_Localized: "{0} mag\xEDculas"
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

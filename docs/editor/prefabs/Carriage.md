@@ -1,6 +1,6 @@
 # Carriage.prefab
 
-Última revisão: 2026-07-15
+Última revisão: 2026-07-16
 
 | Campo | Valor |
 |-------|--------|
@@ -51,6 +51,8 @@ Import: Sprite Single, **PPU 100**, Filter **Point**, pivot **centro** (0.5, 0.5
 ## Notas para agentes
 
 - `CarriageConfig.useOfficialArt = true` → **não** força placeholder marrom.
+- `CarriageConfig.visualRootScale = 0.9` → arte oficial em escala 3×; collider e regras de gameplay permanecem inalterados.
+- Label world-space: `worldLabelFontSize = 1.4` e `repairLabelOffset.y = 3.2`, ajustados para a arte ampliada.
 - Rodas giram em **todos os peers** via `CarriageWheelSpinner` (sem sync de ângulo).
 - Progresso HUD: `NetworkVariable<float> _pathProgress`.
 - Estado de escolta: `NetworkVariable<CarriageState> _carriageState` (servidor).

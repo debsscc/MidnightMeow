@@ -30,12 +30,19 @@ public class PauseMenuActions : MonoBehaviour
         EnsureCreditsButtonIfMissing();
         WireButtons();
         HideQuitConfirmation();
+        ApplyPauseButtonFeedback();
+    }
+
+    private void ApplyPauseButtonFeedback()
+    {
+        UiButtonFeedbackUtility.ApplyToHierarchy(transform);
     }
 
     private void OnEnable()
     {
         HideQuitConfirmation();
         RefreshForCurrentMode();
+        ApplyPauseButtonFeedback();
         SelectDefaultPauseButton();
     }
 

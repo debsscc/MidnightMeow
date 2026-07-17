@@ -128,6 +128,33 @@ public class ContinueSavePanelController : MonoBehaviour
         if (save == null || !save.HasAnyHostSave())
             return;
 
+        OpenSavePanel(hideSettingsTab: false);
+    }
+
+    /// <summary>Opções → Saves: abre o painel de arquivos mesmo sem saves de host.</summary>
+    public void OpenFromSettings(GameObject settingsPanel)
+    {
+        if (settingsPanel != null)
+            settingsPanel.SetActive(false);
+
+        OpenSavePanel(hideSettingsTab: true);
+    }
+
+    public void HideSavePanel()
+    {
+        _isOpen = false;
+        _selectedSlot = null;
+        HideDeleteConfirmation();
+
+        if (savePanelRoot != null)
+            savePanelRoot.SetActive(false);
+
+        ResetPreviewToPlaceholder();
+        ApplyHubBookmarkMode();
+    }
+
+    private void OpenSavePanel(bool hideSettingsTab)
+    {
         _isOpen = true;
         _selectedSlot = null;
         HideDeleteConfirmation();
@@ -137,7 +164,11 @@ public class ContinueSavePanelController : MonoBehaviour
             savePanelRoot.SetActive(true);
 
         SetOtherTabsInactive();
-        ApplyContinueBookmarkMode();
+        if (hideSettingsTab)
+            ApplyHubBookmarkMode();
+        else
+            ApplyContinueBookmarkMode();
+
         RefreshSlotButtons();
         SetActionButtonsInteractable(false);
         SelectDefaultSavePanelControl();

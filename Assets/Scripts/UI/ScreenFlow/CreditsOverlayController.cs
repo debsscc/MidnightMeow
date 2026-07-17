@@ -349,6 +349,7 @@ public class CreditsOverlayController : Singleton<CreditsOverlayController>
             new Vector2(-160f, 40f), new Vector2(160f, 120f));
         _closeButton.onClick.AddListener(Hide);
         ApplyCloseButtonVisual();
+        UiButtonFeedbackUtility.ApplyToSelectable(_closeButton);
 
         _overlayBuilt = true;
     }
@@ -453,16 +454,27 @@ public class CreditsOverlayController : Singleton<CreditsOverlayController>
             return;
 
         CreditsVisualConfig config = ResolveVisualConfig();
-        if (config == null)
+        if (config != null)
+        {
+            ScreenThemeApplier.ApplyButton(_closeButton, config.CloseButtonSprite, config.CloseButtonColor);
+            if (config.CloseButtonSprite != null)
+            {
+                Image image = _closeButton.GetComponent<Image>();
+                if (image != null)
+                    image.color = config.CloseButtonColor;
+            }
+        }
+
+        TMP_Text label = _closeButton.GetComponentInChildren<TMP_Text>(true);
+        if (label == null)
             return;
 
-        ScreenThemeApplier.ApplyButton(_closeButton, config.CloseButtonSprite, config.CloseButtonColor);
-        if (config.CloseButtonSprite != null)
-        {
-            Image image = _closeButton.GetComponent<Image>();
-            if (image != null)
-                image.color = config.CloseButtonColor;
-        }
+        label.color = Color.black;
+        label.fontStyle = FontStyles.Bold;
+        ApplyBodyTypography(label);
+        // Botão: um pouco menor que o corpo dos créditos, para ficar conciso.
+        if (config != null && config.BodyFontSize > 0f)
+            label.fontSize = Mathf.Max(18f, config.BodyFontSize * 0.85f);
     }
 
     private CreditsVisualConfig ResolveVisualConfig()

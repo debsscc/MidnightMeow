@@ -26,13 +26,13 @@ Documentação completa em **[docs/README.md](docs/README.md)**:
 - Project name: MidnightMeow
 - Unity version: Unity 6000.3.13f1
 - Active scene:
-  - Name: Characters
+  - Name: Rato_Boss
   - Tags:
-    - Untagged, Respawn, Finish, EditorOnly, MainCamera, Player, GameController, Structure, Enemy, Drop
+    - Untagged, Respawn, Finish, EditorOnly, MainCamera, Player, GameController
   - Layers:
-    - Default, TransparentFX, Ignore Raycast, Player, Water, UI, Wall, Projectile, ProjectileEnemy, Structure, Enemy, Collectable, DashableWall, Shadow, Barrier
+    - Default, TransparentFX, Ignore Raycast, Water, UI
 - Active game object:
-  - Name: Skils_Cora
-  - Tag: Untagged
-  - Layer: UI
+  - Name: Rato_Boss
+  - Tag: Enemy
+  - Layer: 10
 <!-- UNITY CODE ASSIST INSTRUCTIONS END -->

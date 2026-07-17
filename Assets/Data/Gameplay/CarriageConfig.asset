@@ -15,13 +15,13 @@ MonoBehaviour:
   maxHealth: 20
   repairRestoreHealthFraction: 1
   useOfficialArt: 1
-  visualRootScale: 0.3
+  visualRootScale: 0.9
   visualScale: 1
   frontWheelRadius: 0.28
   backWheelRadius: 0.36
   colliderSize: {x: 3, y: 1.8}
   colliderOffset: {x: 0.15, y: -0.25}
-  repairLabelOffset: {x: 0, y: 1.85, z: 0}
+  repairLabelOffset: {x: 0, y: 3.2, z: 0}
   pathStartX: -42
   pathEndX: 18
   useCustomPathY: 0
@@ -48,6 +48,7 @@ MonoBehaviour:
   repairZoneFillColor: {r: 1, g: 0.85, b: 0.35, a: 0.5}
   repairZoneOutlineColor: {r: 1, g: 0.95, b: 0.75, a: 0.9}
   repairPromptPrefab: {fileID: 5804883921897708028, guid: 13966282a7a8dc342b54e9663bb7c08f, type: 3}
+  worldLabelFontSize: 1.4
   repairLabelVisibilityRadiusMultiplier: 2
   approachText: Aproxime-se para consertar
   pressEText: Aperte E para consertar
