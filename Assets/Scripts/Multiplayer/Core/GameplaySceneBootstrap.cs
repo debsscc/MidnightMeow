@@ -6,12 +6,39 @@ using UnityEngine.SceneManagement;
 /// </summary>
 public static class GameplaySceneBootstrap
 {
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetStatics()
+    {
+        SceneManager.sceneLoaded -= HandleSceneLoaded;
+    }
+
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     private static void AfterSceneLoad()
     {
-        string scene = SceneManager.GetActiveScene().name;
-        if (!IsGameplayScene(scene))
+        SceneManager.sceneLoaded -= HandleSceneLoaded;
+        SceneManager.sceneLoaded += HandleSceneLoaded;
+
+        HandleActiveSceneBootstrap(SceneManager.GetActiveScene());
+    }
+
+    private static void HandleSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        if (!scene.IsValid() || !scene.isLoaded)
             return;
+
+        if (scene == SceneManager.GetActiveScene())
+            HandleActiveSceneBootstrap(scene);
+        else if (!IsGameplayScene(scene.name))
+            CleanupGameplayHudOutsidePhases();
+    }
+
+    private static void HandleActiveSceneBootstrap(Scene scene)
+    {
+        if (!IsGameplayScene(scene.name))
+        {
+            CleanupGameplayHudOutsidePhases();
+            return;
+        }
 
         TransitionCameraKeeper.EnsureActive();
         EnsureCameraRig();
@@ -22,6 +49,34 @@ public static class GameplaySceneBootstrap
 
         TryEnsureGameplayHud();
         EnsureCooperativeZoneVisuals();
+    }
+
+    /// <summary>
+    /// Remove/desativa HUDs de habilidades e objetivos que vazaram para Menu/Victory/Lobby.
+    /// </summary>
+    public static void CleanupGameplayHudOutsidePhases()
+    {
+        if (IsGameplayScene(SceneManager.GetActiveScene().name))
+            return;
+
+        GameplaySessionTeardown.HideGameplayHud();
+
+        // Destroi placeholders procedurais órfãos (DDOL / cena residual).
+        PlayerAbilityHud[] abilityHuds = Object.FindObjectsByType<PlayerAbilityHud>(
+            FindObjectsInactive.Include,
+            FindObjectsSortMode.None);
+        for (int i = 0; i < abilityHuds.Length; i++)
+        {
+            PlayerAbilityHud hud = abilityHuds[i];
+            if (hud == null)
+                continue;
+
+            if (hud.gameObject.scene.name == "DontDestroyOnLoad"
+                || !IsGameplayScene(hud.gameObject.scene.name))
+            {
+                Object.Destroy(hud.gameObject);
+            }
+        }
     }
 
     private static void EnsureCooperativeZoneVisuals()

@@ -80,6 +80,8 @@ Agentes de IA **não veem o Inspector**. Esta pasta descreve prefabs, cenas e as
 - [Conserto carruagem (fix E / zonas)](guides/carriage-repair-fix.md)
 - [Passiva Nix stun + Cora splash](guides/nixie-cora-passive-refactor.md)
 - [Setup Rei Rato](guides/rat-king-boss-setup.md)
+- [Rei Rato anti-tunneling (fuga/dash)](guides/rat-king-anti-tunneling.md)
+- [Knockback anti-tunneling (inimigos)](guides/enemy-knockback-anti-tunneling.md)
 
 ## Template
 

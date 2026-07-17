@@ -24,6 +24,9 @@ public class NetworkEnemyController : NetworkBehaviour
     private DissolveEffect _dissolveEffect;
     private HealthComponent _health;
     private NavMeshAgent _agent;
+    private Rigidbody2D _rigidbody;
+    private EnemyPhysicsBody _physicsBody;
+    private bool _agentHadUpdatePosition = true;
 
     private NetworkVariable<float> _networkHealth = new NetworkVariable<float>(
         0f,
@@ -125,6 +128,7 @@ public class NetworkEnemyController : NetworkBehaviour
         _dissolveEffect = GetComponent<DissolveEffect>();
         _health = GetComponent<HealthComponent>();
         _agent = GetComponent<NavMeshAgent>();
+        _rigidbody = GetComponent<Rigidbody2D>();
         _animator = GetComponent<Animator>();
         _spriteRenderer = GetComponent<SpriteRenderer>();
         _ratKing = GetComponent<RatKingController>();
@@ -138,8 +142,9 @@ public class NetworkEnemyController : NetworkBehaviour
         if (GetComponent<EnemySlowEffect>() == null)
             gameObject.AddComponent<EnemySlowEffect>();
 
-        if (GetComponent<EnemyPhysicsBody>() == null)
-            gameObject.AddComponent<EnemyPhysicsBody>();
+        _physicsBody = GetComponent<EnemyPhysicsBody>();
+        if (_physicsBody == null)
+            _physicsBody = gameObject.AddComponent<EnemyPhysicsBody>();
 
         if (GetComponent<EnemySpawnPresentation>() == null)
             gameObject.AddComponent<EnemySpawnPresentation>();
@@ -658,36 +663,75 @@ public class NetworkEnemyController : NetworkBehaviour
         _networkIsCombatStunned.Value = true;
     }
 
+    /// <summary>
+    /// Knockback autoritativo via Rigidbody2D (Impulse). Não usa transform.position —
+    /// teleporte ignora Continuous Collision e causa tunneling nas paredes.
+    /// </summary>
     private IEnumerator ServerKnockbackRoutine(Vector2 direction, float distance, float duration, float stunAfter)
     {
         direction = direction.sqrMagnitude > 0.0001f ? direction.normalized : Vector2.up;
 
-        if (_agent != null)
-            _agent.isStopped = true;
-        if (_movement != null)
-            _movement.enabled = false;
+        LockLocomotionForKnockback();
 
-        Vector3 start = transform.position;
-        Vector3 end = start + (Vector3)(direction * distance);
-        float elapsed = 0f;
+        // Velocidade média equivalente à antiga distância/duração do Lerp.
+        float speed = distance / Mathf.Max(0.01f, duration);
 
-        while (elapsed < duration)
+        if (_physicsBody != null)
+            _physicsBody.BeginExternalPhysics();
+
+        if (_rigidbody != null)
         {
-            elapsed += Time.deltaTime;
-            float t = Mathf.Clamp01(elapsed / duration);
-            transform.position = Vector3.Lerp(start, end, t);
-            yield return null;
+            _rigidbody.linearVelocity = Vector2.zero;
+            // Impulse: Δv = impulse / mass → impulso = speed * mass.
+            _rigidbody.AddForce(direction * speed * _rigidbody.mass, ForceMode2D.Impulse);
         }
+
+        yield return new WaitForSeconds(duration);
+
+        if (_rigidbody != null)
+            _rigidbody.linearVelocity = Vector2.zero;
+
+        if (_physicsBody != null)
+            _physicsBody.EndExternalPhysics();
 
         if (stunAfter > 0f && !IsDeadOnNetwork)
             ServerApplyCombatStun(stunAfter);
 
-        if (_agent != null && !IsDeadOnNetwork)
-            _agent.isStopped = false;
-        if (_movement != null && !IsDeadOnNetwork)
-            _movement.enabled = true;
+        if (!IsDeadOnNetwork)
+            UnlockLocomotionAfterKnockback();
 
         _knockbackCoroutine = null;
+    }
+
+    private void LockLocomotionForKnockback()
+    {
+        if (_movement != null)
+            _movement.enabled = false;
+
+        if (_agent == null)
+            return;
+
+        _agentHadUpdatePosition = _agent.updatePosition;
+        _agent.isStopped = true;
+        _agent.velocity = Vector3.zero;
+        _agent.ResetPath();
+        // Impede o Agent de sobrescrever a posição enquanto o Rigidbody empurra.
+        _agent.updatePosition = false;
+    }
+
+    private void UnlockLocomotionAfterKnockback()
+    {
+        if (_agent != null)
+        {
+            if (_agent.enabled && _agent.isOnNavMesh)
+                _agent.Warp(transform.position);
+
+            _agent.updatePosition = _agentHadUpdatePosition;
+            _agent.isStopped = false;
+        }
+
+        if (_movement != null)
+            _movement.enabled = true;
     }
 
     private void HandleCombatStunChanged(bool previous, bool current)

@@ -71,6 +71,9 @@ public class PlayerAbilityHud : MonoBehaviour
 
     public void EnsureBuilt()
     {
+        if (!IsAllowedInActiveScene())
+            return;
+
         if (_slots[0] != null)
             return;
 
@@ -97,6 +100,13 @@ public class PlayerAbilityHud : MonoBehaviour
 
     private void LateUpdate()
     {
+        if (!IsAllowedInActiveScene())
+        {
+            if (gameObject.activeSelf)
+                gameObject.SetActive(false);
+            return;
+        }
+
         TryBindLocalPlayer();
         EnsureBuilt();
 
@@ -108,7 +118,7 @@ public class PlayerAbilityHud : MonoBehaviour
 
     public static void EnsureOnCanvas(Canvas canvas, PlayerAbilityHudTheme hudTheme = null)
     {
-        if (canvas == null)
+        if (canvas == null || !IsAllowedInActiveScene())
             return;
 
         EnsureOnParent(canvas.transform, hudTheme);
@@ -116,7 +126,7 @@ public class PlayerAbilityHud : MonoBehaviour
 
     public static void EnsureOnParent(Transform parent, PlayerAbilityHudTheme hudTheme = null)
     {
-        if (parent == null)
+        if (parent == null || !IsAllowedInActiveScene())
             return;
 
         PlayerAbilityHud existing = parent.GetComponentInChildren<PlayerAbilityHud>(true);
@@ -135,6 +145,9 @@ public class PlayerAbilityHud : MonoBehaviour
 
     public static PlayerAbilityHud CreateUnder(Transform parent, PlayerAbilityHudTheme hudTheme = null)
     {
+        if (parent == null || !IsAllowedInActiveScene())
+            return null;
+
         GameObject go = new GameObject("PlayerAbilityHud", typeof(RectTransform), typeof(PlayerAbilityHud));
         go.transform.SetParent(parent, false);
         go.layer = parent.gameObject.layer;
@@ -144,6 +157,9 @@ public class PlayerAbilityHud : MonoBehaviour
         hud.EnsureBuilt();
         return hud;
     }
+
+    private static bool IsAllowedInActiveScene() =>
+        GameplaySceneBootstrap.IsGameplayScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
 
     public void ApplyTheme(PlayerAbilityHudTheme hudTheme)
     {

@@ -87,6 +87,7 @@ Fase-1 → [vitória/derrota] → VictoryScene / GameOver
 ## Regras de negócio
 
 ### Menu
+- **Novo Jogo** reinicia o slot 0 (`ResetActive`): magículas iniciais, mask de contratos zerado → só Contrato 1 liberado (salvo se `ContractProgressionConfig.unlockAllContractsForTesting` estiver ligado).
 - **Continuar** visível apenas se existir save onde `wasHost == true`.
 - **Continuar** abre painel de saves (partidas como host), não vai direto ao lobby.
 - Botões no canto inferior esquerdo (ref. `menu.png`).
@@ -110,6 +111,7 @@ Fase-1 → [vitória/derrota] → VictoryScene / GameOver
 - **Multiplayer:** ambos escolhem personagem; escolha replicada via `PreparationSessionManager` + `CharactersSessionManager` (prefabs em `Assets/Prefabs/Multiplayer/`, catálogo `Resources/HubSessionPrefabCatalog`, registrados em `DefaultNetworkPrefabs`, spawn DDOL no servidor em Loading1).
 - Personagem já escolhido por outro jogador fica **bloqueado** e exibe rótulo `Jogador N`.
 - 6 botões de skill (3 Nix + 3 Cora); popup de upgrade (ref. `levelupskill.png`).
+- Visual das barras (`SkillBarEntry`): State1 = tier 1, State3 = tier 2, State4 = tier 3; State2 = skill **selecionada** e com magículas para o próximo nível (não aplicar State2 às 3 skills só porque dá para comprar).
 
 ### Vitória / Derrota
 - Botão **Continuar** → Preparation (reset de rodada, mantém MP).

@@ -66,10 +66,29 @@ public class PreparationScreenController : MonoBehaviour
 
     private void EnsureUi()
     {
-        bool missingUi = contractButtons == null || contractButtons.Length == 0 || readyButton == null;
+        // Só gera placeholder se a cena não tiver os botões de fase (evita UI duplicada sobreposta).
+        if (HasScenePhaseButtons())
+            return;
 
+        bool missingUi = contractButtons == null || contractButtons.Length == 0 || readyButton == null;
         if (buildPlaceholderIfMissing && missingUi)
             BuildPlaceholderUI();
+    }
+
+    private bool HasScenePhaseButtons()
+    {
+        if (contractButtons != null)
+        {
+            for (int i = 0; i < contractButtons.Length; i++)
+            {
+                if (contractButtons[i] != null)
+                    return true;
+            }
+        }
+
+        Transform canvas = FindSceneCanvas();
+        Transform buttonsDir = canvas != null ? FindDeep(canvas, "Buttons_Dir") : null;
+        return buttonsDir != null && buttonsDir.Find("Fase 1") != null;
     }
 
     private void ResolveContracts()
@@ -846,23 +865,43 @@ public class PreparationScreenController : MonoBehaviour
             if (contractButtons[i] == null)
                 continue;
 
+            // Disponibilidade: interactable + cor (HighlightSelectedContract) + badge/tooltip.
+            // Nunca injeta "(bloqueada)" no label — o layout da Preparação é single-line.
             contractButtons[i].interactable = IsContractUnlocked(i) && IsLocalHost();
+            RestorePhaseLabel(contractButtons[i], i);
+        }
+    }
 
-            TMP_Text label = contractButtons[i].GetComponentInChildren<TMP_Text>();
+    private static void RestorePhaseLabel(Button button, int phaseIndex)
+    {
+        if (button == null)
+            return;
+
+        bool pt = LocaleText.IsPortuguese();
+        string clean = pt ? $"FASE {phaseIndex + 1}" : $"PHASE {phaseIndex + 1}";
+
+        TMP_Text[] labels = button.GetComponentsInChildren<TMP_Text>(true);
+        for (int i = 0; i < labels.Length; i++)
+        {
+            TMP_Text label = labels[i];
             if (label == null)
                 continue;
 
-            bool pt = LocaleText.IsPortuguese();
-            string phaseName = pt ? $"FASE {i + 1}" : $"PHASE {i + 1}";
-            if (!IsContractUnlocked(i))
-            {
-                string lockedSuffix = pt ? "\n(bloqueada)" : "\n(locked)";
-                label.text = $"{phaseName}{lockedSuffix}";
-            }
-            else
-            {
-                label.text = phaseName;
-            }
+            // Só mexe em textos de fase (ignora filhos sem relação, se houver).
+            string current = label.text ?? string.Empty;
+            bool looksLikePhaseLabel =
+                current.IndexOf("FASE", System.StringComparison.OrdinalIgnoreCase) >= 0
+                || current.IndexOf("PHASE", System.StringComparison.OrdinalIgnoreCase) >= 0
+                || current.IndexOf("bloque", System.StringComparison.OrdinalIgnoreCase) >= 0
+                || current.IndexOf("locked", System.StringComparison.OrdinalIgnoreCase) >= 0
+                || string.IsNullOrWhiteSpace(current);
+
+            if (!looksLikePhaseLabel)
+                continue;
+
+            label.text = clean;
+            label.textWrappingMode = TextWrappingModes.NoWrap;
+            label.overflowMode = TextOverflowModes.Overflow;
         }
     }
 

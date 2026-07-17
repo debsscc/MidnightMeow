@@ -280,7 +280,9 @@ public class MainMenuController : MonoBehaviour
         MidnightMeowAnalyticsTracker.NotifyUiClick("main_menu", "new_game");
         GameSessionContext.BeginNewGame();
         SaveProfileStore save = SaveProfileStore.Instance;
+        // Slot 0 = perfil de "Novo Jogo": sempre começa do zero (só Contrato 1 liberado).
         save?.LoadOrCreate(0);
+        save?.ResetActive();
 
         if (GameFlowOrchestrator.Instance != null)
             GameFlowOrchestrator.Instance.TryRequestRoute(SceneFlowRouteIds.MenuToLobby);

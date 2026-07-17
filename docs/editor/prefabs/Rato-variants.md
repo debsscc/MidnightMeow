@@ -1,6 +1,6 @@
 # Prefabs: Variantes de Rato
 
-Última revisão: 2026-07-10
+Última revisão: 2026-07-17
 
 Variantes compartilham a mesma hierarquia base (`Enemy` / ranged): `NetworkObject`, `NetworkEnemyController`, `EnemyMovement`, `EnemyAttack_Ranged` (ou melee em tipos especiais), `EnemyDropHandler`, etc.
 
@@ -43,11 +43,12 @@ Cada `Rato_*` inclui `EnemyTelegraphModuleInstaller` com pattern SO em `Assets/D
 
 Ajuste fino em `Assets/Data/Stats/Enemies/*.asset` — não hardcodar no `EnemyMovement`.
 
-## Física vs player
+## Física vs player / paredes
 
-- `EnemyPhysicsBody`: `Rigidbody2D` **Kinematic** — bloqueia o player (não entra dentro do rato) sem ser empurrado pelo motor do jogador.
-- NavMesh continua movendo o `transform`; o RB kinematic sincroniza em `FixedUpdate`.
-- Colisão **Player–Enemy permanece ativa** (não é ignore layer).
+- `EnemyPhysicsBody`: `Rigidbody2D` **Kinematic** na locomoção (NavMesh); no knockback vira **Dynamic + Continuous** temporariamente para não atravessar paredes.
+- NavMesh move o `transform`; o RB kinematic sincroniza em `FixedUpdate` (pausado durante knockback).
+- Player↔Enemy: sem empurrão físico (`CombatLayerCollision` / `excludeLayers`). Enemy×Wall deve colidir.
+- Guia Inspector: [enemy-knockback-anti-tunneling.md](../guides/enemy-knockback-anti-tunneling.md).
 
 ## GameObject raiz (comum)
 

@@ -241,6 +241,27 @@ public class SaveProfileStore : MonoBehaviour
         SaveActive();
     }
 
+    /// <summary>
+    /// Marca o perfil ativo como sessão de host (necessário para Continuar no menu).
+    /// Solo usa host local — deve chamar isto ao terminar fase ou ao iniciar host.
+    /// </summary>
+    public void MarkActiveAsHostSave(string sceneName = null)
+    {
+        if (_active == null)
+            return;
+
+        bool isHost = true;
+        if (Unity.Netcode.NetworkManager.Singleton != null && Unity.Netcode.NetworkManager.Singleton.IsListening)
+            isHost = Unity.Netcode.NetworkManager.Singleton.IsHost;
+
+        string joinCode = ConnectionManager.Instance != null
+            ? ConnectionManager.Instance.CurrentJoinCode
+            : string.Empty;
+
+        _active.Touch(isHost, joinCode, sceneName ?? _active.lastSceneName);
+        SaveActive();
+    }
+
     public int ResolveActiveContractIndex()
     {
         if (GameSessionContext.ActiveContractIndex >= 0)

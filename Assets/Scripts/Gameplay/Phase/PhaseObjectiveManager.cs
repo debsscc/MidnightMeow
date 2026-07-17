@@ -129,6 +129,7 @@ public class PhaseObjectiveManager : MonoBehaviour
         Debug.LogWarning("[PhaseObjectiveManager] Fallback de vitória — transição MP não completou.");
         Time.timeScale = 1f;
         SaveProfileStore.Instance?.MarkActiveContractCompleted();
+        SaveProfileStore.Instance?.MarkActiveAsHostSave("Gameplay");
         GameSessionContext.ResetContractRound();
         ScreenFlowStateMachine.ShowVictoryScreen();
         _victoryFallbackRoutine = null;

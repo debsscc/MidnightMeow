@@ -82,9 +82,9 @@ public class SkillBarEntry : MonoBehaviour
         ApplySelectionVisual();
     }
 
-    public void ApplyUpgradeVisual(int tier, bool canAffordUpgrade)
+    public void ApplyUpgradeVisual(int tier, bool canAffordUpgrade, bool isSelected = false)
     {
-        _upgradeVisualState = ResolveVisualState(tier, canAffordUpgrade);
+        _upgradeVisualState = ResolveVisualState(tier, canAffordUpgrade, isSelected);
         SetActiveState(_upgradeVisualState);
         ApplySelectionVisual();
     }
@@ -133,15 +133,22 @@ public class SkillBarEntry : MonoBehaviour
         _pulseRoutine = null;
     }
 
-    private static int ResolveVisualState(int tier, bool canAffordUpgrade)
+    /// <summary>
+    /// State1 = tier 1 (base), State2 = selecionada e pode comprar o próximo nível,
+    /// State3 = tier 2, State4 = tier 3 (máximo).
+    /// </summary>
+    private static int ResolveVisualState(int tier, bool canAffordUpgrade, bool isSelected)
     {
-        if (tier >= 3)
+        int clampedTier = Mathf.Clamp(tier, 1, 3);
+
+        if (clampedTier >= 3)
             return 4;
 
-        if (canAffordUpgrade)
+        // Destaque de compra só na skill selecionada — evita as 3 barras parecerem upadas juntas.
+        if (isSelected && canAffordUpgrade)
             return 2;
 
-        if (tier > 0)
+        if (clampedTier >= 2)
             return 3;
 
         return 1;

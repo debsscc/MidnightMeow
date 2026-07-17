@@ -95,6 +95,7 @@ public class ConnectionManager : MonoBehaviour
         }
 
         Debug.Log("[ConnectionManager] Host local (solo) iniciado.");
+        SaveProfileStore.Instance?.MarkActiveAsHostSave("SoloHost");
         OnHostStarted?.Invoke();
         return true;
     }

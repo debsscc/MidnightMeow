@@ -6,8 +6,8 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "ContractProgressionConfig", menuName = "MidnightMeow/Progression/Contract Progression Config")]
 public class ContractProgressionConfig : ScriptableObject
 {
-    [Tooltip("Quando true, todos os contratos ficam selecionáveis (testes). Desligue para progressão linear.")]
-    public bool unlockAllContractsForTesting = true;
+    [Tooltip("Quando true, todos os contratos ficam selecionáveis (testes). Em produção deve ficar false (só Contrato 1 no Novo Jogo).")]
+    public bool unlockAllContractsForTesting = false;
 
     private static ContractProgressionConfig _cached;
 

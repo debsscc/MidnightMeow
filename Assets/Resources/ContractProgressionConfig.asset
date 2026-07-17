@@ -12,4 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f6a7b8c9d0e1417095861728394a5b70, type: 3}
   m_Name: ContractProgressionConfig
   m_EditorClassIdentifier: Assembly-CSharp::ContractProgressionConfig
-  unlockAllContractsForTesting: 1
+  unlockAllContractsForTesting: 0

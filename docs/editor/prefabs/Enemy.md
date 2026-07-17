@@ -1,6 +1,6 @@
 # Prefab: Enemy
 
-Última revisão: 2026-07-09  
+Última revisão: 2026-07-17  
 **Caminho:** `Assets/Prefabs/Enemies/Enemy.prefab`
 
 ## Resumo
@@ -20,7 +20,7 @@ Template de inimigo rato (ranged). Variantes de produção estão em `Rato_*.pre
 |--------|------------------|
 | `EnemyTargetFinder` | Alvo no `targetDetectionRange` |
 | `EnemyMovement` | Perseguição / patrulha (NavMesh rígido; auto-adiciona `EnemyPhysicsBody`) |
-| `EnemyPhysicsBody` | RB kinematic; **não colide com Player** (`excludeLayers`) |
+| `EnemyPhysicsBody` | RB **Kinematic** na locomoção; **Dynamic + Continuous** só no knockback; **não colide com Player** (`excludeLayers`) |
 | `EnemySwordHitFlash` | Flash dourado no hit melee (shader `MidnightMeow/EnemySwordHitFlash`) |
 | `EnemyHitStun` | Parada após dano / stun de combate (passiva Nix) |
 | `NetworkEnemyController` | IA servidor; vida; despawn; knockback RPC |
@@ -52,6 +52,7 @@ Sem sincronização de rede dedicada: como o prefab é instanciado em cada clien
 
 - **Hits (dano)**: detectados pelo collider do inimigo na layer `Enemy` (raycast/colisão do `Projectile`, melee do player).
 - **Empurrão**: Player↔Enemy e Projétil↔Player ficam desligados na matriz via `CombatLayerCollision`, então ninguém empurra ninguém (player atravessa os ratos e vice-versa).
+- **Knockback vs paredes**: `NetworkEnemyController` / `KnockbackReceiver` usam `Rigidbody2D.AddForce(..., Impulse)` — **nunca** `transform.position`. Setup no Editor: [enemy-knockback-anti-tunneling.md](../guides/enemy-knockback-anti-tunneling.md). Prefab: **Collision Detection = Continuous**; Enemy × Wall colidem.
 - **Ratos entre si**: separação resolvida pelo `NavMeshAgent` (avoidance, raio ~0.5).
 - **Sorting de profundidade**: `EnemyAnimationHandler` e `PlayerAnimationHandler` ordenam por `bounds.min.y` do **collider sólido (não-trigger)**. Para alinhar os "pés" de player e inimigo (se um ficar sempre na frente/atrás do outro), use o campo `sortingReferenceYOffset` no Inspector de cada um — ele desloca o Y de referência sem mexer no collider.
 

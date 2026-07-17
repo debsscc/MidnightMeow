@@ -382,12 +382,12 @@ Rigidbody2D:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8336658271261246405}
-  m_BodyType: 1
+  m_BodyType: 0
   m_Simulated: 1
   m_UseFullKinematicContacts: 0
   m_UseAutoMass: 0
-  m_Mass: 1
-  m_LinearDamping: 0
+  m_Mass: 4
+  m_LinearDamping: 8
   m_AngularDamping: 0.05
   m_GravityScale: 0
   m_Material: {fileID: 0}
@@ -399,7 +399,7 @@ Rigidbody2D:
     m_Bits: 0
   m_Interpolate: 0
   m_SleepingMode: 1
-  m_CollisionDetection: 0
+  m_CollisionDetection: 1
   m_Constraints: 4
 --- !u!70 &1324069571585874404
 CapsuleCollider2D:
@@ -435,8 +435,8 @@ CapsuleCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 3.1555157, y: -2.322494}
-  m_Size: {x: 11.659223, y: 10.093822}
+  m_Offset: {x: 2.1145196, y: -1.1942863}
+  m_Size: {x: 12.378446, y: 13.532243}
   m_Direction: 1
 --- !u!195 &1903391186630837853
 NavMeshAgent:
@@ -860,4 +860,10 @@ MonoBehaviour:
   telegraphFactory: {fileID: 0}
   telegraphedAttacker: {fileID: 0}
   disableLegacyAttacks: 1
+  obstacleLayer:
+    serializedVersion: 2
+    m_Bits: 4160
+  obstacleCheckRadius: 0.55
+  obstacleSkin: 0.08
+  minFleeClearance: 0.4
   debugLogs: 0

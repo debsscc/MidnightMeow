@@ -31,8 +31,8 @@ Após atualizar o código, execute:
 
 ## Desbloqueio de contratos
 
-- Testes: `Assets/Resources/ContractProgressionConfig.asset` → `unlockAllContractsForTesting = true`
-- Produção: desligar flag; progressão linear via `completedContractMask` no save
+- Produção (atual): `Assets/Resources/ContractProgressionConfig.asset` → `unlockAllContractsForTesting = false` — só Contrato 1 no Novo Jogo; 2/3 liberam via `completedContractMask`.
+- Testes: religar a flag no asset para liberar todas as fases.
 
 ## Barras de vida inimigos
 

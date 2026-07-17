@@ -36,6 +36,9 @@ public class GameplayHudController : MonoBehaviour
 
     public void EnsureWidgets()
     {
+        if (!GameplaySceneBootstrap.IsGameplayScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name))
+            return;
+
         if (transform.localScale.sqrMagnitude < 0.01f)
             transform.localScale = Vector3.one;
 
@@ -257,6 +260,9 @@ public class GameplayHudController : MonoBehaviour
 
     private void EnsureAbilityHud(PlayerAbilityHudTheme theme)
     {
+        if (!GameplaySceneBootstrap.IsGameplayScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name))
+            return;
+
         Transform abilityLayer = GetLayer(AbilityLayerName);
 
         if (abilityHud == null)
@@ -277,6 +283,7 @@ public class GameplayHudController : MonoBehaviour
             return;
         }
 
+        // Fallback procedural só em cenas de fase — nunca em Menu/Victory.
         abilityHud = PlayerAbilityHud.CreateUnder(abilityLayer, theme);
     }
 

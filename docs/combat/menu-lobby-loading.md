@@ -8,7 +8,7 @@
 
 | Botão | Ação |
 |-------|------|
-| Novo Jogo | `GameSessionContext.BeginNewGame()` → slot 0 → rota `menu_lobby` |
+| Novo Jogo | `BeginNewGame()` → slot 0 + `ResetActive()` (progressão zerada) → rota `menu_lobby` |
 | Continuar | Abre painel **Save** (`ContinueSavePanelController`) — só se `SaveProfileStore.HasAnyHostSave()` |
 | Opções | Painel Opções (gráficos, áudio, controles, geral) |
 | Feedback Playtest | Abre o [formulário de playtest](https://docs.google.com/forms/d/e/1FAIpQLScqrERAjHtXbsp-kTXYh86otM1uvqKOICOwL0JFGYLe5203aw/viewform) no navegador (`Application.OpenURL`) |
@@ -20,6 +20,7 @@ Fluxo em dois passos, separado das abas do `MenuTabController` (Levels / Setting
 
 1. **Continuar** (bookmark) → ativa `Canvas/Save` (inicia oculto); bookmarks do hub trocam para sprites **tucked** (encolhidos na lateral do livro).
 2. **Arquivo 1/2/3** → preview do contrato + data/hora; habilita **Carregar** / **Deletar**. Slots vazios ficam cinza e não clicáveis.
+   - Nota: `ContinueSavePanelController` redimensiona `slotButtons` se a cena serializou `[]` (Length 0) — sem isso os botões `Btn_Save*` nunca ligam.
 3. **Carregar** → `GameSessionContext.BeginContinue(slot)` + rota `menu_lobby`.
 4. **Deletar** → modal `SaveDeleteConfirmation` (Confirmar / Cancelar).
 5. **ESC** ou bookmark **Sair** (vira **Voltar** na tela de save) → fecha Save e volta para **Levels**.

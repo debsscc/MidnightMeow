@@ -1,6 +1,6 @@
 # Prefab: Gameplay_UI
 
-Última revisão: 2026-07-16  
+Última revisão: 2026-07-17  
 **Caminho:** `Assets/Prefabs/UI/Gameplay_UI.prefab`
 
 ## Resumo
@@ -44,6 +44,7 @@ Canvas de HUD principal (vida, upgrades, magículas da fase) durante gameplay si
 - Arte: `Assets/Art/Sprites/New_UI/HUD_ ability/Habilidades Cora|Nyx/`.
 - Fallback: sprites do theme / campos opcionais do componente; senão quadrados coloridos.
 - SP e MP: vincula ao jogador local (`NetworkPlayerController.IsOwner` ou tag `Player`) e troca a arte no bind.
+- **Escopo:** só em cenas `Fase-*`. Ao ir para Victory/GameOver/Menu, `GameplaySessionTeardown.HideGameplayHud` + `GameplaySceneBootstrap.CleanupGameplayHudOutsidePhases` ocultam/destroem placeholders — não devem aparecer fora da fase.
 
 ## Magículas na fase
 

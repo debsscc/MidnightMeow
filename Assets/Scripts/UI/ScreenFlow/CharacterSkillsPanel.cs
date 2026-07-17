@@ -89,10 +89,11 @@ public class CharacterSkillsPanel : MonoBehaviour
             if (bar == null)
                 continue;
 
-            int tier = save?.Active?.GetCharacterData(character).GetTierForSlot(bar.AbilitySlot) ?? 0;
+            int tier = save?.Active?.GetCharacterData(character).GetTierForSlot(bar.AbilitySlot) ?? 1;
             bool canAfford = tier < 3 && magiculas >= _upgradeCostPerTier;
-            bar.ApplyUpgradeVisual(tier, canAfford);
-            bar.SetSelected(bar == _selectedBar);
+            bool selected = bar == _selectedBar;
+            bar.ApplyUpgradeVisual(tier, canAfford, selected);
+            bar.SetSelected(selected);
         }
     }
 

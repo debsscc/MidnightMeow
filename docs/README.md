@@ -42,6 +42,7 @@ Documentação para desenvolvedores e **agentes de IA** que trabalham neste proj
 - [Carruagem (Fase 2)](gameplay/carriage.md)
 - [Boss (Fase 3)](gameplay/boss-phase.md)
 - [Guia: setup Rei Rato (Editor)](editor/guides/rat-king-boss-setup.md)
+- [Guia: Rei Rato anti-tunneling (fuga/dash)](editor/guides/rat-king-anti-tunneling.md)
 - [Guia: escolta carruagem + aggro + telegraph Structure](editor/guides/carriage-phase2-aggro-setup.md)
 - [Guia: conserto carruagem (fix E / zonas)](editor/guides/carriage-repair-fix.md)
 - [Plano de implementação Fases 1–3](todo/phases-implementation.md)
@@ -53,6 +54,7 @@ Documentação para desenvolvedores e **agentes de IA** que trabalham neste proj
 - [Diagnóstico modular](editor/diagnostics.md) — Hub de logs para combate/rede
 - [Prefabs](editor/README.md) — Inventário e template de documentação
 - [Guia: passiva Nix stun + Cora splash](editor/guides/nixie-cora-passive-refactor.md) — setup Editor pós-refatoração
+- [Guia: knockback anti-tunneling (inimigos)](editor/guides/enemy-knockback-anti-tunneling.md) — Rigidbody Continuous + setup paredes
 - [Guia: limite Rat Holes + Poça Cora](editor/guides/rat-holes-and-cora-puddle-balance.md) — `maxRatsAlive`, `castRange` / `puddleRadius`
 - [Estrutura de Assets](assets/STRUCTURE.md) — Pastas e convenções
 - [Erros comuns](troubleshooting/common-errors.md) — Console/compilador: causas e correções

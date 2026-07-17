@@ -70,6 +70,7 @@ public class ContinueSavePanelController : MonoBehaviour
         if (_mainMenu == null)
             _mainMenu = FindFirstObjectByType<MainMenuController>();
 
+        EnsureSlotButtonArray();
         ResolveMissingReferences();
         EnsureClickableButtons();
         DisableStaticLocalizationOnDeleteText();
@@ -82,6 +83,25 @@ public class ContinueSavePanelController : MonoBehaviour
 
         HideDeleteConfirmation();
         ResetPreviewToPlaceholder();
+    }
+
+    /// <summary>
+    /// Arrays serializados vazios (`slotButtons: []`) ficam com Length 0 e impedem o bind de Btn_Save1/2/3.
+    /// </summary>
+    private void EnsureSlotButtonArray()
+    {
+        if (slotButtons == null || slotButtons.Length != GameSaveData.MaxSlots)
+        {
+            Button[] resized = new Button[GameSaveData.MaxSlots];
+            if (slotButtons != null)
+            {
+                int copy = Mathf.Min(slotButtons.Length, resized.Length);
+                for (int i = 0; i < copy; i++)
+                    resized[i] = slotButtons[i];
+            }
+
+            slotButtons = resized;
+        }
     }
 
     private void OnEnable()
@@ -290,6 +310,8 @@ public class ContinueSavePanelController : MonoBehaviour
     {
         if (searchRoot == null)
             return;
+
+        EnsureSlotButtonArray();
 
         string[] names = { "Btn_Save1", "Btn_Save2", "Btn_Save3" };
         for (int i = 0; i < slotButtons.Length && i < names.Length; i++)

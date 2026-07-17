@@ -540,10 +540,7 @@ public class MultiplayerGameManager : NetworkBehaviour
         SaveProfileStore save = SaveProfileStore.Instance;
         if (save?.Active != null)
         {
-            save.Active.Touch(NetworkManager.Singleton != null && NetworkManager.Singleton.IsHost,
-                ConnectionManager.Instance != null ? ConnectionManager.Instance.CurrentJoinCode : string.Empty,
-                "Preparation");
-            save.SaveActive();
+            save.MarkActiveAsHostSave("Preparation");
         }
 
         GameSessionContext.ResetContractRound();

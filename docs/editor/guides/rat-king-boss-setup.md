@@ -1,8 +1,10 @@
 # Guia Editor — Rei Rato (Boss FSM + Telegraph Tronco de Cone)
 
-Última revisão: 2026-07-14
+Última revisão: 2026-07-17
 
 Setup manual após o código das Fases 1–4. **Não** instancia prefabs por script: tudo abaixo é no Unity Inspector.
+
+> **Anti-tunneling (Fuga / Investida):** após pular o código de CircleCast + MovePosition, siga também [rat-king-anti-tunneling.md](rat-king-anti-tunneling.md) (`obstacleLayer`, Continuous, raio do Cast).
 
 ## Checklist rápido
 
@@ -154,7 +156,8 @@ Gizmos: selecione a zona no Scene view (Edit Mode) — `OnDrawGizmosSelected` de
 
 - [ ] Solo Fase-3: boss foge e dispara 5 faixas amarelo→vermelho
 - [ ] Roleta ~70/30 ao longo de vários ciclos
-- [ ] Investida: aproximação rápida → telegraph retangular → dash → cone melee
+- [ ] Investida: aproximação rápida → telegraph retangular (encurtado se houver parede) → dash via MovePosition → cone melee
+- [ ] Fuga contra parede: não atravessa; early-attack ou deslize tangencial ([anti-tunneling](rat-king-anti-tunneling.md))
 - [ ] Dash do player durante o dash do boss: **sem dano** (i-frames)
 - [ ] Cliente remoto: vê telegraphs e animações Spell/Charging
 - [ ] Morte do boss encerra o brain (sem erro no Console)

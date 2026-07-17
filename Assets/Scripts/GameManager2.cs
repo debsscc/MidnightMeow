@@ -501,6 +501,9 @@ public class GameManager2 : MonoBehaviour
         if (isVictory)
             SaveProfileStore.Instance?.MarkActiveContractCompleted();
 
+        // Solo/local host: garante wasHost para o slot aparecer em Continuar.
+        SaveProfileStore.Instance?.MarkActiveAsHostSave("Gameplay");
+
         GameSessionContext.ResetContractRound();
 
         if (isVictory ? ScreenFlowStateMachine.ShowVictoryScreen() : ScreenFlowStateMachine.ShowDefeatScreen())

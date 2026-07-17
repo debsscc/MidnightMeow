@@ -376,12 +376,12 @@ Rigidbody2D:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8336658271261246405}
-  m_BodyType: 1
+  m_BodyType: 0
   m_Simulated: 1
   m_UseFullKinematicContacts: 0
   m_UseAutoMass: 0
   m_Mass: 1
-  m_LinearDamping: 0
+  m_LinearDamping: 8
   m_AngularDamping: 0.05
   m_GravityScale: 0
   m_Material: {fileID: 0}
@@ -393,7 +393,7 @@ Rigidbody2D:
     m_Bits: 0
   m_Interpolate: 0
   m_SleepingMode: 1
-  m_CollisionDetection: 0
+  m_CollisionDetection: 1
   m_Constraints: 4
 --- !u!70 &1324069571585874404
 CapsuleCollider2D:
@@ -517,6 +517,7 @@ MonoBehaviour:
   enemyMovement: {fileID: 8492623029768286588}
   animationBinder: {fileID: 0}
   sortingPrecision: 100
+  sortingReferenceYOffset: 0
   isMelee: 0
   debugLogs: 0
 --- !u!114 &4817587253931695636
@@ -609,7 +610,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnemyAudioController
   healthComponent: {fileID: 4817587253931695636}
   sfxMixerGroup: {fileID: -7772116307795827482, guid: 0369658093ea21d40a1c846ecafdd511, type: 2}
-  audioSource: {fileID: 6371813932539339657}
+  attackClips: []
   damageClip: {fileID: 0}
   deathClip: {fileID: 0}
   volume: 1

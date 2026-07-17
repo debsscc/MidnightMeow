@@ -9,6 +9,7 @@ public static class GameplaySessionTeardown
     public static void PrepareForEndGameScreen()
     {
         CloseGameplayOverlays();
+        HideGameplayHud();
 
         Time.timeScale = 0f;
         GameEvents.InvokeGameplayFreeze();
@@ -16,6 +17,55 @@ public static class GameplaySessionTeardown
         DisablePlayerControl();
         HideGameplayActors();
         StopLocalSpawners();
+    }
+
+    /// <summary>
+    /// Oculta canvas/widgets de gameplay (habilidades, objetivos, etc.) antes de Victory/GameOver/Menu.
+    /// </summary>
+    public static void HideGameplayHud()
+    {
+        PlayerAbilityHud[] abilityHuds = Object.FindObjectsByType<PlayerAbilityHud>(
+            FindObjectsInactive.Include,
+            FindObjectsSortMode.None);
+        for (int i = 0; i < abilityHuds.Length; i++)
+        {
+            if (abilityHuds[i] != null)
+                abilityHuds[i].gameObject.SetActive(false);
+        }
+
+        PhaseObjectiveHud[] objectiveHuds = Object.FindObjectsByType<PhaseObjectiveHud>(
+            FindObjectsInactive.Include,
+            FindObjectsSortMode.None);
+        for (int i = 0; i < objectiveHuds.Length; i++)
+        {
+            if (objectiveHuds[i] != null)
+                objectiveHuds[i].gameObject.SetActive(false);
+        }
+
+        HordeIndicator[] hordeIndicators = Object.FindObjectsByType<HordeIndicator>(
+            FindObjectsInactive.Include,
+            FindObjectsSortMode.None);
+        for (int i = 0; i < hordeIndicators.Length; i++)
+        {
+            if (hordeIndicators[i] != null)
+                hordeIndicators[i].gameObject.SetActive(false);
+        }
+
+        GameplayHudController[] controllers = Object.FindObjectsByType<GameplayHudController>(
+            FindObjectsInactive.Include,
+            FindObjectsSortMode.None);
+        for (int i = 0; i < controllers.Length; i++)
+        {
+            if (controllers[i] == null)
+                continue;
+
+            // Preferir desligar o canvas inteiro da HUD de fase.
+            Canvas canvas = controllers[i].GetComponent<Canvas>();
+            if (canvas != null)
+                canvas.gameObject.SetActive(false);
+            else
+                controllers[i].gameObject.SetActive(false);
+        }
     }
 
     private static void CloseGameplayOverlays()
