@@ -20,7 +20,6 @@ public class LoadingScreenController : MonoBehaviour
     [SerializeField] private Image progressFill;
     [SerializeField] private RectTransform progressFollower;
     [SerializeField] private float followerYOffset = 72f;
-    [SerializeField] private bool buildPlaceholderIfMissing = true;
 
     private bool _contentReady;
 
@@ -31,10 +30,6 @@ public class LoadingScreenController : MonoBehaviour
             fallbackNextRouteId = SceneFlowRouteIds.Loading2ToGameplay;
 
         TryAutoResolveReferences();
-
-        if (buildPlaceholderIfMissing && statusText == null && progressFill == null)
-            BuildPlaceholderUI();
-
         EnsureProgressUi();
 
         if (progressFollower == null)
@@ -149,8 +144,7 @@ public class LoadingScreenController : MonoBehaviour
 
         if (ShouldWaitForHostSceneSync(nextRoute))
         {
-            if (statusText != null)
-                statusText.text = UiLocalization.Get("loading.wait_host_sync", "Aguardando host...");
+            StartCoroutine(WaitForHostSceneSyncRoutine(nextRoute));
             return;
         }
 
@@ -158,6 +152,47 @@ public class LoadingScreenController : MonoBehaviour
             GameFlowOrchestrator.Instance.TryRequestRoute(nextRoute);
         else
             ScreenFlowController.Instance?.RequestRoute(nextRoute);
+    }
+
+    /// <summary>
+    /// Cliente: mantém a UI oficial de Loading1/2 até o NGO ativar a cena do host
+    /// (sem reabrir o overlay placeholder DDOL).
+    /// </summary>
+    private IEnumerator WaitForHostSceneSyncRoutine(string nextRoute)
+    {
+        if (statusText != null)
+            statusText.text = UiLocalization.Get("loading.wait_host_sync", "Aguardando host...");
+
+        UpdateProgressUi(0.99f, UiLocalization.FormatLoadingProgress(0.99f));
+
+        string targetScene = ResolveRouteSceneName(nextRoute);
+        if (string.IsNullOrEmpty(targetScene))
+        {
+            Debug.LogWarning($"[LoadingScreen] Rota '{nextRoute}' sem cena destino; cliente não pode aguardar sync NGO.");
+            yield break;
+        }
+
+        TransitionFadeOverlay.Instance?.HideLoading();
+        yield return NetworkSceneSyncUtility.WaitForActiveScene(targetScene, fadeInOnArrival: true);
+    }
+
+    private static string ResolveRouteSceneName(string routeId)
+    {
+        if (routeId == SceneFlowRouteIds.Loading1ToPreparation)
+            return "Preparation";
+
+        if (routeId == SceneFlowRouteIds.Loading2ToGameplay)
+        {
+            return string.IsNullOrEmpty(GameSessionContext.ActiveGameplaySceneName)
+                ? "Fase-1"
+                : GameSessionContext.ActiveGameplaySceneName;
+        }
+
+        ScreenFlowController flow = ScreenFlowController.Instance;
+        if (flow != null && flow.TryGetRouteSceneName(routeId, out string sceneName))
+            return sceneName;
+
+        return null;
     }
 
     private static bool ShouldWaitForHostSceneSync(string routeId)
@@ -316,21 +351,5 @@ public class LoadingScreenController : MonoBehaviour
         }
 
         return null;
-    }
-
-    private void BuildPlaceholderUI()
-    {
-        Canvas canvas = ScreenFlowPlaceholderFactory.EnsureCanvas(transform);
-        canvas.overrideSorting = true;
-        canvas.sortingOrder = 400;
-        GameObject panel = ScreenFlowPlaceholderFactory.CreatePanel(canvas.transform, "LoadingPanel", new Color(0.04f, 0.04f, 0.06f, 1f));
-
-        statusText = ScreenFlowPlaceholderFactory.CreateText(panel.transform, UiLocalization.FormatLoadingProgress(0f), 32, TextAlignmentOptions.Center, Color.white,
-            new Vector2(0.5f, 0f), new Vector2(0.5f, 0f),
-            new Vector2(-400f, LoadingProgressUtility.BottomStatusTextMinY),
-            new Vector2(400f, LoadingProgressUtility.BottomStatusTextMaxY));
-
-        progressFill = LoadingProgressUtility.CreateBottomProgressBar(panel.transform);
-        progressTrack = progressFill != null ? progressFill.transform.parent as RectTransform : null;
     }
 }

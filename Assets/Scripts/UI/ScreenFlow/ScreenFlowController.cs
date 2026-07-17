@@ -1,6 +1,5 @@
 using System;
 using System.Collections;
-using TMPro;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.Events;
@@ -231,11 +230,9 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
         OnTransitionStarted?.Invoke(sceneName);
 
         bool useLoading = ResolveUsesLoadingScreen(mode);
-        bool useOverlayLoading = useLoading && !dedicatedLoadingScene;
-        TransitionFadeOverlay overlay = TransitionFadeOverlay.Instance;
-        overlay?.SetUseLegacyLoading(!dedicatedLoadingScene);
-        if (useOverlayLoading)
-            overlay?.ShowLoading();
+        // Rotas Loading1/Loading2 usam UI oficial da cena — sem painel DDOL de loading.
+        if (useLoading && !dedicatedLoadingScene)
+            TransitionFadeOverlay.Instance?.ShowLoading();
 
         _transitionRoutine = StartCoroutine(RunTransition(sceneName, mode, loadKind, ft, ml));
         return true;
@@ -409,9 +406,9 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
 
             if (useLoading)
             {
-                asyncLoad.allowSceneActivation = false;
-                yield return WaitForLoadingProgress(overlay, minLoadingTime, loadTimer, asyncLoad);
+                // Single-player: não bloqueia ativação da cena — progresso acompanha o AsyncOperation.
                 asyncLoad.allowSceneActivation = true;
+                yield return WaitForLoadingProgress(overlay, minLoadingTime, loadTimer, asyncLoad);
             }
 
             yield return ScreenFlowSceneReadiness.WaitUntilLoadComplete(asyncLoad);
@@ -483,7 +480,13 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
             yield break;
 
         TransitionFadeOverlay overlay = TransitionFadeOverlay.Instance;
-        if (overlay == null || !overlay.IsFadeOpaque)
+        if (overlay == null)
+            yield break;
+
+        // Sempre libera qualquer painel de loading residual antes do fade-in da cena destino.
+        overlay.HideLoading();
+
+        if (!overlay.IsFadeOpaque)
             yield break;
 
         float ft = fadeTime > 0f ? fadeTime : (_fadeTime > 0f ? _fadeTime : defaultFadeTime);
@@ -581,6 +584,17 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
         return true;
     }
 
+    public bool TryGetRouteSceneName(string routeId, out string sceneName)
+    {
+        sceneName = null;
+        EnsureCatalogLoaded();
+        if (catalog == null || !catalog.TryGetRoute(routeId, out SceneFlowRouteDefinition route))
+            return false;
+
+        sceneName = route.sceneName;
+        return !string.IsNullOrEmpty(sceneName);
+    }
+
     public void ChangeScene(string sceneName) => TryBeginTransition(sceneName);
 }
 
@@ -608,15 +622,10 @@ public class TransitionFadeOverlay : Singleton<TransitionFadeOverlay>
 
     private Canvas _canvas;
     private Image _fadeImage;
-    private GameObject _loadingRoot;
-    private Image _progressFill;
-    private TMP_Text _statusText;
 
     private Image _legacyFadeImage;
-    private GameObject _legacyLoadingScreen;
     private Canvas _legacyCanvas;
     private string _legacySceneName;
-    private bool _useLegacyLoading = true;
     private Coroutine _animatedFadeOutRoutine;
     private Coroutine _fadeInRoutine;
     private bool _fadeRoutineRunning;
@@ -660,19 +669,14 @@ public class TransitionFadeOverlay : Singleton<TransitionFadeOverlay>
         SceneManager.sceneUnloaded -= HandleSceneUnloaded;
     }
 
-    public void SetUseLegacyLoading(bool useLegacy) => _useLegacyLoading = useLegacy;
+    public void SetUseLegacyLoading(bool _) { }
 
     public void RegisterSceneVisuals(Image fadeImage, GameObject loadingScreen)
     {
+        // loadingScreen legado ignorado — Loading1/Loading2 são as telas oficiais.
         _legacyFadeImage = fadeImage;
-        _legacyLoadingScreen = loadingScreen;
 
-        if (_legacyLoadingScreen != null)
-        {
-            _legacyCanvas = _legacyLoadingScreen.GetComponentInParent<Canvas>(true);
-            _legacySceneName = _legacyLoadingScreen.scene.name;
-        }
-        else if (_legacyFadeImage != null)
+        if (_legacyFadeImage != null)
         {
             _legacyCanvas = _legacyFadeImage.GetComponentInParent<Canvas>(true);
             _legacySceneName = _legacyFadeImage.gameObject.scene.name;
@@ -695,12 +699,9 @@ public class TransitionFadeOverlay : Singleton<TransitionFadeOverlay>
     private void ClearLegacyVisuals()
     {
         _legacyFadeImage = null;
-        _legacyLoadingScreen = null;
         _legacyCanvas = null;
         _legacySceneName = null;
     }
-
-    private bool HasLegacyLoadingScreen() => _legacyLoadingScreen != null;
 
     private bool HasLegacyFadeImage() =>
         _legacyFadeImage != null && _legacyFadeImage.gameObject != null;
@@ -752,22 +753,6 @@ public class TransitionFadeOverlay : Singleton<TransitionFadeOverlay>
         }
     }
 
-    private void EnsureLegacyCanvasFront()
-    {
-        if (!HasLegacyLoadingScreen())
-            return;
-
-        if (_legacyCanvas == null)
-            return;
-
-        if (!_legacyCanvas.gameObject.activeSelf)
-            _legacyCanvas.gameObject.SetActive(true);
-
-        _legacyCanvas.enabled = true;
-        _legacyCanvas.overrideSorting = true;
-        _legacyCanvas.sortingOrder = 15000;
-    }
-
     private void SetBuiltInOverlayVisible(bool visible)
     {
         if (_canvas == null)
@@ -783,8 +768,6 @@ public class TransitionFadeOverlay : Singleton<TransitionFadeOverlay>
         }
 
         _canvas.enabled = false;
-        if (_loadingRoot != null)
-            _loadingRoot.SetActive(false);
     }
 
     public IEnumerator FadeOut(float duration, Action<float> onUnscaledTick = null)
@@ -848,45 +831,25 @@ public class TransitionFadeOverlay : Singleton<TransitionFadeOverlay>
         }
     }
 
+    /// <summary>
+    /// Marca estado de loading para listeners. Sem painel visual DDOL —
+    /// progresso oficial fica em Loading1/Loading2.
+    /// </summary>
     public void ShowLoading()
     {
         EnsureOverlayBuilt();
         ResetLoadingProgress();
-
         SetBuiltInOverlayVisible(true);
-
-        if (_fadeImage != null)
-            _fadeImage.transform.SetAsFirstSibling();
-
-        _loadingRoot.SetActive(true);
-        _loadingRoot.transform.SetAsLastSibling();
-
-        if (_useLegacyLoading && HasLegacyLoadingScreen())
-        {
-            EnsureLegacyCanvasFront();
-            _legacyLoadingScreen.SetActive(true);
-            _legacyLoadingScreen.transform.SetAsLastSibling();
-        }
-        else if (_legacyLoadingScreen != null)
-            _legacyLoadingScreen.SetActive(false);
 
         if (!IsLoadingVisible)
         {
             IsLoadingVisible = true;
             OnLoadingVisibilityChanged?.Invoke(true);
         }
-
-        SetLoadingProgress(0.04f);
     }
 
     public void HideLoading()
     {
-        if (_legacyLoadingScreen != null)
-            _legacyLoadingScreen.SetActive(false);
-
-        if (_loadingRoot != null)
-            _loadingRoot.SetActive(false);
-
         if (IsLoadingVisible)
         {
             IsLoadingVisible = false;
@@ -897,14 +860,6 @@ public class TransitionFadeOverlay : Singleton<TransitionFadeOverlay>
     public void SetLoadingProgress(float progress)
     {
         LoadingProgress = Mathf.Clamp01(progress);
-
-        if (_progressFill != null)
-            LoadingProgressUtility.SetProgress(_progressFill, LoadingProgress);
-
-        if (_statusText != null)
-            _statusText.text = LocaleText.IsPortuguese()
-                ? $"Carregando... {LoadingProgress:P0}"
-                : $"Loading... {LoadingProgress:P0}";
     }
 
     public void ResetLoadingProgress() => SetLoadingProgress(0f);
@@ -914,7 +869,7 @@ public class TransitionFadeOverlay : Singleton<TransitionFadeOverlay>
         CancelFadeCoroutines();
         HideLoading();
 
-        // DDOL overlay (sort 32767) cobre a UI da cena de loading — libera alpha para exibir a barra.
+        // DDOL fade (sort 32767) cobriria a UI oficial — libera alpha.
         SetFadeImmediate(0f);
 
         if (progress >= 0f)
@@ -926,7 +881,6 @@ public class TransitionFadeOverlay : Singleton<TransitionFadeOverlay>
         CancelFadeCoroutines();
         HideLoading();
         ResetFade();
-        _useLegacyLoading = true;
     }
 
     public void ResetFade() => ApplyFadeAlpha(0f, raycastWhenVisible: false);
@@ -1014,19 +968,6 @@ public class TransitionFadeOverlay : Singleton<TransitionFadeOverlay>
         LoadingProgressUtility.ApplySolidSprite(_fadeImage);
         _fadeImage.color = new Color(0f, 0f, 0f, 0f);
         _fadeImage.raycastTarget = false;
-
-        _loadingRoot = ScreenFlowPlaceholderFactory.CreatePanel(
-            _canvas.transform, "Loading", new Color(0.04f, 0.05f, 0.1f, 0.98f));
-        if (_loadingRoot.TryGetComponent(out Image loadingBackground))
-            LoadingProgressUtility.ApplySolidSprite(loadingBackground);
-
-        _statusText = ScreenFlowPlaceholderFactory.CreateText(_loadingRoot.transform, "Carregando... 0%",
-            48, TextAlignmentOptions.Center, Color.white,
-            new Vector2(0.5f, 0f), new Vector2(0.5f, 0f),
-            new Vector2(-300f, LoadingProgressUtility.BottomStatusTextMinY),
-            new Vector2(300f, LoadingProgressUtility.BottomStatusTextMaxY));
-        _progressFill = LoadingProgressUtility.CreateBottomProgressBar(_loadingRoot.transform);
-        _loadingRoot.SetActive(false);
     }
 
     private void EnsureOverlayBuilt()

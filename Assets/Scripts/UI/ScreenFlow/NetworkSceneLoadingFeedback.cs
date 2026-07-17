@@ -3,7 +3,8 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 
 /// <summary>
-/// Exibe fade-out no cliente quando o host inicia troca de cena via NGO.
+/// Fade no cliente quando o host inicia troca de cena via NGO.
+/// Não usa overlay de loading placeholder — Loading1/Loading2 são as telas oficiais.
 /// Fade-in de chegada fica em <see cref="NetworkSceneSyncUtility"/> ou <see cref="ScreenFlowController"/>.
 /// </summary>
 public static class NetworkSceneLoadingFeedback
@@ -58,13 +59,19 @@ public static class NetworkSceneLoadingFeedback
         if (overlay == null)
             return;
 
+        // Nunca reativa o painel placeholder DDOL — só fade ou handoff para Loading1/2.
+        overlay.HideLoading();
+
         if (ScreenFlowLoadingScenes.IsDedicatedLoadingScene(sceneName))
         {
             overlay.HandoffToDedicatedLoadingScene();
             return;
         }
 
-        overlay.ShowLoading();
+        // Já estamos na tela oficial de loading: ela cobre até o NGO trocar a cena.
+        if (ScreenFlowLoadingScenes.IsDedicatedLoadingScene(SceneManager.GetActiveScene().name))
+            return;
+
         overlay.BeginAnimatedFadeOut(ClientFadeOutSeconds);
     }
 
@@ -72,6 +79,8 @@ public static class NetworkSceneLoadingFeedback
     {
         if (string.IsNullOrEmpty(sceneName))
             return;
+
+        TransitionFadeOverlay.Instance?.HideLoading();
 
         if (ScreenFlowLoadingScenes.IsDedicatedLoadingScene(sceneName))
             return;

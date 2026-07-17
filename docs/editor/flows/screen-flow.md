@@ -30,7 +30,8 @@
 | Contexto volátil da sessão | `GameSessionContext` |
 | **Overlay** (pause) | `SceneOverlayController` + `PauseMenuActions` |
 | Bootstrap por cena | `ScreenFlowSceneBootstrap` |
-| UI placeholder 1920×1080 | `ScreenFlowPlaceholderFactory` |
+| Overlay (fade DDOL) | `TransitionFadeOverlay` — **sem** painel de loading; Loading1/2 são oficiais |
+| UI placeholder 1920×1080 | `ScreenFlowPlaceholderFactory` (menus/hub; não usar para loading) |
 | Seleção UI (teclado/gamepad) | `UiSelectionUtility` + `GamepadUiAutoSelect` + `UiSelectOnEnable` |
 
 ### Navegação de UI sem mouse

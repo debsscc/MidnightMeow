@@ -70,7 +70,6 @@ public static class Loading1SceneSetupEditor
         so.FindProperty("progressFill").objectReferenceValue = fill;
         so.FindProperty("progressFollower").objectReferenceValue = follower;
         so.FindProperty("followerYOffset").floatValue = 72f;
-        so.FindProperty("buildPlaceholderIfMissing").boolValue = false;
         so.ApplyModifiedPropertiesWithoutUndo();
 
         EditorSceneManager.MarkSceneDirty(SceneManager.GetActiveScene());

@@ -48,10 +48,11 @@ Layout: botões canto inferior esquerdo com offset (ref. `docs/reference_imgs/me
 
 ## Loading1 / Loading2 — sincronia imediata
 
-- O overlay de loading aparece **no mesmo frame** do clique (antes do fade) via `ScreenFlowController.RequestScene`.
-- Rotas para `Loading1`/`Loading2` pulam o fade gradual, zeram `minLoadingTime` no overlay e usam apenas o overlay built-in (sem loading legado da cena de origem).
-- `LoadingScreenController` faz **handoff** do overlay (`HandoffToDedicatedLoadingScene`) no `Awake`, sem `ClearTransitionOverlay` no início da rotina — evita flash entre overlay e UI da cena.
-- Clientes em rede recebem feedback imediato via `NetworkSceneLoadingFeedback` quando o host inicia carga NGO.
+- O overlay de fade aparece no clique; **não** há mais painel DDOL de loading com barra a 4% (`TransitionFadeOverlay` só faz fade).
+- Rotas para `Loading1`/`Loading2` pulam o fade gradual, zeram `minLoadingTime` no overlay e usam a UI oficial da cena.
+- `LoadingScreenController` faz handoff do fade (`HandoffToDedicatedLoadingScene`) e, no **Cliente**, aguarda a cena do host via `NetworkSceneSyncUtility` (sem reabrir placeholder).
+- Clientes em rede recebem fade via `NetworkSceneLoadingFeedback` quando o host inicia carga NGO (nunca `ShowLoading` visual no DDOL).
+- Limpeza no Editor: [remove-legacy-loading-placeholder.md](../editor/guides/remove-legacy-loading-placeholder.md)
 
 ## Loading1
 

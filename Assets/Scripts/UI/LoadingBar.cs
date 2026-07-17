@@ -1,99 +1,32 @@
 /* ----------------------------------------------------------------
 AUTOR: Débora Carvalho
 DATA: 2026-06-23
-DESCRIÇÃO: Barra de loading da cena sincronizada com ScreenFlowController.LoadingProgress.
+DESCRIÇÃO: LEGADO — barra de loading do FadeManager (Menu2).
+Substituída por Loading1/Loading2 + LoadingScreenController.
+Mantido como stub para não quebrar cenas até remoção no Editor.
 ---------------------------------------------------------------- */
 
-using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
+/// <summary>
+/// Obsoleto. Remova o GameObject <c>FadeManager</c> (Menu2) no Editor —
+/// ver docs/editor/guides/remove-legacy-loading-placeholder.md
+/// </summary>
 [DisallowMultipleComponent]
+[System.Obsolete("Use LoadingScreenController em Loading1/Loading2. Remova FadeManager da cena.")]
 public class LoadingBar : MonoBehaviour
 {
     [SerializeField] private Image loadingBar;
     [SerializeField] private float fillSpeed = 2.5f;
-
     [SerializeField] private float idleCreepPerSecond = 0.07f;
-
     [SerializeField] private float maxIdleCreep = 0.88f;
-
-    private Coroutine _routine;
-    private float _smoothedProgress;
-
-    private void Awake()
-    {
-        if (loadingBar == null && GetComponent<SceneTransition>() == null)
-            loadingBar = GetComponentInChildren<Image>(true);
-
-        if (loadingBar != null)
-            loadingBar = LoadingProgressUtility.EnsureFillFromLegacyImage(
-                loadingBar,
-                LoadingProgressUtility.DefaultTrackColor,
-                LoadingProgressUtility.DefaultFillColor);
-
-        ResetBarVisual();
-    }
 
     private void OnEnable()
     {
-        ScreenFlowController flow = ScreenFlowController.Instance;
-        if (flow != null)
-            flow.OnLoadingScreenVisibilityChanged += HandleLoadingScreenVisibilityChanged;
-
-        if (_routine == null)
-            _routine = StartCoroutine(SyncWithScreenFlow());
-    }
-
-    private void OnDisable()
-    {
-        ScreenFlowController flow = ScreenFlowController.Instance;
-        if (flow != null)
-            flow.OnLoadingScreenVisibilityChanged -= HandleLoadingScreenVisibilityChanged;
-
-        if (_routine != null)
-        {
-            StopCoroutine(_routine);
-            _routine = null;
-        }
-    }
-
-    private void HandleLoadingScreenVisibilityChanged(bool visible)
-    {
-        if (visible)
-            ResetBarVisual();
-    }
-
-    private void ResetBarVisual()
-    {
-        _smoothedProgress = 0f;
-
+        // Stub: não sincroniza mais com TransitionFadeOverlay (painel placeholder removido).
         if (loadingBar != null)
             LoadingProgressUtility.ResetProgress(loadingBar);
-    }
-
-    private IEnumerator SyncWithScreenFlow()
-    {
-        while (true)
-        {
-            ScreenFlowController flow = ScreenFlowController.Instance;
-            if (flow != null && flow.IsLoadingScreenVisible && loadingBar != null)
-            {
-                float target = flow.LoadingProgress;
-                float step = Mathf.Max(fillSpeed, 0.75f) * Time.unscaledDeltaTime;
-
-                if (target > _smoothedProgress + 0.001f)
-                    _smoothedProgress = Mathf.MoveTowards(_smoothedProgress, target, step);
-                else if (_smoothedProgress < maxIdleCreep)
-                    _smoothedProgress += idleCreepPerSecond * Time.unscaledDeltaTime;
-
-                float cap = target > 0.05f ? 1f : maxIdleCreep;
-                _smoothedProgress = Mathf.Clamp(_smoothedProgress, 0f, cap);
-                LoadingProgressUtility.SetProgress(loadingBar, _smoothedProgress);
-            }
-
-            yield return null;
-        }
     }
 }
 
@@ -293,7 +226,7 @@ public static class LoadingProgressUtility
         SetProgress(fill, 0f);
     }
 
-    /// Posiciona um ícone ao longo do trilho, na borda direita do preenchimento.</summary>
+    /// <summary>Posiciona um ícone ao longo do trilho, na borda direita do preenchimento.</summary>
     public static void SetFollowerAlongTrack(RectTransform track, RectTransform follower, float progress, float yOffset = 0f)
     {
         if (track == null || follower == null)

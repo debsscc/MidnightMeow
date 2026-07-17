@@ -671,11 +671,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::LanguageToggleButton
   label: {fileID: 746981425}
   button: {fileID: 58124697}
---- !u!1 &66845560 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 3294244476792912388, guid: 7fd442c0c1a96494cbe873127803d219, type: 3}
-  m_PrefabInstance: {fileID: 1391143347725889002}
-  m_PrefabAsset: {fileID: 0}
 --- !u!224 &66845561 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 219297084541927999, guid: 7fd442c0c1a96494cbe873127803d219, type: 3}
@@ -11093,6 +11088,7 @@ MonoBehaviour:
   keyboardMouseTexts: {fileID: 1654723417}
   gamepadTexts: {fileID: 1391143347725889003}
   defaultTab: 0
+  panelRoot: {fileID: 0}
 --- !u!1 &930975635
 GameObject:
   m_ObjectHideFlags: 0
@@ -14928,7 +14924,6 @@ GameObject:
   - component: {fileID: 1648768941}
   - component: {fileID: 1648768940}
   - component: {fileID: 1648768944}
-  - component: {fileID: 1648768945}
   m_Layer: 0
   m_Name: FadeManager
   m_TagString: Untagged
@@ -15035,22 +15030,6 @@ MonoBehaviour:
   minLoadingTime: 5
   fadeImage: {fileID: 1162458845}
   loadingScreen: {fileID: 0}
---- !u!114 &1648768945
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1648768939}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 98888ff2545edff4f89d2ed9bbecea7e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::LoadingBar
-  loadingBar: {fileID: 0}
-  fillSpeed: 0.25
-  idleCreepPerSecond: 0.07
-  maxIdleCreep: 0.88
 --- !u!1 &1654723417 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 2046092234884852656, guid: 7fd442c0c1a96494cbe873127803d219, type: 3}

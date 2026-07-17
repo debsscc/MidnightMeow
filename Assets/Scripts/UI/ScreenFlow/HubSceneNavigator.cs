@@ -139,7 +139,6 @@ public static class HubSceneNavigator
 
             if (useLoading)
             {
-                load.allowSceneActivation = false;
                 yield return ReportLoadingProgress(minLoadingTime, load);
             }
 
@@ -231,9 +230,6 @@ public static class HubSceneNavigator
         }
 
         ScreenFlowController.Instance?.ReportTransitionLoadingProgress(1f);
-
-        if (asyncLoad != null)
-            asyncLoad.allowSceneActivation = true;
     }
 
     private static void NotifyPreparationVisible()
