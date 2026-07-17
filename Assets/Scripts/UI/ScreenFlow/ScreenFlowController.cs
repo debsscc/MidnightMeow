@@ -473,9 +473,11 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
     /// </summary>
     public IEnumerator TryFadeInAfterNetworkSceneArrival(string sceneName, float fadeTime = -1f)
     {
-        if (IsTransitioning || string.IsNullOrEmpty(sceneName))
+        if (string.IsNullOrEmpty(sceneName))
             yield break;
 
+        // Não abortar só porque outra transição local ainda marca IsTransitioning —
+        // o fade NGO do cliente precisa concluir mesmo assim.
         if (SceneManager.GetActiveScene().name != sceneName)
             yield break;
 
@@ -483,16 +485,20 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
         if (overlay == null)
             yield break;
 
-        // Sempre libera qualquer painel de loading residual antes do fade-in da cena destino.
         overlay.HideLoading();
-
-        if (!overlay.IsFadeOpaque)
-            yield break;
+        // Cancela fade-out em andamento (race: cena chega antes do alpha atingir 1).
+        overlay.CancelFadeCoroutines();
 
         float ft = fadeTime > 0f ? fadeTime : (_fadeTime > 0f ? _fadeTime : defaultFadeTime);
 
         yield return ScreenFlowSceneReadiness.WaitUntilReady(sceneName);
         yield return ScreenFlowSceneReadiness.WaitForRenderPadding();
+
+        if (overlay.GetFadeAlpha() <= 0.01f)
+        {
+            overlay.ResetFade();
+            yield break;
+        }
 
         MusicCrossfadeController music = MusicCrossfadeController.Instance;
         music?.PrepareSceneMusic(SceneManager.GetActiveScene());
@@ -503,11 +509,19 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
 
     public void TryBeginFadeInAfterNetworkSceneArrival(string sceneName, float fadeTime = -1f)
     {
-        if (IsTransitioning || string.IsNullOrEmpty(sceneName))
+        if (string.IsNullOrEmpty(sceneName))
             return;
 
         if (_networkFadeInRoutine != null && _networkFadeInScene == sceneName)
             return;
+
+        // Se já há rotina para outra cena, substitui (ex.: Victory → Preparation rápido).
+        if (_networkFadeInRoutine != null)
+        {
+            StopCoroutine(_networkFadeInRoutine);
+            _networkFadeInRoutine = null;
+            _networkFadeInScene = null;
+        }
 
         _networkFadeInScene = sceneName;
         _networkFadeInRoutine = StartCoroutine(RunNetworkFadeInRoutine(sceneName, fadeTime));
@@ -608,9 +622,9 @@ public class TransitionFadeOverlay : Singleton<TransitionFadeOverlay>
 {
     public bool IsLoadingVisible { get; private set; }
     public float LoadingProgress { get; private set; }
-    public bool IsFadeOpaque => GetCurrentFadeAlpha() >= 0.98f;
+    public bool IsFadeOpaque => GetFadeAlpha() >= 0.98f;
 
-    private float GetCurrentFadeAlpha()
+    public float GetFadeAlpha()
     {
         float alpha = _fadeImage != null ? _fadeImage.color.a : 0f;
         if (_legacyFadeImage != null)
@@ -779,7 +793,7 @@ public class TransitionFadeOverlay : Singleton<TransitionFadeOverlay>
         }
 
         EnsureFadeReady();
-        float startAlpha = GetCurrentFadeAlpha();
+        float startAlpha = GetFadeAlpha();
         float t = 0f;
 
         while (t < duration)
@@ -805,7 +819,7 @@ public class TransitionFadeOverlay : Singleton<TransitionFadeOverlay>
             yield break;
         }
 
-        float startAlpha = GetCurrentFadeAlpha();
+        float startAlpha = GetFadeAlpha();
         if (startAlpha <= 0.01f)
         {
             SetFadeImmediate(0f);

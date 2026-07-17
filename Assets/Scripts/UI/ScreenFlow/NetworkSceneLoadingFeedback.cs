@@ -89,7 +89,11 @@ public static class NetworkSceneLoadingFeedback
             return;
 
         ScreenFlowController flow = ScreenFlowController.Instance;
-        if (flow == null || flow.IsTransitioning)
+        if (flow == null)
+            return;
+
+        // Transição local (RequestScene/ExecuteLoad) já faz o fade-in.
+        if (flow.IsTransitioning)
             return;
 
         flow.TryBeginFadeInAfterNetworkSceneArrival(sceneName);

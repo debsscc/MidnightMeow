@@ -137,6 +137,27 @@ public class PreparationSessionManager : NetworkBehaviour
         ScreenFlowStateMachine.RestartCurrentGameplay();
     }
 
+    /// <summary>
+    /// Cliente na tela de vitória/derrota pede ao host para carregar Preparation via NGO.
+    /// </summary>
+    [Rpc(SendTo.Server)]
+    public void RequestContinueAfterEndGameServerRpc(RpcParams rpcParams = default)
+    {
+        if (!IsServer)
+            return;
+
+        string active = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+        if (active is not ("VictoryScene" or "GameOver"))
+            return;
+
+        ScreenFlowController flow = ScreenFlowController.Instance;
+        if (flow != null && flow.IsTransitioning)
+            return;
+
+        ResetRound();
+        ScreenFlowStateMachine.ContinueAfterEndGame();
+    }
+
     [Rpc(SendTo.Server)]
     public void RequestConfirmContractRpc(RpcParams rpcParams = default)
     {

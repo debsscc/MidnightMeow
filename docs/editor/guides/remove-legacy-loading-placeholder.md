@@ -2,7 +2,7 @@
 
 Última revisão: 2026-07-17
 
-> Contexto: o Cliente travava em **4%** num painel DDOL gerado por `TransitionFadeOverlay` (`SetLoadingProgress(0.04f)`), enquanto o Host já chegava em **Preparation**. O C# já não cria/ativa esse painel; este guia limpa a hierarquia no Editor.
+> Contexto: o Cliente travava em **4%** num painel DDOL gerado por `TransitionFadeOverlay` (`SetLoadingProgress(0.04f)`), enquanto o Host já chegava em **Preparation**. Também: fade preto eterno pós Vitória/Derrota se o fade-in abortava no meio do fade-out. O C# já não cria/ativa o painel de loading; este guia limpa a hierarquia no Editor.
 
 ## 1. Limpeza da Hierarquia
 

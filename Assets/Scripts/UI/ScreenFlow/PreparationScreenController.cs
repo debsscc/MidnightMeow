@@ -62,6 +62,24 @@ public class PreparationScreenController : MonoBehaviour
         EnsureDefaultContract();
         RefreshView();
         ScreenFlowSceneReadiness.MarkReadyIfPending("Preparation");
+        EnsureTransitionOverlayCleared();
+    }
+
+    /// <summary>
+    /// Cliente NGO pode chegar com Fade DDOL opaco se o fade-in perdeu a race.
+    /// </summary>
+    private static void EnsureTransitionOverlayCleared()
+    {
+        ScreenFlowController flow = ScreenFlowController.Instance;
+        if (flow != null && flow.IsTransitioning)
+            return;
+
+        TransitionFadeOverlay overlay = TransitionFadeOverlay.Instance;
+        if (overlay == null)
+            return;
+
+        if (overlay.GetFadeAlpha() > 0.01f)
+            flow?.ForceClearTransitionOverlay();
     }
 
     private void EnsureUi()

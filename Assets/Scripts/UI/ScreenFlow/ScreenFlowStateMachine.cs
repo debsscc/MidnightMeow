@@ -194,33 +194,27 @@ public static class ScreenFlowStateMachine
 
 
     public static bool ContinueAfterEndGame()
-
     {
-
         EnterPhase(ScreenFlowPhase.ContractSelect);
-
         GameSessionContext.PendingRouteId = string.Empty;
-
         GameSessionContext.ResetContractRound();
-
         ResetPreparationCharacterSelection();
 
+        // Cliente MP: não chama LoadScene — pede ao host (evita fade preto eterno).
+        if (NetworkSceneSyncUtility.IsNetworkClientAwaitingHost)
+        {
+            PreparationSessionManager.Instance?.RequestContinueAfterEndGameServerRpc();
+            return true;
+        }
+
         string route = SceneManager.GetActiveScene().name == "VictoryScene"
-
             ? SceneFlowRouteIds.VictoryToPreparation
-
             : SceneFlowRouteIds.DefeatToPreparation;
 
-
-
         if (TryTransition(route))
-
             return true;
 
-
-
         return LoadSceneFallback("Preparation");
-
     }
 
 

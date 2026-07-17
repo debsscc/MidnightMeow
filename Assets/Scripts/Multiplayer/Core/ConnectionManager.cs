@@ -154,6 +154,7 @@ public class ConnectionManager : MonoBehaviour
             if (started)
             {
                 Debug.Log($"[ConnectionManager] Host iniciado. Join Code: {joinCode}");
+                SaveProfileStore.Instance?.MarkActiveAsHostSave("Lobby");
                 OnJoinCodeObtained?.Invoke(joinCode);
                 OnHostStarted?.Invoke();
             }

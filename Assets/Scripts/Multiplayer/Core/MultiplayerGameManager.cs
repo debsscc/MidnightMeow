@@ -526,9 +526,7 @@ public class MultiplayerGameManager : NetworkBehaviour
 
         if (IsServer && (newState == GameState.Victory || newState == GameState.Defeat))
         {
-            if (newState == GameState.Victory)
-                SaveProfileStore.Instance?.MarkActiveContractCompleted();
-
+            // Persistência consolidada em ReturnToPreparationOnServer (evita race com índice de contrato).
             ReturnToPreparationOnServer(newState);
         }
     }
@@ -537,15 +535,38 @@ public class MultiplayerGameManager : NetworkBehaviour
     {
         Time.timeScale = 1f;
 
-        SaveProfileStore save = SaveProfileStore.Instance;
-        if (save?.Active != null)
-        {
-            save.MarkActiveAsHostSave("Preparation");
-        }
-
+        PersistEndGameProgress(endState);
         GameSessionContext.ResetContractRound();
 
         BeginEndGameScreenTransitionClientRpc(endState);
+    }
+
+    /// <summary>
+    /// Garante wasHost + contrato concluído + magículas no disco antes da tela de fim.
+    /// </summary>
+    private static void PersistEndGameProgress(GameState endState)
+    {
+        SaveProfileStore save = SaveProfileStore.Instance;
+        if (save?.Active == null)
+        {
+            Debug.LogWarning("[MultiplayerGameManager] PersistEndGameProgress: SaveProfileStore ausente.");
+            return;
+        }
+
+        if (endState == GameState.Victory)
+        {
+            int index = ContractSceneResolver.ResolveActiveContractIndex();
+            if (index >= 0)
+            {
+                save.Active.MarkContractCompleted(index);
+                save.Active.selectedContractIndex = index;
+            }
+            else
+                Debug.LogWarning("[MultiplayerGameManager] Vitória sem contrato ativo — completedContractMask não atualizado.");
+        }
+
+        RoundMagiculaTracker.Instance?.CommitToSave();
+        save.MarkActiveAsHostSave(endState == GameState.Victory ? "VictoryScene" : "GameOver");
     }
 
     [ClientRpc]
