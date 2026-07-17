@@ -114,7 +114,7 @@ Em cada `Rato_*.prefab` / `Enemy.prefab`:
 3. **Cora sem passiva:** projétil some em inimigo/parede; sem ricochete de passiva.
 4. **Cora com passiva:** no impacto, somem o projétil pai e nascem N respingos teleguiados no `Splash Range`.
 5. **MP:** splash só spawna no servidor; clientes veem via NetworkTransform.
-6. **Splash sem alvo / miss:** respingo segue a direção do impacto; some em parede ou ao atingir `ProjectileStats.maxDistance` (igual ao projétil principal).
+6. **Splash sem alvo / miss:** respingo segue a direção do impacto; some em parede (Hit) ou ao atingir `ProjectileStats.maxDistance` (Vanish no ar).
 
 ---
 

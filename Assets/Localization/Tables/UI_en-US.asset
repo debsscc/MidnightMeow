@@ -426,11 +426,13 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 7268000000000002
-    m_Localized: File saved
+    m_Localized: 'File {0}, saved on {1} at {2}'
     m_Metadata:
       m_Items: []
   - m_Id: 7268000000000003
-    m_Localized: 'Delete File?
+    m_Localized: 'Delete File {0}?
+
+      Saved on {1} at {2}
 
       This action cannot be undone.'
     m_Metadata:
@@ -548,6 +550,14 @@ MonoBehaviour:
       m_Items: []
   - m_Id: 9200000000000007
     m_Localized: "{0} magicules"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 9200000000000008
+    m_Localized: BLOCK THE HOLES
+    m_Metadata:
+      m_Items: []
+  - m_Id: 9200000000000009
+    m_Localized: "{0}/{1}"
     m_Metadata:
       m_Items: []
   references:

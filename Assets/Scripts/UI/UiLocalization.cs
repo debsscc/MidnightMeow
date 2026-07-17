@@ -121,6 +121,12 @@ public static class UiLocalization
     public static string GetSealComplete() =>
         Get("seal.complete", "Área selada");
 
+    public static string GetObjectiveSealHolesTitle() =>
+        Get("objective.seal_holes.title", "BLOQUEIE OS BURACOS");
+
+    public static string FormatObjectiveHolesCount(int sealedCount, int totalHoles) =>
+        Format("objective.holes_count", "{0}/{1}", sealedCount, totalHoles);
+
     public static string FormatObjectiveHolesStatus(int sealedCount, int totalHoles, int remaining, int enemiesAlive) =>
         Format(
             "objective.holes_status",

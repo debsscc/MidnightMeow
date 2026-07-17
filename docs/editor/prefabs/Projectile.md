@@ -1,6 +1,6 @@
 # Prefab: Projectile
 
-Última revisão: 2026-07-12  
+Última revisão: 2026-07-17  
 **Caminho:** `Assets/Prefabs/Combat/Projectile.prefab`  
 **GUID:** `eadee2043abe1c540b4356dff9dbd9a7`
 
@@ -39,8 +39,8 @@ Projétil do **jogador** (Cora): física local + sincronização NGO no mesmo pr
 
 | Campo | Valor |
 |-------|--------|
-| `_hitAnimDuration` | 1.15 (splash + vanish) |
-| `_playHitOnExpire` | false |
+| `_hitAnimDuration` | ~0.5 (só clip Hit) |
+| `_vanishAnimDuration` | ~0.6 (só clip Vanish / expire por `maxDistance`) |
 | `_spriteFacingOffsetDegrees` | `0` (fireball Cora aponta para a direita; use `-90` se a arte apontar para cima) |
 
 ## Sprite / animação
@@ -52,11 +52,13 @@ Arte: `Assets/Art/Sprites/VFX/Fire ball Cora/` (import **Single** — frame inte
 | Voo (loop) | `Base_fire_ball_cora_01`…`08` | `Player_flying.anim` → Flying |
 | Hit / splash | `splash_fire_ball_cora_01`…`06` | `Player_projec_hit.anim` → Hit |
 | Vanish | `vanish_fire_ball_cora_01`…`07` | `Player_projec_vanish.anim` → Vanish |
-| Animator | `Assets/Data/Animacoes/Projectiles/Projectile Player.controller` | Spawn → Flying; `OnHit` → Hit → Vanish |
+| Animator | `Assets/Data/Animacoes/Projectiles/Projectile Player.controller` | Spawn → Flying; impacto → Hit; expire → Vanish |
 
-Fluxo: Spawn → Flying (loop) → (trigger `OnHit`) Hit → Vanish → destroy após `_hitAnimDuration`.
+Fluxo:
+- **Acerta algo** (inimigo / parede esgotando bounces): Spawn → Flying → **Hit** → despawn.
+- **Não acerta nada** até `ProjectileStats.maxDistance`: Spawn → Flying → **Vanish** → despawn.
 
-No hit: splash/vanish usam a mesma rotação de voo (`ApplyFacingRotation`). Vanish é agendado em código após o clip de Hit. Em rede, `NotifyHitAndDespawn` replica via ClientRpc. Owner colliders são ignorados no spawn.
+Hit e Vanish são mutuamente exclusivos (sem encadear Hit→Vanish). Em rede: `NotifyHitAndDespawn` / `NotifyVanishAndDespawn` via ClientRpc. Owner colliders são ignorados no spawn.
 
 ## Colisões (código)
 

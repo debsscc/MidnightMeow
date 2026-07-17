@@ -4,7 +4,6 @@
 // DESCRIÇÃO: Controla o comportamento de um projétil que pode quicar em paredes e ser coletado como munição.
 // ---------------------------------------------------------------- */
 
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -22,8 +21,8 @@ public class Projectile : MonoBehaviour
 
     [Header("Animation")]
     [SerializeField] private Animator _projectileAnimator;
-    [SerializeField] private float _hitAnimDuration = 0.3f;
-    [SerializeField] private bool _playHitOnExpire = false;
+    [SerializeField] private float _hitAnimDuration = 0.5f;
+    [SerializeField] private float _vanishAnimDuration = 0.6f;
     [Tooltip("Added to Atan2 angle. 0 = art points right (+X); -90 = art points up (+Y).")]
     [SerializeField] private float _spriteFacingOffsetDegrees;
 
@@ -31,7 +30,7 @@ public class Projectile : MonoBehaviour
     private readonly HashSet<int> _damagedEnemyRootIds = new HashSet<int>();
     private static readonly int _hashOnHit = Animator.StringToHash("OnHit");
     private const float DefaultHitClipLength = 0.5f;
-    private Coroutine _hitPresentationRoutine;
+    private const float DefaultVanishClipLength = 0.6f;
 
     private static int _enemyLayer = -1;
     private static int _wallLayer = -1;
@@ -131,10 +130,8 @@ public class Projectile : MonoBehaviour
 
         if (ShouldExpireByMaxDistance())
         {
-            if (_isSplashSeeker || _playHitOnExpire)
-                TriggerHitAndDestroy();
-            else
-                Destroy(gameObject);
+            // Sem impacto: some no ar com Vanish (não Hit).
+            TriggerVanishAndDestroy();
             return;
         }
 
@@ -544,18 +541,37 @@ public class Projectile : MonoBehaviour
         _hasHit = true;
 
         PlayHitPresentation(impactDirection);
+        float delay = ResolveStateClipLength("Hit", _hitAnimDuration, DefaultHitClipLength);
 
         var networkProjectile = GetComponent<NetworkProjectileController>();
         if (networkProjectile != null && networkProjectile.IsSpawned)
-            networkProjectile.NotifyHitAndDespawn(_hitAnimDuration, impactDirection);
+            networkProjectile.NotifyHitAndDespawn(delay, impactDirection);
         else
-            Destroy(gameObject, _hitAnimDuration);
+            Destroy(gameObject, delay);
+    }
+
+    /// <summary>
+    /// Expira por <see cref="ProjectileStats.maxDistance"/> sem acertar nada: só Vanish.
+    /// </summary>
+    private void TriggerVanishAndDestroy()
+    {
+        if (_hasHit) return;
+        _hasHit = true;
+
+        PlayVanishPresentation();
+        float delay = ResolveStateClipLength("Vanish", _vanishAnimDuration, DefaultVanishClipLength);
+
+        var networkProjectile = GetComponent<NetworkProjectileController>();
+        if (networkProjectile != null && networkProjectile.IsSpawned)
+            networkProjectile.NotifyVanishAndDespawn(delay);
+        else
+            Destroy(gameObject, delay);
     }
 
     public Vector2 TravelDirection => _travelDirection;
 
     /// <summary>
-    /// Splash → vanish. Keeps impact flips from shot direction (base already rotates while flying).
+    /// Impacto (inimigo/parede esgotada): só animação Hit. Não encadeia Vanish.
     /// Safe on clients even when this component is disabled.
     /// </summary>
     public void PlayHitPresentation() => PlayHitPresentation(_travelDirection);
@@ -567,23 +583,8 @@ public class Projectile : MonoBehaviour
             : ResolveImpactDirection();
         _travelDirection = dir;
 
-        if (_rb != null)
-        {
-            _rb.linearVelocity = Vector2.zero;
-            _rb.simulated = false;
-        }
-
+        FreezeForEndPresentation();
         ApplyImpactFacing();
-
-        var sparkTrail = GetComponent<ProjectileSparkTrail>();
-        if (sparkTrail != null)
-            sparkTrail.StopTrail();
-
-        foreach (var col in GetComponents<Collider2D>())
-        {
-            if (col != null)
-                col.enabled = false;
-        }
 
         if (_projectileAnimator == null)
             _projectileAnimator = GetComponent<Animator>();
@@ -595,8 +596,6 @@ public class Projectile : MonoBehaviour
         _projectileAnimator.ResetTrigger(_hashOnHit);
         _projectileAnimator.Play("Hit", 0, 0f);
         _projectileAnimator.Update(0f);
-
-        ScheduleVanishPresentation(ResolveHitClipLength());
     }
 
     /// <summary>Ignores physics with the shooter so the projectile never hits its owner on spawn.</summary>
@@ -616,9 +615,28 @@ public class Projectile : MonoBehaviour
         }
     }
 
+    private void FreezeForEndPresentation()
+    {
+        if (_rb != null)
+        {
+            _rb.linearVelocity = Vector2.zero;
+            _rb.simulated = false;
+        }
+
+        var sparkTrail = GetComponent<ProjectileSparkTrail>();
+        if (sparkTrail != null)
+            sparkTrail.StopTrail();
+
+        foreach (var col in GetComponents<Collider2D>())
+        {
+            if (col != null)
+                col.enabled = false;
+        }
+    }
+
     private void ApplyImpactFacing()
     {
-        // Splash/vanish follow the same travel facing as the flying sprite.
+        // Hit/Vanish seguem a mesma rotação de voo.
         if (_spriteRenderer == null)
             _spriteRenderer = GetComponent<SpriteRenderer>();
         if (_spriteRenderer != null)
@@ -630,44 +648,23 @@ public class Projectile : MonoBehaviour
         ApplyFacingRotation();
     }
 
-    private float ResolveHitClipLength()
+    private float ResolveStateClipLength(string stateName, float serializedFallback, float defaultFallback)
     {
         if (_projectileAnimator == null)
-            return DefaultHitClipLength;
+            return serializedFallback > 0.05f ? serializedFallback : defaultFallback;
 
         var info = _projectileAnimator.GetCurrentAnimatorStateInfo(0);
-        if (info.IsName("Hit") && info.length > 0.05f)
+        if (info.IsName(stateName) && info.length > 0.05f)
             return info.length;
 
-        return DefaultHitClipLength;
-    }
-
-    private void ScheduleVanishPresentation(float hitClipLength)
-    {
-        var networkProjectile = GetComponent<NetworkProjectileController>();
-        if (networkProjectile != null && networkProjectile.isActiveAndEnabled)
-        {
-            networkProjectile.ScheduleVanishPresentation(hitClipLength);
-            return;
-        }
-
-        if (!isActiveAndEnabled)
-            return;
-
-        if (_hitPresentationRoutine != null)
-            StopCoroutine(_hitPresentationRoutine);
-        _hitPresentationRoutine = StartCoroutine(CoPlayVanishAfterHit(hitClipLength));
-    }
-
-    private IEnumerator CoPlayVanishAfterHit(float hitClipLength)
-    {
-        yield return new WaitForSeconds(Mathf.Max(0.05f, hitClipLength));
-        PlayVanishPresentation();
-        _hitPresentationRoutine = null;
+        return serializedFallback > 0.05f ? serializedFallback : defaultFallback;
     }
 
     public void PlayVanishPresentation()
     {
+        FreezeForEndPresentation();
+        ApplyImpactFacing();
+
         if (_projectileAnimator == null)
             _projectileAnimator = GetComponent<Animator>();
         if (_projectileAnimator == null)

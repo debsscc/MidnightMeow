@@ -2031,6 +2031,18 @@ PrefabInstance:
       propertyPath: m_Name
       value: Pilar (3)
       objectReference: {fileID: 0}
+    - target: {fileID: 8038242113983026789, guid: 9dfe366e7244702459c1b35aa279dc08, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 21300000, guid: fe0460a2868a84c44b8dcfb6f1214704, type: 3}
+    - target: {fileID: 8038242113983026789, guid: 9dfe366e7244702459c1b35aa279dc08, type: 3}
+      propertyPath: m_Color.a
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8038242113983026789, guid: 9dfe366e7244702459c1b35aa279dc08, type: 3}
+      propertyPath: m_SortingOrder
+      value: 3562
+      objectReference: {fileID: 0}
     - target: {fileID: 8739368221720536477, guid: 9dfe366e7244702459c1b35aa279dc08, type: 3}
       propertyPath: m_Size.x
       value: 5.0543756

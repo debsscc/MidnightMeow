@@ -19,7 +19,8 @@
 Fluxo em dois passos, separado das abas do `MenuTabController` (Levels / Settings / Upgrades):
 
 1. **Continuar** (bookmark) → ativa `Canvas/Save` (inicia oculto); bookmarks do hub trocam para sprites **tucked** (encolhidos na lateral do livro).
-2. **Arquivo 1/2/3** → preview do contrato + data/hora; habilita **Carregar** / **Deletar**. Slots vazios ficam cinza e não clicáveis.
+2. **Arquivo 1/2/3** → preview do contrato + data/hora (`Stage_Name_Selected` via `UiLocalization.FormatSaveSlotInfo`); habilita **Carregar** / **Deletar**. Slots vazios ficam cinza e não clicáveis.
+   - Strings `saveFiles.slot.info` / `saveFiles.delete.prompt` (pt-BR/en-US) usam placeholders `{0}` slot, `{1}` data, `{2}` hora.
    - Nota: `ContinueSavePanelController` redimensiona `slotButtons` se a cena serializou `[]` (Length 0) — sem isso os botões `Btn_Save*` nunca ligam.
 3. **Carregar** → `GameSessionContext.BeginContinue(slot)` + rota `menu_lobby`.
 4. **Deletar** → modal `SaveDeleteConfirmation` (Confirmar / Cancelar).

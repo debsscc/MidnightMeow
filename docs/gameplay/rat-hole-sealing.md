@@ -69,7 +69,11 @@ Chaves na tabela **UI** (`UiLocalization`):
 | `seal.prompt` | Aperte E para selar | Press E to seal |
 | `seal.progress` | Fique na Área para selar — {0}% | Stay in the Area to seal — {0}% |
 | `seal.complete` | Área selada | Area sealed |
-| `objective.holes_status` | Buracos: … | Holes: … |
+| `objective.seal_holes.title` | BLOQUEIE OS BURACOS | BLOCK THE HOLES |
+| `objective.holes_count` | {0}/{1} | {0}/{1} |
+| `objective.holes_status` | (legado texto longo) | (legacy long text) |
+
+HUD Fase 1: `PhaseObjectiveHud` monta banner + frame (`PhaseObjectiveHudVisuals`) e só mostra o contador `x/y` — sem inimigos na barra de objetivo.
 
 ## Código principal
 

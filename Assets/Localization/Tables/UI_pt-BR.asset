@@ -425,11 +425,11 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 7268000000000002
-    m_Localized: 'Arquivo salvo '
+    m_Localized: "Arquivo {0}, salvo em {1} \xE0s {2}"
     m_Metadata:
       m_Items: []
   - m_Id: 7268000000000003
-    m_Localized: "Apagar Arquivo?\nEsta a\xE7\xE3o n\xE3o pode ser desfeita."
+    m_Localized: "Apagar Arquivo {0}?\n\nSalvo em {1} \xE0s {2}\n\nEsta a\xE7\xE3o n\xE3o pode ser desfeita."
     m_Metadata:
       m_Items: []
   - m_Id: 7626184995909632
@@ -544,6 +544,14 @@ MonoBehaviour:
       m_Items: []
   - m_Id: 9200000000000007
     m_Localized: "{0} mag\xEDculas"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 9200000000000008
+    m_Localized: BLOQUEIE OS BURACOS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 9200000000000009
+    m_Localized: "{0}/{1}"
     m_Metadata:
       m_Items: []
   references:

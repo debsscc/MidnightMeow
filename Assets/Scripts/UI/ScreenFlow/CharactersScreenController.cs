@@ -428,6 +428,8 @@ public class CharactersScreenController : MonoBehaviour
         if (skillsCoraRoot != null)
             skillsCoraRoot.SetActive(showCora);
 
+        RefreshMagiculasLabels();
+
         if (showNix)
             _nixSkillsPanel?.RefreshBars();
         else if (showCora)
@@ -546,31 +548,37 @@ public class CharactersScreenController : MonoBehaviour
         _nixSkillsPanel?.SetBrowseMode(browse);
         _coraSkillsPanel?.SetBrowseMode(browse);
 
-        SaveProfileStore save = SaveProfileStore.Instance;
+        RefreshMagiculasLabels();
+        RefreshCharacterPortraits();
+        RefreshReadyUi();
+        _nixSkillsPanel?.RefreshBars();
+        _coraSkillsPanel?.RefreshBars();
+    }
 
+    private void RefreshMagiculasLabels()
+    {
         if (_magiculasTexts == null || _magiculasTexts.Length == 0)
         {
             if (magiculasText != null)
                 _magiculasTexts = new[] { magiculasText };
+            else
+                BindMagiculasTexts(FindSceneCanvas());
         }
 
+        SaveProfileStore save = SaveProfileStore.Instance;
         int magiculaCount = save?.Active?.magiculas ?? 0;
         string magiculaLabel = UiLocalization.FormatMagiculaCount(magiculaCount);
+
         for (int i = 0; i < _magiculasTexts.Length; i++)
         {
             TMP_Text text = _magiculasTexts[i];
             if (text == null)
                 continue;
 
-            text.gameObject.SetActive(!browse);
-            if (!browse)
-                text.text = magiculaLabel;
+            // Sempre visível nas telas de skills (pai Skils_* controla se aparece).
+            text.gameObject.SetActive(true);
+            text.text = magiculaLabel;
         }
-
-        RefreshCharacterPortraits();
-        RefreshReadyUi();
-        _nixSkillsPanel?.RefreshBars();
-        _coraSkillsPanel?.RefreshBars();
     }
 
     private void RefreshReadyUi()

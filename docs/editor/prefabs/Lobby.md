@@ -1,11 +1,14 @@
 # Prefab: Lobby
 
-Última revisão: 2026-06-23  
+Última revisão: 2026-07-17  
 **Caminho:** `Assets/Prefabs/Multiplayer/Lobby.prefab`
 
 ## Resumo
 
 UI da partida multiplayer em jogo: HUD, lobby in-game, sliders, indicadores. Contém **nested prefab** `PauseMenu`.
+
+Botão **CopyCode**: Image usa `Caixa_Menu_2.png`, tamanho 300×100, texto `COPY CODE`. Página direita alinhada ao Desconectar (anchor bottom-right, pos visual do print ≈ Pos X -504 / Y 380). **Pivot (0.5, 0.5)** para o hover (`Button_Juiceness`) escalar pelo centro do sprite; `anchoredPosition` equivalente com pivot central ≈ (-654, 430).
+Botão **Disconnect**: idle com `NormalColor` alpha 0.55 (fade); hover volta a opacidade total. Texto na mesma cor dos outros botões (`#323232`). Em modo Singleplayer vira **VOLTAR** com `soloDisconnectAnchoredPos` ≈ (309, -109) (anchor/pivot middle-center no override da cena).
 
 ## Nested prefabs
 

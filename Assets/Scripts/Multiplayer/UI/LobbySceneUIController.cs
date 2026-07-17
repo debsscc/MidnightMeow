@@ -47,7 +47,7 @@ public class LobbySceneUIController : MonoBehaviour
     [Header("Layout solo (painel direito)")]
     [SerializeField] private Vector2 soloStatusAnchoredPos = new Vector2(318f, -250f);
     [SerializeField] private Vector2 soloReadyAnchoredPos = new Vector2(409f, 40f);
-    [SerializeField] private Vector2 soloDisconnectAnchoredPos = new Vector2(409f, -90f);
+    [SerializeField] private Vector2 soloDisconnectAnchoredPos = new Vector2(309f, -109f);
 
     private LobbyUiMode _mode = LobbyUiMode.ModeSelect;
     private bool _matchTransitionStarted;
@@ -82,7 +82,7 @@ public class LobbySceneUIController : MonoBehaviour
         }
 
         if (instructionText != null)
-            instructionText.gameObject.SetActive(false);
+            instructionText.gameObject.SetActive(true);
 
         ApplyLobbyButtonFeedback();
     }
@@ -90,6 +90,24 @@ public class LobbySceneUIController : MonoBehaviour
     private void ApplyLobbyButtonFeedback()
     {
         UiButtonFeedbackUtility.ApplyToScene(gameObject.scene);
+        ApplyDisconnectIdleFade();
+    }
+
+    /// <summary>
+    /// Desconectar fica um pouco fade no idle; no hover/seleção volta à opacidade total.
+    /// Precisa rodar depois do <see cref="UiButtonFeedbackUtility"/> (que reforça Highlighted/Pressed).
+    /// </summary>
+    private void ApplyDisconnectIdleFade()
+    {
+        if (disconnectButton == null)
+            return;
+
+        ColorBlock colors = disconnectButton.colors;
+        colors.normalColor = new Color(1f, 1f, 1f, 0.55f);
+        colors.highlightedColor = new Color(colors.highlightedColor.r, colors.highlightedColor.g, colors.highlightedColor.b, 1f);
+        colors.selectedColor = new Color(colors.selectedColor.r, colors.selectedColor.g, colors.selectedColor.b, 1f);
+        colors.pressedColor = new Color(colors.pressedColor.r, colors.pressedColor.g, colors.pressedColor.b, 1f);
+        disconnectButton.colors = colors;
     }
 
     private void OnEnable()
@@ -743,7 +761,7 @@ public class LobbySceneUIController : MonoBehaviour
             charactersButton.gameObject.SetActive(false);
 
         if (instructionText != null)
-            instructionText.gameObject.SetActive(false);
+            instructionText.gameObject.SetActive(_mode == LobbyUiMode.ModeSelect);
 
         UpdateDisconnectLabel();
         ApplyRightPanelLayout(showSoloPanel);
@@ -808,6 +826,8 @@ public class LobbySceneUIController : MonoBehaviour
             ? UiLocalization.Get("btn.lobby.disconect", "Desconectar")
             : UiLocalization.Get("btn.back", "Voltar");
 
+        // Mesma cor dos outros botões do Lobby (Host/Entrar).
+        label.color = new Color(0.19607843f, 0.19607843f, 0.19607843f, 1f);
         label.enableAutoSizing = false;
         label.overflowMode = TMPro.TextOverflowModes.Ellipsis;
     }

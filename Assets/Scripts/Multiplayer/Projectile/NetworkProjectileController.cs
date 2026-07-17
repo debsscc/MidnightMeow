@@ -405,7 +405,7 @@ public class NetworkProjectileController : NetworkBehaviour
     }
 
     /// <summary>
-    /// Server: replicate splash/vanish to all clients, then despawn after the anim window.
+    /// Server: replica Hit nos clients e despawna após o clip (sem Vanish).
     /// </summary>
     public void NotifyHitAndDespawn(float delay, Vector2 impactDirection)
     {
@@ -414,20 +414,14 @@ public class NetworkProjectileController : NetworkBehaviour
         DespawnAfterHit(delay);
     }
 
-    public void ScheduleVanishPresentation(float hitClipLength)
+    /// <summary>
+    /// Server: replica Vanish nos clients (expire por maxDistance) e despawna após o clip.
+    /// </summary>
+    public void NotifyVanishAndDespawn(float delay)
     {
-        CancelInvoke(nameof(PlayVanishPresentationInvoked));
-        Invoke(nameof(PlayVanishPresentationInvoked), Mathf.Max(0.05f, hitClipLength));
-    }
-
-    private void PlayVanishPresentationInvoked()
-    {
-        if (_projectile != null)
-            _projectile.PlayVanishPresentation();
-        else if (TryGetComponent(out Projectile projectile))
-            projectile.PlayVanishPresentation();
-        else if (TryGetComponent(out Animator animator))
-            animator.Play("Vanish", 0, 0f);
+        if (!IsServer) return;
+        PlayVanishPresentationClientRpc();
+        DespawnAfterHit(delay);
     }
 
     [ClientRpc]
@@ -441,5 +435,19 @@ public class NetworkProjectileController : NetworkBehaviour
             _projectile.PlayHitPresentation(impactDirection);
         else if (TryGetComponent(out Projectile projectile))
             projectile.PlayHitPresentation(impactDirection);
+    }
+
+    [ClientRpc]
+    private void PlayVanishPresentationClientRpc()
+    {
+        if (IsServer)
+            return;
+
+        if (_projectile != null)
+            _projectile.PlayVanishPresentation();
+        else if (TryGetComponent(out Projectile projectile))
+            projectile.PlayVanishPresentation();
+        else if (TryGetComponent(out Animator animator))
+            animator.Play("Vanish", 0, 0f);
     }
 }

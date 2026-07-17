@@ -277,7 +277,7 @@ public class SaveProfileStore : MonoBehaviour
         return new GameSaveData
         {
             slotIndex = slot,
-            magiculas = 2,
+            magiculas = 0,
             selectedContractIndex = -1,
             nix = new CharacterSaveData { characterType = LobbyCharacterType.CharacterA },
             cora = new CharacterSaveData { characterType = LobbyCharacterType.CharacterB }

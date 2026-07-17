@@ -49,9 +49,16 @@ Canvas de HUD principal (vida, upgrades, magículas da fase) durante gameplay si
 ## Magículas na fase
 
 - Coleta via `Ciencia` / `NetworkCienciaController` → `RoundMagiculaTracker` (por jogador local).
-- HUD (`ScienceIndicator`) mostra só o número. A tela de personagens exibe `{count} magículas` / `{count} magicules` via `UiLocalization.FormatMagiculaCount` (`hud.magiculas_count`).
+- HUD (`ScienceIndicator`) mostra só o número. A tela de personagens (painel de skills Nyxie/Cora) exibe `{count} magículas` / `{count} magicules` via `UiLocalization.FormatMagiculaCount` (`hud.magiculas_count`) — sempre visível ao abrir skills, inclusive no modo browse do Lobby/Menu.
 - Ao vencer ou perder: `CommitToSave()` grava em `SaveProfileStore.Active.magiculas`.
 - Multiplayer: `sharedSciencePool` desligado por padrão em `MultiplayerConfig`.
+
+## Objetivo Fase 1 (`PhaseObjectiveHud`)
+
+- Layout: banner `Objetivo.png` + título localizado (`objective.seal_holes.title`) e frame `Obj_Buracos.png` com contador `{sealed}/{total}` (`objective.holes_count`).
+- Sprites: `Assets/Art/Sprites/id visual/UI/HUD/Fase 1/` via `Resources/PhaseObjectiveHudVisuals.asset`.
+- Dados: `GameEvents.OnPhaseObjectiveStatusChanged` + `PhaseObjectiveStatusUtility.CountSealedHoles` (buracos locais na cena — igual em SP e MP).
+- Fase 2 (carruagem) / boss: ainda usam texto legado condensado; Fase 3 oculta este HUD.
 
 ## Inimigos — barra de vida
 
