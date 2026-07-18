@@ -12,7 +12,7 @@ using UnityEngine.Localization.Settings;
 [RequireComponent(typeof(PlayerRatHoleSealInteraction))]
 public class RatHoleSealPromptUI : MonoBehaviour
 {
-    [SerializeField] private Vector3 offset = new Vector3(0f, 1.1f, 0f);
+    [SerializeField] private Vector3 offset = new Vector3(0f, 1.85f, 0f);
 
     private PlayerRatHoleSealInteraction _interaction;
     private Canvas _canvas;
@@ -23,6 +23,12 @@ public class RatHoleSealPromptUI : MonoBehaviour
         _interaction = GetComponent<PlayerRatHoleSealInteraction>();
         BuildUI();
         SetVisible(false);
+    }
+
+    private void OnDestroy()
+    {
+        if (_canvas != null)
+            Destroy(_canvas.gameObject);
     }
 
     private void OnEnable() => LocalizationSettings.SelectedLocaleChanged += HandleLocaleChanged;
@@ -46,7 +52,7 @@ public class RatHoleSealPromptUI : MonoBehaviour
         if (!show || _canvas == null)
             return;
 
-        _canvas.transform.position = (Vector3)hole.AnchorPosition + offset;
+        _canvas.transform.SetPositionAndRotation((Vector3)hole.AnchorPosition + offset, Quaternion.identity);
         RefreshLabel();
     }
 
@@ -64,32 +70,18 @@ public class RatHoleSealPromptUI : MonoBehaviour
 
     private void BuildUI()
     {
-        var root = new GameObject("RatHoleSealPrompt");
-        root.transform.SetParent(transform, false);
-
-        _canvas = root.AddComponent<Canvas>();
-        _canvas.renderMode = RenderMode.WorldSpace;
-        _canvas.sortingOrder = 115;
-
-        var rect = root.GetComponent<RectTransform>();
-        rect.sizeDelta = new Vector2(4.8f, 0.22f);
-        rect.localScale = Vector3.one;
+        // Sem pai: evita herdar scale do jogador e garante sorting estável na frente do buraco.
+        _canvas = GameplayUiFonts.CreateWorldInteractionCanvas("RatHoleSealPrompt", out RectTransform rect);
 
         var labelGo = new GameObject("Label");
-        labelGo.transform.SetParent(root.transform, false);
+        labelGo.transform.SetParent(rect, false);
         var labelRect = labelGo.AddComponent<RectTransform>();
         labelRect.anchorMin = Vector2.zero;
         labelRect.anchorMax = Vector2.one;
         labelRect.offsetMin = Vector2.zero;
         labelRect.offsetMax = Vector2.zero;
         _label = labelGo.AddComponent<TextMeshProUGUI>();
-        _label.fontSize = 1.65f;
-        _label.enableAutoSizing = false;
-        _label.textWrappingMode = TextWrappingModes.NoWrap;
-        _label.overflowMode = TextOverflowModes.Overflow;
-        _label.alignment = TextAlignmentOptions.Center;
-        _label.color = new Color(0.85f, 0.95f, 1f, 1f);
-        GameplayUiFonts.Apply(_label);
+        GameplayUiFonts.ApplyWorldInteraction(_label);
         RefreshLabel();
     }
 }

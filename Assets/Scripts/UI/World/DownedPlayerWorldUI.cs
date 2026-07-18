@@ -19,7 +19,7 @@ public class DownedPlayerWorldUI : MonoBehaviour
     }
 
     [SerializeField] private GameObject reviveUIPrefab;
-    [SerializeField] private Vector3 offset = new Vector3(0f, 1.25f, 0f);
+    [SerializeField] private Vector3 offset = new Vector3(0f, 1.85f, 0f);
 
     private NetworkPlayerHealth _health;
     private GameObject _promptInstance;
@@ -66,31 +66,17 @@ public class DownedPlayerWorldUI : MonoBehaviour
         _promptInstance.name = reviveUIPrefab.name;
         _promptTransform = _promptInstance.transform;
         _canvasRect = _promptInstance.GetComponent<RectTransform>();
+        // Sem pai: escala world fixa (igual selar / consertar).
+        _promptTransform.SetParent(null, false);
+        _promptTransform.localScale = Vector3.one;
 
-        ConfigureWorldSpaceCanvas(_canvasRect);
+        GameplayUiFonts.ConfigureWorldInteractionCanvas(_canvasRect);
 
         DownedReviveUILabelView labelView = _promptInstance.GetComponentInChildren<DownedReviveUILabelView>(true);
         _label = labelView != null ? labelView.Label : _promptInstance.GetComponentInChildren<TextMeshProUGUI>(true);
         NormalizeLabelLayout(_label);
 
         _promptInstance.SetActive(false);
-    }
-
-    /// <summary>Alinha escala/layout ao padrão do selamento (RatHoleSealPromptUI.BuildUI).</summary>
-    private static void ConfigureWorldSpaceCanvas(RectTransform canvasRect)
-    {
-        if (canvasRect == null)
-            return;
-
-        Canvas canvas = canvasRect.GetComponent<Canvas>();
-        if (canvas != null)
-        {
-            canvas.renderMode = RenderMode.WorldSpace;
-            canvas.sortingOrder = 115;
-        }
-
-        canvasRect.sizeDelta = new Vector2(4.8f, 0.22f);
-        canvasRect.localScale = Vector3.one;
     }
 
     private static void NormalizeLabelLayout(TextMeshProUGUI label)
@@ -103,12 +89,7 @@ public class DownedPlayerWorldUI : MonoBehaviour
         labelRect.anchorMax = Vector2.one;
         labelRect.offsetMin = Vector2.zero;
         labelRect.offsetMax = Vector2.zero;
-        label.fontSize = 1.65f;
-        label.enableAutoSizing = false;
-        label.textWrappingMode = TextWrappingModes.NoWrap;
-        label.overflowMode = TextOverflowModes.Overflow;
-        label.alignment = TextAlignmentOptions.Center;
-        GameplayUiFonts.Apply(label);
+        GameplayUiFonts.ApplyWorldInteraction(label);
     }
 
     private void LateUpdate()
@@ -132,8 +113,8 @@ public class DownedPlayerWorldUI : MonoBehaviour
         if (mode == DownedReviveLabelMode.Hidden)
             return;
 
-        _promptTransform.position = transform.position + offset;
-        _promptTransform.rotation = Quaternion.identity;
+        _promptTransform.SetPositionAndRotation(transform.position + offset, Quaternion.identity);
+        _promptTransform.localScale = Vector3.one;
     }
 
     /// <summary>Resolve o modo de exibição para o cliente local (autoridade de visualização).</summary>
@@ -237,6 +218,7 @@ public class DownedPlayerWorldUI : MonoBehaviour
                 DownedReviveLabelMode.ReviveProgress => FormatProgressText(_health.ReviveProgress, config),
                 _ => string.Empty
             };
+            GameplayUiFonts.ApplyWorldInteraction(_label);
         }
 
         _lastMode = mode;

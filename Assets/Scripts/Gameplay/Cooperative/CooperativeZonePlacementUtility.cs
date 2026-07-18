@@ -2,10 +2,15 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// Posiciona círculos cooperativos ao redor de um ponto âncora, visíveis na câmera.
+/// Posiciona círculos cooperativos ao redor de um ponto âncora, visíveis na câmera
+/// e sem sobrepor colisões de parede.
 /// </summary>
 public static class CooperativeZonePlacementUtility
 {
+    private const int AngleCandidateCount = 16;
+    private const int DistanceCandidateCount = 5;
+    private static readonly Collider2D[] ObstacleHitBuffer = new Collider2D[1];
+
     public struct PlacementResult
     {
         public bool Success;
@@ -20,21 +25,116 @@ public static class CooperativeZonePlacementUtility
         float maxDistance,
         float minSeparation)
     {
+        return TryPlaceZones(
+            anchor,
+            zoneCount,
+            zoneRadius,
+            minDistance,
+            maxDistance,
+            minSeparation,
+            ResolveDefaultObstacleMask());
+    }
+
+    public static PlacementResult TryPlaceZones(
+        Vector2 anchor,
+        int zoneCount,
+        float zoneRadius,
+        float minDistance,
+        float maxDistance,
+        float minSeparation,
+        LayerMask obstacleMask)
+    {
         zoneCount = Mathf.Clamp(zoneCount, 1, 4);
         Vector2 biasDir = ResolveCameraBiasDirection(anchor);
-        float distance = Mathf.Clamp(Mathf.Lerp(minDistance, maxDistance, 0.7f), minDistance, maxDistance);
+        float clampedMin = Mathf.Min(minDistance, maxDistance);
+        float clampedMax = Mathf.Max(minDistance, maxDistance);
 
+        // Preferência original (câmera + 70% do intervalo), depois varre ângulos/distâncias.
+        for (int angleIndex = 0; angleIndex < AngleCandidateCount; angleIndex++)
+        {
+            float angleOffsetDeg = angleIndex * (360f / AngleCandidateCount);
+            Vector2 dir = Rotate(biasDir, angleOffsetDeg);
+
+            for (int distanceIndex = 0; distanceIndex < DistanceCandidateCount; distanceIndex++)
+            {
+                float t = distanceIndex == 0
+                    ? 0.7f
+                    : (distanceIndex - 1) / Mathf.Max(1f, DistanceCandidateCount - 2);
+                float distance = Mathf.Lerp(clampedMin, clampedMax, Mathf.Clamp01(t));
+
+                if (!TryBuildCandidate(
+                        anchor,
+                        zoneCount,
+                        zoneRadius,
+                        minSeparation,
+                        dir,
+                        distance,
+                        out Vector2[] positions))
+                    continue;
+
+                if (!AreZonesClearOfObstacles(positions, zoneRadius, obstacleMask))
+                    continue;
+
+                return new PlacementResult { Success = true, Positions = positions };
+            }
+        }
+
+        return new PlacementResult { Success = false, Positions = null };
+    }
+
+    public static LayerMask ResolveDefaultObstacleMask() =>
+        LayerMask.GetMask("Wall", "DashableWall");
+
+    public static bool AreZonesClearOfObstacles(
+        IReadOnlyList<Vector2> positions,
+        float zoneRadius,
+        LayerMask obstacleMask)
+    {
+        if (positions == null || positions.Count == 0)
+            return false;
+
+        // Máscara vazia = sem obstáculo a considerar (ex.: testes EditMode).
+        if (obstacleMask.value == 0)
+            return true;
+
+        float radius = Mathf.Max(0.05f, zoneRadius);
+        var filter = new ContactFilter2D
+        {
+            useTriggers = false,
+            useLayerMask = true,
+            useDepth = false
+        };
+        filter.SetLayerMask(obstacleMask);
+
+        for (int i = 0; i < positions.Count; i++)
+        {
+            if (Physics2D.OverlapCircle(positions[i], radius, filter, ObstacleHitBuffer) > 0)
+                return false;
+        }
+
+        return true;
+    }
+
+    private static bool TryBuildCandidate(
+        Vector2 anchor,
+        int zoneCount,
+        float zoneRadius,
+        float minSeparation,
+        Vector2 dir,
+        float distance,
+        out Vector2[] positions)
+    {
         if (zoneCount == 1)
         {
-            Vector2 single = anchor + biasDir * distance;
-            return new PlacementResult { Success = true, Positions = new[] { single } };
+            positions = new[] { anchor + dir * distance };
+            return true;
         }
 
         if (zoneCount == 2)
         {
-            Vector2 perpendicular = new Vector2(-biasDir.y, biasDir.x);
+            Vector2 perpendicular = new Vector2(-dir.y, dir.x);
             float lateral = Mathf.Max(minSeparation * 0.5f, zoneRadius * 0.9f);
-            Vector2 center = anchor + biasDir * distance;
+            Vector2 center = anchor + dir * distance;
             Vector2 first = center + perpendicular * lateral;
             Vector2 second = center - perpendicular * lateral;
 
@@ -44,25 +144,36 @@ public static class CooperativeZonePlacementUtility
                 second = center - perpendicular * (minSeparation * 0.5f);
             }
 
-            return new PlacementResult { Success = true, Positions = new[] { first, second } };
+            positions = new[] { first, second };
+            return true;
         }
 
-        // 3–4 zonas: leque na direção da câmera com espaçamento mínimo.
-        var positions = new Vector2[zoneCount];
+        // 3–4 zonas: leque na direção escolhida com espaçamento mínimo.
+        positions = new Vector2[zoneCount];
         float arcDegrees = zoneCount == 3 ? 90f : 120f;
         float startAngle = -arcDegrees * 0.5f;
         float step = zoneCount > 1 ? arcDegrees / (zoneCount - 1) : 0f;
-        float baseAngle = Mathf.Atan2(biasDir.y, biasDir.x) * Mathf.Rad2Deg;
+        float baseAngle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
 
         for (int i = 0; i < zoneCount; i++)
         {
             float angle = (baseAngle + startAngle + step * i) * Mathf.Deg2Rad;
-            Vector2 dir = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle));
-            positions[i] = anchor + dir * distance;
+            Vector2 fanDir = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle));
+            positions[i] = anchor + fanDir * distance;
         }
 
         EnforceMinSeparation(positions, minSeparation);
-        return new PlacementResult { Success = true, Positions = positions };
+        return true;
+    }
+
+    private static Vector2 Rotate(Vector2 direction, float degrees)
+    {
+        float rad = degrees * Mathf.Deg2Rad;
+        float cos = Mathf.Cos(rad);
+        float sin = Mathf.Sin(rad);
+        return new Vector2(
+            direction.x * cos - direction.y * sin,
+            direction.x * sin + direction.y * cos);
     }
 
     private static void EnforceMinSeparation(Vector2[] positions, float minSeparation)

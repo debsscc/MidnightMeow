@@ -14,7 +14,6 @@ public class DownedReviveScreenFeedback : MonoBehaviour
 {
     private const float ReviveSuccessPulsePeak = 0.18f;
     private const float ReviveSuccessPulseDuration = 0.55f;
-    private const float ReviveCompleteSfxVolume = 0.95f;
 
     private static DownedReviveScreenFeedback _instance;
     private AudioSource _audioSource;
@@ -123,10 +122,7 @@ public class DownedReviveScreenFeedback : MonoBehaviour
             return;
 
         _instance.ClearFeedback(stopAudio: false);
-        DownedPlayerConfig config = DownedPlayerConfigUtility.Resolve();
-        AudioClip reviveClip = config != null ? config.reviveCompleteClip : null;
-        if (reviveClip != null)
-            _instance.PlayClip(reviveClip, ReviveCompleteSfxVolume);
+        GameplayInteractAudio.PlayReviveComplete();
 
         GameplayVignetteController.TriggerReviveSuccessPulse(ReviveSuccessPulsePeak, ReviveSuccessPulseDuration);
     }

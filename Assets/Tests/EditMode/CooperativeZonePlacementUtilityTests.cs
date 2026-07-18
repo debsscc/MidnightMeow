@@ -12,7 +12,8 @@ public class CooperativeZonePlacementUtilityTests
             zoneRadius: 1f,
             minDistance: 1f,
             maxDistance: 2f,
-            minSeparation: 1.5f);
+            minSeparation: 1.5f,
+            obstacleMask: 0);
 
         Assert.IsTrue(result.Success);
         Assert.AreEqual(1, result.Positions.Length);
@@ -31,7 +32,8 @@ public class CooperativeZonePlacementUtilityTests
                 zoneRadius: 1f,
                 minDistance: 1f,
                 maxDistance: 3f,
-                minSeparation: 1.8f);
+                minSeparation: 1.8f,
+                obstacleMask: 0);
 
             if (!result.Success || result.Positions.Length < 2)
                 continue;
@@ -44,5 +46,29 @@ public class CooperativeZonePlacementUtilityTests
         }
 
         Assert.IsTrue(separated);
+    }
+
+    [Test]
+    public void AreZonesClearOfObstacles_EmptyMask_AlwaysClear()
+    {
+        bool clear = CooperativeZonePlacementUtility.AreZonesClearOfObstacles(
+            new[] { Vector2.zero, Vector2.one },
+            zoneRadius: 1f,
+            obstacleMask: 0);
+
+        Assert.IsTrue(clear);
+    }
+
+    [Test]
+    public void ResolveDefaultObstacleMask_IncludesWallLayers()
+    {
+        LayerMask mask = CooperativeZonePlacementUtility.ResolveDefaultObstacleMask();
+        int wall = LayerMask.NameToLayer("Wall");
+        int dashable = LayerMask.NameToLayer("DashableWall");
+
+        if (wall >= 0)
+            Assert.AreNotEqual(0, mask.value & (1 << wall));
+        if (dashable >= 0)
+            Assert.AreNotEqual(0, mask.value & (1 << dashable));
     }
 }

@@ -14,17 +14,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: MidnightMeow::RatKingBehaviorConfig
   rangedWeight: 70
   chargeWeight: 30
-  decisionPause: 0.35
-  minFleeTime: 2
-  maxFleeTime: 6
+  decisionPause: 0.1
+  minFleeTime: 1
+  maxFleeTime: 3
   fleeSampleDistance: 15
   maxRangedDistance: 30
   fleeDistanceThreshold: 0.75
   rangedAngle1: 30
   rangedAngle2: 60
   rangedLaneWidth: 1
-  rangedLaneLength: 30
-  rangedFillDuration: 0.9
+  rangedLaneLength: 50
+  rangedFillDuration: 0.5
   rangedDamage: 2
   rangedDamageLayers:
     serializedVersion: 2
@@ -32,7 +32,7 @@ MonoBehaviour:
   rangedVisualStyle: {fileID: 0}
   rangedPatternOverride: {fileID: 0}
   chargeRange: 14
-  chargeApproachSpeedMultiplier: 1.75
+  chargeApproachSpeedMultiplier: 2
   chargeDashSpeed: 18
   chargeWindupDuration: 1
   chargeLaneWidth: 3
@@ -45,7 +45,7 @@ MonoBehaviour:
   meleeOuterRadius: 4
   meleeLength: 5
   meleeOpeningAngleDegrees: 40
-  meleeFillDuration: 0.45
+  meleeFillDuration: 0.2
   meleeDamage: 3
   meleeDamageLayers:
     serializedVersion: 2

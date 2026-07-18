@@ -208,7 +208,11 @@ public class NetworkRatHoleSealManager : NetworkBehaviour
                 config.minZoneSeparation);
 
         if (!placement.Success || placement.Positions == null || placement.Positions.Length == 0)
+        {
+            Debug.LogWarning(
+                $"[NetworkRatHoleSealManager] Não foi possível posicionar áreas de selamento no buraco {holeId} sem colidir com paredes.");
             return;
+        }
 
         RatHoleSealSession session = new RatHoleSealSession
         {

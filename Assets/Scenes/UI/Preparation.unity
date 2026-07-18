@@ -616,8 +616,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0.5}
   m_AnchorMax: {x: 0, y: 0.5}
-  m_AnchoredPosition: {x: 75, y: -2.0686}
-  m_SizeDelta: {x: 112.1716, y: 104.1373}
+  m_AnchoredPosition: {x: 95, y: 0}
+  m_SizeDelta: {x: 78, y: 72}
   m_Pivot: {x: 0, y: 0.5}
 --- !u!114 &292697653
 MonoBehaviour:
@@ -639,7 +639,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 9e2e7446baba56847ba57b2e67528cf3, type: 3}
+  m_Sprite: {fileID: -2150995288929656545, guid: a41b8b9667f23dc4091914a77fa8b3bf, type: 3}
   m_Type: 0
   m_PreserveAspect: 1
   m_FillCenter: 1
@@ -691,8 +691,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0.5}
   m_AnchorMax: {x: 1, y: 0.5}
-  m_AnchoredPosition: {x: -87.15709, y: 2.9009}
-  m_SizeDelta: {x: 93.5536, y: 87.7517}
+  m_AnchoredPosition: {x: -87.15709, y: 0}
+  m_SizeDelta: {x: 78, y: 72}
   m_Pivot: {x: 1, y: 0.5}
 --- !u!114 &309780085
 MonoBehaviour:
@@ -714,9 +714,9 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 7660bdf687885e34289f2623a25af107, type: 3}
+  m_Sprite: {fileID: -371944659151995867, guid: 7577bd5fc7e5e2f4ba2523894fedf97f, type: 3}
   m_Type: 0
-  m_PreserveAspect: 0
+  m_PreserveAspect: 1
   m_FillCenter: 1
   m_FillMethod: 4
   m_FillAmount: 1
@@ -930,8 +930,12 @@ MonoBehaviour:
   contractButtons: []
   contractCompletionBadges: []
   contractPreviewImages: []
-  nixieIcon: {fileID: 0}
-  coraIcon: {fileID: 0}
+  nixieIcon: {fileID: 309780085}
+  coraIcon: {fileID: 292697653}
+  nixieIconDefaultSprite: {fileID: -371944659151995867, guid: 7577bd5fc7e5e2f4ba2523894fedf97f, type: 3}
+  nixieIconChosenSprite: {fileID: -5542261702657893996, guid: ac122615072d3d74eb28e88fc6bc11f8, type: 3}
+  coraIconDefaultSprite: {fileID: -2150995288929656545, guid: a41b8b9667f23dc4091914a77fa8b3bf, type: 3}
+  coraIconChosenSprite: {fileID: 2291150476927270055, guid: b0d8a575917d6604997ee0932c885de3, type: 3}
   tooltipText: {fileID: 0}
   chooseCharacterButton: {fileID: 0}
   backButton: {fileID: 1189314661}

@@ -88,6 +88,9 @@ public class PlayerAudioController : MonoBehaviour
 
     private void OnEnable()
     {
+        // Corta Play On Awake de filhos que possam ter iniciado após o Awake.
+        SuppressLegacyAutoPlaySources();
+
         if (playerShooting != null)
             playerShooting.OnProjectileInstantiated += HandleProjectileInstantiated;
 
@@ -174,6 +177,7 @@ public class PlayerAudioController : MonoBehaviour
     private void ConfigureSources()
     {
         GameAudioSettings.EnsureExists();
+        SuppressLegacyAutoPlaySources();
 
         if (loopSource != null)
         {
@@ -187,6 +191,29 @@ public class PlayerAudioController : MonoBehaviour
 
         if (dashSource != null)
             BindSourceOutput(dashSource);
+    }
+
+    /// <summary>
+    /// Prefabs Cora/Nixie tinham AudioSources (ataque_audio, etc.) com Play On Awake —
+    /// ao spawnar na fase o SFX de ataque tocava sozinho (às vezes em duplicata).
+    /// </summary>
+    private void SuppressLegacyAutoPlaySources()
+    {
+        AudioSource[] childSources = GetComponentsInChildren<AudioSource>(true);
+        for (int i = 0; i < childSources.Length; i++)
+        {
+            AudioSource source = childSources[i];
+            if (source == null)
+                continue;
+
+            // Heartbeat usa loop intencional; não interromper se já estiver ativo.
+            if (source == _heartbeatSource)
+                continue;
+
+            source.playOnAwake = false;
+            if (source.isPlaying)
+                source.Stop();
+        }
     }
 
     private void BindSourceOutput(AudioSource source)

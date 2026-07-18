@@ -22,11 +22,12 @@ Jogador **corpo a corpo**: ataque em trapézio (`PlayerMeleeCombat`), sem tiro. 
 Nixie
 ├── Shadow
 ├── firePoint
-├── Audios
+├── Audios                    # AudioSources (ataque_audio, …): Play On Awake = off
 ├── DustParticiple
 └── Particle System
 ```
 
+> **Áudio:** filhos em `Audios` com **Play On Awake desligado**. SFX de combate só via `PlayerAudioController` — Play On Awake fazia o ataque tocar ao spawnar na fase.
 ## Scripts (raiz)
 
 | Script | Notas |

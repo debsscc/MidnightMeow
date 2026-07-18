@@ -15,5 +15,9 @@ MonoBehaviour:
   titleFont: {fileID: 11400000, guid: 7faf118ce2a110c439c07239d9436bcd, type: 2}
   bodyFont: {fileID: 11400000, guid: 0e9cb7e0967de5744a83c41a94688022, type: 2}
   bodyFontSize: 28
+  bodyTextColor: {r: 0, g: 0, b: 0, a: 1}
+  bodyWidthNormalized: 0.38
+  backgroundSprite: {fileID: -1134032105938053371, guid: 54e917e933ad1a145b5b5607a12bb438, type: 3}
+  litBackgroundMaterial: {fileID: 2100000, guid: b8b173f66e2e1314abbdc48fed900359, type: 2}
   closeButtonSprite: {fileID: 21300000, guid: a8677308cecd591439739be2486eb7b6, type: 3}
   closeButtonColor: {r: 1, g: 1, b: 1, a: 1}

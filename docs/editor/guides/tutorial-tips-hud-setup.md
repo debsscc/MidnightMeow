@@ -8,14 +8,29 @@ Setup manual do sistema de dicas. O código C# já está no projeto; este guia c
 
 | Peça | Script / asset | Papel |
 |------|----------------|-------|
-| Dados da dica | `TutorialTipSO` | Texto + gatilho (`Move` / `Shoot` / `SealHole`) |
+| Dados da dica | `TutorialTipSO` | Texto + gatilho + `requiredCount` (ex. 3 kills) |
 | Sequência | `TutorialSequenceSO` | Ordem das dicas |
 | Lógica | `TutorialManager` | Avança a sequência via `GameEvents` |
-| Apresentação | `TutorialUIController` | Fade + `TextMeshProUGUI` |
+| Apresentação | `TutorialUIController` | Fade + contador + `TextMeshProUGUI` |
 
 Fluxo: gameplay invoca `GameEvents.InvokeTutorial*Executed` → `TutorialManager` avança → `OnTutorialTipChanged` → `TutorialUIController` atualiza o painel.
 
-Multiplayer: cada cliente tem o próprio Manager/UI. Move e Shoot só disparam no jogador local; SealHole chega em todos via `PlayHoleSealedClientRpc`.
+Multiplayer: cada cliente tem o próprio Manager/UI. Move / Shoot / Ability / Dash só disparam no jogador local; KillEnemies e SealHole usam eventos compartilhados de gameplay.
+
+---
+
+## Sequência padrão (Fase-1)
+
+Asset: `Assets/Data/Tutorial/TutorialSequence.asset`
+
+| Ordem | Asset | Conclusão | Texto PT |
+|-------|-------|-----------|----------|
+| 1 | `Tip_Move` | WASD | Rápido! Movimente-se usando WASD |
+| 2 | `Tip_Shoot` | Botão esquerdo | Agora faça uns ataques! |
+| 3 | `Tip_Ability` | **Q e R** (ambos) | Muito bom, agora use suas habilidades! **Q R** (some a tecla usada) |
+| 4 | `Tip_Dash` | Shift | Para desviar, use seu dash! |
+| 5 | `Tip_KillRats` | 3 inimigos (`requiredCount: 3`) | Agora acabe com essa infestação **0/3** (atualiza) |
+| 6 | `Tip_SealHole` | Selar buraco | Ótimo, só falta fechar por onde eles entram! Sele esses buracos! |
 
 ---
 
@@ -75,15 +90,17 @@ Repita em `Fase-1.unity`, `Fase-2.unity` e `Fase-3.unity` (ou só nas fases que 
 1. Abra a cena da fase.
 2. Hierarchy → `---- UI ----` → **Canvas** (Fase-3: objeto **Gameplay_UI**).
 3. Crie um filho **TutorialTipPanel**:
-   - **Image** (fundo)
    - **Canvas Group**
    - **Tutorial UI Controller**
-4. **Âncoras Middle Left** (Alt+Shift no preset para pivot):
-   - `Pos X ≈ 24`, `Pos Y = 0`
-   - `Width = 220`, `Height = 220`
-5. **Image:** cor escura com alpha baixo, ex. `(0, 0, 0, 0.45)`; **Raycast Target** off.
+   - Filhos **Background** (Image) + **TipText** (TMP)
+4. **Âncoras Middle Right** (pivot à direita):
+   - `Width = 320`, `Height = 221`; `Pos X = 20` (mais à direita)
+5. Filho **Background** → **Image**:
+   - Sprite **Pause 1**; `Rotation Z = 90`; tamanho local `221×320` (antes da rotação); cor `(1, 1, 1, 0.28)`; **Preserve Aspect** off (só comprime na altura); **Raycast Target** off.
+   - Import da sprite: max size **4096**, sem compressão (Standalone/WebGL) para borda mais nítida.
 6. Filho **TipText** → **TextMeshPro - Text (UI)**:
-   - Stretch com margem ~12 px; alignment Center/Middle; wrapping on.
+   - Stretch com inset (`SizeDelta` −80/−50); cor **preta**; **negrito**; fonte auto-size 14–22.
+   - Fonte: **Fira Sans Medium SDF** (mesmo do gameplay — `TutorialUIController` também aplica em Awake).
 7. No `TutorialUIController`:
    - **Tip Label** → TMP
    - **Canvas Group** → o do painel (ou vazio = mesmo GO)
@@ -102,15 +119,17 @@ Pasta: **`Assets/Data/Tutorial/`**
 1. Create → Folder → `Assets/Data/Tutorial`.
 2. Create → MidnightMeow → Tutorial → **Tip** (ex.):
 
-| Asset | Tip Text Pt | Tip Text En | Trigger |
-|-------|------------|------------|---------|
-| `Tip_Move` | Se movimente usando WASD | Move using WASD | **Move** |
-| `Tip_Shoot` | Atire com o botão esquerdo do mouse | Shoot with the left mouse button | **Shoot** |
-| `Tip_SealHole` | Sele um buraco ficando nas áreas indicadas | Seal a hole by standing in the marked areas | **SealHole** |
+| Asset | Tip Text Pt | Trigger | Required Count |
+|-------|------------|---------|----------------|
+| `Tip_Move` | Rápido! Movimente-se usando WASD | **Move** | 1 |
+| `Tip_Shoot` | Agora faça uns ataques! | **Shoot** | 1 |
+| `Tip_Ability` | Muito bom, agora use suas habilidades! | **UseAbility** | 1 (exige Q **e** R) |
+| `Tip_Dash` | Para desviar, use seu dash! | **Dash** | 1 |
+| `Tip_KillRats` | Agora acabe com essa infestação | **KillEnemies** | **3** (UI anexa `0/3`) |
+| `Tip_SealHole` | Ótimo, só falta fechar… | **SealHole** | 1 |
 
-3. Create → MidnightMeow → Tutorial → **Sequence** (ex. `TutorialSequence_Fase1`):
-   - **Tips:** Move → Shoot → SealHole (Fase-1).
-   - Fase-2/3: outra Sequence sem `SealHole`, ou tips específicas (carruagem / boss) quando criar novos gatilhos.
+3. Create → MidnightMeow → Tutorial → **Sequence** (ex. `TutorialSequence`):
+   - **Tips:** Move → Shoot → Ability → Dash → KillRats → SealHole.
 4. No **Tutorial Manager** daquela cena:
    - **Sequence** → o asset da fase
    - **Auto Start** → true
@@ -127,26 +146,30 @@ Para desligar numa fase: desative o Manager, limpe a Sequence, ou remova o paine
 | Move | `GameEvents.InvokeTutorialMoveExecuted()` | `PlayerMovement.cs` | idle → moving |
 | Shoot | `GameEvents.InvokeTutorialShootExecuted()` | `PlayerShooting.cs` | tiro válido |
 | Shoot (melee) | idem | `PlayerMeleeCombat.cs` | `PerformMeleeHit` (Nix) |
+| UseAbility | `GameEvents.InvokeTutorialAbilityExecuted(slot)` | `PlayerAbilityHandler.cs` | Q / R ativados |
+| Dash | `GameEvents.InvokeTutorialDashExecuted()` | `PlayerDash.cs` | dash iniciado |
+| KillEnemies | `GameEvents.OnEnemyKilledByPlayer` | `TutorialManager` escuta | morte de inimigo |
 | SealHole | `GameEvents.InvokeTutorialSealHoleExecuted()` | `NetworkRatHoleSealManager.cs` | `PlayHoleSealedClientRpc` |
 
-UI (só Manager): `InvokeTutorialTipChanged` / `InvokeTutorialCompleted`.
+UI (só Manager): `InvokeTutorialTipChanged(tip, current, required)` / `InvokeTutorialCompleted`.
 
-Nova dica (ex. Dash): enum + evento em `GameEvents` + assinatura no Manager + `Invoke` no script local.
+`UseAbility` só avança depois de **Ability1 e Ability2** (Q e R). A UI anexa `Q R` e remove cada tecla ao usá-la (`TutorialTipDisplayFormatter.FormatAbilityKeys`). Contador `n/total` só aparece quando `requiredCount > 1` (kills).
 
 ---
 
 ## 4. Checklist de teste
 
 - [ ] Painel sob `---- UI ----` → Canvas da fase (não no prefab legado).
-- [ ] SP Fase-1: dicas avançam com fade; última some.
+- [ ] SP Fase-1: 6 dicas avançam na ordem; kills mostram `0/3` → `3/3`; última some após selar.
+- [ ] Habilidades: só avança após usar Q **e** R (não basta repetir uma).
 - [ ] Skills (`PlayerAbilityHud`) e objetivo da fase continuam visíveis.
-- [ ] MP: move/shoot independentes; selo avança SealHole em ambos.
-- [ ] Troca pt/en atualiza o texto da dica atual.
+- [ ] MP: move/shoot/ability/dash independentes; kill/selo avançam com eventos compartilhados.
+- [ ] Troca pt/en atualiza o texto da dica atual (incluindo contador).
 - [ ] Fase-3: Canvas nomeado `Gameplay_UI` — mesmo setup de filho TutorialTipPanel.
 
 ## Notas
 
-- Textos nos SOs (`tipTextPt` / `tipTextEn`), não Localization Tables.
-- `TutorialUIController` exige `CanvasGroup`.
+- Textos nos SOs (`tipTextPt` / `tipTextEn`), não Localization Tables. Contador via `TutorialTipDisplayFormatter`.
+- `TutorialUIController` exige `CanvasGroup`; atualiza progresso sem fade (só fade ao trocar de dica).
 - Prefab legado: [`Gameplay_UI.md`](../prefabs/Gameplay_UI.md) (marcado como legado).
 - Eventos: [`02-event-driven.md`](../../practices/02-event-driven.md).

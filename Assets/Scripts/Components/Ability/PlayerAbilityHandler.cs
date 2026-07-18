@@ -246,6 +246,7 @@ public class PlayerAbilityHandler : MonoBehaviour
         if (definition.abilityType != CharacterAbilityType.CoraBarrier)
             _debugHost?.ShowAbility(definition.abilityType, origin, aimDirection, placement, tierData);
         OnAbilityActivated?.Invoke(definition.abilityType);
+        GameEvents.InvokeTutorialAbilityExecuted(slot);
         _abilityRelay?.ReportAbilityActivated(definition.abilityType, placement, aimDirection);
     }
 

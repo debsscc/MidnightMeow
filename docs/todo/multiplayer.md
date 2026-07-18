@@ -72,7 +72,7 @@ _Última revisão: 2026-07-05_
 
 - [ ] Host + cliente: selar último buraco (Fase-1) → ambos veem `VictoryScene` sem overlay de “aguardando host”
 - [ ] Cliente Cora: Q/R disponíveis desde o spawn; VFX de tiro e habilidades visíveis no peer remoto
-- [ ] “Prosseguir” na vitória retorna ao Preparation com lobby intacto
+- [ ] “Prosseguir” na vitória avança para a próxima fase (ou créditos na Fase-3), preservando personagem de cada jogador em MP
 - [x] Host + cliente Fase-1: reviver por zona (círculo verde, sem despawn prematuro)
 - [x] Host + cliente Fase-2: carruagem move e HUD `%` sincronizados (código — validar em Play)
 - [x] Host + cliente: pausa/unpause com countdown 3→1 em ambos os peers (código — validar em Play)

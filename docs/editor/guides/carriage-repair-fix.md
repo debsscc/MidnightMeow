@@ -57,7 +57,7 @@ Nos prefabs `Cora` / `Nixie`, `PlayerGameplayModuleInstaller` com `Install Carri
 1. Quebre a carruagem (ratos / HP = 0) → label “Consertem…” / “Aperte E…”.
 2. Aproxime e pressione **E** → SFX de Interact + círculos aparecem + texto “Fique na área…”.
 3. Fique em pelo menos um círculo → % sobe.
-4. 100% → zonas somem, HP ~50% (`repairRestoreHealthFraction`), estado Idle/Moving.
+4. 100% → zonas somem, SFX `Reviver.wav`, HP ~50% (`repairRestoreHealthFraction`), estado Idle/Moving.
 
 Se o E ainda falhar: no Console do **servidor** procure logs `[NetworkCarriageRepairManager] RequestStartRepairRpc rejeitado:…`.
 

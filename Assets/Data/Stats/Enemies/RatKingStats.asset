@@ -12,14 +12,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 40812829843fe674189e6b68709405bb, type: 3}
   m_Name: RatKingStats
   m_EditorClassIdentifier: Assembly-CSharp::EnemyStats
+  aggroType: 0
   targetPriority: 0
+  swapToNearbyPlayer: 1
+  swapOnDamage: 1
   targetDetectionRange: 100
   targetScanInterval: 0.25
   scale: 0.4
   hitStunDuration: 0.35
   randomWalkRadius: 6
   randomWalkInterval: 2.5
-  maxHealth: 50
+  maxHealth: 100
   rangedDefense: 0
   deathDespawnDelay: 0.4
   moveSpeed: 2

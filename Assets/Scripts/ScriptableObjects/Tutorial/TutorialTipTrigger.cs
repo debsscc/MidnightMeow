@@ -18,5 +18,14 @@ public enum TutorialTipTrigger
     Shoot = 1,
 
     [Tooltip("Um buraco de spawn foi selado com sucesso.")]
-    SealHole = 2
+    SealHole = 2,
+
+    [Tooltip("Jogador usou as habilidades Q e R (ambas).")]
+    UseAbility = 3,
+
+    [Tooltip("Jogador usou o dash (Shift).")]
+    Dash = 4,
+
+    [Tooltip("Inimigos eliminados (requer requiredCount no Tip SO).")]
+    KillEnemies = 5
 }

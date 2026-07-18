@@ -46,9 +46,9 @@ public class RatHoleSealConfig : ScriptableObject
     [Tooltip("Preencher o interior com cor de fundo (além do anel).")]
     public bool zoneShowInteriorFill;
 
-    public Color zoneBackgroundColor = new Color(0.25f, 0.6f, 1f, 0.28f);
-    public Color zoneFillColor = new Color(0.2f, 0.95f, 0.5f, 0.75f);
-    public Color zoneOutlineColor = new Color(1f, 1f, 1f, 0.95f);
+    public Color zoneBackgroundColor = new Color(0.25f, 0.6f, 1f, 0.14f);
+    public Color zoneFillColor = new Color(0.2f, 0.95f, 0.5f, 0.4f);
+    public Color zoneOutlineColor = new Color(1f, 1f, 1f, 0.55f);
     [Tooltip("Sorting order do sprite (acima do chão, buracos e decoração).")]
     public int zoneSortingOrder = 250;
 

@@ -373,20 +373,36 @@ public class CharactersScreenController : MonoBehaviour
         if (canvas == null)
             return;
 
-        _nixPortraitVisual = EnsurePortraitVisual(canvas.Find("Nyxie_Images"));
-        _coraPortraitVisual = EnsurePortraitVisual(canvas.Find("Cora_Images"));
+        // Nix (esquerda): idle → hover → selecionado (local ou outro jogador no MP).
+        _nixPortraitVisual = EnsurePortraitVisual(
+            canvas.Find("Nyxie_Images"),
+            "Nyx_Personagem_Aguardando_Selecao",
+            "Nix_Selecionado_Personagem",
+            "Nix_Selecionado_OutroPlayer_Personagem");
+
+        // Cora (direita): idle → hover → selecionado.
+        _coraPortraitVisual = EnsurePortraitVisual(
+            canvas.Find("Cora_Images"),
+            "Cora_Personagem_Aguardando_Selecao",
+            "Cora_Selecionada_Personagem",
+            "Cora_Selecionada_OutroPlayer_Personagem");
     }
 
-    private static CharacterPortraitVisual EnsurePortraitVisual(Transform root)
+    private static CharacterPortraitVisual EnsurePortraitVisual(
+        Transform root,
+        string idleSpriteName,
+        string hoverSpriteName,
+        string selectedSpriteName)
     {
         if (root == null)
             return null;
 
         CharacterPortraitVisual visual = root.GetComponent<CharacterPortraitVisual>();
-        if (visual != null)
-            return visual;
+        if (visual == null)
+            visual = root.gameObject.AddComponent<CharacterPortraitVisual>();
 
-        return root.gameObject.AddComponent<CharacterPortraitVisual>();
+        visual.ConfigureSpriteNames(idleSpriteName, hoverSpriteName, selectedSpriteName);
+        return visual;
     }
 
     private void WireButtons()

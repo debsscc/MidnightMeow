@@ -3,6 +3,7 @@
 // DESCRIÇÃO: Barra de progresso e texto de selamento em world-space sobre cada buraco. Traduzido
 // ---------------------------------------------------------------- 
 
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -12,13 +13,15 @@ using UnityEngine.UI;
 [RequireComponent(typeof(RatHoleSpawnPoint))]
 public class RatHoleSealStatusUI : MonoBehaviour
 {
-    [SerializeField] private Vector3 offset = new Vector3(0f, 0.75f, 0f);
-    [SerializeField] private Vector2 panelSize = new Vector2(3.4f, 0.55f);
+    [SerializeField] private Vector3 offset = new Vector3(0f, 1.85f, 0f);
     [SerializeField] private SpriteRenderer holeSprite;
+
+    private static readonly List<Vector2> ZoneBuffer = new List<Vector2>(2);
 
     private RatHoleSpawnPoint _hole;
     private Canvas _canvas;
     private Image _fill;
+    private GameObject _barRoot;
     private TextMeshProUGUI _label;
 
     private void Awake()
@@ -27,6 +30,12 @@ public class RatHoleSealStatusUI : MonoBehaviour
         ResolveHoleSprite();
         BuildUI();
         SetVisible(false);
+    }
+
+    private void OnDestroy()
+    {
+        if (_canvas != null)
+            Destroy(_canvas.gameObject);
     }
 
     private void LateUpdate()
@@ -74,7 +83,8 @@ public class RatHoleSealStatusUI : MonoBehaviour
 
         SetHoleSpriteVisible(true);
         SetVisible(true);
-        _canvas.transform.position = (Vector3)_hole.AnchorPosition + offset;
+        SetBarVisible(true);
+        _canvas.transform.SetPositionAndRotation(ResolveActiveLabelPosition(session, manager), Quaternion.identity);
         if (_fill != null)
             _fill.fillAmount = session.Progress;
         if (_label != null)
@@ -84,13 +94,30 @@ public class RatHoleSealStatusUI : MonoBehaviour
         }
     }
 
+    private Vector3 ResolveActiveLabelPosition(in RatHoleSealSession session, NetworkRatHoleSealManager manager)
+    {
+        Vector2 anchor = _hole.AnchorPosition;
+        CooperativeZoneLabelPlacementUtility.CollectSealZones(session, ZoneBuffer);
+
+        float visualRadius = 1.1f;
+        RatHoleSealConfig config = manager != null ? manager.Config : null;
+        if (config != null)
+            visualRadius = config.GetZoneVisualDiameter() * 0.5f;
+
+        return CooperativeZoneLabelPlacementUtility.ResolvePosition(
+            ZoneBuffer,
+            visualRadius,
+            anchor,
+            offset,
+            entityAnchorForSideChoice: anchor);
+    }
+
     private void ShowSealed()
     {
         SetHoleSpriteVisible(false);
         SetVisible(true);
-        _canvas.transform.position = (Vector3)_hole.AnchorPosition + offset;
-        if (_fill != null)
-            _fill.fillAmount = 1f;
+        SetBarVisible(false);
+        _canvas.transform.SetPositionAndRotation((Vector3)_hole.AnchorPosition + offset, Quaternion.identity);
         if (_label != null)
             _label.text = UiLocalization.GetSealComplete();
     }
@@ -117,20 +144,37 @@ public class RatHoleSealStatusUI : MonoBehaviour
             _canvas.gameObject.SetActive(visible);
     }
 
+    private void SetBarVisible(bool visible)
+    {
+        if (_barRoot != null)
+            _barRoot.SetActive(visible);
+    }
+
     private void BuildUI()
     {
-        var root = new GameObject("RatHoleSealStatus");
-        root.transform.SetParent(transform, false);
+        // Mesmo canvas/tamanho/sorting do prompt — escala world fixa (sem herdar scale do buraco).
+        _canvas = GameplayUiFonts.CreateWorldInteractionCanvas("RatHoleSealStatus", out RectTransform rootRect);
 
-        _canvas = root.AddComponent<Canvas>();
-        _canvas.renderMode = RenderMode.WorldSpace;
-        _canvas.sortingOrder = 120;
+        var labelGo = new GameObject("Label");
+        labelGo.transform.SetParent(rootRect, false);
+        var labelRect = labelGo.AddComponent<RectTransform>();
+        labelRect.anchorMin = new Vector2(0f, 0.35f);
+        labelRect.anchorMax = Vector2.one;
+        labelRect.offsetMin = Vector2.zero;
+        labelRect.offsetMax = Vector2.zero;
+        _label = labelGo.AddComponent<TextMeshProUGUI>();
+        GameplayUiFonts.ApplyWorldInteraction(_label);
 
-        RectTransform panelRect = root.GetComponent<RectTransform>();
-        panelRect.sizeDelta = panelSize;
+        _barRoot = new GameObject("ProgressBar");
+        _barRoot.transform.SetParent(rootRect, false);
+        var barRect = _barRoot.AddComponent<RectTransform>();
+        barRect.anchorMin = new Vector2(0.12f, 0.05f);
+        barRect.anchorMax = new Vector2(0.88f, 0.32f);
+        barRect.offsetMin = Vector2.zero;
+        barRect.offsetMax = Vector2.zero;
 
         var bgGo = new GameObject("Background");
-        bgGo.transform.SetParent(root.transform, false);
+        bgGo.transform.SetParent(_barRoot.transform, false);
         var bgRect = bgGo.AddComponent<RectTransform>();
         Stretch(bgRect);
         var bgImage = bgGo.AddComponent<Image>();
@@ -139,23 +183,12 @@ public class RatHoleSealStatusUI : MonoBehaviour
         var fillGo = new GameObject("Fill");
         fillGo.transform.SetParent(bgGo.transform, false);
         var fillRect = fillGo.AddComponent<RectTransform>();
-        Stretch(fillRect, 2f);
+        Stretch(fillRect, 1.5f);
         _fill = fillGo.AddComponent<Image>();
         _fill.color = new Color(0.25f, 0.75f, 0.45f, 0.95f);
         _fill.type = Image.Type.Filled;
         _fill.fillMethod = Image.FillMethod.Horizontal;
         _fill.fillOrigin = (int)Image.OriginHorizontal.Left;
-
-        var labelGo = new GameObject("Label");
-        labelGo.transform.SetParent(root.transform, false);
-        var labelRect = labelGo.AddComponent<RectTransform>();
-        Stretch(labelRect);
-        _label = labelGo.AddComponent<TextMeshProUGUI>();
-        _label.fontSize = 1.25f;
-        _label.alignment = TextAlignmentOptions.Center;
-        _label.color = Color.white;
-        _label.textWrappingMode = TextWrappingModes.NoWrap;
-        GameplayUiFonts.Apply(_label);
     }
 
     private static void Stretch(RectTransform rt, float inset = 0f)

@@ -51,9 +51,9 @@ public class DownedPlayerConfig : ScriptableObject
     public bool reviveZoneShowInteriorFill;
 
     public int reviveZoneSortingOrder = 250;
-    public Color reviveZoneBackgroundColor = new Color(0.2f, 0.85f, 0.45f, 0.2f);
-    public Color reviveZoneFillColor = new Color(0.35f, 1f, 0.55f, 0.45f);
-    public Color reviveZoneOutlineColor = new Color(0.9f, 1f, 0.95f, 0.9f);
+    public Color reviveZoneBackgroundColor = new Color(0.2f, 0.85f, 0.45f, 0.12f);
+    public Color reviveZoneFillColor = new Color(0.35f, 1f, 0.55f, 0.25f);
+    public Color reviveZoneOutlineColor = new Color(0.9f, 1f, 0.95f, 0.5f);
 
     [Header("Feedback de tela (reviver)")]
     [Tooltip("SFX de batida cardíaca durante a janela de reviver. Roteado pelo grupo SFX do AudioMixer.")]

@@ -58,6 +58,7 @@ O bootstrap prefere Canvas com nome `Gameplay_UI`; senão pontua Canvas filhos d
 ## Tutorial (dicas HUD)
 
 - Setup nas **cenas** sob `---- UI ----` → Canvas: [tutorial-tips-hud-setup.md](../guides/tutorial-tips-hud-setup.md).
+- Prefab: `Assets/Prefabs/UI/TutorialTipPanel.prefab` — Pause 1 (rot. Z 90°, alpha 0.28), painel `320×221` à direita, texto preto em negrito; fonte ≤22.
 - `TutorialManager` + `TutorialUIController`; dados em `Assets/Data/Tutorial/`.
 - **Não** configure o tutorial neste prefab legado.
 

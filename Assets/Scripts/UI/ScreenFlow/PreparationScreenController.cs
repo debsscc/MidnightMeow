@@ -12,13 +12,10 @@ using UnityEngine.UI;
 public class PreparationScreenController : MonoBehaviour
 {
     private const int ContractCount = 3;
+    private const string SelectedPhaseHintName = "SelectedPhaseHint";
+    private const float SelectedPhaseHintFontSize = 20f;
     private static readonly Color IconSelectedColor = Color.white;
     private static readonly Color IconDeselectedColor = new(0.55f, 0.5f, 0.48f, 1f);
-
-    private static Sprite _nixieIconSelectedSprite;
-    private static Sprite _nixieIconDeselectedSprite;
-    private static Sprite _coraIconSelectedSprite;
-    private static Sprite _coraIconDeselectedSprite;
 
     [SerializeField] private ContractDefinition[] contracts;
     [SerializeField] private Button[] contractButtons;
@@ -26,6 +23,14 @@ public class PreparationScreenController : MonoBehaviour
     [SerializeField] private GameObject[] contractPreviewImages = System.Array.Empty<GameObject>();
     [SerializeField] private Image nixieIcon;
     [SerializeField] private Image coraIcon;
+    [Tooltip("Nix_Selecionado — nenhum jogador escolheu Nix.")]
+    [SerializeField] private Sprite nixieIconDefaultSprite;
+    [Tooltip("Nix_Selecionado (1) — Nix escolhido (local ou outro jogador).")]
+    [SerializeField] private Sprite nixieIconChosenSprite;
+    [Tooltip("Cora_Selecionada — nenhum jogador escolheu Cora.")]
+    [SerializeField] private Sprite coraIconDefaultSprite;
+    [Tooltip("Cora_Selecionada (1) — Cora escolhida (local ou outro jogador).")]
+    [SerializeField] private Sprite coraIconChosenSprite;
     [SerializeField] private TMP_Text tooltipText;
     [SerializeField] private Button chooseCharacterButton;
     [SerializeField] private Button backButton;
@@ -37,8 +42,10 @@ public class PreparationScreenController : MonoBehaviour
     private int _localSelectedContract = -1;
     private bool _buttonsWired;
     private bool _previewZoomWired;
+    private bool _showSelectedPhaseHint;
     private PreparationSessionManager _subscribedSession;
     private UiSimpleImageZoomOverlay _imageZoomOverlay;
+    private TMP_Text[] _phaseSelectedHints;
 
     private void Awake()
     {
@@ -523,6 +530,7 @@ public class PreparationScreenController : MonoBehaviour
             return;
 
         _localSelectedContract = index;
+        _showSelectedPhaseHint = true;
 
         if (!GameSessionContext.IsSinglePlayer)
         {
@@ -695,8 +703,15 @@ public class PreparationScreenController : MonoBehaviour
     {
         if (GameSessionContext.IsSinglePlayer)
         {
-            if (LobbySelectionStore.TryGetCharacter(0, out LobbyCharacterType selected))
+            if (LobbySelectionStore.TryGetCharacter(0, out LobbyCharacterType selected)
+                && selected != LobbyCharacterType.Default)
+            {
                 return selected;
+            }
+
+            SaveProfileStore save = SaveProfileStore.Instance;
+            if (save != null)
+                return save.GetSelectedCharacter();
 
             return LobbyCharacterType.Default;
         }
@@ -742,6 +757,7 @@ public class PreparationScreenController : MonoBehaviour
         if (selectedContract >= 0)
             HighlightSelectedContract(selectedContract);
 
+        RefreshSelectedPhaseHints(selectedContract);
         ApplyContractButtonLabels();
 
         if (GameSessionContext.IsSinglePlayer)
@@ -792,65 +808,93 @@ public class PreparationScreenController : MonoBehaviour
 
     private void RefreshCharacterIcons()
     {
-        LobbyCharacterType selected = ResolveLocalCharacter();
         EnsureCharacterIconSprites();
 
-        if (nixieIcon != null)
-        {
-            Sprite sprite = selected == LobbyCharacterType.CharacterA
-                ? _nixieIconSelectedSprite
-                : _nixieIconDeselectedSprite;
-            if (sprite != null)
-            {
-                nixieIcon.sprite = sprite;
-                nixieIcon.color = Color.white;
-            }
-            else
-            {
-                nixieIcon.color = selected == LobbyCharacterType.CharacterA ? IconSelectedColor : IconDeselectedColor;
-            }
-        }
+        bool nixChosen = IsCharacterSelectedInSession(LobbyCharacterType.CharacterA);
+        bool coraChosen = IsCharacterSelectedInSession(LobbyCharacterType.CharacterB);
 
-        if (coraIcon != null)
-        {
-            Sprite sprite = selected == LobbyCharacterType.CharacterB
-                ? _coraIconSelectedSprite
-                : _coraIconDeselectedSprite;
-            if (sprite != null)
-            {
-                coraIcon.sprite = sprite;
-                coraIcon.color = Color.white;
-            }
-            else
-            {
-                coraIcon.color = selected == LobbyCharacterType.CharacterB ? IconSelectedColor : IconDeselectedColor;
-            }
-        }
+        ApplyCharacterIcon(nixieIcon, nixChosen ? nixieIconChosenSprite : nixieIconDefaultSprite, nixChosen);
+        ApplyCharacterIcon(coraIcon, coraChosen ? coraIconChosenSprite : coraIconDefaultSprite, coraChosen);
     }
 
-    private static void EnsureCharacterIconSprites()
+    /// <summary>
+    /// Solo: personagem local. MP: qualquer jogador da sessão que tenha escolhido esse tipo.
+    /// </summary>
+    private bool IsCharacterSelectedInSession(LobbyCharacterType type)
     {
-        if (_nixieIconSelectedSprite == null)
-            _nixieIconSelectedSprite = FindMenuContractSprite("Nix_Selecionado");
-        if (_nixieIconDeselectedSprite == null)
-            _nixieIconDeselectedSprite = FindMenuContractSprite("Nix_Nao_Selecionado");
-        if (_coraIconSelectedSprite == null)
-            _coraIconSelectedSprite = FindMenuContractSprite("Cora_Selecionada");
-        if (_coraIconDeselectedSprite == null)
-            _coraIconDeselectedSprite = FindMenuContractSprite("Cora_Nao_Selecionada");
+        if (type == LobbyCharacterType.Default)
+            return false;
+
+        if (GameSessionContext.IsSinglePlayer)
+            return ResolveLocalCharacter() == type;
+
+        return HubSessionStateReader.FindCharacterOwnerId(type).HasValue;
     }
 
-    private static Sprite FindMenuContractSprite(string spriteNamePrefix)
+    private static void ApplyCharacterIcon(Image icon, Sprite sprite, bool chosen)
+    {
+        if (icon == null)
+            return;
+
+        if (sprite != null)
+        {
+            icon.sprite = sprite;
+            icon.color = Color.white;
+            return;
+        }
+
+        icon.color = chosen ? IconSelectedColor : IconDeselectedColor;
+    }
+
+    private void EnsureCharacterIconSprites()
+    {
+        if (nixieIconDefaultSprite == null)
+            nixieIconDefaultSprite = FindMenuContractSprite("Nix_Selecionado");
+        if (nixieIconChosenSprite == null)
+            nixieIconChosenSprite = FindMenuContractSprite("Nix_Selecionado (1)");
+        if (coraIconDefaultSprite == null)
+            coraIconDefaultSprite = FindMenuContractSprite("Cora_Selecionada");
+        if (coraIconChosenSprite == null)
+            coraIconChosenSprite = FindMenuContractSprite("Cora_Selecionada (1)");
+    }
+
+    /// <summary>
+    /// Prefere nome exato (ou sufixo _0 de Multiple), evitando variantes Personagem/OutroPlayer/(1) indesejadas.
+    /// </summary>
+    private static Sprite FindMenuContractSprite(string spriteName)
     {
         Sprite[] sprites = Resources.FindObjectsOfTypeAll<Sprite>();
+        Sprite prefixFallback = null;
         for (int i = 0; i < sprites.Length; i++)
         {
             Sprite sprite = sprites[i];
-            if (sprite != null && sprite.name.StartsWith(spriteNamePrefix, StringComparison.Ordinal))
+            if (sprite == null)
+                continue;
+
+            string name = sprite.name;
+            if (name == spriteName || name == spriteName + "_0")
                 return sprite;
+
+            if (prefixFallback != null
+                || !name.StartsWith(spriteName, StringComparison.Ordinal)
+                || name.IndexOf("Personagem", StringComparison.Ordinal) >= 0
+                || name.IndexOf("OutroPlayer", StringComparison.Ordinal) >= 0)
+            {
+                continue;
+            }
+
+            // Evita "Nix_Selecionado (1)" quando o pedido é "Nix_Selecionado".
+            if (name.Length > spriteName.Length)
+            {
+                char next = name[spriteName.Length];
+                if (next is ' ' or '(')
+                    continue;
+            }
+
+            prefixFallback = sprite;
         }
 
-        return null;
+        return prefixFallback;
     }
 
     private void RefreshSinglePlayerStatus()
@@ -958,7 +1002,7 @@ public class PreparationScreenController : MonoBehaviour
         for (int i = 0; i < labels.Length; i++)
         {
             TMP_Text label = labels[i];
-            if (label == null)
+            if (label == null || label.gameObject.name == SelectedPhaseHintName)
                 continue;
 
             // Só mexe em textos de fase (ignora filhos sem relação, se houver).
@@ -977,6 +1021,127 @@ public class PreparationScreenController : MonoBehaviour
             label.textWrappingMode = TextWrappingModes.NoWrap;
             label.overflowMode = TextOverflowModes.Overflow;
         }
+    }
+
+    private void RefreshSelectedPhaseHints(int selectedIndex)
+    {
+        EnsurePhaseSelectedHints();
+        if (_phaseSelectedHints == null)
+            return;
+
+        // Só após clique explícito em SelectContract — o default automático da fase 1 não conta.
+        if (!_showSelectedPhaseHint)
+            selectedIndex = -1;
+
+        bool pt = LocaleText.IsPortuguese();
+        string hint = pt ? "Fase Selecionada" : "Phase Selected";
+
+        for (int i = 0; i < _phaseSelectedHints.Length; i++)
+        {
+            TMP_Text label = _phaseSelectedHints[i];
+            if (label == null)
+                continue;
+
+            bool show = selectedIndex >= 0 && i == selectedIndex;
+            label.gameObject.SetActive(show);
+            if (!show)
+                continue;
+
+            label.text = hint;
+        }
+    }
+
+    private void EnsurePhaseSelectedHints()
+    {
+        if (contractButtons == null)
+            return;
+
+        if (_phaseSelectedHints == null || _phaseSelectedHints.Length != contractButtons.Length)
+            _phaseSelectedHints = new TMP_Text[contractButtons.Length];
+
+        TMP_FontAsset font = ResolvePhaseUiFont();
+
+        for (int i = 0; i < contractButtons.Length; i++)
+        {
+            Button button = contractButtons[i];
+            if (button == null)
+                continue;
+
+            if (_phaseSelectedHints[i] != null)
+            {
+                ApplySelectedPhaseHintStyle(_phaseSelectedHints[i], font);
+                continue;
+            }
+
+            Transform existing = button.transform.Find(SelectedPhaseHintName);
+            TMP_Text label = existing != null ? existing.GetComponent<TMP_Text>() : null;
+            if (label == null)
+                label = CreateSelectedPhaseHint(button.transform, font);
+
+            _phaseSelectedHints[i] = label;
+            ApplySelectedPhaseHintStyle(label, font);
+        }
+    }
+
+    private TMP_FontAsset ResolvePhaseUiFont()
+    {
+        if (contractButtons == null)
+            return null;
+
+        for (int i = 0; i < contractButtons.Length; i++)
+        {
+            Button button = contractButtons[i];
+            if (button == null)
+                continue;
+
+            TMP_Text[] labels = button.GetComponentsInChildren<TMP_Text>(true);
+            for (int j = 0; j < labels.Length; j++)
+            {
+                TMP_Text label = labels[j];
+                if (label == null || label.gameObject.name == SelectedPhaseHintName || label.font == null)
+                    continue;
+
+                return label.font;
+            }
+        }
+
+        return null;
+    }
+
+    private static TMP_Text CreateSelectedPhaseHint(Transform parent, TMP_FontAsset font)
+    {
+        var go = new GameObject(SelectedPhaseHintName, typeof(RectTransform));
+        go.transform.SetParent(parent, false);
+
+        RectTransform rt = go.GetComponent<RectTransform>();
+        rt.anchorMin = new Vector2(0.5f, 0f);
+        rt.anchorMax = new Vector2(0.5f, 0f);
+        rt.pivot = new Vector2(0.5f, 1f);
+        rt.anchoredPosition = new Vector2(0f, -6f);
+        rt.sizeDelta = new Vector2(280f, 24f);
+
+        TMP_Text label = go.AddComponent<TextMeshProUGUI>();
+        ApplySelectedPhaseHintStyle(label, font);
+        go.SetActive(false);
+        return label;
+    }
+
+    private static void ApplySelectedPhaseHintStyle(TMP_Text label, TMP_FontAsset font)
+    {
+        if (label == null)
+            return;
+
+        if (font != null)
+            label.font = font;
+
+        label.fontSize = SelectedPhaseHintFontSize;
+        label.fontStyle = FontStyles.Italic;
+        label.color = Color.black;
+        label.alignment = TextAlignmentOptions.Center;
+        label.textWrappingMode = TextWrappingModes.NoWrap;
+        label.overflowMode = TextOverflowModes.Overflow;
+        label.raycastTarget = false;
+        label.enableAutoSizing = false;
     }
 
     private void HighlightSelectedContract(int index)

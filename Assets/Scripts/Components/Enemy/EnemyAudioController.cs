@@ -84,7 +84,14 @@ public class EnemyAudioController : MonoBehaviour
 
     public void PlayDeathSfx() => PlaySfx(EnemySfxKind.Death);
 
-    private void HandleAttack() => PlayAttackSfx();
+    private void HandleAttack()
+    {
+        // Em rede o SFX de ataque sai por NetworkEnemyController (server + sync cliente).
+        if (UsesNetworkSfxRelay())
+            return;
+
+        PlayAttackSfx();
+    }
 
     private void HandleTakeDamage()
     {

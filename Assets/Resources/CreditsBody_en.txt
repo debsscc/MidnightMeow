@@ -140,6 +140,66 @@ TextMesh Pro, Unity Technologies
 VOiD1 Gaming, 2D Dissolve Shader Graph
 Other Unity packages listed in Packages/manifest.json
 
+<b>Sounds</b>
+
+<b>Freesound (freesound.org)</b>
+"OWI spit.wav" by Gidion
+"spit in spitoon (comedy)_3D.wav" by Timbre
+"Heavy_whoosh_sound_122762022" by Artninja
+"heavy_textured_whoosh_01" by Artninja
+"whoosh_sound_01.mp3" by Artninja
+"medieval horn by kris klavenes .wav..wav" by klavo1985
+"Shield Bash Impact" by Hybrid_V
+"Shield Hit 10" by LiamG_SFX
+"Epic Sword Clang 2.wav" by ethanchase7744
+"Sword Unsheath" by lucabia
+"WeaponSwipe03.mp3" by Yap_Audio_Production
+"Axe Slash 1" by smokebomb99
+"Mini sword battle ready #4" by True_Killian
+"spit2.ogg" by Kneeling
+"Player Hit & Impact" by EminYILDIRIM
+"Orchestral Logo" by SergeQuadrado
+"Medieval Lute Chords" by f-r-a-g-i-l-e
+""Medieval" guitar loop" by User391915396
+"Bard melody" by Akrythael
+"00504 brass fanfare 4.wav" by Robinhood76
+"Medieval Tune - Knight's Castle.wav" by gertraut_hecher
+"Medieval/Fantasy RPG Loop (mix at 32 secs to extend/repeat)" by sonically_sound
+
+<b>OpenGameArt (opengameart.org)</b>
+Zombie sound effects by bendzer
+Botton Sound pack
+Picked Coin Echo
+Fantasy Magic Spell
+Elemental Spell
+Magic Spell SFX
+Spell 4 (fire)
+Spell Sounds Starter Pack
+Cure Magic
+Jingling heal
+8 Heals and Buffs SFX
+Slime Monster
+Monster Sound Effects 2
+Tiny vicious creature
+Rat Monster Screams
+Keyboard Soundpack #1 Typing and Single Keystrokes
+typing soundeffect
+JC Sounds - Fantasy SFX Pack Vol 1
+Items, door, fire, weapon hits
+Win sound effect
+Heartbeat sounds
+Zombie noises and moans
+8 Magic Attacks
+Player Hit (damage)
+
+<b>Pixabay (pixabay.com)</b>
+Free Medieval Battle Music
+Free Medieval Fight Music
+Free Gaming Music
+
+<b>Epidemic Sound (epidemicsound.com)</b>
+Sound effects
+
 
 <size=120%><b>DEDICATION</b></size>
 

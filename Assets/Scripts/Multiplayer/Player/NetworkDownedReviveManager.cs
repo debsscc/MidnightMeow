@@ -169,7 +169,11 @@ public class NetworkDownedReviveManager : NetworkBehaviour
                 config.reviveZoneMinSeparation);
 
         if (!placement.Success || placement.Positions == null || placement.Positions.Length == 0)
+        {
+            Debug.LogWarning(
+                $"[NetworkDownedReviveManager] Não foi possível posicionar áreas de revive para o cliente {downedClientId} sem colidir com paredes.");
             return;
+        }
 
         DownedReviveSession session = new DownedReviveSession
         {

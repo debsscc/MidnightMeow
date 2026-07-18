@@ -13,18 +13,18 @@ MonoBehaviour:
   m_Name: RatHoleSealConfig
   m_EditorClassIdentifier: Assembly-CSharp::RatHoleSealConfig
   promptRadius: 2.4
-  zoneRadius: 1.1
+  zoneRadius: 1.5
   minDistanceFromHole: 1.8
   maxDistanceFromHole: 3.2
   minZoneSeparation: 1.6
   sealDuration: 6
   dualPlayerSpeedMultiplier: 2
   abandonTimeout: 2.5
-  zoneVisualScaleMultiplier: 1.05
+  zoneVisualScaleMultiplier: 1.45
   zoneOutlineThickness: 0.055
   zoneShowInteriorFill: 0
-  zoneBackgroundColor: {r: 0.25, g: 0.6, b: 1, a: 0.28}
-  zoneFillColor: {r: 0.2, g: 0.95, b: 0.5, a: 0.75}
-  zoneOutlineColor: {r: 1, g: 1, b: 1, a: 0.95}
+  zoneBackgroundColor: {r: 0.25, g: 0.6, b: 1, a: 0.14}
+  zoneFillColor: {r: 0.2, g: 0.95, b: 0.5, a: 0.4}
+  zoneOutlineColor: {r: 1, g: 1, b: 1, a: 0.55}
   zoneSortingOrder: 250
   sealCompleteClip: {fileID: 8300000, guid: 9e1b382f78a026047b904fd21e91d367, type: 3}

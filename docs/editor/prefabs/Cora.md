@@ -22,11 +22,12 @@ Jogador **à distância**: tiro, munição, spawn de `Projectile` em rede. Prefa
 Cora
 ├── Shadow
 ├── firePoint
-├── Audios
+├── Audios                    # AudioSources (ataque_audio, dash_audio, …): Play On Awake = off
 ├── DustParticiple
 └── Particle System
 ```
 
+> **Áudio:** filhos em `Audios` (ex.: `ataque_audio`) devem ter **Play On Awake desligado**. O SFX de ataque é disparado só por `PlayerAudioController` no momento do tiro — com Play On Awake, o som tocava sozinho ao spawnar na fase.
 ## Scripts (raiz)
 
 | Script | Notas |

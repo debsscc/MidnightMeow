@@ -17,7 +17,7 @@
 | **Preparation** | Contrato + personagem + pronto (sem ordem obrigatória) — mesmo ambience |
 | **Characters** | Skills/upgrades (em save) ou consulta (menu/lobby) — mesmo ambience |
 | **Fase-1** | Gameplay principal |
-| **VictoryScene** | Vitória — continuar ou sair |
+| **VictoryScene** | Vitória — Prosseguir (próxima fase / créditos na Fase-3) ou sair |
 | **GameOver** | Derrota — continuar ou sair |
 
 ## Visão geral (arquitetura)
@@ -60,8 +60,10 @@ Preparation
   ├─ Contrato 1 (ativo) / 2 e 3 (bloqueados)
   └─ [contrato + personagem + todos prontos] → Loading2 → Fase-1
 
-Fase-1 → [vitória/derrota] → VictoryScene / GameOver
-  ├─ Continuar → Preparation (mantém sincronização MP)
+Fase-1 / Fase-2 / Fase-3 → [vitória/derrota] → VictoryScene / GameOver
+  ├─ Vitória → Prosseguir → próxima fase via NGO (MP) / Loading2 (solo) — ou créditos (Fase-3, todos os peers)
+  ├─ Personagens: preservados (`LobbySelectionStore` + Preparation/Characters session)
+  ├─ Derrota → Reiniciar fase
   └─ Sair → Menu2 (desconecta rede)
 ```
 
@@ -98,11 +100,13 @@ Fase-1 → [vitória/derrota] → VictoryScene / GameOver
 - **Personagens**: consulta de skills, sem níveis nem compras.
 - **Multiplayer**: ao conectar o 2º jogador, transição automática para Loading1.
 - **Solo**: botão dedicado, sem exigir sincronização.
+- **Música:** `Sound Track` na cena Lobby; persiste em Loading1/2, Preparation e Characters (`CarriesMusicAcross`).
 
 ### Preparação
 - Sem ordem obrigatória entre contrato, personagem e pronto.
 - Mensagens de erro ao apertar pronto sem requisitos (ex.: personagem, contrato, outro jogador).
 - Hover no contrato exibe tooltip (ref. `hover_contract.png`).
+- Ícones sob **Selecionar Personagens** (`Icons_Characters`): padrão `Cora_Selecionada` / `Nix_Selecionado`; ao escolher (solo = local; MP = qualquer jogador da sessão) → `Cora_Selecionada (1)` / `Nix_Selecionado (1)`. Se ambos estiverem escolhidos no MP, os dois ícones ficam na variante `(1)`.
 - **Multiplayer:** apenas o **host** seleciona o contrato; o cliente vê tooltip e o contrato escolhido pelo host.
 - **Multiplayer:** cada jogador navega livremente entre Preparation e Characters (rotas `preparation_characters` / `characters_preparation` com **carga aditiva**; `HubSceneNavigator` alterna visibilidade da UI sem descarregar cenas).
 - Quando **todos** estão prontos (contrato + personagem), o host dispara `preparation_loading2` (NetcodeHost) para todos.
@@ -112,6 +116,7 @@ Fase-1 → [vitória/derrota] → VictoryScene / GameOver
 - **Preparação**: seleção sincronizada (Nix/Cora exclusivos) + upgrades com magículas.
 - **Multiplayer:** ambos escolhem personagem; escolha replicada via `PreparationSessionManager` + `CharactersSessionManager` (prefabs em `Assets/Prefabs/Multiplayer/`, catálogo `Resources/HubSessionPrefabCatalog`, registrados em `DefaultNetworkPrefabs`, spawn DDOL no servidor em Loading1).
 - Personagem já escolhido por outro jogador fica **bloqueado** e exibe rótulo `Jogador N`.
+- Retratos na Characters (`CharacterPortraitVisual` em `Nyxie_Images` / `Cora_Images`): idle `*_Personagem_Aguardando_Selecao`, hover `Nix_Selecionado_Personagem` / `Cora_Selecionada_Personagem`, selecionado (local ou taken no MP) `*_OutroPlayer_Personagem`. Trocar de personagem devolve o anterior ao idle (solo e MP).
 - 6 botões de skill (3 Nix + 3 Cora); popup de upgrade (ref. `levelupskill.png`).
 - Visual das barras (`SkillBarEntry`): State1 = tier 1, State3 = tier 2, State4 = tier 3; State2 = skill **selecionada** e com magículas para o próximo nível (não aplicar State2 às 3 skills só porque dá para comprar).
 

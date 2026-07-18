@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b3c161a78af321c47aba1959d33784de, type: 3}
   m_Name: Tip_Shoot
   m_EditorClassIdentifier: MidnightMeow::TutorialTipSO
-  tipTextPt: "Atire com o bot\xE3o esquerdo do mouse"
-  tipTextEn: Shoot with the left mouse button
+  tipTextPt: "Agora fa\xE7a uns ataques!"
+  tipTextEn: Now land some attacks!
   trigger: 1
+  requiredCount: 1

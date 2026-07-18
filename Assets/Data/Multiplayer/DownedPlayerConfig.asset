@@ -26,9 +26,9 @@ MonoBehaviour:
   reviveZoneOutlineThickness: 0.055
   reviveZoneShowInteriorFill: 0
   reviveZoneSortingOrder: 250
-  reviveZoneBackgroundColor: {r: 0.72300005, g: 0, b: 0.0141766, a: 0.39607844}
-  reviveZoneFillColor: {r: 1, g: 0.35546222, b: 0.34901965, a: 0.2}
-  reviveZoneOutlineColor: {r: 1, g: 0.9019608, b: 0.9019608, a: 0.9}
+  reviveZoneBackgroundColor: {r: 0.72300005, g: 0, b: 0.0141766, a: 0.22}
+  reviveZoneFillColor: {r: 1, g: 0.35546222, b: 0.34901965, a: 0.12}
+  reviveZoneOutlineColor: {r: 1, g: 0.9019608, b: 0.9019608, a: 0.5}
   downedHeartbeatClip: {fileID: 8300000, guid: 674ebaf099df62b44aac49a281b82551, type: 3}
   reviveCompleteClip: {fileID: 8300000, guid: 6d09b176a4a8fee4399286737db06699, type: 3}
   downedScreenPulseIntensity: 0.38

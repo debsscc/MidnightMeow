@@ -54,7 +54,7 @@ Import: Sprite Single, **PPU 100**, Filter **Point**, pivot **centro** (0.5, 0.5
 
 - `CarriageConfig.useOfficialArt = true` → **não** força placeholder marrom.
 - `CarriageConfig.visualRootScale = 0.9` → arte oficial em escala 3×; collider e regras de gameplay permanecem inalterados.
-- Label world-space: `worldLabelFontSize = 1.4` e `repairLabelOffset.y = 3.2`, ajustados para a arte ampliada.
+- Label world-space: `worldLabelFontSize = 0.9`, sorting `450`, opacidade ~0.78 — mesmo padrão de selar/reviver (`GameplayUiFonts.ApplyWorldInteraction`). Offset vertical da carruagem: `repairLabelOffset.y = 4.6` (acima da barra de HP; runtime ainda garante clearance). Durante conserto ativo, o texto fica **acima ou abaixo** dos círculos (`CooperativeZoneLabelPlacementUtility`), sem sobrepor a área.
 - Rodas giram em **todos os peers** via `CarriageWheelSpinner` (sem sync de ângulo).
 - Progresso HUD: `NetworkVariable<float> _pathProgress`.
 - Estado de escolta: `NetworkVariable<CarriageState> _carriageState` (servidor).

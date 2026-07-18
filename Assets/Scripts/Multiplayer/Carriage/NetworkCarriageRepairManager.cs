@@ -215,7 +215,14 @@ public class NetworkCarriageRepairManager : NetworkBehaviour
         float restoreAmount = config.maxHealth * Mathf.Clamp01(config.repairRestoreHealthFraction);
         _health.ServerRestoreAfterRepair(restoreAmount);
         ClearRepairState();
-        NotifyRepairSessionEndedClientRpc();
+        NotifyRepairCompletedClientRpc();
+    }
+
+    [ClientRpc]
+    private void NotifyRepairCompletedClientRpc()
+    {
+        CarriageRepairZoneVisualHost.EnsureAttached(this)?.HideSession();
+        GameplayInteractAudio.PlayReviveComplete();
     }
 
     private void HandleSessionDeactivated()
@@ -252,7 +259,7 @@ public class NetworkCarriageRepairManager : NetworkBehaviour
             _sessions[0] = session;
     }
 
-    private bool TryGetActiveSession(out CarriageRepairSession session)
+    public bool TryGetActiveSession(out CarriageRepairSession session)
     {
         for (int i = 0; i < _sessions.Count; i++)
         {

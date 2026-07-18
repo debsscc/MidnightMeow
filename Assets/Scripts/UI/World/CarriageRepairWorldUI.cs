@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using TMPro;
 using Unity.Netcode;
 using UnityEngine;
@@ -22,14 +23,19 @@ public class CarriageRepairWorldUI : MonoBehaviour
         RepairProgress
     }
 
+    private const float HealthBarLabelClearance = 0.55f;
+
     [SerializeField] private GameObject repairUIPrefab;
-    [SerializeField] private Vector3 offset = new Vector3(0f, 1.6f, 0f);
+    [SerializeField] private Vector3 offset = new Vector3(0f, 1.85f, 0f);
 
     public void SetOffset(Vector3 worldOffset) => offset = worldOffset;
+
+    private static readonly List<Vector2> ZoneBuffer = new List<Vector2>(CarriageRepairSession.MaxZones);
 
     private CarriageController _carriage;
     private NetworkCarriageHealth _health;
     private NetworkCarriageRepairManager _repairManager;
+    private EnemyHealthBarDisplay _healthBar;
     private GameObject _promptInstance;
     private Transform _promptTransform;
     private TextMeshProUGUI _label;
@@ -42,6 +48,7 @@ public class CarriageRepairWorldUI : MonoBehaviour
         _carriage = GetComponent<CarriageController>();
         _health = GetComponent<NetworkCarriageHealth>();
         _repairManager = GetComponent<NetworkCarriageRepairManager>();
+        _healthBar = GetComponent<EnemyHealthBarDisplay>();
         TryResolvePrefabReference();
         InstantiatePromptIfNeeded();
         SetVisible(false);
@@ -136,29 +143,16 @@ public class CarriageRepairWorldUI : MonoBehaviour
         _promptInstance = Instantiate(repairUIPrefab);
         _promptInstance.name = repairUIPrefab.name;
         _promptTransform = _promptInstance.transform;
+        // Sem pai: escala world fixa (igual selar / reviver).
+        _promptTransform.SetParent(null, false);
+        _promptTransform.localScale = Vector3.one;
 
-        ConfigureWorldSpaceCanvas(_promptInstance.GetComponent<RectTransform>());
+        GameplayUiFonts.ConfigureWorldInteractionCanvas(_promptInstance.GetComponent<RectTransform>());
 
         DownedReviveUILabelView labelView = _promptInstance.GetComponentInChildren<DownedReviveUILabelView>(true);
         _label = labelView != null ? labelView.Label : _promptInstance.GetComponentInChildren<TextMeshProUGUI>(true);
         NormalizeLabelLayout(_label);
         _promptInstance.SetActive(false);
-    }
-
-    private static void ConfigureWorldSpaceCanvas(RectTransform canvasRect)
-    {
-        if (canvasRect == null)
-            return;
-
-        Canvas canvas = canvasRect.GetComponent<Canvas>();
-        if (canvas != null)
-        {
-            canvas.renderMode = RenderMode.WorldSpace;
-            canvas.sortingOrder = 115;
-        }
-
-        canvasRect.sizeDelta = new Vector2(4.8f, 0.22f);
-        canvasRect.localScale = Vector3.one;
     }
 
     private void NormalizeLabelLayout(TextMeshProUGUI label)
@@ -171,13 +165,7 @@ public class CarriageRepairWorldUI : MonoBehaviour
         labelRect.anchorMax = Vector2.one;
         labelRect.offsetMin = Vector2.zero;
         labelRect.offsetMax = Vector2.zero;
-        CarriageConfig config = ResolveConfig();
-        label.fontSize = config != null ? Mathf.Max(0.1f, config.worldLabelFontSize) : 1.4f;
-        label.enableAutoSizing = false;
-        label.textWrappingMode = TextWrappingModes.NoWrap;
-        label.overflowMode = TextOverflowModes.Overflow;
-        label.alignment = TextAlignmentOptions.Center;
-        GameplayUiFonts.Apply(label);
+        GameplayUiFonts.ApplyWorldInteraction(label);
     }
 
     private void LateUpdate()
@@ -190,6 +178,9 @@ public class CarriageRepairWorldUI : MonoBehaviour
 
         if (_repairManager == null)
             _repairManager = GetComponent<NetworkCarriageRepairManager>();
+
+        if (_healthBar == null)
+            _healthBar = GetComponent<EnemyHealthBarDisplay>();
 
         TrySubscribeCarriageState();
         TrySubscribeRepairProgress();
@@ -207,8 +198,48 @@ public class CarriageRepairWorldUI : MonoBehaviour
         if (mode == CarriageLabelMode.Hidden)
             return;
 
-        _promptTransform.position = transform.position + offset;
-        _promptTransform.rotation = Quaternion.identity;
+        _promptTransform.SetPositionAndRotation(ResolveLabelWorldPosition(mode), Quaternion.identity);
+        _promptTransform.localScale = Vector3.one;
+    }
+
+    private Vector3 ResolveLabelWorldPosition(CarriageLabelMode mode)
+    {
+        Vector2 anchor = transform.position;
+        Vector3 fallback = (Vector3)anchor + offset;
+
+        bool usesRepairZones = mode == CarriageLabelMode.StayInArea || mode == CarriageLabelMode.RepairProgress;
+        if (usesRepairZones &&
+            _repairManager != null &&
+            _repairManager.TryGetActiveSession(out CarriageRepairSession session))
+        {
+            session.CollectZones(ZoneBuffer);
+            CarriageConfig config = ResolveConfig();
+            float visualRadius = config != null
+                ? config.GetRepairZoneVisualDiameter() * 0.5f
+                : 1.5f;
+
+            return CooperativeZoneLabelPlacementUtility.ResolvePosition(
+                ZoneBuffer,
+                visualRadius,
+                anchor,
+                offset,
+                entityAnchorForSideChoice: anchor);
+        }
+
+        return RaiseAboveHealthBar(fallback);
+    }
+
+    private Vector3 RaiseAboveHealthBar(Vector3 candidate)
+    {
+        if (_healthBar == null)
+            return candidate;
+
+        Vector3 barPos = _healthBar.GetBarWorldPosition();
+        float minY = barPos.y + _healthBar.GetBarHeight() * 0.5f + HealthBarLabelClearance;
+        if (candidate.y < minY)
+            candidate.y = minY;
+
+        return candidate;
     }
 
     private CarriageLabelMode ResolveLabelModeForLocalViewer()
@@ -293,6 +324,7 @@ public class CarriageRepairWorldUI : MonoBehaviour
                     Mathf.Clamp(Mathf.RoundToInt(progress * 100f), 0, 100)),
                 _ => string.Empty
             };
+            GameplayUiFonts.ApplyWorldInteraction(_label);
         }
 
         _lastMode = mode;

@@ -1,3 +1,8 @@
+//--------------------------------
+// FEITO POR: PEDRO CAURIO
+// DESCRICAO: Retrato Nix/Cora na Characters — idle / hover / selecionado (local ou outro jogador).
+// --------------------------------
+
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -16,11 +21,19 @@ public class CharacterPortraitVisual : MonoBehaviour
     [SerializeField] private GameObject deselectedRoot;
     [SerializeField] private GameObject selectedRoot;
     [SerializeField] private GameObject animationRoot;
-    [SerializeField] private Color takenByOtherTint = new(0.55f, 0.45f, 0.45f, 1f);
 
-    private PortraitState _state = PortraitState.Deselected;
-    private Image _deselectedImage;
-    private Color _deselectedBaseColor = Color.white;
+    [Header("Sprites (opcional — resolve por nome se vazio)")]
+    [SerializeField] private Sprite idleSprite;
+    [SerializeField] private Sprite hoverSprite;
+    [SerializeField] private Sprite selectedSprite;
+
+    [SerializeField] private string idleSpriteName;
+    [SerializeField] private string hoverSpriteName;
+    [SerializeField] private string selectedSpriteName;
+
+    /// <summary>Estado persistente (sem hover): idle ou selecionado.</summary>
+    private PortraitState _baseState = PortraitState.Deselected;
+    private Image _displayImage;
     private bool _hovering;
 
     private void Awake()
@@ -32,16 +45,65 @@ public class CharacterPortraitVisual : MonoBehaviour
         if (animationRoot == null)
             animationRoot = transform.Find("Animation")?.gameObject;
 
-        if (deselectedRoot != null)
+        // Um único Image ativo evita PointerExit falso ao trocar de root no hover.
+        _displayImage = deselectedRoot != null ? deselectedRoot.GetComponent<Image>() : null;
+
+        ResolveSprites();
+        DisableRootRaycast();
+        CollapseVariantRoots();
+        WireHoverTarget();
+        RefreshDisplay();
+    }
+
+    /// <summary>
+    /// Configura nomes das sprites (CharactersScreenController). Resolve imediatamente se Awake já rodou.
+    /// </summary>
+    public void ConfigureSpriteNames(string idle, string hover, string selected)
+    {
+        idleSpriteName = idle;
+        hoverSpriteName = hover;
+        selectedSpriteName = selected;
+        ResolveSprites();
+        RefreshDisplay();
+    }
+
+    private void ResolveSprites()
+    {
+        if (idleSprite == null && !string.IsNullOrEmpty(idleSpriteName))
+            idleSprite = FindPortraitSprite(idleSpriteName);
+        if (hoverSprite == null && !string.IsNullOrEmpty(hoverSpriteName))
+            hoverSprite = FindPortraitSprite(hoverSpriteName);
+        if (selectedSprite == null && !string.IsNullOrEmpty(selectedSpriteName))
+            selectedSprite = FindPortraitSprite(selectedSpriteName);
+    }
+
+    /// <summary>
+    /// Prefere nome exato ou sufixo _0 (Sprite Mode Multiple).
+    /// </summary>
+    private static Sprite FindPortraitSprite(string spriteName)
+    {
+        if (string.IsNullOrEmpty(spriteName))
+            return null;
+
+        Sprite[] sprites = Resources.FindObjectsOfTypeAll<Sprite>();
+        Sprite exact = null;
+        Sprite withZero = null;
+
+        for (int i = 0; i < sprites.Length; i++)
         {
-            _deselectedImage = deselectedRoot.GetComponent<Image>();
-            if (_deselectedImage != null)
-                _deselectedBaseColor = _deselectedImage.color;
+            Sprite sprite = sprites[i];
+            if (sprite == null)
+                continue;
+
+            string name = sprite.name;
+            if (name == spriteName)
+                exact = sprite;
+            else if (name == spriteName + "_0")
+                withZero = sprite;
         }
 
-        DisableRootRaycast();
-        WireHoverTargets();
-        Apply(_state);
+        // Multiple (_0) costuma ser a arte nova em NOVAS COISAS JU.
+        return withZero != null ? withZero : exact;
     }
 
     private void DisableRootRaycast()
@@ -51,25 +113,33 @@ public class CharacterPortraitVisual : MonoBehaviour
             rootImage.raycastTarget = false;
     }
 
-    private void WireHoverTargets()
+    private void CollapseVariantRoots()
     {
-        WireHover(deselectedRoot);
-        WireHover(selectedRoot);
-        WireHover(animationRoot);
+        if (deselectedRoot != null)
+            deselectedRoot.SetActive(true);
+
+        // Selected/Animation ficam só como referência visual na cena; o display usa Desselected.
+        if (selectedRoot != null)
+            selectedRoot.SetActive(false);
+        if (animationRoot != null)
+            animationRoot.SetActive(false);
     }
 
-    private void WireHover(GameObject target)
+    private void WireHoverTarget()
     {
-        if (target == null)
+        if (deselectedRoot == null)
             return;
 
-        Image image = target.GetComponent<Image>();
-        if (image != null)
-            image.raycastTarget = true;
+        if (_displayImage != null)
+            _displayImage.raycastTarget = true;
 
-        EventTrigger trigger = target.GetComponent<EventTrigger>();
+        EventTrigger trigger = deselectedRoot.GetComponent<EventTrigger>();
         if (trigger == null)
-            trigger = target.AddComponent<EventTrigger>();
+            trigger = deselectedRoot.AddComponent<EventTrigger>();
+
+        trigger.triggers.RemoveAll(entry =>
+            entry.eventID == EventTriggerType.PointerEnter
+            || entry.eventID == EventTriggerType.PointerExit);
 
         AddHoverEntry(trigger, EventTriggerType.PointerEnter, true);
         AddHoverEntry(trigger, EventTriggerType.PointerExit, false);
@@ -82,52 +152,59 @@ public class CharacterPortraitVisual : MonoBehaviour
         trigger.triggers.Add(entry);
     }
 
-    public void Apply(PortraitState state)
+    private bool IsSelectedBase =>
+        _baseState == PortraitState.Selected || _baseState == PortraitState.TakenByOther;
+
+    private void RefreshDisplay()
     {
-        _state = state;
-        bool taken = state == PortraitState.TakenByOther;
-        bool selected = state == PortraitState.Selected;
-        bool hover = state == PortraitState.Hover;
+        CollapseVariantRoots();
 
-        if (deselectedRoot != null)
-            deselectedRoot.SetActive(!selected && !hover);
+        Sprite sprite;
+        if (IsSelectedBase)
+            sprite = selectedSprite != null ? selectedSprite : idleSprite;
+        else if (_hovering)
+            sprite = hoverSprite != null ? hoverSprite : idleSprite;
+        else
+            sprite = idleSprite;
 
-        if (selectedRoot != null)
-            selectedRoot.SetActive(selected);
+        if (_displayImage == null)
+            return;
 
-        if (animationRoot != null)
-            animationRoot.SetActive(hover);
-
-        if (_deselectedImage != null)
-            _deselectedImage.color = taken && !hover ? takenByOtherTint : _deselectedBaseColor;
+        if (sprite != null)
+            _displayImage.sprite = sprite;
+        _displayImage.color = Color.white;
     }
 
     public void SetHovering(bool hovering)
     {
-        if (_state == PortraitState.Selected || _state == PortraitState.TakenByOther)
+        // Já selecionado: mantém OutroPlayer; hover não troca a arte.
+        if (IsSelectedBase)
         {
             _hovering = false;
-            Apply(_state);
+            RefreshDisplay();
             return;
         }
 
         _hovering = hovering;
-        if (_hovering && _state == PortraitState.Deselected)
-            Apply(PortraitState.Hover);
-        else
-            Apply(_state);
+        RefreshDisplay();
     }
 
     public void SetBaseState(PortraitState state)
     {
-        _state = state;
+        if (state == PortraitState.Hover)
+            state = PortraitState.Deselected;
 
-        if (state == PortraitState.Selected || state == PortraitState.TakenByOther)
+        _baseState = state;
+
+        if (IsSelectedBase)
             _hovering = false;
 
-        if (_hovering && state == PortraitState.Deselected)
-            Apply(PortraitState.Hover);
-        else
-            Apply(state);
+        RefreshDisplay();
+    }
+
+    /// <summary>Compat: Apply força o estado base (ignora Hover como persistente).</summary>
+    public void Apply(PortraitState state)
+    {
+        SetBaseState(state);
     }
 }

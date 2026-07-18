@@ -77,7 +77,8 @@ public class NetworkPlayerAbilityRelay : NetworkBehaviour
         {
             _animationHandler.SetUseNetworkMoveSpeed(true);
             _animationHandler.ApplyNetworkMoveSpeed(_moveSpeed.Value);
-            TryPlayRemoteAttack(_attackSequence.Value);
+            // Sincroniza sem tocar SFX/anim de ataque no spawn (sequence 0 = idle).
+            _lastRemoteAttackSequence = _attackSequence.Value;
         }
     }
 

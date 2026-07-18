@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b3c161a78af321c47aba1959d33784de, type: 3}
   m_Name: Tip_Move
   m_EditorClassIdentifier: MidnightMeow::TutorialTipSO
-  tipTextPt: Se movimente usando WASD
-  tipTextEn: Move using WASD
+  tipTextPt: "R\xE1pido! Movimente-se usando WASD"
+  tipTextEn: Quick! Move using WASD
   trigger: 0
+  requiredCount: 1

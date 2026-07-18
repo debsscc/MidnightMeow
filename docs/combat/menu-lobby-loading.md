@@ -47,6 +47,8 @@ Layout: botões canto inferior esquerdo com offset (ref. `docs/reference_imgs/me
 
 **Multiplayer:** quando 2 jogadores conectam, host dispara `lobby_loading1` automaticamente.
 
+**Música:** objeto raiz `Sound Track` (clip do lobby, grupo **Music**, Loop). A trilha inicia no Lobby e **continua** em Loading1/2, Preparation e Characters (`SceneMusicResolver.CarriesMusicAcross` — sem fade para silêncio; clips legados de Sound Track nessas cenas são ignorados). Só troca quando uma cena traz Soundtrack próprio (menu, fases, vitória/derrota).
+
 ## Loading1 / Loading2 — sincronia imediata
 
 - O overlay de fade aparece no clique; **não** há mais painel DDOL de loading com barra a 4% (`TransitionFadeOverlay` só faz fade).

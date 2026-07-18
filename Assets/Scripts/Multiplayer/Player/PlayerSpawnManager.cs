@@ -553,6 +553,17 @@ public class PlayerSpawnManager : NetworkBehaviour
             }
         }
 
+        CharactersSessionManager characters = CharactersSessionManager.Instance;
+        if (characters != null)
+        {
+            for (int i = 0; i < characters.Players.Count; i++)
+            {
+                CharactersPlayerState player = characters.Players[i];
+                if (player.ClientId == clientId && player.CharacterType != LobbyCharacterType.Default)
+                    return player.CharacterType;
+            }
+        }
+
         if (GameSessionContext.IsSinglePlayer || (NetworkManager.Singleton != null && clientId == NetworkManager.Singleton.LocalClientId))
         {
             SaveProfileStore save = SaveProfileStore.Instance;

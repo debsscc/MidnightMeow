@@ -34,14 +34,16 @@ flowchart TD
     end
 
     subgraph loop [4. Loop de Gameplay]
-        Gameplay[Fase-1]
+        Gameplay[Fase-1 / Fase-2 / Fase-3]
         Victory[VictoryScene]
         Defeat[GameOver]
+        Credits[Créditos]
         Load2 --> Gameplay
         Gameplay -->|vitória| Victory
         Gameplay -->|derrota| Defeat
-        Victory -->|Continuar| Preparation
-        Defeat -->|Continuar| Preparation
+        Victory -->|Prosseguir Fase-1/2| Load2
+        Victory -->|Prosseguir Fase-3| Credits
+        Defeat -->|Reiniciar| Load2
         Victory -->|Sair| Menu
         Defeat -->|Sair| Menu
     end

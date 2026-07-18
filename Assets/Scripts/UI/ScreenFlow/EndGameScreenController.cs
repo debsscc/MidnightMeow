@@ -46,6 +46,10 @@ public class EndGameScreenController : MonoBehaviour
 
     private void Start()
     {
+        // Prefab da Victory pode não estar resolvido no Awake — re-liga o botão Créditos.
+        TryAutoResolveReferences();
+        WireButtons();
+
         ApplyEndGameButtonFeedback();
         ScreenFlowPlaceholderFactory.ApplyMenuCursor();
         RefreshPrimaryActionLabel();
@@ -112,23 +116,38 @@ public class EndGameScreenController : MonoBehaviour
             return;
 
         bool pt = IsPortuguese();
-        string label = isVictory
-            ? (pt ? "Prosseguir" : "Continue")
-            : (pt ? "Reiniciar fase" : "Restart stage");
+        string label;
+        if (isVictory)
+        {
+            label = ScreenFlowStateMachine.IsFinalVictoryPhase()
+                ? (pt ? "Créditos" : "Credits")
+                : (pt ? "Prosseguir" : "Continue");
+        }
+        else
+        {
+            label = pt ? "Reiniciar fase" : "Restart stage";
+        }
+
         SetButtonLabel(continueButton, label);
     }
 
     private void OnPrimaryAction()
     {
-        if (GameFlowOrchestrator.Instance != null && !GameFlowOrchestrator.Instance.CanRequestTransition())
-            return;
-
         if (isVictory)
         {
-            PreparationSessionManager.Instance?.ResetRound();
-            ScreenFlowStateMachine.ContinueAfterEndGame();
+            if (!ScreenFlowStateMachine.IsFinalVictoryPhase()
+                && GameFlowOrchestrator.Instance != null
+                && !GameFlowOrchestrator.Instance.CanRequestTransition())
+            {
+                return;
+            }
+
+            ScreenFlowStateMachine.ContinueAfterVictory();
             return;
         }
+
+        if (GameFlowOrchestrator.Instance != null && !GameFlowOrchestrator.Instance.CanRequestTransition())
+            return;
 
         ScreenFlowStateMachine.RequestRestartCurrentGameplay();
     }
@@ -143,7 +162,7 @@ public class EndGameScreenController : MonoBehaviour
 
     private void OnCredits()
     {
-        CreditsOverlayController.Open();
+        CreditsOverlayController.Open(CreditsPresentationConfig.ManualClose);
     }
 
     private void OnOpenPlaytestForm()

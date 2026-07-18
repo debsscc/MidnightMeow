@@ -124,6 +124,19 @@ public class EnemyHealthBarDisplay : MonoBehaviour
         return verticalOffset;
     }
 
+    /// <summary>Posição world-space atual (ou estimada) do centro da barra de vida.</summary>
+    public Vector3 GetBarWorldPosition()
+    {
+        if (_barRoot != null)
+            return _barRoot.position;
+
+        Vector3 worldUp = Camera.main != null ? Camera.main.transform.up : Vector3.up;
+        return GetAnchorPosition() + worldUp * GetVerticalOffset();
+    }
+
+    /// <summary>Altura visual da barra (world units).</summary>
+    public float GetBarHeight() => Mathf.Max(0.05f, barHeight);
+
     private void HandleHealthChanged(float current, float max)
     {
         if (_fillImage == null)

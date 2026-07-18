@@ -166,7 +166,7 @@ MonoBehaviour:
   isVictory: 1
   continueButton: {fileID: 436697146}
   exitButton: {fileID: 1248519236}
-  creditsButton: {fileID: 0}
+  creditsButton: {fileID: 1248519237}
   feedbackButton: {fileID: 0}
   playtestFormUrl: https://docs.google.com/forms/d/e/1FAIpQLScqrERAjHtXbsp-kTXYh86otM1uvqKOICOwL0JFGYLe5203aw/viewform?usp=sharing&ouid=104196659444550947531
   buildPlaceholderIfMissing: 0
@@ -258,7 +258,7 @@ AudioSource:
   OutputAudioMixerGroup: {fileID: -2881765551862513947, guid: 0369658093ea21d40a1c846ecafdd511, type: 2}
   m_audioClip: {fileID: 0}
   m_Resource: {fileID: 8300000, guid: 8c7dfb85ceec32d46a426cae10dec0a0, type: 3}
-  m_PlayOnAwake: 1
+  m_PlayOnAwake: 0
   m_Volume: 1
   m_Pitch: 1
   Loop: 0
@@ -610,6 +610,17 @@ PrefabInstance:
 --- !u!114 &1248519236 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 6968789522630925221, guid: b242745fab239824cb496ab1946bea44, type: 3}
+  m_PrefabInstance: {fileID: 1248519235}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Button
+--- !u!114 &1248519237 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 5247410513688866041, guid: b242745fab239824cb496ab1946bea44, type: 3}
   m_PrefabInstance: {fileID: 1248519235}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}

@@ -1,6 +1,6 @@
 # Reviver por zona (área cooperativa)
 
-Última revisão: 2026-07-10
+Última revisão: 2026-07-18
 
 ## Máquina de estados
 
@@ -20,7 +20,7 @@
 
 1. Jogador A cai **inconsciente** — animação de morte trava no último frame; inputs desabilitados no dono.
 2. Aliado vivo se aproxima → label muda conforme distância (`DownedPlayerWorldUI`).
-3. Ao pressionar **E** dentro de `revivePromptRadius`, o servidor coloca 1–2 círculos cooperativos (`CooperativeZonePlacementUtility`).
+3. Ao pressionar **E** dentro de `revivePromptRadius`, o servidor coloca 1–2 círculos cooperativos (`CooperativeZonePlacementUtility`), evitando sobreposição com colisões **Wall** / **DashableWall** (mesma regra do selamento).
 4. Aliado(s) permanecem dentro do(s) círculo(s) → progresso sobe (`reviveZoneFillDuration` no SO).
 5. Ninguém nas áreas por `reviveAbandonTimeout` → sessão cancelada; `NotifyReviveSessionEndedClientRpc` limpa círculos em todos os clientes.
 6. Progresso = 100% → `ServerReviveFromUnconscious()` restaura `reviveHealthFraction` da vida máxima.
@@ -50,8 +50,10 @@ Asset: `Assets/Data/Multiplayer/DownedPlayerConfig.asset`
 | Momento | Áudio | Visual |
 |---------|-------|--------|
 | Aliado inconsciente (janela de revive) | Batidas `downedHeartbeatClip` | Vinheta pulsante + timer HUD |
-| Revive concluído | `reviveCompleteClip` (`Reviver.wav`) | Pulso breve de vinheta (`TriggerReviveSuccessPulse`) |
-| Início da interação (E) | `Interacao.wav` via `GameplayInteractAudio` | — |
+| Revive concluído | `reviveCompleteClip` (`Reviver.wav`) via `GameplayInteractAudio.PlayReviveComplete` | Pulso breve de vinheta (`TriggerReviveSuccessPulse`) |
+| Início da interação (E) | `Interacao.wav` via `GameplayInteractAudio.PlayConfirm` | — |
+
+O mesmo `PlayReviveComplete` toca ao concluir o conserto da carruagem (`NetworkCarriageRepairManager`).
 
 Singleplayer não entra em downed cooperativo (`CanUseCooperativeRevive` = false), então esse feedback não roda.
 

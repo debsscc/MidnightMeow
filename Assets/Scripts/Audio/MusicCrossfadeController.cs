@@ -21,6 +21,7 @@ public class MusicCrossfadeController : Singleton<MusicCrossfadeController>
     private AudioClip _currentClip;
     private AudioClip _pendingClip;
     private bool _pendingLoop = true;
+    private bool _externalOverride;
 
     public static void EnsureExists()
     {
@@ -29,9 +30,18 @@ public class MusicCrossfadeController : Singleton<MusicCrossfadeController>
         if (Instance != null)
             return;
 
-        MusicCrossfadeController existing = FindFirstObjectByType<MusicCrossfadeController>(FindObjectsInactive.Include);
+        MusicCrossfadeController existing =
+            FindFirstObjectByType<MusicCrossfadeController>(FindObjectsInactive.Include);
         if (existing != null)
+        {
+            if (!existing.gameObject.activeSelf)
+                existing.gameObject.SetActive(true);
+
+            // Awake do Singleton define Instance; se o objeto já estava ativo sem Awake, força.
+            if (Instance == null)
+                Instance = existing;
             return;
+        }
 
         var go = new GameObject(nameof(MusicCrossfadeController));
         go.AddComponent<MusicCrossfadeController>();
@@ -106,9 +116,14 @@ public class MusicCrossfadeController : Singleton<MusicCrossfadeController>
 
     public void PrepareSceneMusic(Scene scene)
     {
+        // Lê o clip ANTES de silenciar o AudioSource da cena (Unity 6 / resource).
+        bool resolved = SceneMusicResolver.TryResolve(scene, out AudioClip clip, out bool _);
         SceneMusicResolver.SuppressSceneMusicSources(scene);
 
-        if (!SceneMusicResolver.TryResolve(scene, out AudioClip clip, out bool loop))
+        if (_externalOverride)
+            return;
+
+        if (!resolved)
         {
             _pendingClip = null;
             if (SceneMusicResolver.IsSilentHubScene(scene.name))
@@ -117,11 +132,15 @@ public class MusicCrossfadeController : Singleton<MusicCrossfadeController>
         }
 
         _pendingClip = clip;
-        _pendingLoop = loop;
+        // Trilha de cena (menu/lobby/fases) sempre em loop — não confiar só no flag do AudioSource da cena.
+        _pendingLoop = true;
     }
 
     public void HandleTransitionFadeOut(float duration)
     {
+        if (_externalOverride)
+            return;
+
         float fade = ResolveDuration(duration);
         if (_activeSource == null || !_activeSource.isPlaying)
             return;
@@ -131,6 +150,9 @@ public class MusicCrossfadeController : Singleton<MusicCrossfadeController>
 
     public void FadeInPending(float duration)
     {
+        if (_externalOverride)
+            return;
+
         float fade = ResolveDuration(duration);
 
         if (_pendingClip == null)
@@ -144,6 +166,48 @@ public class MusicCrossfadeController : Singleton<MusicCrossfadeController>
 
         CrossfadeTo(_pendingClip, _pendingLoop, fade);
         _pendingClip = null;
+    }
+
+    /// <summary>
+    /// Trilha forçada (ex.: créditos). Bloqueia Prepare/FadeIn da cena até <see cref="EndExternalOverride"/>.
+    /// </summary>
+    public void BeginExternalOverride(AudioClip clip, bool loop, float duration)
+    {
+        _externalOverride = true;
+        _pendingClip = null;
+        SceneMusicResolver.SuppressAllLoadedScenes();
+
+        if (_fadeRoutine != null)
+        {
+            StopCoroutine(_fadeRoutine);
+            _fadeRoutine = null;
+        }
+
+        // Para imediatamente a trilha atual (ex.: vitória) antes de entrar nos créditos.
+        HardStopSource(_sourceA);
+        HardStopSource(_sourceB);
+        _activeSource = null;
+        _currentClip = null;
+
+        if (clip == null)
+            return;
+
+        CrossfadeTo(clip, loop, duration);
+    }
+
+    public void EndExternalOverride()
+    {
+        _externalOverride = false;
+    }
+
+    private static void HardStopSource(AudioSource source)
+    {
+        if (source == null)
+            return;
+
+        source.Stop();
+        source.clip = null;
+        source.volume = 0f;
     }
 
     public void CrossfadeTo(AudioClip clip, bool loop, float duration)
@@ -166,10 +230,15 @@ public class MusicCrossfadeController : Singleton<MusicCrossfadeController>
 
         incoming.clip = clip;
         incoming.loop = loop;
+        incoming.playOnAwake = false;
         incoming.volume = 0f;
         AssignMusicOutput(incoming);
         if (!incoming.isPlaying)
             incoming.Play();
+
+        // Garante loop mesmo se algum Suppress/HardStop tiver alterado o AudioSource.
+        if (loop && !incoming.loop)
+            incoming.loop = true;
 
         _fadeRoutine = StartCoroutine(CrossfadeRoutine(outgoing, incoming, fade));
         _activeSource = incoming;

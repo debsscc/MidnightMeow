@@ -1,6 +1,6 @@
 # Selamento de buracos de spawn
 
-Última revisão: 2026-07-16
+Última revisão: 2026-07-18
 
 ## Spawn data-driven por buraco
 
@@ -38,10 +38,12 @@ Guia Editor (teto + Poça): [rat-holes-and-cora-puddle-balance.md](../editor/gui
 ## Fluxo de selamento (resumo)
 
 1. Aproximar do buraco → prompt **"Aperte E para selar"** (`RatHoleSealPromptUI`).
-2. Pressionar **Interact (E)** → surgem **áreas circulares** grandes e opacas (`SealZoneRingVisual` via `RatHoleSealZoneVisual`), posicionadas em direção à câmera.
-3. Entrar na área → texto **"Fique na Área para selar — X%"** + barra (`RatHoleSealStatusUI`).
+2. Pressionar **Interact (E)** → surgem **áreas circulares** grandes e opacas (`SealZoneRingVisual` via `RatHoleSealZoneVisual`), posicionadas em direção à câmera. `CooperativeZonePlacementUtility` rejeita candidatos cujo círculo sobreponha layers **Wall** / **DashableWall** e tenta outros ângulos/distâncias.
+3. Entrar na área → texto **"Fique na Área para selar — X%"** + barra (`RatHoleSealStatusUI`), posicionado **acima ou abaixo** dos círculos (nunca sobreposto) via `CooperativeZoneLabelPlacementUtility`.
 4. 100% → **"Área selada"**; buraco para de spawnar; HUD atualiza (`PhaseObjectiveHud` / win Fase 1).
 5. **Todos os buracos selados** → `PhaseObjectiveManager.TryEvaluateSealVictory()` → vitória → `VictoryScene`.
+
+Prompts de selar (mesmo estilo em reviver/consertar) usam `GameplayUiFonts.ApplyWorldInteraction` — Fira Sans, tamanho `0.9`, sorting `450` (na frente do buraco), opacidade ~0.78.
 
 ## Vitória (Fase 1)
 

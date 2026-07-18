@@ -100,7 +100,9 @@ Artistas podem ajustar **timing** e **curves** no Animation window; mudanças de
 
 - Fontes brutas: `Assets/Art/Fonts/` (ex.: FiraSans).
 - TextMesh Pro SDF: gerados em `Assets/Fonts/` ou subpasta TMP — **não mover** pasta `TextMesh Pro/` do pacote.
-- **Gameplay:** Fira Sans via `Assets/Resources/GameplayUiFontConfig.asset` (`GameplayUiFonts.Apply`).
+- **Gameplay:** Fira Sans via `Assets/Resources/GameplayUiFontConfig.asset` (`GameplayUiFonts.Apply`). Prompts world-space (selar / reviver / consertar): `GameplayUiFonts.ApplyWorldInteraction` — tamanho `0.9`, canvas `6.5×1.1`, sorting `450`, opacidade ~0.78.
+- **Tutorial:** `TutorialTipPanel` usa Fira Sans Medium (`TutorialUIController` aplica em Awake).
+- **Cenas Fase-1/2/3:** textos TMP e UI.Text serializados usam Fira Sans Medium (mesmo asset do HUD "BLOQUEIE OS BURACOS").
 - **Menu / títulos / créditos (título):** Inknut Antiqua Black. Corpo dos créditos: Fira Sans (mesmo SO `CreditsVisualConfig`).
 
 **UI sprites:** `Art/Sprites/id visual/UI/` — HUD, Book/menu, Defeat&Victory, Controls, Upgrades.

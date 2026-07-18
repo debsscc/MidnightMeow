@@ -321,10 +321,12 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
         }
 
         MusicCrossfadeController music = MusicCrossfadeController.Instance;
-        // Cenas Loading1/Loading2 têm UI própria — sem fade antes de abrir.
+        // Cenas Loading1/Loading2 têm UI própria — sem fade visual antes de abrir.
+        // Hubs CarriesMusicAcross: fade visual ok, mas não corta a trilha do lobby.
         if (useFade && !enteringDedicatedLoading)
         {
-            music?.HandleTransitionFadeOut(fadeTime);
+            if (!SceneMusicResolver.CarriesMusicAcross(sceneName))
+                music?.HandleTransitionFadeOut(fadeTime);
             overlay.CancelFadeCoroutines();
             yield return overlay.FadeOut(fadeTime, delta =>
             {

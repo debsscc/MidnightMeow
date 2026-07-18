@@ -39,7 +39,7 @@ public class CarriageConfig : ScriptableObject
 
     [Header("UI offsets (arte oficial)")]
     [Tooltip("Offset local do label de conserto acima da carruagem.")]
-    public Vector3 repairLabelOffset = new Vector3(0f, 1.85f, 0f);
+    public Vector3 repairLabelOffset = new Vector3(0f, 4.6f, 0f);
 
     [Header("Trajeto (Fase 2)")]
     public float pathStartX = -42f;
@@ -118,7 +118,7 @@ public class CarriageConfig : ScriptableObject
 
     [Tooltip("Tamanho da fonte do label world-space da carruagem.")]
     [Min(0.1f)]
-    public float worldLabelFontSize = 1.4f;
+    public float worldLabelFontSize = 0.9f;
 
     public float repairLabelVisibilityRadiusMultiplier = 2f;
     public string approachText = "Aproxime-se para consertar";

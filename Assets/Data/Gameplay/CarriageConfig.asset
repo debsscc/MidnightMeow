@@ -21,7 +21,7 @@ MonoBehaviour:
   backWheelRadius: 0.36
   colliderSize: {x: 3, y: 1.8}
   colliderOffset: {x: 0.15, y: -0.25}
-  repairLabelOffset: {x: 0, y: 3.2, z: 0}
+  repairLabelOffset: {x: 0, y: 4.6, z: 0}
   pathStartX: -42
   pathEndX: 18
   useCustomPathY: 0
@@ -42,14 +42,14 @@ MonoBehaviour:
   presenceZoneFillColor: {r: 0.85, g: 0.95, b: 0.98, a: 0.1}
   arrivalZoneRadius: 2
   repairPromptRadius: 3.3
-  repairZoneRadius: 1.2
+  repairZoneRadius: 1.5
   repairMinDistance: 1.4
   repairMaxDistance: 2.8
   repairMinZoneSeparation: 1.6
   repairDuration: 8
   repairDualPlayerSpeedMultiplier: 2
   repairAbandonTimeout: 2.5
-  repairZoneVisualScaleMultiplier: 1.05
+  repairZoneVisualScaleMultiplier: 1.95
   repairZoneOutlineThickness: 0.055
   repairZoneShowInteriorFill: 0
   repairZoneSortingOrder: 250
@@ -57,8 +57,8 @@ MonoBehaviour:
   repairZoneFillColor: {r: 1, g: 0.85, b: 0.35, a: 0.5}
   repairZoneOutlineColor: {r: 1, g: 0.95, b: 0.75, a: 0.9}
   repairPromptPrefab: {fileID: 5804883921897708028, guid: 13966282a7a8dc342b54e9663bb7c08f, type: 3}
-  worldLabelFontSize: 1.4
-  repairLabelVisibilityRadiusMultiplier: 2
+  worldLabelFontSize: 0.9
+  repairLabelVisibilityRadiusMultiplier: 1.45
   approachText: Aproxime-se para consertar
   pressEText: Aperte E para consertar
   stayInAreaText: "Fique na \xE1rea para consertar"

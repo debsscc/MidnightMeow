@@ -131,6 +131,74 @@ public class PreparationSessionManager : NetworkBehaviour
         BroadcastHubStateChanged();
     }
 
+    /// <summary>
+    /// Avança o contrato sem limpar a escolha de personagem de cada cliente.
+    /// Recaptura <see cref="LobbySelectionStore"/> para o respawn na próxima fase.
+    /// </summary>
+    public void AdvanceContractPreservingCharactersOnServer(int contractIndex)
+    {
+        if (!IsServer)
+            return;
+
+        RestoreCharactersFromSelectionStoreIfNeeded();
+        CaptureSelectionsToStore();
+
+        if (contractIndex >= 0 && contracts != null && contractIndex < contracts.Length)
+        {
+            _selectedContractIndex.Value = contractIndex;
+            _contractConfirmed.Value = true;
+            _startCountdown.Value = -1;
+            ClearAllReady();
+        }
+
+        ContractSceneResolver.ApplyToSession(contractIndex);
+        SyncGameplaySceneClientRpc(new FixedString64Bytes(GameSessionContext.ActiveGameplaySceneName));
+        BroadcastHubStateChanged();
+    }
+
+    public void CaptureSelectionsToStore()
+    {
+        LobbySelectionStore.CaptureFromPreparation(_players);
+
+        CharactersSessionManager characters = CharactersSessionManager.Instance;
+        if (characters != null)
+            LobbySelectionStore.MergeFromCharacters(characters.Players);
+    }
+
+    private void RestoreCharactersFromSelectionStoreIfNeeded()
+    {
+        for (int i = 0; i < _players.Count; i++)
+        {
+            PreparationPlayerState state = _players[i];
+            if (state.CharacterType != LobbyCharacterType.Default)
+                continue;
+
+            if (LobbySelectionStore.TryGetCharacter(state.ClientId, out LobbyCharacterType stored)
+                && stored != LobbyCharacterType.Default)
+            {
+                state.CharacterType = stored;
+                _players[i] = state;
+                continue;
+            }
+
+            CharactersSessionManager characters = CharactersSessionManager.Instance;
+            if (characters == null)
+                continue;
+
+            for (int c = 0; c < characters.Players.Count; c++)
+            {
+                CharactersPlayerState characterState = characters.Players[c];
+                if (characterState.ClientId != state.ClientId
+                    || characterState.CharacterType == LobbyCharacterType.Default)
+                    continue;
+
+                state.CharacterType = characterState.CharacterType;
+                _players[i] = state;
+                break;
+            }
+        }
+    }
+
     [Rpc(SendTo.Server)]
     public void RequestRestartGameplayServerRpc(RpcParams rpcParams = default)
     {
@@ -156,6 +224,49 @@ public class PreparationSessionManager : NetworkBehaviour
 
         ResetRound();
         ScreenFlowStateMachine.ContinueAfterEndGame();
+    }
+
+    /// <summary>
+    /// Cliente na vitória pede ao host para ir à próxima fase (ou créditos na fase final).
+    /// </summary>
+    [Rpc(SendTo.Server)]
+    public void RequestContinueAfterVictoryServerRpc(RpcParams rpcParams = default)
+    {
+        if (!IsServer)
+            return;
+
+        string active = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+        if (active != "VictoryScene")
+            return;
+
+        ScreenFlowController flow = ScreenFlowController.Instance;
+        if (flow != null && flow.IsTransitioning)
+            return;
+
+        ScreenFlowStateMachine.ContinueAfterVictory();
+    }
+
+    [Rpc(SendTo.Server)]
+    public void RequestOpenVictoryCreditsServerRpc(RpcParams rpcParams = default)
+    {
+        if (!IsServer)
+            return;
+
+        BroadcastVictoryCredits();
+    }
+
+    public void BroadcastVictoryCredits()
+    {
+        if (!IsServer)
+            return;
+
+        OpenVictoryCreditsClientRpc();
+    }
+
+    [ClientRpc]
+    private void OpenVictoryCreditsClientRpc()
+    {
+        CreditsOverlayController.Open(CreditsPresentationConfig.ManualClose);
     }
 
     [Rpc(SendTo.Server)]

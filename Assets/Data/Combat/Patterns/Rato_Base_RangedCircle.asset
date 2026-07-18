@@ -31,7 +31,7 @@ MonoBehaviour:
     damage: 1
     damageLayers:
       serializedVersion: 2
-      m_Bits: 520
+      m_Bits: 8
     effectPrefab: {fileID: 0}
     travelVisualPrefab: {fileID: 3344960684203597567, guid: 6ededdb4f3eb7e143ae0a036319f5fd3, type: 3}
     travelSpeed: 14

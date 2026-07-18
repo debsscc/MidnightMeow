@@ -217,6 +217,121 @@ public static class ScreenFlowStateMachine
         return LoadSceneFallback("Preparation");
     }
 
+    /// <summary>
+    /// Vitória → próxima fase (contrato+1) ou créditos se já for a fase final.
+    /// Em MP: host sincroniza cena/contrato e preserva personagem de cada cliente.
+    /// </summary>
+    public static bool ContinueAfterVictory()
+    {
+        int currentIndex = ContractSceneResolver.ResolveActiveContractIndex();
+        string activeScene = GameSessionContext.ActiveGameplaySceneName;
+
+        if (VictoryContinueResolver.IsFinalPhase(currentIndex, activeScene))
+            return OpenVictoryCredits();
+
+        // Cliente MP: host avança o contrato e carrega a próxima fase.
+        if (NetworkSceneSyncUtility.IsNetworkClientAwaitingHost)
+        {
+            PreparationSessionManager.Instance?.RequestContinueAfterVictoryServerRpc();
+            return true;
+        }
+
+        return AdvanceToNextPhaseAfterVictory(currentIndex, activeScene);
+    }
+
+    public static bool IsFinalVictoryPhase()
+    {
+        return VictoryContinueResolver.IsFinalPhase(
+            ContractSceneResolver.ResolveActiveContractIndex(),
+            GameSessionContext.ActiveGameplaySceneName);
+    }
+
+    private static bool OpenVictoryCredits()
+    {
+        NetworkManager networkManager = NetworkManager.Singleton;
+        bool isNetworkSession = !GameSessionContext.IsSinglePlayer
+            && networkManager != null
+            && networkManager.IsListening;
+
+        if (!isNetworkSession)
+        {
+            CreditsOverlayController.Open(CreditsPresentationConfig.ManualClose);
+            return true;
+        }
+
+        if (networkManager.IsServer)
+        {
+            PreparationSessionManager.Instance?.BroadcastVictoryCredits();
+            if (PreparationSessionManager.Instance == null)
+                CreditsOverlayController.Open(CreditsPresentationConfig.ManualClose);
+            return true;
+        }
+
+        PreparationSessionManager.Instance?.RequestOpenVictoryCreditsServerRpc();
+        if (PreparationSessionManager.Instance == null)
+            CreditsOverlayController.Open(CreditsPresentationConfig.ManualClose);
+        return true;
+    }
+
+    private static bool AdvanceToNextPhaseAfterVictory(int currentIndex, string activeScene)
+    {
+        int nextIndex = VictoryContinueResolver.ResolveNextContractIndex(currentIndex, activeScene);
+
+        PreparationSessionManager session = PreparationSessionManager.Instance;
+        if (session != null && session.IsServer)
+            session.AdvanceContractPreservingCharactersOnServer(nextIndex);
+        else
+        {
+            ContractSceneResolver.ApplyToSession(nextIndex);
+            session?.CaptureSelectionsToStore();
+        }
+
+        return LoadNextGameplayPhaseAfterVictory();
+    }
+
+    private static bool LoadNextGameplayPhaseAfterVictory()
+    {
+        Time.timeScale = 1f;
+        GameplayVignetteController.ClearIfActive();
+        GameSessionContext.ResetContractRound();
+        RoundMagiculaTracker.Instance?.ResetRound();
+
+        // Nunca ResetRound() aqui — isso apagaria CharacterType de cada jogador.
+        PreparationSessionManager.Instance?.CaptureSelectionsToStore();
+
+        string sceneName = GameSessionContext.ActiveGameplaySceneName;
+        if (string.IsNullOrEmpty(sceneName) || !GameplaySceneBootstrap.IsGameplayScene(sceneName))
+            sceneName = ContractSceneResolver.ResolveSceneName(
+                VictoryContinueResolver.ResolveCurrentContractIndex(
+                    ContractSceneResolver.ResolveActiveContractIndex(),
+                    GameSessionContext.ActiveGameplaySceneName));
+
+        if (string.IsNullOrEmpty(sceneName))
+            return false;
+
+        NetworkManager networkManager = NetworkManager.Singleton;
+        bool isNetworkSession = !GameSessionContext.IsSinglePlayer
+            && networkManager != null
+            && networkManager.IsListening;
+
+        if (isNetworkSession)
+        {
+            if (!networkManager.IsServer)
+                return false;
+
+            return RestartGameplayPhaseOnServer(networkManager, sceneName);
+        }
+
+        DespawnPlayersForRestart();
+        EnterPhase(ScreenFlowPhase.LoadingToGameplay);
+        GameSessionContext.PendingRouteId = SceneFlowRouteIds.Loading2ToGameplay;
+
+        if (TryTransition(SceneFlowRouteIds.PreparationToLoading2))
+            return true;
+
+        return LoadSceneFallback("Loading2");
+    }
+
 
 
     public static bool ExitToMainMenu()

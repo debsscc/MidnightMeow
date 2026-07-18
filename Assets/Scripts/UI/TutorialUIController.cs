@@ -32,6 +32,8 @@ public class TutorialUIController : MonoBehaviour
 
     private Coroutine _transitionRoutine;
     private TutorialTipSO _displayedTip;
+    private int _displayedProgress;
+    private int _displayedRequired = 1;
 
     private void Awake()
     {
@@ -46,7 +48,12 @@ public class TutorialUIController : MonoBehaviour
         }
 
         if (tipLabel != null)
+        {
+            GameplayUiFonts.Apply(tipLabel);
+            tipLabel.color = Color.black;
+            tipLabel.fontStyle = FontStyles.Bold;
             tipLabel.text = string.Empty;
+        }
     }
 
     private void OnEnable()
@@ -57,7 +64,7 @@ public class TutorialUIController : MonoBehaviour
         // Se o Manager já publicou a dica antes deste painel habilitar, sincroniza.
         TutorialManager manager = FindFirstObjectByType<TutorialManager>();
         if (manager != null && manager.CurrentTip != null)
-            HandleTipChanged(manager.CurrentTip);
+            HandleTipChanged(manager.CurrentTip, manager.CurrentProgress, manager.CurrentTip.RequiredCount);
     }
 
     private void OnDisable()
@@ -74,14 +81,22 @@ public class TutorialUIController : MonoBehaviour
 
     private void HandleLocaleChanged(Locale _)
     {
-        if (_displayedTip == null || tipLabel == null)
-            return;
-
-        tipLabel.text = _displayedTip.ResolvedTipText;
+        RefreshLabelText();
     }
 
-    private void HandleTipChanged(TutorialTipSO tip)
+    private void HandleTipChanged(TutorialTipSO tip, int currentProgress, int requiredCount)
     {
+        bool sameTip = tip != null && tip == _displayedTip;
+        _displayedProgress = currentProgress;
+        _displayedRequired = Mathf.Max(1, requiredCount);
+
+        // Atualização só de progresso (ex. kills 1/3): troca o texto sem fade.
+        if (sameTip)
+        {
+            RefreshLabelText();
+            return;
+        }
+
         if (_transitionRoutine != null)
             StopCoroutine(_transitionRoutine);
 
@@ -104,11 +119,24 @@ public class TutorialUIController : MonoBehaviour
             yield break;
         }
 
-        if (tipLabel != null)
-            tipLabel.text = tip.ResolvedTipText;
-
+        RefreshLabelText();
         yield return FadeTo(1f, fadeInSeconds);
         _transitionRoutine = null;
+    }
+
+    private void RefreshLabelText()
+    {
+        if (tipLabel == null || _displayedTip == null)
+            return;
+
+        tipLabel.text = _displayedTip.Trigger == TutorialTipTrigger.UseAbility
+            ? TutorialTipDisplayFormatter.FormatAbilityKeys(
+                _displayedTip.ResolvedTipText,
+                _displayedProgress)
+            : TutorialTipDisplayFormatter.Format(
+                _displayedTip.ResolvedTipText,
+                _displayedProgress,
+                _displayedRequired);
     }
 
     private IEnumerator FadeTo(float targetAlpha, float duration)

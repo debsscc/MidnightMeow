@@ -1251,7 +1251,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_FontData:
-    m_Font: {fileID: 12800000, guid: 96a4e5d24c43b2747a5ecdd5a5bf80e6, type: 3}
+    m_Font: {fileID: 12800000, guid: 2a28465d4df9fe5499f2f891f82c0f20, type: 3}
     m_FontSize: 20
     m_FontStyle: 0
     m_BestFit: 0
@@ -1769,7 +1769,7 @@ Transform:
   m_GameObject: {fileID: 479527496}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 19.57, y: -21.45, z: 0}
+  m_LocalPosition: {x: 18.02, y: -19.22, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -3125,7 +3125,7 @@ Transform:
   m_GameObject: {fileID: 782478972}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -25.76, y: -26.23, z: 0}
+  m_LocalPosition: {x: -30.61, y: -13.34, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -4031,8 +4031,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Button
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 0e9cb7e0967de5744a83c41a94688022, type: 2}
+  m_sharedMaterial: {fileID: 5258727435717829718, guid: 0e9cb7e0967de5744a83c41a94688022, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -4303,7 +4303,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_FontData:
-    m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
+    m_Font: {fileID: 12800000, guid: 2a28465d4df9fe5499f2f891f82c0f20, type: 3}
     m_FontSize: 48
     m_FontStyle: 0
     m_BestFit: 0
@@ -10011,7 +10011,7 @@ Transform:
   m_GameObject: {fileID: 1400957144}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 17.06, y: 2.78, z: 0}
+  m_LocalPosition: {x: 16.28, y: -0.81, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -12204,7 +12204,7 @@ Transform:
   m_GameObject: {fileID: 2014084469}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.8, y: -15, z: 0}
+  m_LocalPosition: {x: -5.89, y: -23.53, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -12943,11 +12943,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5896607904219452471, guid: 6b3f3ec92404eb84ba5dc8c82ad615d3, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 220
+      value: 320
       objectReference: {fileID: 0}
     - target: {fileID: 5896607904219452471, guid: 6b3f3ec92404eb84ba5dc8c82ad615d3, type: 3}
       propertyPath: m_SizeDelta.y
-      value: 220
+      value: 221
       objectReference: {fileID: 0}
     - target: {fileID: 5896607904219452471, guid: 6b3f3ec92404eb84ba5dc8c82ad615d3, type: 3}
       propertyPath: m_LocalPosition.x
@@ -12979,7 +12979,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5896607904219452471, guid: 6b3f3ec92404eb84ba5dc8c82ad615d3, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: -0.00012207031
+      value: 20
       objectReference: {fileID: 0}
     - target: {fileID: 5896607904219452471, guid: 6b3f3ec92404eb84ba5dc8c82ad615d3, type: 3}
       propertyPath: m_AnchoredPosition.y

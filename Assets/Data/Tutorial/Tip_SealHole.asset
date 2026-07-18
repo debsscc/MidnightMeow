@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b3c161a78af321c47aba1959d33784de, type: 3}
   m_Name: Tip_SealHole
   m_EditorClassIdentifier: MidnightMeow::TutorialTipSO
-  tipTextPt: "Sele um buraco ficando nas \xE1reas indicadas"
-  tipTextEn: Seal a hole by standing in the marked areas
+  tipTextPt: "\xD3timo, s\xF3 falta fechar por onde eles entram! Sele esses buracos!"
+  tipTextEn: Great, now close where they come from! Seal those holes!
   trigger: 2
+  requiredCount: 1

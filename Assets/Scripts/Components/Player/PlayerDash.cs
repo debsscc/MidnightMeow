@@ -269,6 +269,7 @@ public class PlayerDash : MonoBehaviour
             _debugHost.ShowDash(_dashStartPosition, _activeDashDirection, _dashTotalDistance, dashGizmoWidth);
 
         OnDashStarted?.Invoke();
+        GameEvents.InvokeTutorialDashExecuted();
         GameplayDiagnosticHub.EmitPlayerDash(new PlayerDashDiagnostic(
             gameObject.name,
             "start",

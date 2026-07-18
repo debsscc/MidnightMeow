@@ -12,6 +12,7 @@
 - **Aggro dos ratos** via `EnemyStats.aggroType` (`PlayersOnly` / `StructuresOnly` / `Dynamic`) — ver [guia Editor](../editor/guides/carriage-phase2-aggro-setup.md).
 - Conserto cooperativo (mesmo padrão do selamento): **E** → zonas → progresso no servidor → restaura `repairRestoreHealthFraction` da vida.
   - Manager isolado: `NetworkCarriageRepairManager` (arquivo próprio — RPC NGO).
+  - SFX: `Interacao.wav` ao iniciar (`GameplayInteractAudio.PlayConfirm`); `Reviver.wav` ao concluir (`PlayReviveComplete`).
   - Guia de correção do E: [carriage-repair-fix.md](../editor/guides/carriage-repair-fix.md)
 - Chegada ao fim → `PhaseObjectiveManager.NotifyCarriageArrived()` + `GameEvents.OnCarriageArrived` → vitória Fase 2.
 - **HUD:** `PhaseObjectiveHud` (Fase-2) — banner “Proteja a carruagem” + barra de trajeto (branco restante = `1 - PathProgress`) + ícone `Carriage_Reference` que acompanha o progresso.
@@ -26,7 +27,7 @@
 | Giro das rodas | `CarriageWheelSpinner` (local; pausa / quebrada / chegada param) |
 | Raios | `frontWheelRadius` / `backWheelRadius` no config |
 | Collider | `colliderSize` / `colliderOffset` no config |
-| Label escolta/conserto | `repairLabelOffset` + textos `escort*` / repair |
+| Label escolta/conserto | `repairLabelOffset` (base) + clearance acima da HP; com zonas ativas, `CooperativeZoneLabelPlacementUtility` coloca o texto acima/abaixo dos círculos |
 | Área de presença (escolta) | `CarriagePresenceZoneVisual` — anel pastel (`SealZoneRingVisual`) com diâmetro `2 × playerPresenceRadius`; Idle mais legível, Moving mais suave; some em Broken/chegada |
 
 Não sincronizar ângulo de roda na rede — deriva do progresso/movimento já replicado.

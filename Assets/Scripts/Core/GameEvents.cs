@@ -154,13 +154,20 @@ public static class GameEvents
     /// <summary>Jogador local atirou ou atacou com o botão primário.</summary>
     public static event Action OnTutorialShootExecuted;
 
+    /// <summary>Jogador local usou habilidade Q (Ability1) ou R (Ability2).</summary>
+    public static event Action<AbilitySlot> OnTutorialAbilityExecuted;
+
+    /// <summary>Jogador local usou o dash.</summary>
+    public static event Action OnTutorialDashExecuted;
+
     /// <summary>Um buraco foi selado (SP ou MP — todos os clientes).</summary>
     public static event Action OnTutorialSealHoleExecuted;
 
     /// <summary>
-    /// Dica atual mudou. Payload null = tutorial concluído / esconder painel.
+    /// Dica atual mudou. tip null = tutorial concluído / esconder painel.
+    /// currentProgress / requiredCount alimentam contadores (ex. kills 0/3).
     /// </summary>
-    public static event Action<TutorialTipSO> OnTutorialTipChanged;
+    public static event Action<TutorialTipSO, int, int> OnTutorialTipChanged;
 
     /// <summary>Sequência de dicas terminou.</summary>
     public static event Action OnTutorialCompleted;
@@ -175,14 +182,24 @@ public static class GameEvents
         OnTutorialShootExecuted?.Invoke();
     }
 
+    public static void InvokeTutorialAbilityExecuted(AbilitySlot slot)
+    {
+        OnTutorialAbilityExecuted?.Invoke(slot);
+    }
+
+    public static void InvokeTutorialDashExecuted()
+    {
+        OnTutorialDashExecuted?.Invoke();
+    }
+
     public static void InvokeTutorialSealHoleExecuted()
     {
         OnTutorialSealHoleExecuted?.Invoke();
     }
 
-    public static void InvokeTutorialTipChanged(TutorialTipSO tip)
+    public static void InvokeTutorialTipChanged(TutorialTipSO tip, int currentProgress = 0, int requiredCount = 1)
     {
-        OnTutorialTipChanged?.Invoke(tip);
+        OnTutorialTipChanged?.Invoke(tip, currentProgress, requiredCount);
     }
 
     public static void InvokeTutorialCompleted()
