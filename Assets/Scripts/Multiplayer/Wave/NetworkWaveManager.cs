@@ -126,6 +126,8 @@ public class NetworkWaveManager : NetworkBehaviour
             case SpawnMode.SingleBoss:
                 Debug.Log("[NetworkWaveManager] Spawnando boss.");
                 StartCoroutine(SpawnBossRoutine());
+                // HUD de boss pode ter nascido antes do Playing — reforça no servidor e peers locais.
+                GameplaySceneBootstrap.TryEnsureGameplayHud();
                 break;
             default:
                 Debug.Log("[NetworkWaveManager] Iniciando ondas.");
@@ -323,6 +325,9 @@ public class NetworkWaveManager : NetworkBehaviour
         netObj.Spawn(true);
         _spawnedEnemies.Add(netObj);
         _enemiesAlive++;
+
+        if (prefab.GetComponent<BossEnemyMarker>() != null)
+            GameplaySceneBootstrap.TryEnsureGameplayHud();
 
         if (_spawnMode == SpawnMode.Waves && waveSettings != null)
         {

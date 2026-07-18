@@ -46,7 +46,7 @@ public class LobbySceneUIController : MonoBehaviour
 
     [Header("Layout solo (painel direito)")]
     [SerializeField] private Vector2 soloStatusAnchoredPos = new Vector2(318f, -250f);
-    [SerializeField] private Vector2 soloReadyAnchoredPos = new Vector2(409f, 40f);
+    [SerializeField] private Vector2 soloReadyAnchoredPos = new Vector2(309f, 40f);
     [SerializeField] private Vector2 soloDisconnectAnchoredPos = new Vector2(309f, -109f);
 
     private LobbyUiMode _mode = LobbyUiMode.ModeSelect;

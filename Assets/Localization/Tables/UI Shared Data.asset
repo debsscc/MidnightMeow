@@ -565,6 +565,18 @@ MonoBehaviour:
     m_Key: objective.holes_count
     m_Metadata:
       m_Items: []
+  - m_Id: 9200000000000010
+    m_Key: objective.protect_carriage.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 9200000000000011
+    m_Key: objective.carriage_progress
+    m_Metadata:
+      m_Items: []
+  - m_Id: 9200000000000012
+    m_Key: objective.defeat_boss.title
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

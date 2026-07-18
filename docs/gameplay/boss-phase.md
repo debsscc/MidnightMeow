@@ -28,14 +28,14 @@ Guia de setup no Editor: [rat-king-boss-setup.md](../editor/guides/rat-king-boss
 
 | Elemento | Comportamento |
 |----------|----------------|
-| `BossHealthBarHud` | Barra grande **centralizada no meio da tela** (nome + fill + trail) |
-| `EnemyHealthBarDisplay` | **Desligada** no boss (evita barra duplicada na cabeça) |
+| `BossHealthBarHud` | Banner **Objetivo** (“DERROTE O REI RATO”) + barra larga (moldura dourada + fill vermelho) no topo |
+| `EnemyHealthBarDisplay` | Fallback world-space no boss até a HUD de tela vincular; depois some |
 | `PhaseObjectiveHud` | **Oculta** (sem texto de buracos/poças seladas) |
 | `SpriteBlink` | Só em hits **marcantes** (`dano > 1` ou `≥ 5%` da vida máx.) |
 
 Helpers: `BossPhaseUtility`, criação via `GameplayHudController.EnsureBossHealthBarHud()`.
 
-**Nota (2026-07-16):** a barra fica oculta via `CanvasGroup.alpha` (não `SetActive(false)` no root). O boss spawna com `firstSpawnDelay`; o HUD faz poll com `FindObjectsInactive.Include`. `GameplayHudLayers` é trazido para frente no canvas; `ignoreParentGroups` evita herdar alpha zero de pais. Em `Fase-3`, havia um segundo `Canvas` com `localScale (0,0,0)` — ignorado pelo bootstrap e corrigido no disco.
+**Nota (2026-07-17):** bind via `BossEnemyMarker.OnBossAvailable` + poll; `EnsureConfigured()` reconstrói UI/CanvasGroup se o objeto na cena estiver incompleto ou desligado. Canvas da Fase-3 renomeado para `Gameplay_UI` com `GameplayHudController` bakeado. HUD re-assegurada em `GameState.Playing` e no spawn do boss. Sem bind, world-space permanece como fallback.
 
 ## Prefab
 

@@ -24,20 +24,21 @@ public class EnemyHealthBarDisplay : MonoBehaviour
     private Transform _barRoot;
     private Image _fillImage;
     private float _barWidth;
+    private bool _cinematicBossFallback;
 
     private void Awake()
     {
         _health = GetComponent<HealthComponent>();
 
-        // Fase-3: barra world-space some — a vida do boss vai para o HUD de tela.
+        // Fase-3: preferir HUD de tela, mas manter world-space como fallback até o bind.
         if (BossPhaseUtility.UsesCinematicBossPresentation(gameObject))
         {
-            buildIfMissing = false;
-            enabled = false;
-            return;
+            _cinematicBossFallback = true;
         }
-
-        ApplyBossOverrides();
+        else
+        {
+            ApplyBossOverrides();
+        }
 
         if (buildIfMissing && _barRoot == null)
             BuildBar();
@@ -84,6 +85,16 @@ public class EnemyHealthBarDisplay : MonoBehaviour
 
     private void LateUpdate()
     {
+        if (_cinematicBossFallback)
+        {
+            bool hudBound = BossHealthBarHud.IsBoundToBoss(gameObject);
+            if (_barRoot != null && _barRoot.gameObject.activeSelf == hudBound)
+                _barRoot.gameObject.SetActive(!hudBound);
+
+            if (hudBound)
+                return;
+        }
+
         if (_barRoot == null)
             return;
 

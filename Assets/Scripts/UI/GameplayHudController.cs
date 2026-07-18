@@ -254,7 +254,11 @@ public class GameplayHudController : MonoBehaviour
         else if (hud.transform.parent != objectiveLayer)
             hud.transform.SetParent(objectiveLayer, false);
 
-        hud.gameObject.SetActive(true);
+        if (hud == null)
+            return;
+
+        // Garante GameObject + componente ativos (cenas às vezes salvam o script desligado).
+        hud.EnsureConfigured();
         hud.transform.SetAsLastSibling();
     }
 

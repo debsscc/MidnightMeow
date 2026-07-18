@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 90f144b590fb61a448403c7c17764fa6
+guid: 6bf23a8f3e2ebe243bd0158b70de8fc9
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 5802897827288582985
-    second: Objetivo_0
+      213: -8576005567024338843
+    second: cmp 3_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -46,7 +46,7 @@ TextureImporter:
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 2
+  spriteMode: 1
   spriteExtrude: 1
   spriteMeshType: 1
   alignment: 0
@@ -126,23 +126,23 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Objetivo_0
+      name: cmp 3_0
       rect:
         serializedVersion: 2
-        x: 113
-        y: 9
-        width: 456
-        height: 81
+        x: 0
+        y: 0
+        width: 2339
+        height: 1600
       alignment: 0
-      pivot: {x: 0.5, y: 0.5}
+      pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 94b0c6f24d8088050800000000000000
-      internalID: 5802897827288582985
+      spriteID: 568edb9df58ebf880800000000000000
+      internalID: -8576005567024338843
       vertices: []
       indices: 
       edges: []
@@ -161,7 +161,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      Objetivo_0: 5802897827288582985
+      cmp 3_0: -8576005567024338843
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

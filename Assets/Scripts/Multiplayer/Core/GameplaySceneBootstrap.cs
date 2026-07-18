@@ -49,6 +49,21 @@ public static class GameplaySceneBootstrap
 
         TryEnsureGameplayHud();
         EnsureCooperativeZoneVisuals();
+
+        MultiplayerGameManager.OnGameStateChanged -= HandleGameplayStateChangedForHud;
+        MultiplayerGameManager.OnGameStateChanged += HandleGameplayStateChangedForHud;
+    }
+
+    private static void HandleGameplayStateChangedForHud(GameState state)
+    {
+        if (state != GameState.Playing)
+            return;
+
+        if (!IsGameplayScene(SceneManager.GetActiveScene().name))
+            return;
+
+        // Re-garante HUD do boss quando a partida entra em Playing (spawn do Rei Rato vem depois).
+        TryEnsureGameplayHud();
     }
 
     /// <summary>
@@ -144,16 +159,29 @@ public static class GameplaySceneBootstrap
             if (canvas == null)
                 continue;
 
-            if (canvas.transform.localScale.sqrMagnitude < 0.01f)
-                continue;
-
             int score = 0;
+            // Canvas com scale zero (Fase-3 no disco) ainda pode ser o HUD certo — repara depois.
+            bool zeroScale = canvas.transform.localScale.sqrMagnitude < 0.01f;
+            if (zeroScale)
+                score -= 20;
+
             if (canvas.GetComponent<GameplayHudController>() != null)
                 score += 100;
             if (canvas.GetComponentInChildren<HordeIndicator>(true) != null)
                 score += 50;
             if (canvas.GetComponentInChildren<healthBarUi>(true) != null)
                 score += 25;
+            if (canvas.GetComponentInChildren<PlayerAbilityHud>(true) != null)
+                score += 25;
+
+            Transform parent = canvas.transform.parent;
+            if (parent != null && parent.name.IndexOf("UI", System.StringComparison.OrdinalIgnoreCase) >= 0)
+                score += 40;
+
+            // Evita Canvas órfão dentro de Environment (luz / props).
+            if (parent != null && parent.name.IndexOf("Enviroment", System.StringComparison.OrdinalIgnoreCase) >= 0)
+                score -= 80;
+
             score += canvas.sortingOrder;
 
             if (score > bestScore)

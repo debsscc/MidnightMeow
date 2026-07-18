@@ -36,7 +36,9 @@ public class PreparationScreenController : MonoBehaviour
 
     private int _localSelectedContract = -1;
     private bool _buttonsWired;
+    private bool _previewZoomWired;
     private PreparationSessionManager _subscribedSession;
+    private UiSimpleImageZoomOverlay _imageZoomOverlay;
 
     private void Awake()
     {
@@ -44,6 +46,7 @@ public class PreparationScreenController : MonoBehaviour
         BindSceneReferences();
         EnsureUi();
         WireButtons();
+        WireContractPreviewZoom();
         ApplyMenuButtonFeedback();
     }
 
@@ -58,6 +61,7 @@ public class PreparationScreenController : MonoBehaviour
         if (!_buttonsWired)
             WireButtons();
 
+        WireContractPreviewZoom();
         ApplyMenuButtonFeedback();
         EnsureDefaultContract();
         RefreshView();
@@ -176,6 +180,8 @@ public class PreparationScreenController : MonoBehaviour
         CancelInvoke(nameof(RefreshView));
         PreparationSessionManager.OnInstanceAvailable -= TrySubscribeSession;
         UnsubscribeSession();
+        if (_imageZoomOverlay != null && _imageZoomOverlay.IsOpen)
+            _imageZoomOverlay.Close();
     }
 
     private void TrySubscribeSession()
@@ -417,6 +423,55 @@ public class PreparationScreenController : MonoBehaviour
         }
 
         _buttonsWired = true;
+    }
+
+    private void WireContractPreviewZoom()
+    {
+        if (_previewZoomWired)
+            return;
+
+        if (contractPreviewImages == null || contractPreviewImages.Length == 0)
+            return;
+
+        Transform canvas = FindSceneCanvas();
+        if (canvas == null)
+            return;
+
+        _imageZoomOverlay = UiSimpleImageZoomOverlay.EnsureOnCanvas(canvas);
+
+        for (int i = 0; i < contractPreviewImages.Length; i++)
+        {
+            GameObject previewGo = contractPreviewImages[i];
+            if (previewGo == null)
+                continue;
+
+            Image previewImage = previewGo.GetComponent<Image>()
+                                 ?? previewGo.GetComponentInChildren<Image>(true);
+            if (previewImage == null)
+                continue;
+
+            previewImage.raycastTarget = true;
+
+            EventTrigger trigger = previewGo.GetComponent<EventTrigger>();
+            if (trigger == null)
+                trigger = previewGo.AddComponent<EventTrigger>();
+
+            // Remove listeners antigos deste zoom (PointerClick com zoom).
+            trigger.triggers.RemoveAll(e => e.eventID == EventTriggerType.PointerClick);
+
+            Image captured = previewImage;
+            var entry = new EventTrigger.Entry { eventID = EventTriggerType.PointerClick };
+            entry.callback.AddListener(_ =>
+            {
+                if (!captured.gameObject.activeInHierarchy)
+                    return;
+
+                _imageZoomOverlay?.ToggleFrom(captured);
+            });
+            trigger.triggers.Add(entry);
+        }
+
+        _previewZoomWired = true;
     }
 
     private static void AddHover(EventTrigger trigger, int index)
@@ -730,7 +785,8 @@ public class PreparationScreenController : MonoBehaviour
             if (contractPreviewImages[i] == null)
                 continue;
 
-            contractPreviewImages[i].SetActive(selected < 0 || i == selected);
+            bool show = selected < 0 || i == selected;
+            contractPreviewImages[i].SetActive(show);
         }
     }
 

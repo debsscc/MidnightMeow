@@ -44,7 +44,7 @@ Carriage (tag Structure, layer Structure)
 | `Carriage_Body.png` | Corpo (camada frente) |
 | `Carriage_Tire_Front/Back.png` | Aro/pneu |
 | `Carriage_Spokes_Front/Back.png` | Cruz/raios (gira com o pneu) |
-| `Carriage_Reference.png` | Só referência — **não** usar no play |
+| `Carriage_Reference.png` | Ícone follower do HUD Fase-2 (`PhaseObjectiveHudVisuals`) |
 
 Import: Sprite Single, **PPU 100**, Filter **Point**, pivot **centro** (0.5, 0.5).
 

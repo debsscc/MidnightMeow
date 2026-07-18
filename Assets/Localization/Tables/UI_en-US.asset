@@ -560,6 +560,18 @@ MonoBehaviour:
     m_Localized: "{0}/{1}"
     m_Metadata:
       m_Items: []
+  - m_Id: 9200000000000010
+    m_Localized: PROTECT THE CARRIAGE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 9200000000000011
+    m_Localized: "Carriage: {0}%"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 9200000000000012
+    m_Localized: DEFEAT THE RAT KING
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

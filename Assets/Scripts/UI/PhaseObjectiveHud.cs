@@ -1,6 +1,6 @@
 // ----------------------------------------------------------------
 // CRIADO POR: Pedro Caurio
-// DESCRIÇÃO: HUD de objetivo da fase. Fase 1: banner + contador x/y de buracos.
+// DESCRIÇÃO: HUD de objetivo — Fase 1 buracos, Fase 2 carruagem (banner + barra).
 // ----------------------------------------------------------------
 
 using TMPro;
@@ -15,23 +15,33 @@ public class PhaseObjectiveHud : MonoBehaviour
     [SerializeField] private PhaseObjectiveHudVisuals visuals;
     [SerializeField] private bool buildVisualsIfMissing = true;
 
-    [Header("Legacy fallback (Fase 2+)")]
+    [Header("Legacy fallback")]
     [SerializeField] private Text legacyStatusText;
     [SerializeField] private bool buildLegacyTextIfMissing = true;
 
     private string _legacyStatus = "Buracos: -/-";
-    private float _carriageProgressPercent;
+    private float _carriageProgressNormalized;
     private int _holesSealed;
     private int _totalHoles;
     private int _enemiesAlive;
     private CarriageController _subscribedCarriage;
 
     private RectTransform _holesRoot;
-    private Image _bannerImage;
-    private TextMeshProUGUI _titleLabel;
-    private Image _counterImage;
-    private TextMeshProUGUI _counterLabel;
+    private Image _holesBannerImage;
+    private TextMeshProUGUI _holesTitleLabel;
+    private Image _holesCounterImage;
+    private TextMeshProUGUI _holesCounterLabel;
     private bool _holesUiBuilt;
+
+    private RectTransform _carriageRoot;
+    private Image _carriageBannerImage;
+    private TextMeshProUGUI _carriageTitleLabel;
+    private RectTransform _carriageBarTrack;
+    private Image _carriageBarBackground;
+    private Image _carriageBarRemaining;
+    private Image _carriageBarFrame;
+    private RectTransform _carriageFollower;
+    private bool _carriageUiBuilt;
 
     private void Awake() => EnsureConfigured();
 
@@ -92,7 +102,7 @@ public class PhaseObjectiveHud : MonoBehaviour
 
     private void HandleCarriageProgressChanged(float previous, float current)
     {
-        _carriageProgressPercent = Mathf.Clamp01(current) * 100f;
+        _carriageProgressNormalized = Mathf.Clamp01(current);
         RebuildStatusText();
     }
 
@@ -106,6 +116,7 @@ public class PhaseObjectiveHud : MonoBehaviour
 
         EnsureRootRect();
         EnsureHolesVisualLayout();
+        EnsureCarriageVisualLayout();
         EnsureLegacyText();
         UpdateUI();
     }
@@ -120,7 +131,7 @@ public class PhaseObjectiveHud : MonoBehaviour
         rt.anchorMax = new Vector2(0.5f, 1f);
         rt.pivot = new Vector2(0.5f, 1f);
         rt.anchoredPosition = new Vector2(0f, -16f);
-        rt.sizeDelta = new Vector2(640f, 240f);
+        rt.sizeDelta = new Vector2(720f, 260f);
     }
 
     private void EnsureHolesVisualLayout()
@@ -134,46 +145,129 @@ public class PhaseObjectiveHud : MonoBehaviour
 
         _holesRoot = CreateChild("SealHolesHud", stretch: true);
 
-        _bannerImage = CreateImageChild(_holesRoot, "ObjectiveBanner", new Vector2(0.5f, 1f), new Vector2(0f, -4f),
+        _holesBannerImage = CreateImageChild(_holesRoot, "ObjectiveBanner", new Vector2(0.5f, 1f), new Vector2(0f, -4f),
             new Vector2(520f, 92f));
         if (visuals.SealHolesBanner != null)
-            _bannerImage.sprite = visuals.SealHolesBanner;
-        _bannerImage.preserveAspect = true;
-        _bannerImage.raycastTarget = false;
+            _holesBannerImage.sprite = visuals.SealHolesBanner;
+        _holesBannerImage.preserveAspect = true;
+        _holesBannerImage.raycastTarget = false;
 
-        _titleLabel = CreateTmpChild(_bannerImage.transform, "ObjectiveTitle", Vector2.zero, Vector2.one,
+        _holesTitleLabel = CreateTmpChild(_holesBannerImage.transform, "ObjectiveTitle", Vector2.zero, Vector2.one,
             new Vector2(24f, 15f), new Vector2(-24f, -1f));
-        _titleLabel.alignment = TextAlignmentOptions.Center;
-        _titleLabel.fontSize = 28f;
-        _titleLabel.fontStyle = FontStyles.Bold | FontStyles.UpperCase;
-        _titleLabel.color = new Color(0.28f, 0.28f, 0.3f, 1f);
-        _titleLabel.enableAutoSizing = true;
-        _titleLabel.fontSizeMin = 18f;
-        _titleLabel.fontSizeMax = 30f;
-        _titleLabel.raycastTarget = false;
+        StyleTitleLabel(_holesTitleLabel);
 
-        _counterImage = CreateImageChild(_holesRoot, "HolesCounter", new Vector2(0.5f, 1f), new Vector2(0f, -108f),
+        _holesCounterImage = CreateImageChild(_holesRoot, "HolesCounter", new Vector2(0.5f, 1f), new Vector2(0f, -108f),
             new Vector2(340f, 124f));
         if (visuals.SealHolesCounterFrame != null)
-            _counterImage.sprite = visuals.SealHolesCounterFrame;
-        _counterImage.preserveAspect = true;
-        _counterImage.raycastTarget = false;
+            _holesCounterImage.sprite = visuals.SealHolesCounterFrame;
+        _holesCounterImage.preserveAspect = true;
+        _holesCounterImage.raycastTarget = false;
 
-        // Ícone já vem na sprite à esquerda; o x/y fica na área branca à direita.
-        // Nudge: +2px direita, +8px baixo (4 + 4) em relação ao centro da área.
-        _counterLabel = CreateTmpChild(_counterImage.transform, "HolesCount",
+        _holesCounterLabel = CreateTmpChild(_holesCounterImage.transform, "HolesCount",
             new Vector2(0.32f, 0f), Vector2.one,
             new Vector2(10f, 10f), new Vector2(-16f, -26f));
-        _counterLabel.alignment = TextAlignmentOptions.Center;
-        _counterLabel.fontSize = 42f;
-        _counterLabel.fontStyle = FontStyles.Bold;
-        _counterLabel.color = Color.black;
-        _counterLabel.enableAutoSizing = true;
-        _counterLabel.fontSizeMin = 28f;
-        _counterLabel.fontSizeMax = 48f;
-        _counterLabel.raycastTarget = false;
+        _holesCounterLabel.alignment = TextAlignmentOptions.Center;
+        _holesCounterLabel.fontSize = 42f;
+        _holesCounterLabel.fontStyle = FontStyles.Bold;
+        _holesCounterLabel.color = Color.black;
+        _holesCounterLabel.enableAutoSizing = true;
+        _holesCounterLabel.fontSizeMin = 28f;
+        _holesCounterLabel.fontSizeMax = 48f;
+        _holesCounterLabel.raycastTarget = false;
 
         _holesUiBuilt = true;
+    }
+
+    private void EnsureCarriageVisualLayout()
+    {
+        if (_carriageUiBuilt || !buildVisualsIfMissing)
+            return;
+
+        if (visuals == null ||
+            (visuals.CarriageBanner == null && visuals.CarriageBarFrame == null && visuals.CarriageBarBackground == null))
+            return;
+
+        _carriageRoot = CreateChild("CarriageHud", stretch: true);
+
+        _carriageBannerImage = CreateImageChild(_carriageRoot, "ObjectiveBanner", new Vector2(0.5f, 1f), new Vector2(0f, -4f),
+            new Vector2(520f, 92f));
+        if (visuals.CarriageBanner != null)
+            _carriageBannerImage.sprite = visuals.CarriageBanner;
+        _carriageBannerImage.preserveAspect = true;
+        _carriageBannerImage.raycastTarget = false;
+
+        _carriageTitleLabel = CreateTmpChild(_carriageBannerImage.transform, "ObjectiveTitle", Vector2.zero, Vector2.one,
+            new Vector2(24f, 15f), new Vector2(-24f, -1f));
+        StyleTitleLabel(_carriageTitleLabel);
+
+        // Trilho: Baixo (fundo) → branco restante → Moldura → ícone follower (como loading).
+        RectTransform barRoot = CreateChildUnder(_carriageRoot, "CarriageProgress");
+        barRoot.anchorMin = new Vector2(0.5f, 1f);
+        barRoot.anchorMax = new Vector2(0.5f, 1f);
+        barRoot.pivot = new Vector2(0.5f, 1f);
+        barRoot.anchoredPosition = new Vector2(0f, -100f);
+        barRoot.sizeDelta = new Vector2(640f, 96f);
+
+        _carriageBarTrack = CreateChildUnder(barRoot, "BarTrack");
+        _carriageBarTrack.anchorMin = new Vector2(0.5f, 0.5f);
+        _carriageBarTrack.anchorMax = new Vector2(0.5f, 0.5f);
+        _carriageBarTrack.pivot = new Vector2(0.5f, 0.5f);
+        _carriageBarTrack.anchoredPosition = new Vector2(0f, -2f);
+        _carriageBarTrack.sizeDelta = new Vector2(528f, 44f);
+
+        _carriageBarBackground = CreateImageChild(_carriageBarTrack, "BarBackground", new Vector2(0.5f, 0.5f), Vector2.zero,
+            new Vector2(560f, 48f));
+        if (visuals.CarriageBarBackground != null)
+            _carriageBarBackground.sprite = visuals.CarriageBarBackground;
+        _carriageBarBackground.preserveAspect = false;
+        _carriageBarBackground.color = new Color(0.92f, 0.18f, 0.18f, 1f);
+        _carriageBarBackground.raycastTarget = false;
+
+        _carriageBarRemaining = CreateImageChild(_carriageBarTrack, "BarRemaining", new Vector2(0.5f, 0.5f), Vector2.zero,
+            new Vector2(528f, 44f));
+        LoadingProgressUtility.ApplySolidSprite(_carriageBarRemaining);
+        _carriageBarRemaining.color = Color.white;
+        _carriageBarRemaining.type = Image.Type.Filled;
+        _carriageBarRemaining.fillMethod = Image.FillMethod.Horizontal;
+        _carriageBarRemaining.fillOrigin = (int)Image.OriginHorizontal.Left;
+        _carriageBarRemaining.fillAmount = 1f;
+        _carriageBarRemaining.raycastTarget = false;
+
+        _carriageBarFrame = CreateImageChild(barRoot, "BarFrame", new Vector2(0.5f, 0.5f), Vector2.zero,
+            new Vector2(640f, 96f));
+        if (visuals.CarriageBarFrame != null)
+            _carriageBarFrame.sprite = visuals.CarriageBarFrame;
+        _carriageBarFrame.preserveAspect = true;
+        _carriageBarFrame.raycastTarget = false;
+
+        if (visuals.CarriageFollowerIcon != null)
+        {
+            Image followerImage = CreateImageChild(barRoot, "CarriageFollower", new Vector2(0.5f, 0.5f),
+                Vector2.zero, new Vector2(96f, 72f));
+            followerImage.sprite = visuals.CarriageFollowerIcon;
+            followerImage.preserveAspect = true;
+            followerImage.raycastTarget = false;
+            _carriageFollower = followerImage.rectTransform;
+            _carriageFollower.pivot = new Vector2(0.5f, 0.35f);
+            _carriageFollower.SetAsLastSibling();
+        }
+
+        _carriageUiBuilt = true;
+    }
+
+    private static void StyleTitleLabel(TextMeshProUGUI label)
+    {
+        if (label == null)
+            return;
+
+        label.alignment = TextAlignmentOptions.Center;
+        label.fontSize = 28f;
+        label.fontStyle = FontStyles.Bold | FontStyles.UpperCase;
+        label.color = new Color(0.28f, 0.28f, 0.3f, 1f);
+        label.enableAutoSizing = true;
+        label.fontSizeMin = 18f;
+        label.fontSizeMax = 30f;
+        label.raycastTarget = false;
     }
 
     private void EnsureLegacyText()
@@ -181,11 +275,18 @@ public class PhaseObjectiveHud : MonoBehaviour
         if (legacyStatusText == null)
             legacyStatusText = GetComponent<Text>();
 
-        if (legacyStatusText == null && buildLegacyTextIfMissing && !_holesUiBuilt)
+        bool hasVisual = _holesUiBuilt || _carriageUiBuilt;
+        if (legacyStatusText == null && buildLegacyTextIfMissing && !hasVisual)
             legacyStatusText = CreateFallbackLegacyText();
 
         if (legacyStatusText != null)
-            legacyStatusText.gameObject.SetActive(!_holesUiBuilt || ResolveMode() != HudMode.SealHoles);
+        {
+            HudMode mode = ResolveMode();
+            bool useLegacy = mode == HudMode.KillBoss
+                             || (mode == HudMode.SealHoles && !_holesUiBuilt)
+                             || (mode == HudMode.Carriage && !_carriageUiBuilt);
+            legacyStatusText.gameObject.SetActive(useLegacy);
+        }
     }
 
     private Text CreateFallbackLegacyText()
@@ -217,13 +318,10 @@ public class PhaseObjectiveHud : MonoBehaviour
                 _legacyStatus = UiLocalization.FormatObjectiveDefeatBoss(_enemiesAlive);
                 break;
             case HudMode.Carriage:
-                int remainingCarriage = Mathf.Max(0, _totalHoles - _holesSealed);
-                _legacyStatus = UiLocalization.FormatObjectiveCarriageStatus(
-                    _carriageProgressPercent,
-                    _holesSealed,
-                    _totalHoles,
-                    remainingCarriage,
-                    _enemiesAlive);
+                _legacyStatus = UiLocalization.Format(
+                    "objective.carriage_progress",
+                    "Carruagem: {0}%",
+                    Mathf.RoundToInt(_carriageProgressNormalized * 100f));
                 break;
             default:
                 _legacyStatus = UiLocalization.FormatObjectiveHolesCount(_holesSealed, _totalHoles);
@@ -237,23 +335,43 @@ public class PhaseObjectiveHud : MonoBehaviour
     {
         HudMode mode = ResolveMode();
         bool showHolesVisual = mode == HudMode.SealHoles && _holesUiBuilt;
+        bool showCarriageVisual = mode == HudMode.Carriage && _carriageUiBuilt;
 
         if (_holesRoot != null)
             _holesRoot.gameObject.SetActive(showHolesVisual);
 
+        if (_carriageRoot != null)
+            _carriageRoot.gameObject.SetActive(showCarriageVisual);
+
         if (showHolesVisual)
         {
-            if (_titleLabel != null)
-                _titleLabel.text = UiLocalization.GetObjectiveSealHolesTitle();
+            if (_holesTitleLabel != null)
+                _holesTitleLabel.text = UiLocalization.GetObjectiveSealHolesTitle();
 
-            if (_counterLabel != null)
-                _counterLabel.text = UiLocalization.FormatObjectiveHolesCount(_holesSealed, _totalHoles);
+            if (_holesCounterLabel != null)
+                _holesCounterLabel.text = UiLocalization.FormatObjectiveHolesCount(_holesSealed, _totalHoles);
+        }
+
+        if (showCarriageVisual)
+        {
+            if (_carriageTitleLabel != null)
+                _carriageTitleLabel.text = UiLocalization.GetObjectiveProtectCarriageTitle();
+
+            float remaining = 1f - _carriageProgressNormalized;
+            if (_carriageBarRemaining != null)
+                _carriageBarRemaining.fillAmount = remaining;
+
+            // Ícone acompanha a ponta do trajeto (0→1), igual ao follower do loading.
+            if (_carriageBarTrack != null && _carriageFollower != null)
+                LoadingProgressUtility.SetFollowerAlongTrack(
+                    _carriageBarTrack, _carriageFollower, _carriageProgressNormalized, -8f);
         }
 
         if (legacyStatusText != null)
         {
-            legacyStatusText.gameObject.SetActive(!showHolesVisual);
-            if (!showHolesVisual)
+            bool useLegacy = !showHolesVisual && !showCarriageVisual;
+            legacyStatusText.gameObject.SetActive(useLegacy);
+            if (useLegacy)
                 legacyStatusText.text = _legacyStatus;
         }
     }
@@ -289,6 +407,13 @@ public class PhaseObjectiveHud : MonoBehaviour
         return rt;
     }
 
+    private static RectTransform CreateChildUnder(Transform parent, string name)
+    {
+        GameObject go = new GameObject(name, typeof(RectTransform));
+        go.transform.SetParent(parent, false);
+        return go.GetComponent<RectTransform>();
+    }
+
     private static Image CreateImageChild(
         Transform parent,
         string name,
@@ -301,7 +426,9 @@ public class PhaseObjectiveHud : MonoBehaviour
         RectTransform rt = go.GetComponent<RectTransform>();
         rt.anchorMin = anchor;
         rt.anchorMax = anchor;
-        rt.pivot = new Vector2(0.5f, 1f);
+        rt.pivot = new Vector2(0.5f, 0.5f);
+        if (Mathf.Approximately(anchor.y, 1f) && Mathf.Approximately(anchor.x, 0.5f))
+            rt.pivot = new Vector2(0.5f, 1f);
         rt.anchoredPosition = anchoredPos;
         rt.sizeDelta = size;
 

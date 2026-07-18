@@ -58,7 +58,15 @@ Canvas de HUD principal (vida, upgrades, magículas da fase) durante gameplay si
 - Layout: banner `Objetivo.png` + título localizado (`objective.seal_holes.title`) e frame `Obj_Buracos.png` com contador `{sealed}/{total}` (`objective.holes_count`).
 - Sprites: `Assets/Art/Sprites/id visual/UI/HUD/Fase 1/` via `Resources/PhaseObjectiveHudVisuals.asset`.
 - Dados: `GameEvents.OnPhaseObjectiveStatusChanged` + `PhaseObjectiveStatusUtility.CountSealedHoles` (buracos locais na cena — igual em SP e MP).
-- Fase 2 (carruagem) / boss: ainda usam texto legado condensado; Fase 3 oculta este HUD.
+- Fase 3 (boss): `BossHealthBarHud` com banner Objetivo (`objective.defeat_boss.title`) + barra de vida larga.
+
+## Objetivo Fase 2 (`PhaseObjectiveHud` — carruagem)
+
+- Banner `Fase 2/Objetivo.png` + título (`objective.protect_carriage.title`: PROTEJA A CARRUAGEM / PROTECT THE CARRIAGE).
+- Barra de trajeto: `Obj_Barra_Baixo` (fundo) + fill **branco** (`fillAmount = 1 - PathProgress`) + moldura `Obj_Barra_Moldura`.
+- Follower: ícone `Carriage_Reference` anda na ponta do progresso (mesmo padrão `LoadingProgressUtility.SetFollowerAlongTrack` do loading).
+- Progresso: `CarriageController.PathProgress` (0→1), já assinado pelo HUD — SP/MP.
+- Vida da carruagem continua no world UI (`NetworkCarriageHealth` / labels); não misturar com esta barra.
 
 ## Inimigos — barra de vida
 

@@ -14,3 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PhaseObjectiveHudVisuals
   sealHolesBanner: {fileID: 5802897827288582985, guid: 4cbda6fd3579d73458e8428bee65b841, type: 3}
   sealHolesCounterFrame: {fileID: -796869091861117191, guid: 707b6c36c1abf9441b34bb11f64d7342, type: 3}
+  carriageBanner: {fileID: 5802897827288582985, guid: 90f144b590fb61a448403c7c17764fa6, type: 3}
+  carriageBarBackground: {fileID: -5453913649669430796, guid: c1c6b555ce6c4934c9bcdc068210ea02, type: 3}
+  carriageBarFrame: {fileID: -1807709038719260908, guid: 8ae5760743362bd4388537fc87fdb739, type: 3}
+  carriageFollowerIcon: {fileID: 21300000, guid: 9954a9b89cf27ce42a186fbea8523758, type: 3}
+  bossBanner: {fileID: 5802897827288582985, guid: 90f144b590fb61a448403c7c17764fa6, type: 3}
+  bossBarBackground: {fileID: -5453913649669430796, guid: c1c6b555ce6c4934c9bcdc068210ea02, type: 3}
+  bossBarFrame: {fileID: -1807709038719260908, guid: 8ae5760743362bd4388537fc87fdb739, type: 3}

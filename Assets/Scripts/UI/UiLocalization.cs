@@ -124,6 +124,12 @@ public static class UiLocalization
     public static string GetObjectiveSealHolesTitle() =>
         Get("objective.seal_holes.title", "BLOQUEIE OS BURACOS");
 
+    public static string GetObjectiveProtectCarriageTitle() =>
+        Get("objective.protect_carriage.title", "PROTEJA A CARRUAGEM");
+
+    public static string GetObjectiveDefeatBossTitle() =>
+        Get("objective.defeat_boss.title", "DERROTE O REI RATO");
+
     public static string FormatObjectiveHolesCount(int sealedCount, int totalHoles) =>
         Format("objective.holes_count", "{0}/{1}", sealedCount, totalHoles);
 
