@@ -43,6 +43,7 @@ public static class GameplaySceneBootstrap
         TransitionCameraKeeper.EnsureActive();
         EnsureCameraRig();
         TransitionCameraKeeper.Refresh();
+        AspectLetterboxController.EnsureExists()?.Reapply();
 
         RoundMagiculaTracker.EnsureExists();
         RoundMagiculaTracker.Instance?.ResetRound();

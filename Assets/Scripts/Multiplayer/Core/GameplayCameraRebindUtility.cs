@@ -53,6 +53,7 @@ public static class GameplayCameraRebindUtility
                     GameplaySceneBootstrap.SpawnCameraRigIfMissing();
 
                 GameplaySceneBootstrap.RebindLocalPlayerCamera();
+                AspectLetterboxController.EnsureExists()?.Reapply();
 
                 MultiplayerCameraController controller = MultiplayerCameraController.Resolve();
                 if (controller != null && controller.IsFollowingTarget)
@@ -60,6 +61,7 @@ public static class GameplayCameraRebindUtility
             }
 
             GameplaySceneBootstrap.EnsureActiveGameplayCamera();
+            AspectLetterboxController.EnsureExists()?.Reapply();
             _routine = null;
         }
     }

@@ -1,6 +1,6 @@
 # Prefab: Gameplay_UI
 
-Última revisão: 2026-07-17  
+Última revisão: 2026-07-18  
 **Caminho:** `Assets/Prefabs/UI/Gameplay_UI.prefab`
 
 ## Resumo
@@ -34,7 +34,7 @@ Canvas de HUD principal (vida, upgrades, magículas da fase) durante gameplay si
 
 - **`PauseOverlayLayer`:** overlays (pause, baú) reparentados para camada acima da HUD de habilidades via `GameplayHudController.BringOverlayToFront`.
 - **`AbilityHudLayer`:** `PlayerAbilityHud` deixa de usar `SetAsLastSibling` no canvas raiz.
-- **`CanvasScaler`:** `matchWidthOrHeight = 0.5` aplicado em runtime no gameplay (`GameplayHudController`) e no menu (`MainMenuController`).
+- **`CanvasScaler`:** `matchWidthOrHeight = 0.5` e referência **sempre** 1920×1080 em runtime (`GameplayHudController`). Em aspect ≠ 16:9 o `AspectLetterboxController` letterboxa o viewport (ver `docs/editor/flows/screen-flow.md`).
 
 ## HUD de habilidades (`PlayerAbilityHud`)
 

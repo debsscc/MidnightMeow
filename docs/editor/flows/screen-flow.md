@@ -1,6 +1,6 @@
 # Fluxo de telas unificado
 
-Última revisão: 2026-07-10
+Última revisão: 2026-07-18
 
 > Requisitos completos: [screen-flow.md](../screen-flow.md)  
 > Diagrama visual: [screen-flow-diagram.md](./screen-flow-diagram.md)  
@@ -31,6 +31,7 @@
 | **Overlay** (pause) | `SceneOverlayController` + `PauseMenuActions` |
 | Bootstrap por cena | `ScreenFlowSceneBootstrap` |
 | Overlay (fade DDOL) | `TransitionFadeOverlay` — **sem** painel de loading; Loading1/2 são oficiais |
+| Letterbox 16:9 (DDOL) | `AspectLetterboxController` + `LetterboxAspectMath` — força viewport 16:9 em todas as cenas |
 | UI placeholder 1920×1080 | `ScreenFlowPlaceholderFactory` (menus/hub; não usar para loading) |
 | Seleção UI (teclado/gamepad) | `UiSelectionUtility` + `GamepadUiAutoSelect` + `UiSelectOnEnable` |
 
@@ -141,3 +142,18 @@ Fase-1 → [vitória/derrota] → VictoryScene / GameOver
 - Canvas Scaler **1920×1080**, `matchWidthOrHeight = 0.5`
 - Placeholders em `ScreenFlowPlaceholderFactory`; substituir mantendo **ancoragens**
 - Refs: `menu.png`, `hostear_lobby.png`, `entrar_lobby.png`, `prep_screen.png`, `contract.png`, `select_char.png`, `char_from_lobby.png`
+
+## Letterbox 16:9 (resolução / ultrawide)
+
+> **Status (2026-07-18):** v3 URP-safe. `Camera.rect` em câmeras existentes; barras Overlay + **OnGUI**; no Editor o tamanho vem de `Handles.GetMainGameViewSize()` (evitar `Screen` colapsar após letterbox).
+
+| Camada | Comportamento |
+|--------|----------------|
+| Câmeras de cena | `camera.rect` → viewport 16:9 (sem criar câmeras novas) |
+| Barras | Overlay UGUI (sprite sólido) + `OnGUI` (garantia visual) |
+| Overlay UI | `LetterboxSafeArea` + `AspectRatioFitter` |
+| Fade | `LetterboxExempt` / sort ≥ 32000 — tela cheia |
+
+**Como testar:** Game → Free Aspect → alargar bem. Console deve logar `[AspectLetterbox] Output=… showBars=True` e laterais pretas (não azul do céu).
+
+**Nota:** 2560×1440 = 16:9 → sem barras (correto). Ultrawide real = 2560×1080 / Free Aspect largo.

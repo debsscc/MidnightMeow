@@ -102,9 +102,8 @@ public class GameplayHudController : MonoBehaviour
         if (scaler.uiScaleMode != CanvasScaler.ScaleMode.ScaleWithScreenSize)
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
 
-        if (scaler.referenceResolution.x < 1f || scaler.referenceResolution.y < 1f)
-            scaler.referenceResolution = ResponsiveReferenceResolution;
-
+        // Sempre ancora em 1920×1080 (letterbox 16:9). Prefabs legados com 800×600 quebram ultrawide.
+        scaler.referenceResolution = ResponsiveReferenceResolution;
         scaler.matchWidthOrHeight = match;
     }
 

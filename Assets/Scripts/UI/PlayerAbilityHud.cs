@@ -110,6 +110,14 @@ public class PlayerAbilityHud : MonoBehaviour
         TryBindLocalPlayer();
         EnsureBuilt();
 
+        // Reancora após o letterbox aplicar Camera.rect (Awake costuma rodar antes).
+        if (_root != null)
+        {
+            Vector2 desired = ResolveHudAnchorPosition();
+            if (_root.anchoredPosition != desired)
+                _root.anchoredPosition = desired;
+        }
+
         RefreshPassiveSlot();
         RefreshDashSlot();
         RefreshAbilitySlot(_slots[2], AbilitySlot.Ability1, _cachedAbility1Label);
@@ -665,20 +673,48 @@ public class PlayerAbilityHud : MonoBehaviour
     private Vector2 ResolveHudAnchorPosition()
     {
         Vector2 margin = theme != null ? theme.anchoredPosition : new Vector2(12f, 10f);
+        RectTransform parent = transform.parent as RectTransform;
+        if (parent == null)
+            return margin;
+
+        if (IsUnderNamedAncestor(transform, AspectLetterboxController.SafeAreaName))
+            return margin;
+
+        AspectLetterboxController.GetOutputSize(out int width, out int height);
+        Rect viewport = AspectLetterboxController.Instance != null
+            ? AspectLetterboxController.Instance.CurrentViewport
+            : LetterboxAspectMath.CalculateNormalizedViewport(
+                width, height, LetterboxAspectMath.DefaultTargetAspect);
+
+        if (!LetterboxAspectMath.HasBars(viewport))
+            return margin;
+
         Canvas canvas = GetComponentInParent<Canvas>();
-        if (canvas == null)
+
+        // Screen Space Camera já letterboxed via Camera.rect: (0,0) do pai = canto da faixa.
+        if (canvas != null
+            && canvas.renderMode == RenderMode.ScreenSpaceCamera
+            && canvas.worldCamera != null
+            && LetterboxAspectMath.HasBars(canvas.worldCamera.rect))
             return margin;
 
-        RectTransform canvasRect = canvas.transform as RectTransform;
-        if (canvasRect == null)
-            return margin;
+        // Canvas em tela cheia (Overlay ou câmera sem rect): âncora bottom-left cai na tarja.
+        // Desloca pelo inset da viewport em unidades do pai (filho com anchor 0,0).
+        float insetX = viewport.x * parent.rect.width;
+        float insetY = viewport.y * parent.rect.height;
+        return new Vector2(insetX + margin.x, insetY + margin.y);
+    }
 
-        Rect safe = Screen.safeArea;
-        Camera cam = canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera;
-        if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, safe.min, cam, out Vector2 localMin))
-            return margin;
+    private static bool IsUnderNamedAncestor(Transform node, string name)
+    {
+        while (node != null)
+        {
+            if (node.name == name)
+                return true;
+            node = node.parent;
+        }
 
-        return new Vector2(margin.x + localMin.x, margin.y + localMin.y);
+        return false;
     }
 
     private void BuildUi()

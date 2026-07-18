@@ -44,6 +44,7 @@ public class ScreenFlowController : Singleton<ScreenFlowController>
 
     public static void EnsureExists()
     {
+        AspectLetterboxController.EnsureExists();
         TransitionFadeOverlay.EnsureExists();
         GameAudioSettings.EnsureExists();
         MusicCrossfadeController.EnsureExists();
@@ -972,6 +973,8 @@ public class TransitionFadeOverlay : Singleton<TransitionFadeOverlay>
         _canvas.renderMode = RenderMode.ScreenSpaceOverlay;
         _canvas.overrideSorting = true;
         _canvas.sortingOrder = 32767;
+        if (_canvas.GetComponent<LetterboxExempt>() == null)
+            _canvas.gameObject.AddComponent<LetterboxExempt>();
 
         GameObject fadeGo = new GameObject("Fade", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
         fadeGo.transform.SetParent(_canvas.transform, false);

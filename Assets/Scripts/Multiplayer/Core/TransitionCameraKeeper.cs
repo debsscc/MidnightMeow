@@ -117,6 +117,10 @@ public static class TransitionCameraKeeper
             if (cam == null || cam == _fallbackCamera)
                 continue;
 
+            // Backdrop / UI do letterbox 16:9 não contam como câmera de cena.
+            if (cam.name == "LetterboxBackdropCamera" || cam.name == "LetterboxUiCamera")
+                continue;
+
             if (cam.isActiveAndEnabled)
                 return true;
         }
