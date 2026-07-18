@@ -1,6 +1,6 @@
 # Carriage.prefab
 
-Última revisão: 2026-07-16
+Última revisão: 2026-07-18
 
 | Campo | Valor |
 |-------|--------|
@@ -19,6 +19,8 @@ Carriage (tag Structure, layer Structure)
 ├── HealthComponent (IDamageable)
 ├── CarriageController → CarriageConfig
 │   └── NetworkVariable<CarriageState> Idle | Moving | Broken
+├── CarriagePresenceZoneVisual   ← runtime (anel pastel do raio de presença)
+│   └── PresenceZoneRing         ← SealZoneRingVisual
 ├── NetworkCarriageHealth
 ├── NetworkCarriageRepairManager → CarriageConfig
 ├── CarriageRepairWorldUI (labels escolta + conserto)
@@ -56,7 +58,9 @@ Import: Sprite Single, **PPU 100**, Filter **Point**, pivot **centro** (0.5, 0.5
 - Rodas giram em **todos os peers** via `CarriageWheelSpinner` (sem sync de ângulo).
 - Progresso HUD: `NetworkVariable<float> _pathProgress`.
 - Estado de escolta: `NetworkVariable<CarriageState> _carriageState` (servidor).
-- Presença de jogadores: `Physics2D.OverlapCircle` + `playerPresenceRadius` (gizmo no Scene).
+- Presença de jogadores: `Physics2D.OverlapCircle` + `playerPresenceRadius`.
+- Visual de presença: `CarriagePresenceZoneVisual` cria anel pastel (`SealZoneRingVisual`) no mesmo raio; Idle um pouco mais visível, Moving mais suave; oculto em Broken / chegada. Campos no `CarriageConfig` (header **Visual da área de presença**).
+- Gizmo editor: `CarriageController.OnDrawGizmos` (wire sphere ciano) — só Scene View.
 - Posição: `NetworkTransform` (servidor).
 - Conserto: `PlayerCarriageRepairInteraction` + `NetworkCarriageRepairManager` (arquivo próprio) + `CarriageRepairWorldUI` + zonas `SealZoneRingVisual`.
 - Fix Input E: [guides/carriage-repair-fix.md](../guides/carriage-repair-fix.md).

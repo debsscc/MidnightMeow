@@ -59,6 +59,35 @@ public class CarriageConfig : ScriptableObject
     [Tooltip("Layers consideradas na detecção de presença. Se 0, usa a layer Player.")]
     public LayerMask playerPresenceLayerMask;
 
+    [Header("Visual da área de presença (escolta)")]
+    [Tooltip("Exibe anel pastel no chão com o mesmo raio de presença (Idle/Moving).")]
+    public bool showPlayerPresenceVisual = true;
+
+    [Tooltip("Espessura relativa da borda do anel (0.02–0.15).")]
+    [Range(0.02f, 0.15f)]
+    public float presenceZoneOutlineThickness = 0.04f;
+
+    [Tooltip("Se true, desenha miolo preenchido bem transparente (senão só a borda).")]
+    public bool presenceZoneShowInteriorFill = true;
+
+    [Tooltip("Sorting order do anel (abaixo do corpo da carruagem ~25).")]
+    public int presenceZoneSortingOrder = 12;
+
+    [Tooltip("Cor do miolo em Idle (carruagem parada — jogadores precisam se aproximar).")]
+    public Color presenceZoneIdleBackgroundColor = new Color(0.78f, 0.90f, 0.94f, 0.09f);
+
+    [Tooltip("Cor da borda em Idle.")]
+    public Color presenceZoneIdleOutlineColor = new Color(0.70f, 0.86f, 0.92f, 0.38f);
+
+    [Tooltip("Cor do miolo em Moving (escolta ativa — mais suave).")]
+    public Color presenceZoneMovingBackgroundColor = new Color(0.78f, 0.90f, 0.94f, 0.045f);
+
+    [Tooltip("Cor da borda em Moving.")]
+    public Color presenceZoneMovingOutlineColor = new Color(0.70f, 0.86f, 0.92f, 0.20f);
+
+    [Tooltip("Cor do fill progressivo (não usado na escolta; reservado para o SealZoneRingVisual).")]
+    public Color presenceZoneFillColor = new Color(0.85f, 0.95f, 0.98f, 0.10f);
+
     [Header("Chegada")]
     public float arrivalZoneRadius = 2f;
 
@@ -114,6 +143,9 @@ public class CarriageConfig : ScriptableObject
         Mathf.Max(repairPromptRadius, repairPromptRadius * Mathf.Max(1f, repairLabelVisibilityRadiusMultiplier));
 
     public float GetPlayerPresenceRadius() => Mathf.Max(0.5f, playerPresenceRadius);
+
+    /// <summary>Diâmetro world-space do anel visual (= 2 × raio de presença).</summary>
+    public float GetPlayerPresenceVisualDiameter() => GetPlayerPresenceRadius() * 2f;
 
     public LayerMask ResolvePlayerPresenceLayerMask()
     {

@@ -1,6 +1,6 @@
 # Carruagem (Fase 2)
 
-Última revisão: 2026-07-15
+Última revisão: 2026-07-18
 
 ## Comportamento
 
@@ -27,6 +27,7 @@
 | Raios | `frontWheelRadius` / `backWheelRadius` no config |
 | Collider | `colliderSize` / `colliderOffset` no config |
 | Label escolta/conserto | `repairLabelOffset` + textos `escort*` / repair |
+| Área de presença (escolta) | `CarriagePresenceZoneVisual` — anel pastel (`SealZoneRingVisual`) com diâmetro `2 × playerPresenceRadius`; Idle mais legível, Moving mais suave; some em Broken/chegada |
 
 Não sincronizar ângulo de roda na rede — deriva do progresso/movimento já replicado.
 
@@ -53,6 +54,7 @@ Setup Editor: **MidnightMeow → Phases → Setup Active Phase Scene** (Fase-2).
 ## Código ativo
 
 - `CarriageController`, `CarriageState`, `CarriageSpawner`, `CarriagePath`, `CarriageWheelSpinner`
+- `CarriagePresenceZoneVisual` (anel de escolta)
 - `NetworkCarriageHealth`, `NetworkCarriageRepairManager`, `CarriageDamageFilter`
 - `CarriageRepairWorldUI`, `CarriageRepairZoneVisualHost`
 - `PhaseGameplayContentInstaller.ConfigureCarriage()` / `EnsureCarriageSetup()`

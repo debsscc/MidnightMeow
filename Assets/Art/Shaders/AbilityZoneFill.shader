@@ -10,6 +10,7 @@ Shader "MidnightMeow/AbilityZoneFill"
         _Shape ("Shape 0=Circle 1=Rect", Float) = 0
         _Alpha ("Alpha", Range(0, 1)) = 1
         _Pulse ("Pulse", Range(0, 1)) = 0
+        _PulseStrength ("Pulse Strength", Range(0, 1)) = 1
     }
 
     SubShader
@@ -58,6 +59,7 @@ Shader "MidnightMeow/AbilityZoneFill"
             float _Shape;
             float _Alpha;
             float _Pulse;
+            float _PulseStrength;
 
             v2f vert(appdata_t v)
             {
@@ -71,7 +73,8 @@ Shader "MidnightMeow/AbilityZoneFill"
             fixed4 frag(v2f i) : SV_Target
             {
                 float2 uv = i.texcoord;
-                float pulse = 0.85 + 0.15 * sin(_Time.y * 8.0 + _Pulse * 6.28318);
+                float pulseWave = 0.85 + 0.15 * sin(_Time.y * 8.0 + _Pulse * 6.28318);
+                float pulse = lerp(1.0, pulseWave, saturate(_PulseStrength));
 
                 if (_Shape < 0.5)
                 {

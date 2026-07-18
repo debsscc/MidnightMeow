@@ -94,6 +94,7 @@ public class CarriageController : NetworkBehaviour
         }
 
         EnsureWheelSpinner();
+        EnsurePresenceZoneVisual();
         EnsureHealthBar();
         ApplyRepairLabelOffset();
     }
@@ -574,6 +575,15 @@ public class CarriageController : NetworkBehaviour
         Transform front = visualRoot != null ? visualRoot.Find("Layer_Wheels/Wheel_Front") : null;
         Transform back = visualRoot != null ? visualRoot.Find("Layer_Wheels/Wheel_Back") : null;
         spinner.Configure(front, back, config.frontWheelRadius, config.backWheelRadius);
+    }
+
+    private void EnsurePresenceZoneVisual()
+    {
+        CarriagePresenceZoneVisual visual = GetComponent<CarriagePresenceZoneVisual>();
+        if (visual == null)
+            visual = gameObject.AddComponent<CarriagePresenceZoneVisual>();
+
+        visual.Bind(this);
     }
 }
 

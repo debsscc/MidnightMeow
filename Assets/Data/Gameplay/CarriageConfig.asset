@@ -31,6 +31,15 @@ MonoBehaviour:
   playerPresenceLayerMask:
     serializedVersion: 2
     m_Bits: 8
+  showPlayerPresenceVisual: 1
+  presenceZoneOutlineThickness: 0.04
+  presenceZoneShowInteriorFill: 1
+  presenceZoneSortingOrder: 12
+  presenceZoneIdleBackgroundColor: {r: 0.78, g: 0.9, b: 0.94, a: 0.09}
+  presenceZoneIdleOutlineColor: {r: 0.7, g: 0.86, b: 0.92, a: 0.38}
+  presenceZoneMovingBackgroundColor: {r: 0.78, g: 0.9, b: 0.94, a: 0.045}
+  presenceZoneMovingOutlineColor: {r: 0.7, g: 0.86, b: 0.92, a: 0.2}
+  presenceZoneFillColor: {r: 0.85, g: 0.95, b: 0.98, a: 0.1}
   arrivalZoneRadius: 2
   repairPromptRadius: 3.3
   repairZoneRadius: 1.2

@@ -1,24 +1,40 @@
+///* ----------------------------------------------------------------
+// ATUALIZADO EM: 18-07-2026
+// DESCRIÇÃO: Anel circular world-space via shader AbilityZoneFill (anti-aliased).
+// ---------------------------------------------------------------- */
+
 using UnityEngine;
 
 /// <summary>
-/// Anel circular world-space com sprites procedurais (sem shader Telegraph).
+/// Anel circular world-space. Usa o shader <c>MidnightMeow/AbilityZoneFill</c>
+/// (círculo matemático — sem textura procedural pixelada).
 /// </summary>
 [DisallowMultipleComponent]
 [RequireComponent(typeof(SpriteRenderer))]
 public class SealZoneRingVisual : MonoBehaviour
 {
-    private static Sprite _circleSprite;
-    private static Sprite _outlineSprite;
-    private static float _cachedOutlineThickness = -1f;
+    private static readonly int FillColorId = Shader.PropertyToID("_FillColor");
+    private static readonly int OutlineColorId = Shader.PropertyToID("_OutlineColor");
+    private static readonly int OutlineWidthId = Shader.PropertyToID("_OutlineWidth");
+    private static readonly int ShapeId = Shader.PropertyToID("_Shape");
+    private static readonly int AlphaId = Shader.PropertyToID("_Alpha");
+    private static readonly int PulseStrengthId = Shader.PropertyToID("_PulseStrength");
 
     private SpriteRenderer _background;
-    private SpriteRenderer _outline;
     private SpriteRenderer _fill;
+    private Material _backgroundMaterial;
+    private Material _fillMaterial;
 
     private void Awake()
     {
         _background = GetComponent<SpriteRenderer>();
-        EnsureChildRenderers();
+        EnsureRenderers();
+    }
+
+    private void OnDestroy()
+    {
+        DestroyMaterial(ref _backgroundMaterial);
+        DestroyMaterial(ref _fillMaterial);
     }
 
     public void Configure(Color background, Color fill, int sortingOrder, float diameter)
@@ -40,22 +56,34 @@ public class SealZoneRingVisual : MonoBehaviour
         float outlineThickness,
         bool showInteriorFill)
     {
-        EnsureChildRenderers();
-        EnsureOutlineSprite(Mathf.Clamp(outlineThickness, 0.02f, 0.15f));
-
-        _background.color = background;
-        _fill.color = fill;
-        _outline.color = outline;
-
-        _background.sortingOrder = sortingOrder;
-        _outline.sortingOrder = sortingOrder + 1;
-        _fill.sortingOrder = sortingOrder + 2;
-
-        _background.enabled = showInteriorFill;
-        _outline.enabled = true;
+        EnsureRenderers();
 
         float size = Mathf.Max(0.5f, diameter);
         transform.localScale = new Vector3(size, size, 1f);
+
+        Color fillColor = showInteriorFill
+            ? background
+            : new Color(background.r, background.g, background.b, 0f);
+
+        ApplyZoneMaterial(
+            _background,
+            _backgroundMaterial,
+            fillColor,
+            outline,
+            Mathf.Clamp(outlineThickness, 0.02f, 0.15f),
+            sortingOrder);
+
+        _background.enabled = true;
+
+        _fill.sortingOrder = sortingOrder + 2;
+        ApplyZoneMaterial(
+            _fill,
+            _fillMaterial,
+            fill,
+            new Color(outline.r, outline.g, outline.b, 0f),
+            0.02f,
+            sortingOrder + 2);
+
         SetFill(0f);
     }
 
@@ -69,105 +97,86 @@ public class SealZoneRingVisual : MonoBehaviour
         _fill.enabled = clamped > 0.01f;
     }
 
-    private void EnsureChildRenderers()
+    private void EnsureRenderers()
     {
-        EnsureSprites();
+        if (_background == null)
+            _background = GetComponent<SpriteRenderer>();
 
-        _background.sprite = _circleSprite;
+        Sprite unit = CooperativeZoneSpriteFactory.GetUnitQuadSprite();
+        _background.sprite = unit;
+        _background.sharedMaterial = null;
 
-        if (_outline == null)
-        {
-            var outlineGo = new GameObject("Outline");
-            outlineGo.transform.SetParent(transform, false);
-            _outline = outlineGo.AddComponent<SpriteRenderer>();
-        }
+        // Remove hierarquia legada do gerador procedural (Outline sprite).
+        Transform legacyOutline = transform.Find("Outline");
+        if (legacyOutline != null)
+            DestroyActive(legacyOutline.gameObject);
 
-        _outline.sprite = _outlineSprite;
+        if (_backgroundMaterial == null)
+            _backgroundMaterial = CombatVisualMaterials.CreateAbilityZoneFillInstance();
+        _background.material = _backgroundMaterial;
 
         if (_fill == null)
         {
-            var fillGo = new GameObject("Fill");
-            fillGo.transform.SetParent(transform, false);
-            _fill = fillGo.AddComponent<SpriteRenderer>();
+            Transform existing = transform.Find("Fill");
+            if (existing != null)
+                _fill = existing.GetComponent<SpriteRenderer>();
+
+            if (_fill == null)
+            {
+                var fillGo = new GameObject("Fill");
+                fillGo.transform.SetParent(transform, false);
+                _fill = fillGo.AddComponent<SpriteRenderer>();
+            }
         }
 
-        _fill.sprite = _circleSprite;
+        _fill.sprite = unit;
+        if (_fillMaterial == null)
+            _fillMaterial = CombatVisualMaterials.CreateAbilityZoneFillInstance();
+        _fill.material = _fillMaterial;
+        _fill.enabled = false;
     }
 
-    private static void EnsureSprites()
+    private static void ApplyZoneMaterial(
+        SpriteRenderer renderer,
+        Material material,
+        Color fill,
+        Color outline,
+        float outlineWidth,
+        int sortingOrder)
     {
-        if (_circleSprite == null)
-            _circleSprite = CreateFilledCircleSprite(64, 0.98f);
-    }
-
-    private static void EnsureOutlineSprite(float thickness)
-    {
-        if (_outlineSprite != null && Mathf.Approximately(_cachedOutlineThickness, thickness))
+        if (renderer == null || material == null)
             return;
 
-        const float outer = 0.98f;
-        float inner = Mathf.Clamp(outer - thickness, 0.82f, outer - 0.02f);
-        _outlineSprite = CreateRingSprite(64, inner, outer);
-        _cachedOutlineThickness = thickness;
+        material.SetColor(FillColorId, fill);
+        material.SetColor(OutlineColorId, outline);
+        material.SetFloat(OutlineWidthId, outlineWidth);
+        material.SetFloat(ShapeId, 0f);
+        material.SetFloat(AlphaId, 1f);
+        material.SetFloat(PulseStrengthId, 0f);
+        renderer.sortingOrder = sortingOrder;
     }
 
-    private static Sprite CreateFilledCircleSprite(int size, float radiusNormalized)
+    private static void DestroyMaterial(ref Material material)
     {
-        var texture = new Texture2D(size, size, TextureFormat.RGBA32, false)
-        {
-            filterMode = FilterMode.Bilinear,
-            wrapMode = TextureWrapMode.Clamp
-        };
+        if (material == null)
+            return;
 
-        float center = (size - 1) * 0.5f;
-        float radius = center * radiusNormalized;
-        float radiusSq = radius * radius;
-        var pixels = new Color[size * size];
+        if (Application.isPlaying)
+            Object.Destroy(material);
+        else
+            Object.DestroyImmediate(material);
 
-        for (int y = 0; y < size; y++)
-        {
-            for (int x = 0; x < size; x++)
-            {
-                float dx = x - center;
-                float dy = y - center;
-                float distSq = dx * dx + dy * dy;
-                pixels[y * size + x] = distSq <= radiusSq ? Color.white : Color.clear;
-            }
-        }
-
-        texture.SetPixels(pixels);
-        texture.Apply();
-
-        return Sprite.Create(texture, new Rect(0f, 0f, size, size), new Vector2(0.5f, 0.5f), size);
+        material = null;
     }
 
-    private static Sprite CreateRingSprite(int size, float innerRadiusNormalized, float outerRadiusNormalized)
+    private static void DestroyActive(GameObject go)
     {
-        var texture = new Texture2D(size, size, TextureFormat.RGBA32, false)
-        {
-            filterMode = FilterMode.Bilinear,
-            wrapMode = TextureWrapMode.Clamp
-        };
+        if (go == null)
+            return;
 
-        float center = (size - 1) * 0.5f;
-        float innerSq = Mathf.Pow(center * innerRadiusNormalized, 2f);
-        float outerSq = Mathf.Pow(center * outerRadiusNormalized, 2f);
-        var pixels = new Color[size * size];
-
-        for (int y = 0; y < size; y++)
-        {
-            for (int x = 0; x < size; x++)
-            {
-                float dx = x - center;
-                float dy = y - center;
-                float distSq = dx * dx + dy * dy;
-                pixels[y * size + x] = distSq >= innerSq && distSq <= outerSq ? Color.white : Color.clear;
-            }
-        }
-
-        texture.SetPixels(pixels);
-        texture.Apply();
-
-        return Sprite.Create(texture, new Rect(0f, 0f, size, size), new Vector2(0.5f, 0.5f), size);
+        if (Application.isPlaying)
+            Object.Destroy(go);
+        else
+            Object.DestroyImmediate(go);
     }
 }

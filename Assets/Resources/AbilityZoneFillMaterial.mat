@@ -29,6 +29,7 @@ Material:
     - _Alpha: 1
     - _OutlineWidth: 0.05
     - _Pulse: 0
+    - _PulseStrength: 1
     - _Shape: 0
     m_Colors:
     - _FillColor: {r: 0.2, g: 0.75, b: 1, a: 0.45}

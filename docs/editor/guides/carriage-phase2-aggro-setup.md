@@ -1,6 +1,6 @@
 # Guia Editor — Carruagem Fase 2 (escolta, aggro e telegraph)
 
-Última revisão: 2026-07-15
+Última revisão: 2026-07-18
 
 Setup manual após a refatoração de estados da carruagem, `AggroType` nos ratos e dano de telegraph em `Structure`. **Não** use scripts de Editor para gravar Layers/UI — configure no Inspector.
 
@@ -52,8 +52,12 @@ Campo legado `Target Priority` ainda existe: se `Aggro Type` = `PlayersOnly` e `
 ## 4. UI Canvas / TextMeshPro flutuante
 
 1. Em `Assets/Data/Gameplay/CarriageConfig.asset`:
-   - **Player Presence Radius** — raio do gizmo ciano e da condição Idle→Moving (default ~8).
+   - **Player Presence Radius** — raio do gizmo ciano, do anel pastel in-game e da condição Idle→Moving (default ~8).
    - **Player Presence Layer Mask** — deixe vazio para usar automaticamente a layer `Player`, ou marque `Player`.
+   - Header **Visual da área de presença (escolta)**:
+     - `Show Player Presence Visual` → ligado (anel pastel no Play Mode).
+     - Cores Idle/Moving em tons pastéis e alpha baixo (defaults já suaves).
+     - `Presence Zone Sorting Order` → ~12 (abaixo do corpo da carruagem).
    - Textos de escolta:
      - `Escort Idle Text` → “Se aproximem da Carruagem”
      - `Escort Moving Text` → “Protejam a Carruagem”
@@ -64,13 +68,17 @@ Campo legado `Target Priority` ainda existe: se `Aggro Type` = `PlayersOnly` e `
    - Se `Repair UI Prefab` estiver vazio, o script puxa de `CarriageConfig.repairPromptPrefab`.
    - Não precisa linkar o TMP manualmente: o runtime instancia o prefab e busca `TextMeshProUGUI` / `DownedReviveUILabelView`.
 3. Comportamento esperado no Play Mode (cliente):
-   - Longe / Idle → texto idle
-   - Jogador vivo no raio → “Protejam…”
-   - HP 0 → “Consertem…”; perto → “Aperte E…”; consertando → `%`
+   - Longe / Idle → texto idle + anel um pouco mais visível
+   - Jogador vivo no raio → “Protejam…” + anel mais suave
+   - HP 0 → anel some; “Consertem…”; perto → “Aperte E…”; consertando → `%`
 
-## 5. Gizmo de debug
+## 5. Visual de presença + gizmo de debug
 
-Selecione a carruagem na Scene View. O `CarriageController.OnDrawGizmos` desenha um wire sphere com `playerPresenceRadius` (cor ciano). Ajuste o raio no `CarriageConfig` se a escolta estiver larga/estreita demais.
+**In-game (Play Mode):** o `CarriagePresenceZoneVisual` é anexado em runtime pelo `CarriageController` — **não** precisa adicionar no prefab. Diâmetro = `2 × Player Presence Radius`. Aparece em Idle/Moving; some em Broken e após a chegada.
+
+**Editor (Scene View):** selecione a carruagem. O `CarriageController.OnDrawGizmos` desenha um wire sphere ciano com o mesmo raio (só debug de editor; não aparece no Game View sem Gizmos ligados).
+
+Ajuste o raio e as cores pastéis no `CarriageConfig` se a escolta estiver larga/estreita ou muito chamativa.
 
 ## Checklist rápido
 
@@ -78,7 +86,8 @@ Selecione a carruagem na Scene View. O `CarriageController.OnDrawGizmos` desenha
 - [ ] Patterns de telegraph: `damageLayers` = Player **e** Structure
 - [ ] EnemyStats dos ratos da Fase 2: `AggroType` configurado
 - [ ] `CarriageConfig`: raio de presença + textos de escolta + prompt prefab
-- [ ] Play Mode host: carruagem só anda com jogador vivo no raio; ratos Dynamic miram carroça/jogador; telegraph baixa HP da carroça
+- [ ] `CarriageConfig`: header de visual de presença ligado (cores pastéis)
+- [ ] Play Mode host: anel pastel no chão; carruagem só anda com jogador vivo no raio; ratos Dynamic miram carroça/jogador; telegraph baixa HP da carroça
 
 ## Ver também
 
