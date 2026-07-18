@@ -17,6 +17,7 @@ Assets/
 │   ├── Contracts/
 │   ├── Multiplayer/
 │   ├── Stats/           # Player, Enemies, Game, Projectiles
+│   ├── Tutorial/        # TutorialTipSO + TutorialSequenceSO (dicas HUD)
 │   └── UI/ScreenFlow/
 ├── Prefabs/
 │   ├── Characters/
@@ -46,11 +47,11 @@ Assets/
 | Pasta | Conteúdo |
 |-------|----------|
 | `Core/` | Bootstrap, GameFlow, ServiceLocator, GameEvents |
-| `Systems/` | Day/Night, Waves |
+| `Systems/` | Day/Night, Waves, Tutorial (`TutorialManager`) |
 | `Components/` | Player, Enemy, Projectile, Collectibles, Health |
 | `Multiplayer/` | NGO, lobby, câmera, wave rede |
-| `ScriptableObjects/` | Definições de SO (código) |
-| `UI/` | HUD, menus, botões |
+| `ScriptableObjects/` | Definições de SO (código), incl. `Tutorial/` |
+| `UI/` | HUD, menus, botões (`TutorialUIController`) |
 | `VFX/` | Efeitos visuais |
 | `Audio/` | Mixer settings, buses (`UiSfxPlayer`, `EnemySfxBus`), configs SO |
 

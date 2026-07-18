@@ -144,6 +144,7 @@ public class NetworkRatHoleSealManager : NetworkBehaviour
     private void PlayHoleSealedClientRpc(ushort holeId)
     {
         RatHoleSealAudioUtility.PlaySealComplete(config);
+        GameEvents.InvokeTutorialSealHoleExecuted();
     }
 
     [ClientRpc]

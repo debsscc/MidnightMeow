@@ -1,6 +1,5 @@
 ///* ----------------------------------------------------------------
-// ATUALIZADO EM: 25-02-2026
-// REVISADO POR: Arquiteto de Sistemas
+// ATUALIZADO EM: 18-07-2026
 // DESCRIÇÃO: Controla o movimento do jogador, respeitando o estado de Dash.
 // ---------------------------------------------------------------- */
 
@@ -69,6 +68,7 @@ public class PlayerMovement : MonoBehaviour
         if (movingNow && !_isMoving)
         {
             OnMovement?.Invoke();
+            GameEvents.InvokeTutorialMoveExecuted();
             _isMoving = true;
         }
         else if (!movingNow && _isMoving)

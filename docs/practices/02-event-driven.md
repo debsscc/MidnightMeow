@@ -15,6 +15,7 @@ Eventos globais de UI e fluxo, por exemplo:
 - `OnPlayerHealthChanged`, `OnPlayerAdrenalineChanged`
 - `OnWaveStatusChanged`, `OnNightEnded`, `OnPlayerDefeated`
 - `OnPauseChanged`, `OnCienciaCollected`
+- Tutorial HUD: `OnTutorialMoveExecuted`, `OnTutorialShootExecuted`, `OnTutorialSealHoleExecuted`, `OnTutorialTipChanged`, `OnTutorialCompleted`
 
 **Uso:** UI e managers assinam; componentes de gameplay invocam via `GameEvents.Invoke*`.
 

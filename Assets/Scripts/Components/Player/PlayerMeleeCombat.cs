@@ -176,6 +176,7 @@ public class PlayerMeleeCombat : MonoBehaviour
         float farHalfWidth = CombatStats.farHalfWidth;
 
         OnAttackPerformed?.Invoke(origin, direction, CombatStats);
+        GameEvents.InvokeTutorialShootExecuted();
 
         float searchRadius = attackRange + farHalfWidth + 0.5f;
         Collider2D[] hits = Physics2D.OverlapCircleAll(origin, searchRadius, enemyLayers);

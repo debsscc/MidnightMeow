@@ -1,6 +1,6 @@
 # Cenas
 
-Última revisão: 2026-07-04
+Última revisão: 2026-07-18
 
 ## EventSystem
 
@@ -26,9 +26,9 @@ Gameplay: `GameplayPrefabCatalog` em `Resources/` instancia `MultiplayerCameraRi
 | Loading 2         | `Assets/Scenes/UI/Loading2.unity`                   | Transição para gameplay                 |
 | Jogo (UI wrapper) | `Assets/Scenes/UI/Game.unity`                       | Fluxo de partida com UI                 |
 | Game (legado?)    | `Assets/Scenes/Game.unity`                          | Verificar Build Settings antes de usar  |
-| Fase 1            | `Assets/Scenes/Fases/Fase-1.unity`                  | Ondas + selamento de buracos              |
-| Fase 2            | `Assets/Scenes/Fases/Fase-2.unity`                  | Ondas + selamento + carruagem horizontal. **Sem** prefabs Cora/Nixie na hierarquia — jogador só via `PlayerSpawnManager`. |
-| Fase 3            | `Assets/Scenes/Fases/Fase-3.unity`                  | Boss (`Rato_Boss`)                        |
+| Fase 1            | `Assets/Scenes/Fases/Fase-1.unity`                  | Selamento de buracos. HUD sob `---- UI ----` → `Canvas` |
+| Fase 2            | `Assets/Scenes/Fases/Fase-2.unity`                  | Carruagem. HUD sob `---- UI ----` → `Canvas`. **Sem** prefabs Cora/Nixie na hierarquia — jogador só via `PlayerSpawnManager`. |
+| Fase 3            | `Assets/Scenes/Fases/Fase-3.unity`                  | Boss (`Rato_Boss`). HUD sob `---- UI ----` → Canvas nomeado `Gameplay_UI` |
 
 **Fase-3 — fogo ambiente:** prefab `Assets/Prefabs/VFX/AmbientFire2D.prefab` (ver [AmbientFire2D.md](prefabs/AmbientFire2D.md)). Arrastar na cena; presets Ember/Torch/Bonfire.
 | Game Over         | `Assets/Scenes/UI/GameOver.unity`                   | `EndGameScreenController` — derrota (Continuar / Sair) |
@@ -54,8 +54,10 @@ Assets de NavMesh baked por cena em subpastas (`NavMesh-*.asset`). Prefabs: `Nav
 - **Pouca vida:** vinheta vermelha + tremor da barra a partir de ~50% HP (mesmo fluxo em SP/MP via `NetworkPlayerHealth`).
 - **Tune:** `Assets/Data/Multiplayer/CameraConfig.asset` — `enableCameraBounce`, `zoomPunch*`, `moveLean*` (amplitude ao andar), `breathing*` (amplitude/frequência idle), `shakePerlinFrequency`.
 - **Limites da câmera:** adicione um GameObject com `CameraBoundsVolume` + `PolygonCollider2D` na Fase-1; o `MultiplayerCameraController` liga ao `CinemachineConfiner2D` e aplica clamp manual via `CameraBoundsClampUtility` quando `useDirectCameraFollow` está ativo (Brain desligado).
-- **HUD habilidades:** `PlayerAbilityHud` é criado automaticamente no Canvas ao entrar em Fase-1/2 (cooldowns Dash/Q/R + barra da passiva, canto inferior direito).
-- **Magículas na fase:** posicione `ScienceIndicator` no Canvas/HUD pelo Editor (RectTransform); o script só atualiza o texto via `RoundMagiculaTracker`.
+- **HUD habilidades:** `PlayerAbilityHud` é criado automaticamente no Canvas da fase (`---- UI ----`) ao entrar em Fase-* (cooldowns + passiva, canto inferior esquerdo).
+- **Magículas na fase:** `ScienceIndicator` já está no Canvas da cena (`Indicator` → `ScienceIndicator`); o script só atualiza o texto via `RoundMagiculaTracker`.
+- **Objetivo por fase:** `PhaseObjectiveHud` (Fase-1 buracos / Fase-2 carruagem) e `BossHealthBarHud` (Fase-3) via `GameplayHudController` no mesmo Canvas.
+- **Tutorial (dicas):** painel manual no Canvas da cena — [tutorial-tips-hud-setup.md](guides/tutorial-tips-hud-setup.md). Não usar o prefab legado `Gameplay_UI.prefab`.
 - **Estado da partida:** ao carregar Fase-1 como servidor, `MultiplayerGameManager` passa automaticamente para `Playing` (campo `gameplaySceneName`). Sem isso, `NetworkWaveManager` fica em espera e nenhum inimigo spawna.
 - **Trilha:** objeto raiz `Soundtrack` em Fase-1/2/3 define o clip (`Fase 1.wav`, etc.) para o `MusicCrossfadeController`; `Play On Awake` desligado — só o crossfade persistente toca (evita duplo start ao entrar na fase).
 

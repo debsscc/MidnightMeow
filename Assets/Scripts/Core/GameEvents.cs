@@ -1,7 +1,6 @@
 ///* ----------------------------------------------------------------
-// CRIADO EM: 13-11-2025
-// FEITO POR: Pedro Caurio
-// DESCRI��O: Define eventos globais do jogo que podem ser invocados e assinados por diferentes componentes.
+// ATUALIZADO EM: 18-07-2026
+// DESCRIÇÃO: Eventos globais do jogo (UI, fluxo, multiplayer, tutorial).
 // ---------------------------------------------------------------- */
 
 using UnityEngine;
@@ -145,5 +144,49 @@ public static class GameEvents
     public static void InvokeCarriageArrived()
     {
         OnCarriageArrived?.Invoke();
+    }
+
+    // --- Tutorial (dicas na HUD) ---
+
+    /// <summary>Jogador local se moveu (WASD / stick).</summary>
+    public static event Action OnTutorialMoveExecuted;
+
+    /// <summary>Jogador local atirou ou atacou com o botão primário.</summary>
+    public static event Action OnTutorialShootExecuted;
+
+    /// <summary>Um buraco foi selado (SP ou MP — todos os clientes).</summary>
+    public static event Action OnTutorialSealHoleExecuted;
+
+    /// <summary>
+    /// Dica atual mudou. Payload null = tutorial concluído / esconder painel.
+    /// </summary>
+    public static event Action<TutorialTipSO> OnTutorialTipChanged;
+
+    /// <summary>Sequência de dicas terminou.</summary>
+    public static event Action OnTutorialCompleted;
+
+    public static void InvokeTutorialMoveExecuted()
+    {
+        OnTutorialMoveExecuted?.Invoke();
+    }
+
+    public static void InvokeTutorialShootExecuted()
+    {
+        OnTutorialShootExecuted?.Invoke();
+    }
+
+    public static void InvokeTutorialSealHoleExecuted()
+    {
+        OnTutorialSealHoleExecuted?.Invoke();
+    }
+
+    public static void InvokeTutorialTipChanged(TutorialTipSO tip)
+    {
+        OnTutorialTipChanged?.Invoke(tip);
+    }
+
+    public static void InvokeTutorialCompleted()
+    {
+        OnTutorialCompleted?.Invoke();
     }
 }

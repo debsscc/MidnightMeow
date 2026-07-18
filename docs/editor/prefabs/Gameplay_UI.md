@@ -1,84 +1,85 @@
-# Prefab: Gameplay_UI
+# Prefab: Gameplay_UI (legado)
 
 Última revisão: 2026-07-18  
 **Caminho:** `Assets/Prefabs/UI/Gameplay_UI.prefab`
 
-## Resumo
+> **Legado:** este prefab **não é mais a fonte de verdade** da HUD de combate. A UI atual vive **nas cenas de fase**, sob `---- UI ----` → `Canvas` (Fase-3: o Canvas chama-se `Gameplay_UI` na hierarquia, mas é objeto de cena — não uma instância obrigatória deste prefab).
 
-Canvas de HUD principal (vida, upgrades, magículas da fase) durante gameplay single-player ou multiplayer.
+Para tutorial / novas peças de HUD, edite a cena: ver [tutorial-tips-hud-setup.md](../guides/tutorial-tips-hud-setup.md) e a seção abaixo.
 
-## Componentes Unity
+## Hierarquia atual (Fase-1 / 2 / 3)
 
-| Tipo | Presente |
-|------|----------|
-| `Canvas` + `CanvasScaler` + `GraphicRaycaster` | Sim |
-| TMP / Image / Button | Sim |
+```
+---- UI ----
+├── UIManager
+└── Canvas                    # Fase-3: nomeado Gameplay_UI
+    ├── Button
+    ├── PlayerUI
+    ├── HordeUI
+    ├── HealthBar             # vida (healthBarUi)
+    ├── AdrenalineBar
+    ├── Indicator / ScienceIndicator
+    ├── HordeIndicator
+    └── (runtime) GameplayHudLayers → Ability / Objective / Feedback…
+```
 
-## Scripts custom
+### Autorado na cena
+
+| Widget | Função |
+|--------|--------|
+| `HealthBar` | Vida do jogador local |
+| `AdrenalineBar` | Adrenalina / frenzy |
+| `ScienceIndicator` | Magículas da fase (`RoundMagiculaTracker`) |
+| `HordeIndicator` | Wave (desliga quando a fase usa objetivo) |
+
+### Criado em runtime (`GameplayHudController` via `GameplaySceneBootstrap`)
+
+| Widget | Fase | Função |
+|--------|------|--------|
+| `PlayerAbilityHud` | 1–3 | Skills — canto inferior esquerdo |
+| `PhaseObjectiveHud` | 1 | Sele buracos |
+| `PhaseObjectiveHud` | 2 | Proteja a carruagem + barra de trajeto |
+| `BossHealthBarHud` | 3 | Objetivo + vida do Rei Rato |
+| `PlaytestFeedbackButton` | 1–3 | Feedback |
+
+O bootstrap prefere Canvas com nome `Gameplay_UI`; senão pontua Canvas filhos de um pai com `"UI"` no nome (ex. `---- UI ----`).
+
+## Prefab legado — componentes (referência histórica)
 
 | Script | Função |
 |--------|--------|
-| `healthBarUi` | Barra de vida do jogador local — tremor leve abaixo de ~50% HP (junto com a vinheta) |
-| `ScienceIndicator` | Contador de magículas coletadas na fase (`RoundMagiculaTracker`) |
-| `GameplayHudController` | Orquestra widgets de HUD no `Awake` (cooldowns, wave, feedback, indicadores) |
-| `HordeIndicator` | Wave atual, inimigos restantes e kills — topo central |
-| `PlayerAbilityHud` | Cooldowns Passiva / Dash / Q / R — canto inferior esquerdo |
-| `PlaytestFeedbackButton` | Botão de feedback — canto inferior **direito** (280×72) |
+| `healthBarUi` | Barra de vida |
+| `ScienceIndicator` | Magículas |
+| `GameplayHudController` | Orquestra widgets / camadas |
+| `HordeIndicator` | Wave |
+| `PlayerAbilityHud` | Skills |
+| `PlaytestFeedbackButton` | Feedback |
 
-## Correção 2026-06-16
+## Tutorial (dicas HUD)
 
-- **Escala do root:** `Gameplay_UI` estava com `localScale (0,0,0)` — corrigido para `(1,1,1)`.
-- **`GameplayHudController`:** camadas `GameplayHudLayers` com fallback **apenas** para widgets ausentes; reutiliza `HordeIndicator` da cena quando presente.
-
-## Correção 2026-07-05
-
-- **`PauseOverlayLayer`:** overlays (pause, baú) reparentados para camada acima da HUD de habilidades via `GameplayHudController.BringOverlayToFront`.
-- **`AbilityHudLayer`:** `PlayerAbilityHud` deixa de usar `SetAsLastSibling` no canvas raiz.
-- **`CanvasScaler`:** `matchWidthOrHeight = 0.5` e referência **sempre** 1920×1080 em runtime (`GameplayHudController`). Em aspect ≠ 16:9 o `AspectLetterboxController` letterboxa o viewport (ver `docs/editor/flows/screen-flow.md`).
-
-## HUD de habilidades (`PlayerAbilityHud`)
-
-- Posição padrão: **canto inferior esquerdo** (fallback procedural).
-- Slots: Passiva, Dash, Q, R — cada um com overlay de cooldown e timer.
-- Ícones por personagem: campos `passiveHudIcon` / `dashHudIcon` / `ability1HudIcon` / `ability2HudIcon` em `CharacterAbilitySet` (`CoraAbilitySet`, `NixAbilitySet`).
-- Arte: `Assets/Art/Sprites/New_UI/HUD_ ability/Habilidades Cora|Nyx/`.
-- Fallback: sprites do theme / campos opcionais do componente; senão quadrados coloridos.
-- SP e MP: vincula ao jogador local (`NetworkPlayerController.IsOwner` ou tag `Player`) e troca a arte no bind.
-- **Escopo:** só em cenas `Fase-*`. Ao ir para Victory/GameOver/Menu, `GameplaySessionTeardown.HideGameplayHud` + `GameplaySceneBootstrap.CleanupGameplayHudOutsidePhases` ocultam/destroem placeholders — não devem aparecer fora da fase.
-
-## Magículas na fase
-
-- Coleta via `Ciencia` / `NetworkCienciaController` → `RoundMagiculaTracker` (por jogador local).
-- HUD (`ScienceIndicator`) mostra só o número. A tela de personagens (painel de skills Nyxie/Cora) exibe `{count} magículas` / `{count} magicules` via `UiLocalization.FormatMagiculaCount` (`hud.magiculas_count`) — sempre visível ao abrir skills, inclusive no modo browse do Lobby/Menu.
-- Ao vencer ou perder: `CommitToSave()` grava em `SaveProfileStore.Active.magiculas`.
-- Multiplayer: `sharedSciencePool` desligado por padrão em `MultiplayerConfig`.
+- Setup nas **cenas** sob `---- UI ----` → Canvas: [tutorial-tips-hud-setup.md](../guides/tutorial-tips-hud-setup.md).
+- `TutorialManager` + `TutorialUIController`; dados em `Assets/Data/Tutorial/`.
+- **Não** configure o tutorial neste prefab legado.
 
 ## Objetivo Fase 1 (`PhaseObjectiveHud`)
 
-- Layout: banner `Objetivo.png` + título localizado (`objective.seal_holes.title`) e frame `Obj_Buracos.png` com contador `{sealed}/{total}` (`objective.holes_count`).
-- Sprites: `Assets/Art/Sprites/id visual/UI/HUD/Fase 1/` via `Resources/PhaseObjectiveHudVisuals.asset`.
-- Dados: `GameEvents.OnPhaseObjectiveStatusChanged` + `PhaseObjectiveStatusUtility.CountSealedHoles` (buracos locais na cena — igual em SP e MP).
-- Fase 3 (boss): `BossHealthBarHud` com banner Objetivo (`objective.defeat_boss.title`) + barra de vida larga.
+- Banner + contador `{sealed}/{total}`; sprites em `Resources/PhaseObjectiveHudVisuals.asset`.
+- Dados: `GameEvents.OnPhaseObjectiveStatusChanged`.
 
 ## Objetivo Fase 2 (`PhaseObjectiveHud` — carruagem)
 
-- Banner `Fase 2/Objetivo.png` + título (`objective.protect_carriage.title`: PROTEJA A CARRUAGEM / PROTECT THE CARRIAGE).
-- Barra de trajeto: `Obj_Barra_Baixo` (fundo) + fill **branco** (`fillAmount = 1 - PathProgress`) + moldura `Obj_Barra_Moldura`.
-- Follower: ícone `Carriage_Reference` anda na ponta do progresso (mesmo padrão `LoadingProgressUtility.SetFollowerAlongTrack` do loading).
-- Progresso: `CarriageController.PathProgress` (0→1), já assinado pelo HUD — SP/MP.
-- Vida da carruagem continua no world UI (`NetworkCarriageHealth` / labels); não misturar com esta barra.
+- Banner “Proteja a carruagem” + barra de trajeto (`1 - PathProgress`) + follower `Carriage_Reference`.
+- Progresso: `CarriageController.PathProgress`.
 
-## Inimigos — barra de vida
+## Fase 3 (`BossHealthBarHud`)
 
-- `EnemyHealthBarDisplay` é adicionado automaticamente em inimigos (`HealthComponent` + tag `Enemy`).
-- Barra world-space dimensionada pelo `SpriteRenderer.bounds`.
-- Sprites opcionais: `backgroundSprite`, `fillSprite` no componente.
+- Banner objetivo + barra de vida do boss; criado no `ObjectiveHudLayer` quando a fase é KillBoss.
 
-## Valores a confirmar no Editor
+## Magículas
 
-| Objeto | Campo | Valor atual |
-|--------|-------|-------------|
-| Canvas | Sort Order / Render Mode | |
-| Barras de vida jogador | Eventos `GameEvents.OnPlayerHealthChanged` | |
-| `PlayerAbilityHud` | Ícones de arte (opcional) | |
-| EventSystem na cena | Não duplicar com Lobby | |
+- `ScienceIndicator` na cena; tracker `RoundMagiculaTracker`. Persistência via `CommitToSave()` ao fim da partida.
+
+## Correções históricas (prefab)
+
+- 2026-06-16: scale root `(0,0,0)` → `(1,1,1)`.
+- 2026-07-05: `PauseOverlayLayer`, `CanvasScaler` 1920×1080 match 0.5.

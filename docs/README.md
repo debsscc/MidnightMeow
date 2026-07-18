@@ -45,6 +45,7 @@ Documentação para desenvolvedores e **agentes de IA** que trabalham neste proj
 - [Guia: Rei Rato anti-tunneling (fuga/dash)](editor/guides/rat-king-anti-tunneling.md)
 - [Guia: escolta carruagem + aggro + telegraph Structure](editor/guides/carriage-phase2-aggro-setup.md)
 - [Guia: conserto carruagem (fix E / zonas)](editor/guides/carriage-repair-fix.md)
+- [Guia: tutorial dinâmico (dicas HUD)](editor/guides/tutorial-tips-hud-setup.md)
 - [Plano de implementação Fases 1–3](todo/phases-implementation.md)
 
 ### Editor (para agentes sem acesso ao Unity)

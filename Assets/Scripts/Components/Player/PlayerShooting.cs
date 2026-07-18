@@ -314,6 +314,7 @@ public class PlayerShooting : MonoBehaviour
         }
 
         OnShoot?.Invoke();
+        GameEvents.InvokeTutorialShootExecuted();
         OnProjectileInstantiated?.Invoke(projectileInstance, spawnPosition, projectileRotation, fireDirection);
     }
 
