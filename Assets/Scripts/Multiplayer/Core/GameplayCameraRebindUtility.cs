@@ -54,6 +54,7 @@ public static class GameplayCameraRebindUtility
 
                 GameplaySceneBootstrap.RebindLocalPlayerCamera();
                 AspectLetterboxController.EnsureExists()?.Reapply();
+                PhaseLightingHierarchyFix.EnsureForActiveScene();
 
                 MultiplayerCameraController controller = MultiplayerCameraController.Resolve();
                 if (controller != null && controller.IsFollowingTarget)
@@ -62,6 +63,7 @@ public static class GameplayCameraRebindUtility
 
             GameplaySceneBootstrap.EnsureActiveGameplayCamera();
             AspectLetterboxController.EnsureExists()?.Reapply();
+            PhaseLightingHierarchyFix.EnsureForActiveScene();
             _routine = null;
         }
     }

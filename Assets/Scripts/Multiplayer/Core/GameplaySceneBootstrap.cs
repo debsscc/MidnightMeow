@@ -44,6 +44,7 @@ public static class GameplaySceneBootstrap
         EnsureCameraRig();
         TransitionCameraKeeper.Refresh();
         AspectLetterboxController.EnsureExists()?.Reapply();
+        PhaseLightingHierarchyFix.EnsureForActiveScene();
 
         RoundMagiculaTracker.EnsureExists();
         RoundMagiculaTracker.Instance?.ResetRound();

@@ -31,6 +31,8 @@ Gameplay: `GameplayPrefabCatalog` em `Resources/` instancia `MultiplayerCameraRi
 | Fase 3            | `Assets/Scenes/Fases/Fase-3.unity`                  | Boss (`Rato_Boss`). HUD sob `---- UI ----` → Canvas nomeado `Gameplay_UI` |
 
 **Fase-3 — fogo ambiente:** prefab `Assets/Prefabs/VFX/AmbientFire2D.prefab` (ver [AmbientFire2D.md](prefabs/AmbientFire2D.md)). Arrastar na cena; presets Ember/Torch/Bonfire.
+
+**Fase-3 — iluminação / tela escura fora de 1080p:** luzes estavam sob Canvas Overlay (`Enviroment/Canvas` — “letterbox”). Ver guia [fase3-lighting-letterbox-fix.md](guides/fase3-lighting-letterbox-fix.md). Runtime: `PhaseLightingHierarchyFix` + `OrthographicSpriteLightFitter`.
 | Game Over         | `Assets/Scenes/UI/GameOver.unity`                   | `EndGameScreenController` — derrota (Continuar / Sair) |
 | Vitória           | `Assets/Scenes/UI/VictoryScene.unity`               | `EndGameScreenController` — vitória (Prosseguir → próxima fase / créditos na Fase-3) |
 
