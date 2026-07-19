@@ -43,7 +43,7 @@ Layout: botões canto inferior esquerdo com offset (ref. `docs/reference_imgs/me
 | Hostear | Painel aguardando + `ConnectionManager.StartHostAsync()` |
 | Entrar | Painel código + `ConnectionManager.StartClientAsync()` |
 | Jogar Solo | `BeginSinglePlayer()` → `lobby_loading1` |
-| Personagens | `Characters` modo consulta → `return_lobby` |
+| Voltar (`Btn_Back`) | `ExitToMainMenu()` → Menu2 |
 
 **Multiplayer:** quando 2 jogadores conectam, host dispara `lobby_loading1` automaticamente.
 

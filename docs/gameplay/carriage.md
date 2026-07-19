@@ -15,7 +15,7 @@
   - SFX: `Interacao.wav` ao iniciar (`GameplayInteractAudio.PlayConfirm`); `Reviver.wav` ao concluir (`PlayReviveComplete`).
   - Guia de correção do E: [carriage-repair-fix.md](../editor/guides/carriage-repair-fix.md)
 - Chegada ao fim → `PhaseObjectiveManager.NotifyCarriageArrived()` + `GameEvents.OnCarriageArrived` → vitória Fase 2.
-- **HUD:** `PhaseObjectiveHud` (Fase-2) — banner “Proteja a carruagem” + barra de trajeto (branco restante = `1 - PathProgress`) + ícone `Carriage_Reference` que acompanha o progresso.
+- **HUD:** `PhaseObjectiveHud` (Fase-2) — banner “Proteja a carruagem” + barra de trajeto (branco fixo, sem encolher) + ícone `Carriage_Reference` que acompanha o progresso.
 - **Arte oficial:** hierarquia `VisualRoot` com 3 camadas (Body / Wheels / Back). Ver [prefabs/Carriage.md](../editor/prefabs/Carriage.md).
 - **Placeholder legado:** só se `CarriageConfig.useOfficialArt = false`.
 

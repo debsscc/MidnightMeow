@@ -376,14 +376,14 @@ public class PreparationScreenController : MonoBehaviour
 
         if (backButton != null)
         {
-            backButton.onClick.RemoveListener(GoBackToMenu);
-            backButton.onClick.AddListener(GoBackToMenu);
+            backButton.onClick.RemoveListener(GoBackToLobby);
+            backButton.onClick.AddListener(GoBackToLobby);
         }
 
         if (leaveLobbyButton != null)
         {
-            leaveLobbyButton.onClick.RemoveListener(LeaveLobby);
-            leaveLobbyButton.onClick.AddListener(LeaveLobby);
+            leaveLobbyButton.onClick.RemoveListener(GoBackToLobby);
+            leaveLobbyButton.onClick.AddListener(GoBackToLobby);
         }
 
         if (chooseCharacterButton != null)
@@ -492,12 +492,7 @@ public class PreparationScreenController : MonoBehaviour
         trigger.triggers.Add(entry);
     }
 
-    private void GoBackToMenu()
-    {
-        RequestNavigation(SceneFlowRouteIds.ReturnToMenu);
-    }
-
-    private void LeaveLobby()
+    private void GoBackToLobby()
     {
         RequestNavigation(SceneFlowRouteIds.ReturnToLobby);
     }
@@ -1196,10 +1191,10 @@ public class PreparationScreenController : MonoBehaviour
         chooseCharacterButton = ScreenFlowPlaceholderFactory.CreateButton(panel.transform, "Escolher Personagem",
             new Vector2(0.2f, 0.35f), new Vector2(0.2f, 0.35f), new Vector2(-160f, -40f), new Vector2(160f, 40f));
 
-        backButton = ScreenFlowPlaceholderFactory.CreateButton(panel.transform, "Voltar ao Menu",
+        backButton = ScreenFlowPlaceholderFactory.CreateButton(panel.transform, "Voltar ao Lobby",
             new Vector2(0f, 0f), new Vector2(0f, 0f), new Vector2(40f, 210f), new Vector2(260f, 270f));
 
-        leaveLobbyButton = ScreenFlowPlaceholderFactory.CreateButton(panel.transform, "Sair do Lobby",
+        leaveLobbyButton = ScreenFlowPlaceholderFactory.CreateButton(panel.transform, "Voltar ao Lobby",
             new Vector2(0f, 0f), new Vector2(0f, 0f), new Vector2(40f, 90f), new Vector2(260f, 150f));
 
         readyButton = ScreenFlowPlaceholderFactory.CreateButton(panel.transform, "Pronto",

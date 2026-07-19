@@ -47,17 +47,17 @@ No **Menu2**, `UiSelectableFocusVisual` (adicionado por `MainMenuController`) co
 BootstrapScene → Menu2
   ├─ Novo Jogo → Loading2 → Lobby
   ├─ Continuar (se host) → Painel Saves → Lobby (auto-host)
-  ├─ Opções → Painel Opções (na mesma cena)
-  └─ Personagens (via Lobby) → Characters (somente consulta)
+  └─ Opções → Painel Opções (na mesma cena)
 
 Lobby
   ├─ Hostear / Entrar → sincronização (2 jogadores) → Loading1 → Preparation
   ├─ Jogar Solo → Loading1 → Preparation
-  └─ Personagens → Characters (consulta) → Voltar ao Lobby
+  └─ Voltar (`Btn_Back`) → Menu2 (`ExitToMainMenu`)
 
 Preparation
   ├─ Escolher Personagem → Characters (seleção + upgrades) → Voltar
   ├─ Contrato 1 (ativo) / 2 e 3 (bloqueados)
+  ├─ Voltar (`Btn_Back`) → Lobby (`return_lobby`)
   └─ [contrato + personagem + todos prontos] → Loading2 → Fase-1
 
 Fase-1 / Fase-2 / Fase-3 → [vitória/derrota] → VictoryScene / GameOver
@@ -97,13 +97,14 @@ Fase-1 / Fase-2 / Fase-3 → [vitória/derrota] → VictoryScene / GameOver
 - Botões no canto inferior esquerdo (ref. `menu.png`).
 
 ### Lobby
-- **Personagens**: consulta de skills, sem níveis nem compras.
+- **Voltar** (`Btn_Back`): desconecta e volta ao Menu2 via `ExitToMainMenu()`.
 - **Multiplayer**: ao conectar o 2º jogador, transição automática para Loading1.
 - **Solo**: botão dedicado, sem exigir sincronização.
 - **Música:** `Sound Track` na cena Lobby; persiste em Loading1/2, Preparation e Characters (`CarriesMusicAcross`).
 
 ### Preparação
 - Sem ordem obrigatória entre contrato, personagem e pronto.
+- **Voltar** (`Btn_Back`): rota `return_lobby` → Lobby.
 - Mensagens de erro ao apertar pronto sem requisitos (ex.: personagem, contrato, outro jogador).
 - Hover no contrato exibe tooltip (ref. `hover_contract.png`).
 - Ícones sob **Selecionar Personagens** (`Icons_Characters`): padrão `Cora_Selecionada` / `Nix_Selecionado`; ao escolher (solo = local; MP = qualquer jogador da sessão) → `Cora_Selecionada (1)` / `Nix_Selecionado (1)`. Se ambos estiverem escolhidos no MP, os dois ícones ficam na variante `(1)`.

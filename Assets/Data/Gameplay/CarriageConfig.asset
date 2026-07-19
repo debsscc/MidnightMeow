@@ -26,7 +26,7 @@ MonoBehaviour:
   pathEndX: 18
   useCustomPathY: 0
   pathY: 0
-  moveSpeed: 0.9
+  moveSpeed: 1
   playerPresenceRadius: 8
   playerPresenceLayerMask:
     serializedVersion: 2

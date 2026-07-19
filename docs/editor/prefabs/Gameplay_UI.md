@@ -69,8 +69,8 @@ O bootstrap prefere Canvas com nome `Gameplay_UI`; senão pontua Canvas filhos d
 
 ## Objetivo Fase 2 (`PhaseObjectiveHud` — carruagem)
 
-- Banner “Proteja a carruagem” + barra de trajeto (`1 - PathProgress`) + follower `Carriage_Reference`.
-- Progresso: `CarriageController.PathProgress`.
+- Banner “Proteja a carruagem” + barra de trajeto (branco fixo em `fillAmount = 1`) + follower `Carriage_Reference` que acompanha o progresso.
+- Progresso do ícone: `CarriageController.PathProgress`.
 
 ## Fase 3 (`BossHealthBarHud`)
 

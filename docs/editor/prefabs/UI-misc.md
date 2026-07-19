@@ -1,6 +1,6 @@
 # Prefabs: UI diversos
 
-Última revisão: 2026-07-16
+Última revisão: 2026-07-18
 
 ## Defeat.prefab
 
@@ -20,7 +20,8 @@
 
 | Confirmar | Valor atual |
 |-----------|-------------|
-| Botão continuar | |
+| Botão continuar | `Button_Prosseguir` — na vitória da Fase-3 o rótulo vira "Créditos" via `EndGameScreenController` |
+| Botão créditos (meio) | `Button_Credits` — **oculto** só na vitória final (Fase-3), para não duplicar o Prosseguir→Créditos |
 | Animações / TMP título | |
 
 ---

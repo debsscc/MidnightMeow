@@ -53,6 +53,7 @@ public class EndGameScreenController : MonoBehaviour
         ApplyEndGameButtonFeedback();
         ScreenFlowPlaceholderFactory.ApplyMenuCursor();
         RefreshPrimaryActionLabel();
+        ApplyCreditsButtonVisibility();
         if (continueButton != null)
             UiSelectionUtility.Select(continueButton);
         else if (exitButton != null)
@@ -63,7 +64,11 @@ public class EndGameScreenController : MonoBehaviour
 
     private void OnDisable() => LocalizationSettings.SelectedLocaleChanged -= HandleLocaleChanged;
 
-    private void HandleLocaleChanged(Locale _) => RefreshPrimaryActionLabel();
+    private void HandleLocaleChanged(Locale _)
+    {
+        RefreshPrimaryActionLabel();
+        ApplyCreditsButtonVisibility();
+    }
 
     private void TryAutoResolveReferences()
     {
@@ -129,6 +134,19 @@ public class EndGameScreenController : MonoBehaviour
         }
 
         SetButtonLabel(continueButton, label);
+    }
+
+    /// <summary>
+    /// Na vitória da Fase-3 o Prosseguir já vira "Créditos" — esconde o Button_Credits do meio
+    /// para não ficar duplicado. Nas demais vitórias/derrota o botão permanece.
+    /// </summary>
+    private void ApplyCreditsButtonVisibility()
+    {
+        if (creditsButton == null)
+            return;
+
+        bool hideDuplicateCredits = isVictory && ScreenFlowStateMachine.IsFinalVictoryPhase();
+        creditsButton.gameObject.SetActive(!hideDuplicateCredits);
     }
 
     private void OnPrimaryAction()

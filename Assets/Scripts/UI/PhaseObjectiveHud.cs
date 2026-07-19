@@ -357,9 +357,9 @@ public class PhaseObjectiveHud : MonoBehaviour
             if (_carriageTitleLabel != null)
                 _carriageTitleLabel.text = UiLocalization.GetObjectiveProtectCarriageTitle();
 
-            float remaining = 1f - _carriageProgressNormalized;
+            // Fase 2: barra branca fica cheia (não encolhe com o progresso); só o ícone se move.
             if (_carriageBarRemaining != null)
-                _carriageBarRemaining.fillAmount = remaining;
+                _carriageBarRemaining.fillAmount = 1f;
 
             // Ícone acompanha a ponta do trajeto (0→1), igual ao follower do loading.
             if (_carriageBarTrack != null && _carriageFollower != null)

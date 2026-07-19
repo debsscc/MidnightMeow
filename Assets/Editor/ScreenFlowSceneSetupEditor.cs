@@ -191,7 +191,7 @@ public static class ScreenFlowSceneSetupEditor
         AssignButton(so, "startGameButton", "StartGame");
         AssignButton(so, "disconnectButton", "Disconnect");
         AssignButton(so, "copyCodeButton", "CopyCode");
-        AssignButton(so, "charactersButton", "Back");
+        AssignButton(so, "backButton", "Btn_Back", "Btn_Voltar");
         AssignText(so, "joinCodeText", "JoinCode");
         AssignText(so, "statusText", "ERROCODE", "Status");
         AssignText(so, "playersText", "Texts");

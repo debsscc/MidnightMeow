@@ -8,6 +8,7 @@ using System.Collections;
 using TMPro;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 [DisallowMultipleComponent]
@@ -27,7 +28,8 @@ public class LobbySceneUIController : MonoBehaviour
     [SerializeField] private Button hostButton;
     [SerializeField] private Button joinButton;
     [SerializeField] private Button soloButton;
-    [SerializeField] private Button charactersButton;
+    [FormerlySerializedAs("charactersButton")]
+    [SerializeField] private Button backButton;
     [SerializeField] private TMP_InputField joinCodeInput;
     [SerializeField] private TMP_Text joinCodeText;
     [SerializeField] private TMP_Text instructionText;
@@ -71,7 +73,7 @@ public class LobbySceneUIController : MonoBehaviour
         if (hostButton != null) hostButton.onClick.AddListener(EnterHostMode);
         if (joinButton != null) joinButton.onClick.AddListener(EnterJoinMode);
         if (soloButton != null) soloButton.onClick.AddListener(EnterSoloMode);
-        if (charactersButton != null) charactersButton.onClick.AddListener(OnBackOrCharactersClicked);
+        if (backButton != null) backButton.onClick.AddListener(GoBackToMenu);
         if (copyCodeButton != null) copyCodeButton.onClick.AddListener(CopyJoinCode);
         if (disconnectButton != null) disconnectButton.onClick.AddListener(Disconnect);
         if (readyToggle != null)
@@ -170,7 +172,8 @@ public class LobbySceneUIController : MonoBehaviour
         if (soloButton == null) soloButton = ScreenFlowUiLookup.FindButton("Solo_StartGame");
         if (disconnectButton == null) disconnectButton = ScreenFlowUiLookup.FindButton("Disconnect");
         if (copyCodeButton == null) copyCodeButton = ScreenFlowUiLookup.FindButton("CopyCode");
-        if (charactersButton == null) charactersButton = ScreenFlowUiLookup.FindButton("Back");
+        if (backButton == null) backButton = ScreenFlowUiLookup.FindButton("Btn_Back")
+            ?? ScreenFlowUiLookup.FindButton("Btn_Voltar");
         if (joinCodeText == null) joinCodeText = ScreenFlowUiLookup.FindText("JoinCodeDisplay");
         if (instructionText == null) instructionText = ScreenFlowUiLookup.FindText("ERROCODE");
         if (statusText == null) statusText = ScreenFlowUiLookup.FindText("Status");
@@ -340,23 +343,9 @@ public class LobbySceneUIController : MonoBehaviour
 
     private bool IsMultiplayerMode => _mode == LobbyUiMode.HostWaiting || _mode == LobbyUiMode.ClientJoin;
 
-    private void CancelCurrentMode()
+    private void GoBackToMenu()
     {
-        if (IsNetworkConnected())
-        {
-            Disconnect();
-            return;
-        }
-
-        ReturnToModeSelect();
-    }
-
-    private void OnBackOrCharactersClicked()
-    {
-        if (_mode != LobbyUiMode.ModeSelect)
-            CancelCurrentMode();
-        else
-            OpenCharacters();
+        ScreenFlowStateMachine.ExitToMainMenu();
     }
 
     private async void StartHost()
@@ -417,11 +406,6 @@ public class LobbySceneUIController : MonoBehaviour
             yield break;
 
         TryBeginPreparation();
-    }
-
-    private void OpenCharacters()
-    {
-        ScreenFlowStateMachine.OpenCharactersFromLobby();
     }
 
     private void OnReadyToggleChanged(bool isOn)
@@ -757,8 +741,8 @@ public class LobbySceneUIController : MonoBehaviour
         if (disconnectButton != null)
             disconnectButton.gameObject.SetActive(showRightPanel);
 
-        if (charactersButton != null)
-            charactersButton.gameObject.SetActive(false);
+        if (backButton != null)
+            backButton.gameObject.SetActive(true);
 
         if (instructionText != null)
             instructionText.gameObject.SetActive(_mode == LobbyUiMode.ModeSelect);
